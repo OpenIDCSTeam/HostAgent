@@ -14,9 +14,12 @@ import {
     GlobalOutlined,
     SwapOutlined,
     TranslationOutlined,
+    SunOutlined,
+    MoonOutlined,
 } from '@ant-design/icons'
 import {useUserStore} from '@/utils/data.ts'
 import { changeLanguage, getAvailableLanguages, getCurrentLanguage } from '@/utils/i18n.ts'
+import { useTheme } from '@/contexts/ThemeContext'
 import type {MenuProps} from 'antd'
 
 const {Header, Sider, Content} = Layout
@@ -29,6 +32,7 @@ function MainLayout() {
     const navigate = useNavigate()
     const location = useLocation()
     const {user, logout} = useUserStore()
+    const { theme: currentTheme, toggleTheme } = useTheme() // 主题管理
     const [collapsed, setCollapsed] = useState(false) // 侧边栏折叠状态
     const [notifications, setNotifications] = useState(0) // 通知数量
     const [currentLang, setCurrentLang] = useState('zh-cn')
@@ -82,7 +86,7 @@ function MainLayout() {
         {
             key: '/user/vms',
             icon: <CloudServerOutlined/>,
-            label: '容器管理',
+            label: '实例管理',
         },
         {
             key: '/user/proxys',
@@ -116,7 +120,7 @@ function MainLayout() {
         {
             key: '/vms',
             icon: <CloudServerOutlined/>,
-            label: '容器管理',
+            label: '实例管理',
         },
         {
             key: '/web-proxys',
@@ -150,13 +154,13 @@ function MainLayout() {
         ? [
             {
                 key: 'user-interface',
-                label: '用户界面',
+                label: '用户空间',
                 type: 'group',
                 children: userMenuItems,
             },
             {
                 key: 'system-interface',
-                label: '系统界面',
+                label: '系统空间',
                 type: 'group',
                 children: adminMenuItems,
             },
@@ -197,22 +201,35 @@ function MainLayout() {
     }
 
     return (
-        <Layout style={{minHeight: '100vh'}}>
+        <Layout style={{
+            minHeight: '100vh',
+            background: currentTheme === 'dark' ? 'var(--bg-primary)' : '#f0f2f5'
+        }}>
             {/* 侧边栏 */}
-            <Sider trigger={null} collapsible collapsed={collapsed}>
+            <Sider
+                trigger={null} 
+                collapsible 
+                collapsed={collapsed}
+                style={{
+                    background: currentTheme === 'dark' ? 'var(--bg-secondary)' : '#001529',
+                    borderRight: currentTheme === 'dark' ? '1px solid var(--border-primary)' : 'none',
+                }}
+            >
                 {/* Logo区域 */}
                 <div
+                    className="gradient-text"
                     style={{
-                        height: 64,
+                        height: 80,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#fff',
-                        fontSize: collapsed ? 16 : 20,
+                        fontSize: collapsed ? 26 : 34,
                         fontWeight: 'bold',
+                        padding: '0 16px',
+                        color: currentTheme === 'dark' ? 'var(--text-primary)' : '#fff',
+                        borderBottom: currentTheme === 'dark' ? '1px solid var(--border-primary)' : 'none',
                     }}
-                >
-                    {collapsed ? 'OI' : 'OpenIDCS'}
+                >{collapsed ? 'OI' : 'OpenIDCS'}
                 </div>
 
                 {/* 菜单 */}
@@ -222,18 +239,26 @@ function MainLayout() {
                     selectedKeys={[location.pathname]}
                     items={menuItems}
                     onClick={handleMenuClick}
+                    style={{
+                        background: 'transparent',
+                        border: 'none',
+                    }}
                 />
             </Sider>
 
             <Layout>
                 {/* 顶部导航 */}
                 <Header
+                    className="glass-card"
                     style={{
                         padding: '0 16px',
-                        background: colorBgContainer,
+                        background: currentTheme === 'dark' ? 'var(--bg-card)' : colorBgContainer,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
+                        borderBottom: currentTheme === 'dark' ? '1px solid var(--border-primary)' : '1px solid #f0f0f0',
+                        backdropFilter: currentTheme === 'dark' ? 'blur(20px)' : 'none',
+                        margin: '6px 16px 16px ',
                     }}
                 >
                     {/* 折叠按钮 */}
@@ -241,16 +266,36 @@ function MainLayout() {
                         type="text"
                         icon={collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>}
                         onClick={() => setCollapsed(!collapsed)}
-                        style={{fontSize: 16, width: 64, height: 64}}
+                        style={{
+                            fontSize: 16,
+                            width: 64,
+                            height: 64,
+                            color: currentTheme === 'dark' ? 'var(--text-primary)' : undefined,
+                        }}
                     />
 
                     {/* 右侧操作区 */}
                     <div style={{display: 'flex', alignItems: 'center', gap: 16}}>
+                        {/* 主题切换 */}
+                        <Button
+                            className="theme-toggle"
+                            type="text"
+                            icon={currentTheme === 'dark' ? <SunOutlined style={{fontSize: 18}} /> : <MoonOutlined style={{fontSize: 18}} />}
+                            onClick={toggleTheme}
+                            title={currentTheme === 'dark' ? '切换到浅色模式' : '切换到深色模式'}
+                            style={{
+                                color: currentTheme === 'dark' ? 'var(--accent-primary)' : undefined,
+                            }}
+                        />
+
                         {/* 语言切换 */}
                         <Dropdown menu={{items: languageMenuItems}} placement="bottomRight">
-                            <Button 
-                                type="text" 
+                            <Button
+                                type="text"
                                 icon={<TranslationOutlined style={{fontSize: 18}} />}
+                                style={{
+                                    color: currentTheme === 'dark' ? 'var(--text-primary)' : undefined,
+                                }}
                             />
                         </Dropdown>
 
@@ -260,14 +305,41 @@ function MainLayout() {
                                 type="text"
                                 icon={<BellOutlined style={{fontSize: 18}}/>}
                                 onClick={() => setNotifications(0)}
+                                style={{
+                                    color: currentTheme === 'dark' ? 'var(--text-primary)' : undefined,
+                                }}
                             />
                         </Badge>
 
                         {/* 用户信息 */}
                         <Dropdown menu={{items: dropdownMenuItems}} placement="bottomRight">
-                            <div style={{display: 'flex', alignItems: 'center', cursor: 'pointer'}}>
-                                <Avatar icon={<UserOutlined/>}/>
-                                <span style={{marginLeft: 8}}>{user?.username || '用户'}</span>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    cursor: 'pointer',
+                                    padding: '4px 12px',
+                                    borderRadius: '12px',
+                                    transition: 'all 0.3s ease',
+                                }}
+                                className="btn-hover"
+                            >
+                                <Avatar
+                                    icon={<UserOutlined/>}
+                                    style={{
+                                        border: currentTheme === 'dark' ? '2px solid transparent' : undefined,
+                                        backgroundImage: currentTheme === 'dark' ? 'var(--gradient-primary)' : undefined,
+                                        backgroundClip: currentTheme === 'dark' ? 'padding-box' : undefined,
+                                    }}
+                                />
+                                <span
+                                    style={{
+                                        marginLeft: 8,
+                                        color: currentTheme === 'dark' ? 'var(--text-primary)' : undefined,
+                                    }}
+                                >
+                                    {user?.username || '用户'}
+                                </span>
                             </div>
                         </Dropdown>
                     </div>
@@ -275,12 +347,13 @@ function MainLayout() {
 
                 {/* 内容区域 */}
                 <Content
+                    className={currentTheme === 'dark' ? 'grid-background' : ''}
                     style={{
-                        margin: '16px',
+                        margin: '0px 16px',
                         padding: 24,
                         minHeight: 280,
-                        background: colorBgContainer,
-                        borderRadius: 8,
+                        background: currentTheme === 'dark' ? 'var(--bg-primary)' : colorBgContainer,
+                        borderRadius: 16,
                         overflow: 'auto',
                     }}
                 >

@@ -160,23 +160,28 @@ function UserLogins() {
 
   return (
     <div
+      className="login-page-container"
       style={{
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        background: 'linear-gradient(to bottom right, #eff6ff, #eef2ff, #faf5ff)',
+        background: 'var(--bg-primary)',
       }}
     >
       {/* 登录卡片 */}
       <div
+        className="login-card glass-card"
         style={{
-          background: 'white',
+          background: 'var(--bg-card)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           borderRadius: '16px',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          boxShadow: 'var(--shadow-glass)',
           padding: '32px',
           width: '100%',
           maxWidth: '448px',
+          border: '1px solid var(--border-primary)',
         }}
       >
         {/* 标题区域 */}
@@ -206,10 +211,10 @@ function UserLogins() {
               </svg>
             </div>
           </div>
-          <h1 style={{ fontSize: '30px', fontWeight: 'bold', color: '#1f2937', marginBottom: 8 }}>
-            OpenIDCS
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+            OpenIDCS受控端
           </h1>
-          <p style={{ color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <p style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <LockOutlined style={{ fontSize: 16 }} />
             虚拟化管理平台
           </p>
@@ -221,7 +226,7 @@ function UserLogins() {
             display: 'flex',
             gap: '8px',
             marginBottom: 24,
-            background: '#f3f4f6',
+            background: 'var(--bg-secondary)',
             padding: '4px',
             borderRadius: '8px',
           }}
@@ -236,7 +241,9 @@ function UserLogins() {
               cursor: 'pointer',
               transition: 'all 0.3s',
               background: loginType === 'user' ? 'linear-gradient(to right, #2563eb, #4f46e5)' : 'transparent',
-              color: loginType === 'user' ? 'white' : '#374151',
+              color: loginType === 'user' ? '#ffffff' : 'var(--text-primary)',
+              fontFamily: 'var(--font-family)',
+              fontSize: '14px',
               fontWeight: 500,
             }}
           >
@@ -253,7 +260,9 @@ function UserLogins() {
               cursor: 'pointer',
               transition: 'all 0.3s',
               background: loginType === 'token' ? 'linear-gradient(to right, #2563eb, #4f46e5)' : 'transparent',
-              color: loginType === 'token' ? 'white' : '#374151',
+              color: loginType === 'token' ? '#ffffff' : 'var(--text-primary)',
+              fontFamily: 'var(--font-family)',
+              fontSize: '14px',
               fontWeight: 500,
             }}
           >
@@ -274,7 +283,7 @@ function UserLogins() {
             {/* 用户名输入框 */}
             <Form.Item
               label={
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500, color: 'var(--text-primary)' }}>
                   <UserOutlined style={{ color: '#3b82f6' }} />
                   用户名
                 </span>
@@ -296,7 +305,7 @@ function UserLogins() {
             {/* 密码输入框 */}
             <Form.Item
               label={
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500, color: 'var(--text-primary)' }}>
                   <LockOutlined style={{ color: '#3b82f6' }} />
                   密码
                 </span>
@@ -349,10 +358,10 @@ function UserLogins() {
 
             {/* 底部链接 */}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-              <Link to="/register" style={{ color: '#2563eb' }}>
+              <Link to="/register" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>
                 还没有账号？立即注册
               </Link>
-              <a onClick={openForgotPasswordModal} style={{ color: '#2563eb', cursor: 'pointer' }}>
+              <a onClick={openForgotPasswordModal} style={{ color: 'var(--accent-primary)', cursor: 'pointer', textDecoration: 'none' }}>
                 忘记密码？
               </a>
             </div>
@@ -371,7 +380,7 @@ function UserLogins() {
             {/* Token输入框 */}
             <Form.Item
               label={
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500, color: 'var(--text-primary)' }}>
                   <KeyOutlined style={{ color: '#3b82f6' }} />
                   访问Token
                 </span>
@@ -427,23 +436,27 @@ function UserLogins() {
                 marginTop: 24,
                 textAlign: 'center',
                 fontSize: '14px',
-                color: '#6b7280',
+                color: 'var(--text-secondary)',
               }}
             >
               <div
+                className="glass-card"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 4,
-                  background: '#eff6ff',
+                  background: 'var(--bg-secondary)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
                   padding: '12px 16px',
                   borderRadius: '8px',
-                  border: '1px solid #dbeafe',
+                  border: '1px solid var(--border-primary)',
+                  color: 'var(--text-primary)',
                 }}
               >
-                <InfoCircleOutlined style={{ color: '#3b82f6' }} />
-                启动服务时会在控制台显示访问Token
+                <InfoCircleOutlined style={{ color: 'var(--accent-primary)' }} />
+                <span style={{ color: 'var(--text-primary)' }}>启动服务时会在控制台显示访问Token</span>
               </div>
             </div>
           </Form>
@@ -468,8 +481,8 @@ function UserLogins() {
               <MailOutlined style={{ color: 'white', fontSize: 20 }} />
             </div>
             <div>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>找回密码</div>
-              <div style={{ fontSize: 14, fontWeight: 400, color: '#6b7280' }}>通过邮件重置您的密码</div>
+              <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)' }}>找回密码</div>
+              <div style={{ fontSize: 14, fontWeight: 400, color: 'var(--text-secondary)', marginTop: 2 }}>通过邮件重置您的密码</div>
             </div>
           </div>
         }

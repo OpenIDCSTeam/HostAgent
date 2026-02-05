@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Select, Button, Modal, Card, Statistic } from 'antd'
+import { Select, Button, Card, Statistic } from 'antd'
 import { 
   ReloadOutlined, 
   PlayCircleOutlined, 
@@ -38,6 +38,7 @@ function LogsManage() {
   const [hosts, setHosts] = useState<string[]>([]) // 主机列表
   const [loading, setLoading] = useState(false) // 加载状态
   const [autoRefresh, setAutoRefresh] = useState(false) // 自动刷新状态
+  const [selectedLog, setSelectedLog] = useState<Log | null>(null) // 选中的日志
   const [filters, setFilters] = useState({
     host: '', // 主机筛选
     level: '', // 日志级别筛选
@@ -146,36 +147,6 @@ function LogsManage() {
   }
 
   /**
-   * 显示操作详情
-   */
-  const showResults = (log: Log) => {
-    Modal.info({
-      title: '操作详情',
-      width: 800,
-      content: (
-        <pre className="text-sm text-gray-700 bg-gray-50 p-3 rounded border border-gray-200 whitespace-pre-wrap max-h-96 overflow-y-auto">
-          {JSON.stringify(log.results, null, 2)}
-        </pre>
-      ),
-    })
-  }
-
-  /**
-   * 显示错误堆栈
-   */
-  const showExecute = (log: Log) => {
-    Modal.error({
-      title: '错误堆栈',
-      width: 800,
-      content: (
-        <pre className="text-sm text-red-700 bg-red-50 p-3 rounded border border-red-200 whitespace-pre-wrap font-mono max-h-96 overflow-y-auto">
-          {log.execute}
-        </pre>
-      ),
-    })
-  }
-
-  /**
    * 获取日志级别颜色
    */
   const getLevelColor = (level: string) => {
@@ -199,15 +170,15 @@ function LogsManage() {
   const getLevelTextColor = (level: string) => {
     switch (level?.toUpperCase()) {
       case 'ERROR':
-        return 'text-red-600'
+        return 'text-red-600 dark:text-red-400'
       case 'WARNING':
-        return 'text-yellow-600'
+        return 'text-yellow-600 dark:text-yellow-400'
       case 'INFO':
-        return 'text-blue-600'
+        return 'text-blue-600 dark:text-blue-400'
       case 'DEBUG':
-        return 'text-gray-600'
+        return 'text-gray-600 dark:text-gray-400'
       default:
-        return 'text-gray-600'
+        return 'text-gray-600 dark:text-gray-400'
     }
   }
 
@@ -245,21 +216,21 @@ function LogsManage() {
   }, [autoRefresh, filters])
 
   return (
-    <div className="p-6">
+    <div className="p-6 h-screen flex flex-col">
       {/* 页面标题 */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+      <div className="mb-4 flex-shrink-0">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
           <FileTextOutlined className="text-blue-600" style={{ fontSize: '36px' }} />
-          日志管理
+          系统日志管理
         </h1>
-        <p className="text-gray-600 mt-1">查看系统运行日志和事件记录</p>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">查看系统运行日志和事件记录</p>
       </div>
 
       {/* 过滤器 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 shadow-sm hover:shadow-md transition-shadow">
+      <div className="glass-card p-4 mb-4 flex-shrink-0">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">主机筛选</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">主机筛选</label>
             <Select
               className="w-full"
               placeholder="全部主机"
@@ -273,7 +244,7 @@ function LogsManage() {
             </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">日志级别</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">日志级别</label>
             <Select
               className="w-full"
               placeholder="全部级别"
@@ -288,7 +259,7 @@ function LogsManage() {
             </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">显示条数</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">显示条数</label>
             <Select
               className="w-full"
               value={filters.limit}
@@ -314,138 +285,218 @@ function LogsManage() {
         </div>
       </div>
 
-      {/* 日志列表 */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
-            <FileTextOutlined className="text-blue-600" />
-            日志记录
-          </h2>
-          <div className="flex items-center gap-2">
-            <Button
-              size="small"
-              icon={autoRefresh ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
-              onClick={toggleAutoRefresh}
-              className={autoRefresh ? 'bg-green-100 text-green-700 border-green-300' : ''}
-            >
-              {autoRefresh ? '停止刷新' : '自动刷新'}
-            </Button>
-            <Button
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={clearLogs}
-            >
-              清空显示
-            </Button>
-          </div>
-        </div>
-        <div className="max-h-96 overflow-y-auto">
-          {loading && filteredLogs.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 text-sm">
-              <ReloadOutlined spin className="text-xl" />
-              <span className="ml-2">加载日志中...</span>
-            </div>
-          ) : filteredLogs.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 text-sm">
-              <FileTextOutlined className="text-xl" />
-              <span className="ml-2">暂无日志记录</span>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-200">
-              {filteredLogs.map((log, index) => {
-                const level = log.level || 'INFO'
-                const timestamp = log.timestamp || new Date().toISOString()
-                const time = new Date(timestamp).toLocaleString('zh-CN')
-                const message = log.message || log.content || '无消息内容'
-                const host = log.host || '系统'
-                const actions = log.actions || '未知操作'
-                const success = log.success !== undefined ? (log.success ? '成功' : '失败') : '未知'
-                const successColor = log.success === true ? 'text-green-600' : (log.success === false ? 'text-red-600' : 'text-gray-600')
-                const hasResults = log.results && Object.keys(log.results).length > 0
-                const hasExecute = log.execute && log.execute !== 'None' && log.execute.trim() !== ''
-
-                return (
-                  <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-start gap-3">
-                      <div className={`w-2 h-2 ${getLevelColor(level)} rounded-full mt-2 flex-shrink-0`}></div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-semibold text-gray-600">{host}</span>
-                            <span className={`text-xs ${getLevelTextColor(level)} font-medium uppercase`}>{level}</span>
-                            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">{actions}</span>
-                            <span className={`text-xs ${successColor} font-medium`}>{success}</span>
-                            {hasResults && (
-                              <Button
-                                size="small"
-                                type="link"
-                                icon={<EyeOutlined />}
-                                onClick={() => showResults(log)}
-                                className="text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 px-2 py-0 h-6 border-0"
-                              >
-                                详情
-                              </Button>
-                            )}
-                            {hasExecute && (
-                              <Button
-                                size="small"
-                                type="link"
-                                icon={<BugOutlined />}
-                                onClick={() => showExecute(log)}
-                                className="text-xs bg-orange-100 hover:bg-orange-200 text-orange-700 px-2 py-0 h-6 border-0"
-                              >
-                                堆栈
-                              </Button>
-                            )}
-                          </div>
-                          <span className="text-xs text-gray-500">{time}</span>
-                        </div>
-                        <p className="text-sm text-gray-800 break-words">{message}</p>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+      {/* 统计信息 */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 flex-shrink-0">
+        <Card className="glass-card shadow-sm hover:shadow-md transition-shadow">
+          <Statistic
+            title={<span className="text-gray-700 dark:text-gray-300">错误</span>}
+            value={statistics.ERROR}
+            prefix={<AlertOutlined className="text-red-600 dark:text-red-400" />}
+            valueStyle={{ color: 'var(--error)' }}
+          />
+        </Card>
+        <Card className="glass-card shadow-sm hover:shadow-md transition-shadow">
+          <Statistic
+            title={<span className="text-gray-700 dark:text-gray-300">警告</span>}
+            value={statistics.WARNING}
+            prefix={<AlertOutlined className="text-yellow-600 dark:text-yellow-400" />}
+            valueStyle={{ color: 'var(--warning)' }}
+          />
+        </Card>
+        <Card className="glass-card shadow-sm hover:shadow-md transition-shadow">
+          <Statistic
+            title={<span className="text-gray-700 dark:text-gray-300">信息</span>}
+            value={statistics.INFO}
+            prefix={<InfoCircleOutlined className="text-blue-600 dark:text-blue-400" />}
+            valueStyle={{ color: 'var(--info)' }}
+          />
+        </Card>
+        <Card className="glass-card shadow-sm hover:shadow-md transition-shadow">
+          <Statistic
+            title={<span className="text-gray-700 dark:text-gray-300">调试</span>}
+            value={statistics.DEBUG}
+            prefix={<BugOutlined className="text-gray-600 dark:text-gray-400" />}
+            valueStyle={{ color: 'var(--text-secondary)' }}
+          />
+        </Card>
       </div>
 
-      {/* 统计信息 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <Statistic
-            title="错误"
-            value={statistics.ERROR}
-            prefix={<AlertOutlined className="text-red-600" />}
-            valueStyle={{ color: '#dc2626' }}
-          />
-        </Card>
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <Statistic
-            title="警告"
-            value={statistics.WARNING}
-            prefix={<AlertOutlined className="text-yellow-600" />}
-            valueStyle={{ color: '#ca8a04' }}
-          />
-        </Card>
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <Statistic
-            title="信息"
-            value={statistics.INFO}
-            prefix={<InfoCircleOutlined className="text-blue-600" />}
-            valueStyle={{ color: '#2563eb' }}
-          />
-        </Card>
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <Statistic
-            title="调试"
-            value={statistics.DEBUG}
-            prefix={<BugOutlined className="text-gray-600" />}
-            valueStyle={{ color: '#4b5563' }}
-          />
-        </Card>
+      {/* 两列布局：左边日志列表，右边详情 */}
+      <div className="flex gap-4 flex-1 min-h-0">
+        {/* 左侧：日志列表 */}
+        <div className="glass-card flex-1 flex flex-col">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
+            <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+              <FileTextOutlined className="text-blue-600" />
+              日志记录
+            </h2>
+            <div className="flex items-center gap-2">
+              <Button
+                size="small"
+                icon={autoRefresh ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
+                onClick={toggleAutoRefresh}
+                className={autoRefresh ? 'bg-green-100 text-green-700 border-green-300' : ''}
+              >
+                {autoRefresh ? '停止刷新' : '自动刷新'}
+              </Button>
+              <Button
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={clearLogs}
+              >
+                清空显示
+              </Button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {loading && filteredLogs.length === 0 ? (
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                <ReloadOutlined spin className="text-xl" />
+                <span className="ml-2">加载日志中...</span>
+              </div>
+            ) : filteredLogs.length === 0 ? (
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                <FileTextOutlined className="text-xl" />
+                <span className="ml-2">暂无日志记录</span>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                {filteredLogs.map((log, index) => {
+                  const level = log.level || 'INFO'
+                  const timestamp = log.timestamp || new Date().toISOString()
+                  const time = new Date(timestamp).toLocaleString('zh-CN')
+                  const message = log.message || log.content || '无消息内容'
+                  const host = log.host || '系统'
+                  const actions = log.actions || '未知操作'
+                  const success = log.success !== undefined ? (log.success ? '成功' : '失败') : '未知'
+                  const successColor = log.success === true ? 'text-green-600' : (log.success === false ? 'text-red-600' : 'text-gray-600')
+                  const isSelected = selectedLog === log
+
+                  return (
+                    <div 
+                      key={index} 
+                      className={`p-4 cursor-pointer transition-colors ${
+                        isSelected 
+                          ? 'bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500' 
+                          : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                      }`}
+                      onClick={() => setSelectedLog(log)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-2 h-2 ${getLevelColor(level)} rounded-full mt-2 flex-shrink-0`}></div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{host}</span>
+                              <span className={`text-xs ${getLevelTextColor(level)} font-medium uppercase`}>{level}</span>
+                              <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">{actions}</span>
+                              <span className={`text-xs ${successColor} dark:brightness-125 font-medium`}>{success}</span>
+                            </div>
+                            <span className="text-xs text-gray-600 dark:text-gray-400">{time}</span>
+                          </div>
+                          <p className="text-sm text-gray-800 dark:text-gray-200 break-words line-clamp-2">{message}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 右侧：日志详情 */}
+        <div className="glass-card w-1/2 flex flex-col">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+              <EyeOutlined className="text-blue-600" />
+              日志详情
+            </h2>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            {selectedLog ? (
+              <div className="space-y-4">
+                {/* 基本信息 */}
+                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">基本信息</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-start">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-20 flex-shrink-0">主机:</span>
+                      <span className="text-xs text-gray-800 dark:text-gray-200">{selectedLog.host || '系统'}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-20 flex-shrink-0">级别:</span>
+                      <span className={`text-xs ${getLevelTextColor(selectedLog.level || 'INFO')} font-medium uppercase`}>
+                        {selectedLog.level || 'INFO'}
+                      </span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-20 flex-shrink-0">操作:</span>
+                      <span className="text-xs text-gray-800 dark:text-gray-200">{selectedLog.actions || '未知操作'}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-20 flex-shrink-0">状态:</span>
+                      <span className={`text-xs font-medium ${
+                        selectedLog.success === true ? 'text-green-600' : 
+                        selectedLog.success === false ? 'text-red-600' : 'text-gray-600'
+                      }`}>
+                        {selectedLog.success !== undefined ? (selectedLog.success ? '成功' : '失败') : '未知'}
+                      </span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-20 flex-shrink-0">时间:</span>
+                      <span className="text-xs text-gray-800 dark:text-gray-200">
+                        {new Date(selectedLog.timestamp || new Date().toISOString()).toLocaleString('zh-CN')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 消息内容 */}
+                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">消息内容</h3>
+                  <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
+                    {selectedLog.message || selectedLog.content || '无消息内容'}
+                  </p>
+                </div>
+
+                {/* 操作结果 */}
+                {selectedLog.results && Object.keys(selectedLog.results).length > 0 && (
+                  <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+                    <h3 className="text-sm font-semibold text-purple-700 dark:text-purple-300 mb-3 flex items-center gap-2">
+                      <EyeOutlined />
+                      操作结果
+                    </h3>
+                    <pre className="text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 p-3 rounded border border-purple-200 dark:border-purple-800 whitespace-pre-wrap break-words overflow-x-auto">
+                      {JSON.stringify(selectedLog.results, null, 2)}
+                    </pre>
+                  </div>
+                )}
+
+                {/* 错误堆栈 */}
+                {selectedLog.execute && selectedLog.execute !== 'None' && selectedLog.execute.trim() !== '' && (
+                  <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
+                    <h3 className="text-sm font-semibold text-red-700 dark:text-red-300 mb-3 flex items-center gap-2">
+                      <BugOutlined />
+                      错误堆栈
+                    </h3>
+                    <pre className="text-xs text-red-700 dark:text-red-400 bg-white dark:bg-gray-800 p-3 rounded border border-red-200 dark:border-red-800 whitespace-pre-wrap break-words font-mono overflow-x-auto">
+                      {selectedLog.execute}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+                <div className="text-center">
+                  <InfoCircleOutlined className="text-4xl mb-2" />
+                  <p className="text-sm">请从左侧选择一条日志查看详情</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )

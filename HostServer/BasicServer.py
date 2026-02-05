@@ -175,6 +175,40 @@ class BasicServer:
                 return False
         return False
 
+    # 保存虚拟机状态到数据库 ########################################################
+    def vm_status_set(self, vm_uuid: str, status_name: str) -> bool:
+        """保存虚拟机操作状态到数据库
+        :param vm_uuid: 虚拟机UUID
+        :param status_name: 状态名称（启动/关机/强制关机/强制重启/暂停/恢复/重装/改密/修改配置）
+        :return: 是否成功
+        """
+        if self.save_data and self.hs_config.server_name:
+            try:
+                from MainObject.Public.HWStatus import HWStatus
+                import time
+                # 创建状态对象
+                hw_status = HWStatus()
+                hw_status.vm_state = status_name
+                hw_status.on_update = int(time.time())
+                # 保存到数据库
+                success = self.save_data.add_vm_status(
+                    self.hs_config.server_name,
+                    vm_uuid,
+                    hw_status
+                )
+                if success:
+                    logger.debug(
+                        f"[{self.hs_config.server_name}] 虚拟机 {vm_uuid} "
+                        f"状态 '{status_name}' 已保存"
+                    )
+                return success
+            except Exception as e:
+                logger.error(
+                    f"[{self.hs_config.server_name}] 保存虚拟机状态失败: {e}"
+                )
+                return False
+        return False
+
     # 保存数据到数据库 ##############################################################
     def data_set(self) -> bool:
         if self.save_data and self.hs_config.server_name:
@@ -835,6 +869,10 @@ class BasicServer:
     def VMUpdate(self, vm_conf: VMConfig, vm_last: VMConfig) -> ZMessage:
         # 保存到数据库 =========================================================
         self.data_set()
+        
+        # 保存虚拟机状态
+        self.vm_status_set(vm_conf.vm_uuid, "修改配置")
+        
         # 记录日志 =============================================================
         hs_result = ZMessage(
             success=True, action="VMUpdate",
@@ -849,13 +887,71 @@ class BasicServer:
             all_status = self.save_data.get_vm_status(
                 self.hs_config.server_name, start_timestamp=s_t,
                 end_timestamp=e_t)
+            
+            # 如果指定了vm_name，检查是否需要从API获取实际状态
             if vm_name:
-                return {vm_name: all_status.get(vm_name, [])}
+                vm_status_list = all_status.get(vm_name, [])
+                
+                # 如果没有状态记录或最新状态为未知，尝试从API获取实际状态
+                if not vm_status_list or (vm_status_list and 
+                    hasattr(vm_status_list[-1], 'vm_status') and 
+                    vm_status_list[-1].vm_status in ['未知', 'unknown', '', None]):
+                    try:
+                        # 调用子类实现的获取实际状态方法
+                        actual_status = self.VMStatusAPI(vm_name)
+                        if actual_status:
+                            logger.info(f"从API获取虚拟机 {vm_name} 实际状态: {actual_status}")
+                            # 如果获取到实际状态，返回包含实际状态的列表
+                            if vm_status_list:
+                                vm_status_list[-1].vm_status = actual_status
+                            else:
+                                # 创建新的状态记录
+                                new_status = HWStatus()
+                                new_status.vm_status = actual_status
+                                new_status.timestamp = datetime.datetime.now().timestamp()
+                                vm_status_list = [new_status]
+                    except Exception as e:
+                        logger.warning(f"从API获取虚拟机状态失败: {str(e)}")
+                
+                return {vm_name: vm_status_list}
+            
+            # 如果没有指定vm_name，对所有虚拟机检查状态
+            for vm_uuid in self.vm_saving.keys():
+                vm_status_list = all_status.get(vm_uuid, [])
+                
+                # 如果没有状态记录或最新状态为未知，尝试从API获取实际状态
+                if not vm_status_list or (vm_status_list and 
+                    hasattr(vm_status_list[-1], 'vm_status') and 
+                    vm_status_list[-1].vm_status in ['未知', 'unknown', '', None]):
+                    try:
+                        actual_status = self.VMStatusAPI(vm_uuid)
+                        if actual_status:
+                            logger.info(f"从API获取虚拟机 {vm_uuid} 实际状态: {actual_status}")
+                            if vm_status_list:
+                                vm_status_list[-1].vm_status = actual_status
+                            else:
+                                new_status = HWStatus()
+                                new_status.vm_status = actual_status
+                                new_status.timestamp = datetime.datetime.now().timestamp()
+                                vm_status_list = [new_status]
+                            all_status[vm_uuid] = vm_status_list
+                    except Exception as e:
+                        logger.warning(f"从API获取虚拟机 {vm_uuid} 状态失败: {str(e)}")
+            
             return all_status
         return {}
 
     # 虚拟机截图 ####################################################################
     def VMScreen(self, vm_name: str = "") -> str:
+        return ""
+
+    # 获取虚拟机实际状态（从API）####################################################
+    def VMStatusAPI(self, vm_name: str) -> str:
+        """
+        从虚拟化平台API获取虚拟机实际状态
+        子类需要实现此方法以返回虚拟机的实际运行状态
+        返回值示例: "运行中", "已关机", "暂停", "未知" 等
+        """
         return ""
 
     # 删除虚拟机 ####################################################################
@@ -875,12 +971,28 @@ class BasicServer:
 
     # 虚拟机电源 ####################################################################
     def VMPowers(self, vm_name: str, p: VMPowers) -> ZMessage:
+        # 映射电源操作到状态名称
+        power_status_map = {
+            VMPowers.S_START: "启动",
+            VMPowers.S_CLOSE: "关机",
+            VMPowers.H_CLOSE: "强制关机",
+            VMPowers.H_RESET: "强制重启",
+            VMPowers.S_PAUSE: "暂停",
+            VMPowers.S_RESUME: "恢复"
+        }
+        
+        # 保存虚拟机状态
+        status_name = power_status_map.get(p, "未知操作")
+        self.vm_status_set(vm_name, status_name)
+        
         return ZMessage(
             success=False, action="VMPowers",
             message="操作成功完成")
 
     # 安装虚拟机 ####################################################################
     def VMSetups(self, vm_conf: VMConfig) -> ZMessage:
+        # 保存虚拟机状态
+        self.vm_status_set(vm_conf.vm_uuid, "重装")
         pass
 
     # 设置虚拟机密码 ################################################################
@@ -894,6 +1006,10 @@ class BasicServer:
         ap_config_dict = vm_config.__save__()
         ap_config = VMConfig(**ap_config_dict)
         ap_config.os_pass = os_pass
+        
+        # 保存虚拟机状态
+        self.vm_status_set(vm_name, "改密")
+        
         return self.VMUpdate(ap_config, vm_config)
 
     # 备份虚拟机 ####################################################################

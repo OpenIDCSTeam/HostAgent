@@ -200,18 +200,18 @@ function TaskManage() {
     <div>
       {/* 页面标题 */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
           <span className="iconify text-purple-600" data-icon="mdi:playlist-check" style={{ width: '36px', height: '36px' }}></span>
           任务管理
         </h1>
-        <p className="text-gray-600 mt-1">查看虚拟机任务执行情况和状态</p>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">查看虚拟机任务执行情况和状态</p>
       </div>
 
       {/* 过滤器 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 hover:shadow-md transition-shadow duration-200">
+      <div className="glass-card p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">主机筛选</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>主机筛选</label>
             <Select
               className="w-full"
               placeholder="全部主机"
@@ -225,7 +225,7 @@ function TaskManage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">任务状态</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>任务状态</label>
             <Select
               className="w-full"
               placeholder="全部状态"
@@ -255,56 +255,56 @@ function TaskManage() {
 
       {/* 任务统计 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
+        <div className="glass-card p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
               <span className="iconify text-yellow-600" data-icon="mdi:clock-outline" style={{ width: '20px', height: '20px' }}></span>
             </div>
             <div>
-              <p className="text-xs text-gray-600 font-medium">等待中</p>
-              <p className="text-lg font-bold text-gray-800">{statistics.pending}</p>
+              <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>等待中</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{statistics.pending}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
+        <div className="glass-card p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
               <span className="iconify text-blue-600" data-icon="mdi:play-circle" style={{ width: '20px', height: '20px' }}></span>
             </div>
             <div>
-              <p className="text-xs text-gray-600 font-medium">运行中</p>
-              <p className="text-lg font-bold text-gray-800">{statistics.running}</p>
+              <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>运行中</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{statistics.running}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
+        <div className="glass-card p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
               <span className="iconify text-green-600" data-icon="mdi:check-circle" style={{ width: '20px', height: '20px' }}></span>
             </div>
             <div>
-              <p className="text-xs text-gray-600 font-medium">已完成</p>
-              <p className="text-lg font-bold text-gray-800">{statistics.completed}</p>
+              <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>已完成</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{statistics.completed}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
+        <div className="glass-card p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
               <span className="iconify text-red-600" data-icon="mdi:close-circle" style={{ width: '20px', height: '20px' }}></span>
             </div>
             <div>
-              <p className="text-xs text-gray-600 font-medium">失败</p>
-              <p className="text-lg font-bold text-gray-800">{statistics.failed}</p>
+              <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>失败</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{statistics.failed}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* 任务列表 */}
-      <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-200">
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+      <div className="glass-card">
+        <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-primary)' }}>
+          <h2 className="text-base font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
             <span className="iconify text-purple-600" data-icon="mdi:format-list-bulleted" style={{ width: '20px', height: '20px' }}></span>
             任务列表
           </h2>
@@ -331,17 +331,17 @@ function TaskManage() {
         </div>
         <div className="max-h-96 overflow-y-auto">
           {loading ? (
-            <div className="p-8 text-center text-gray-500 text-sm">
+            <div className="p-8 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
               <span className="iconify animate-spin" data-icon="mdi:loading" style={{ width: '20px', height: '20px' }}></span>
               <span className="ml-2">加载任务中...</span>
             </div>
           ) : filteredTasks.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 text-sm">
+            <div className="p-8 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
               <span className="iconify" data-icon="mdi:playlist-remove" style={{ width: '20px', height: '20px' }}></span>
               <span className="ml-2">暂无任务记录</span>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y" style={{ borderColor: 'var(--border-primary)' }}>
               {filteredTasks.map((task, index) => {
                 const statusInfo = getStatusInfo(task.status || 'pending')
                 const taskType = task.type || task.task_type || '未知'
@@ -353,7 +353,12 @@ function TaskManage() {
                 return (
                   <div
                     key={index}
-                    className="p-4 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                    className="p-4 transition-colors duration-200 cursor-pointer"
+                    style={{
+                      ':hover': { background: 'var(--bg-hover)' }
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     onClick={() => showTaskDetail(task)}
                   >
                     <div className="flex items-start gap-3">
@@ -363,16 +368,16 @@ function TaskManage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-gray-800">{taskType}</span>
+                            <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{taskType}</span>
                             <span className={`text-xs ${statusInfo.textColor} ${statusInfo.bgColor} px-2 py-1 rounded-full font-medium`}>
                               {statusInfo.text}
                             </span>
                           </div>
-                          <span className="text-xs text-gray-500">{time}</span>
+                          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{time}</span>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-sm text-gray-700">{description}</p>
-                          <div className="flex items-center gap-4 text-xs text-gray-600">
+                          <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{description}</p>
+                          <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-secondary)' }}>
                             <span className="flex items-center gap-1">
                               <span className="iconify" data-icon="mdi:server" style={{ width: '14px', height: '14px' }}></span>
                               {hostName}
@@ -411,11 +416,11 @@ function TaskManage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">任务类型</label>
-                <p className="text-sm font-semibold text-gray-800">{selectedTask.type || selectedTask.task_type || '未知'}</p>
+                <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>任务类型</label>
+                <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{selectedTask.type || selectedTask.task_type || '未知'}</p>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">状态</label>
+                <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>状态</label>
                 {(() => {
                   const statusInfo = getStatusInfo(selectedTask.status || 'pending')
                   return (
@@ -427,38 +432,38 @@ function TaskManage() {
                 })()}
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">主机</label>
-                <p className="text-sm text-gray-800">{selectedTask.hs_name || '未知主机'}</p>
+                <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>主机</label>
+                <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{selectedTask.hs_name || '未知主机'}</p>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">虚拟机</label>
-                <p className="text-sm text-gray-800">{selectedTask.vm_name || selectedTask.vm_uuid || '未知虚拟机'}</p>
+                <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>虚拟机</label>
+                <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{selectedTask.vm_name || selectedTask.vm_uuid || '未知虚拟机'}</p>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">描述</label>
-              <p className="text-sm text-gray-800">{selectedTask.description || selectedTask.message || '无描述'}</p>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>描述</label>
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{selectedTask.description || selectedTask.message || '无描述'}</p>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">创建时间</label>
-              <p className="text-sm text-gray-800">{formatTime(selectedTask.created_at || selectedTask.timestamp)}</p>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>创建时间</label>
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{formatTime(selectedTask.created_at || selectedTask.timestamp)}</p>
             </div>
 
             {selectedTask.error_message && (
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">错误信息</label>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-sm text-red-800 font-mono">{selectedTask.error_message}</p>
+                <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>错误信息</label>
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                  <p className="text-sm text-red-800 dark:text-red-300 font-mono">{selectedTask.error_message}</p>
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">完整数据</label>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 max-h-40 overflow-y-auto">
-                <pre className="text-xs text-gray-700 font-mono">{JSON.stringify(selectedTask, null, 2)}</pre>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>完整数据</label>
+              <div className="rounded-lg p-3 max-h-40 overflow-y-auto" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)' }}>
+                <pre className="text-xs font-mono" style={{ color: 'var(--text-primary)' }}>{JSON.stringify(selectedTask, null, 2)}</pre>
               </div>
             </div>
           </div>

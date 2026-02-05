@@ -7,7 +7,6 @@ import {
     Select,
     InputNumber,
     message,
-    Progress,
     Card,
     Row,
     Col,
@@ -31,7 +30,8 @@ import {
     SettingOutlined,
     FolderOutlined,
     DatabaseOutlined,
-    CopyOutlined
+    CopyOutlined,
+    ExclamationCircleOutlined
 } from '@ant-design/icons'
 import {useNavigate} from 'react-router-dom'
 import api from '@/utils/apis.ts'
@@ -213,35 +213,41 @@ function HostManage() {
         loadHosts()
     }, [])
 
-    // 定时刷新状态 - 只刷新状态，不刷新整个主机列表
+    // 定时刷新状态 - 刷新主机列表和状态，确保is_enabled等字段实时更新
     useEffect(() => {
-        const loadHostStatus = async () => {
+        const refreshHostsAndStatus = async () => {
             try {
-                // 从当前主机列表获取主机名（使用ref避免闭包问题）
-                const hostNames = Object.keys(hostsRef.current)
-                if (hostNames.length > 0) {
-                    const statusPromises = hostNames.map(name =>
-                        api.getServerStatus(name).catch(() => null)
-                    )
-                    const statusResults = await Promise.all(statusPromises)
+                // 1. 刷新主机列表（包含is_enabled状态）
+                const hostsResult = await api.getServerDetail()
+                if (hostsResult.code === 200 && hostsResult.data) {
+                    setHosts(hostsResult.data as unknown as Record<string, Host>)
+                    
+                    // 2. 并行刷新所有主机状态
+                    const hostNames = Object.keys(hostsResult.data)
+                    if (hostNames.length > 0) {
+                        const statusPromises = hostNames.map(name =>
+                            api.getServerStatus(name).catch(() => null)
+                        )
+                        const statusResults = await Promise.all(statusPromises)
 
-                    // 构建状态映射
-                    const statusMap: Record<string, HostStatus> = {}
-                    hostNames.forEach((name, index) => {
-                        const statusResult = statusResults[index] as any
-                        if (statusResult && statusResult.code === 200) {
-                            statusMap[name] = statusResult.data
-                        }
-                    })
-                    setHostsStatus(statusMap)
+                        // 构建状态映射
+                        const statusMap: Record<string, HostStatus> = {}
+                        hostNames.forEach((name, index) => {
+                            const statusResult = statusResults[index] as any
+                            if (statusResult && statusResult.code === 200) {
+                                statusMap[name] = statusResult.data
+                            }
+                        })
+                        setHostsStatus(statusMap)
+                    }
                 }
             } catch (error) {
-                console.error('刷新主机状态失败:', error)
+                console.error('刷新主机数据失败:', error)
             }
         }
 
         // 只通过定时器执行，不立即执行
-        const interval = setInterval(loadHostStatus, 10000)
+        const interval = setInterval(refreshHostsAndStatus, 10000)
 
         return () => clearInterval(interval)
     }, [])
@@ -488,14 +494,49 @@ function HostManage() {
         }
     }
 
-    // 切换主机状态
+    // 切换主机状态（启用/禁用）
     const handleToggle = async (name: string, enable: boolean) => {
-        try {
-            await api.toggleServerPower(name, enable)
-            message.success(enable ? '主机已启动' : '主机已停止')
-            loadHosts()
-        } catch (error) {
-            message.error('操作失败')
+        // 如果是禁用操作，弹出确认对话框
+        if (!enable) {
+            Modal.confirm({
+                title: '确认禁用主机',
+                icon: <ExclamationCircleOutlined style={{color: '#faad14'}}/>,
+                content: (
+                    <div>
+                        <p>确定要禁用主机 <strong>"{name}"</strong> 吗？</p>
+                        <p style={{color: '#ff4d4f', marginTop: 8}}>
+                            禁用后：
+                        </p>
+                        <ul style={{marginTop: 4, paddingLeft: 20}}>
+                            <li>该主机的虚拟机操作将不可用</li>
+                            <li>系统将不再自动更新该主机状态</li>
+                            <li>运行中的虚拟机不会被关闭</li>
+                        </ul>
+                    </div>
+                ),
+                okText: '确认禁用',
+                okType: 'danger',
+                cancelText: '取消',
+                mask: false,
+                onOk: async () => {
+                    try {
+                        await api.toggleServerPower(name, enable)
+                        message.success('主机已禁用')
+                        loadHosts()
+                    } catch (error) {
+                        message.error('禁用失败')
+                    }
+                }
+            })
+        } else {
+            // 启用操作直接执行
+            try {
+                await api.toggleServerPower(name, enable)
+                message.success('主机已启用')
+                loadHosts()
+            } catch (error) {
+                message.error('启用失败')
+            }
         }
     }
 
@@ -596,7 +637,7 @@ function HostManage() {
         return (
             <Card
                 key={name}
-                className="mb-4 hover:shadow-lg transition-shadow"
+                className="glass-card mb-4 hover:shadow-lg transition-shadow"
                 title={
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -605,12 +646,12 @@ function HostManage() {
                                 <CloudServerOutlined className="text-white text-2xl"/>
                             </div>
                             <div>
-                                <div className="font-semibold text-gray-800">{name}</div>
-                                <div className="text-sm text-gray-500">{typeInfo.description || host.type}</div>
+                                <div className="font-semibold text-gray-800 dark:text-gray-100">{name}</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">{typeInfo.description || host.type}</div>
                             </div>
                         </div>
-                        <Tag color={host.status === 'active' ? 'success' : 'default'}>
-                            {host.status === 'active' ? '运行中' : '已停止'}
+                        <Tag color={host.status === 'active' ? 'success' : 'error'}>
+                            {host.status === 'active' ? '已启用' : '已禁用'}
                         </Tag>
                     </div>
                 }
@@ -620,38 +661,45 @@ function HostManage() {
                             type="link"
                             onClick={() => navigate(`/hosts/${name}/vms`)}
                             title="虚拟机管理"
+                            disabled={host.status !== 'active'}
                         >
-                            虚拟机管理
+                            管理
                         </Button>
                         <Button
                             type="text"
                             icon={<CloudSyncOutlined/>}
                             onClick={() => handleScanBackups(name)}
                             title="扫描备份"
+                            disabled={host.status !== 'active'}
                         />
                         <Button
                             type="text"
                             icon={<ScanOutlined/>}
                             onClick={() => handleScanVMs(name)}
                             title="扫描虚拟机"
+                            disabled={host.status !== 'active'}
                         />
                         <Button
-                            type="text"
+                            type={host.status === 'active' ? 'default' : 'primary'}
+                            danger={host.status === 'active'}
                             icon={host.status === 'active' ? <StopOutlined/> : <PlayCircleOutlined/>}
                             onClick={() => handleToggle(name, host.status !== 'active')}
-                            title={host.status === 'active' ? '停止' : '启动'}
-                        />
+                        >
+                            {host.status === 'active' ? '禁用' : '启用'}
+                        </Button>
                         <Button
                             type="text"
                             icon={<EditOutlined/>}
                             onClick={() => handleEdit(name)}
                             title="编辑"
+                            disabled={host.status !== 'active'}
                         />
                         <Button
                             type="text"
                             danger
                             icon={<DeleteOutlined/>}
                             title="删除"
+                            disabled={host.status !== 'active'}
                             onClick={() => {
                                 Modal.confirm({
                                     title: '确认删除',
@@ -660,6 +708,7 @@ function HostManage() {
                                     okText: '确认删除',
                                     okType: 'danger',
                                     cancelText: '取消',
+                                    mask: false,
                                     onOk: () => handleDelete(name)
                                 })
                             }}
@@ -672,16 +721,16 @@ function HostManage() {
                     <Col span={8} style={{minWidth: '240px', flexShrink: 0, flexGrow: 0}}>
                         <div className="space-y-1 text-xs">
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600">主机连接IP:</span>
-                                <span className="truncate">{host.addr || '未配置'}</span>
+                                <span className="text-gray-600 dark:text-gray-400">主机连接IP:</span>
+                                <span className="truncate dark:text-gray-200">{host.addr || '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-start">
-                                <span className="text-gray-600">公共公共IP:</span>
+                                <span className="text-gray-600 dark:text-gray-400">公共公共IP:</span>
                                 <div className="text-right max-w-[60%]">
                                     {host.config?.public_addr && host.config.public_addr.length > 0 ? (
                                         host.config.public_addr.map((ip, idx) => (
                                             <div key={idx} className="flex items-center justify-end gap-1 mb-1">
-                                                <span className=" truncate">{ip}</span>
+                                                <span className="truncate dark:text-gray-200">{ip}</span>
                                                 <Tooltip title="复制">
                                                     <CopyOutlined
                                                         className="text-gray-400 hover:text-blue-600 cursor-pointer text-xs"
@@ -695,83 +744,83 @@ function HostManage() {
                                 </div>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600">访问端口:</span>
-                                <span>{host.config?.server_port && host.config.server_port > 0 ? host.config.server_port : '未配置'}</span>
+                                <span className="text-gray-600 dark:text-gray-400">访问端口:</span>
+                                <span className="dark:text-gray-200">{host.config?.server_port && host.config.server_port > 0 ? host.config.server_port : '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600">桌面端口:</span>
-                                <span>{host.config?.remote_port || '未配置'}</span>
+                                <span className="text-gray-600 dark:text-gray-400">桌面端口:</span>
+                                <span className="dark:text-gray-200">{host.config?.remote_port || '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600">虚拟机前缀:</span>
-                                <span className=" truncate">{host.config?.filter_name || '未配置'}</span>
+                                <span className="text-gray-600 dark:text-gray-400">虚拟机前缀:</span>
+                                <span className="truncate dark:text-gray-200">{host.config?.filter_name || '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600">虚拟机数量:</span>
-                                <span
+                                <span className="text-gray-600 dark:text-gray-400">虚拟机数量:</span>
+                                <span className="dark:text-gray-200"
                                 >{host.vm_count || 0} / {host.config?.limits_nums || 0} 台</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600">内网网桥:</span>
-                                <span>{host.config?.network_nat || '未配置'}</span>
+                                <span className="text-gray-600 dark:text-gray-400">内网网桥:</span>
+                                <span className="dark:text-gray-200">{host.config?.network_nat || '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600">公网网桥:</span>
-                                <span>{host.config?.network_pub || '未配置'}</span>
+                                <span className="text-gray-600 dark:text-gray-400">公网网桥:</span>
+                                <span className="dark:text-gray-200">{host.config?.network_pub || '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600">端口范围:</span>
-                                <span
+                                <span className="text-gray-600 dark:text-gray-400">端口范围:</span>
+                                <span className="dark:text-gray-200"
                                 >{host.config?.ports_start && host.config?.ports_close ? `${host.config.ports_start}-${host.config.ports_close}` : '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600">爱快地址:</span>
-                                <span className=" truncate">{host.config?.i_kuai_addr || '未配置'}</span>
+                                <span className="text-gray-600 dark:text-gray-400">爱快地址:</span>
+                                <span className="truncate dark:text-gray-200">{host.config?.i_kuai_addr || '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600">模板数:</span>
-                                <span
+                                <span className="text-gray-600 dark:text-gray-400">模板数:</span>
+                                <span className="dark:text-gray-200"
                                 >系统盘 {host.config?.system_maps && Object.keys(host.config.system_maps).length > 0 ? Object.keys(host.config.system_maps).length : 0} / 光盘 {host.config?.images_maps && Object.keys(host.config.images_maps).length > 0 ? Object.keys(host.config.images_maps).length : 0} 个</span>
                             </div>
-                            <div className="flex justify-between items-start">
-                                <span className="text-gray-600">DNS服务器列表:</span>
-                                <div className="text-right max-w-[60%]">
-                                    <span
-                                    >{host.config?.ipaddr_dnss && host.config.ipaddr_dnss.length > 0 ? host.config.ipaddr_dnss.join(', ') : '未配置'}</span>
-                                </div>
-                            </div>
-                            <div>
-                                {host.config?.ipaddr_maps && Object.keys(host.config.ipaddr_maps).length > 0 ? (
-                                    Object.entries(host.config.ipaddr_maps).slice(0, 1).map(([name, config]: [string, any]) => (
-                                        <div key={name} className="space-y-0.5">
-                                            {/* 第一行：起始IP + 最大分配数量 */}
-                                            <div className="flex justify-between">
-                                                <div className="flex items-center space-x-2">
-                                                    <span className="text-gray-500 text-xs">起始:</span>
-                                                    <span className=" truncate text-xs">{config.from}</span>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <span className="text-gray-500 text-xs">分配数:</span>
-                                                    <span className=" text-xs">{config.nums} 个</span>
-                                                </div>
-                                            </div>
-                                            {/* 第二行：网关 + 掩码 */}
-                                            <div className="flex justify-between">
-                                                <div className="flex items-center space-x-2">
-                                                    <span className="text-gray-500 text-xs">网关:</span>
-                                                    <span className=" truncate text-xs">{config.gate}</span>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <span className="text-gray-500 text-xs">掩码:</span>
-                                                    <span className=" text-xs">{config.mask}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="ml-2 text-xs text-gray-500 ">未配置</div>
-                                )}
-                            </div>
+                            {/*<div className="flex justify-between items-start">*/}
+                            {/*    <span className="text-gray-600 dark:text-gray-400">DNS:</span>*/}
+                            {/*    <div className="text-right max-w-[80%]">*/}
+                            {/*        <span className="dark:text-gray-200"*/}
+                            {/*        >{host.config?.ipaddr_dnss && host.config.ipaddr_dnss.length > 0 ? host.config.ipaddr_dnss.join(',') : '未配置'}</span>*/}
+                            {/*    </div>*/}
+                            {/*</div>*/}
+                            {/*<div>*/}
+                            {/*    {host.config?.ipaddr_maps && Object.keys(host.config.ipaddr_maps).length > 0 ? (*/}
+                            {/*        Object.entries(host.config.ipaddr_maps).slice(0, 1).map(([name, config]: [string, any]) => (*/}
+                            {/*            <div key={name} className="space-y-0.5">*/}
+                            {/*                /!* 第一行：起始IP + 最大分配数量 *!/*/}
+                            {/*                <div className="flex justify-between">*/}
+                            {/*                    <div className="flex items-center space-x-2">*/}
+                            {/*                        <span className="text-gray-500 text-xs">IP</span>*/}
+                            {/*                        <span className="truncate text-xs dark:text-gray-200">{config.from}</span>*/}
+                            {/*                    </div>*/}
+                            {/*                    <div className="flex items-center space-x-2">*/}
+                            {/*                        <span className="text-gray-500 text-xs">分配</span>*/}
+                            {/*                        <span className="text-xs dark:text-gray-200">{config.nums} 个</span>*/}
+                            {/*                    </div>*/}
+                            {/*                </div>*/}
+                            {/*                /!* 第二行：网关 + 掩码 *!/*/}
+                            {/*                <div className="flex justify-between">*/}
+                            {/*                    <div className="flex items-center space-x-2">*/}
+                            {/*                        <span className="text-gray-500 text-xs">IP</span>*/}
+                            {/*                        <span className="truncate text-xs dark:text-gray-200">{config.gate}</span>*/}
+                            {/*                    </div>*/}
+                            {/*                    <div className="flex items-center space-x-2">*/}
+                            {/*                        <span className="text-gray-500 text-xs">/</span>*/}
+                            {/*                        <span className="text-xs dark:text-gray-200">{config.mask}</span>*/}
+                            {/*                    </div>*/}
+                            {/*                </div>*/}
+                            {/*            </div>*/}
+                            {/*        ))*/}
+                            {/*    ) : (*/}
+                            {/*        <div className="ml-2 text-xs text-gray-500 ">未配置</div>*/}
+                            {/*    )}*/}
+                            {/*</div>*/}
 
                         </div>
                     </Col>
@@ -788,8 +837,10 @@ function HostManage() {
                                         <span
                                             className="font-bold whitespace-nowrap">{status.cpu_total || 0}核 {cpuPercent.toFixed(1)}%</span>
                                     </div>
-                                    <Progress percent={cpuPercent} strokeColor={getProgressColor(cpuPercent)}
-                                              showInfo={false} size="small"/>
+                                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                        <div className="h-2 transition-all"
+                                             style={{width: `${cpuPercent}%`, backgroundColor: getProgressColor(cpuPercent)}}></div>
+                                    </div>
                                 </div>
 
                                 {/* 内存 */}
@@ -799,8 +850,10 @@ function HostManage() {
                                         <span
                                             className="font-bold whitespace-nowrap">{memUsageGB}GB/{memTotalGB}GB {memPercent.toFixed(1)}%</span>
                                     </div>
-                                    <Progress percent={memPercent} strokeColor={getProgressColor(memPercent)}
-                                              showInfo={false} size="small"/>
+                                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                        <div className="h-2 transition-all"
+                                             style={{width: `${memPercent}%`, backgroundColor: getProgressColor(memPercent)}}></div>
+                                    </div>
                                 </div>
 
                                 {/* 磁盘 */}
@@ -810,8 +863,10 @@ function HostManage() {
                                         <span
                                             className="font-bold whitespace-nowrap">{diskUsageGB.toFixed(1)}GB/{diskTotalGB.toFixed(1)}GB {diskPercent.toFixed(1)}%</span>
                                     </div>
-                                    <Progress percent={diskPercent} strokeColor={getProgressColor(diskPercent)}
-                                              showInfo={false} size="small"/>
+                                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                        <div className="h-2 transition-all"
+                                             style={{width: `${diskPercent}%`, backgroundColor: getProgressColor(diskPercent)}}></div>
+                                    </div>
                                 </div>
 
                                 {/* 网络 */}
@@ -835,8 +890,10 @@ function HostManage() {
                                         <span
                                             className="font-bold whitespace-nowrap">{status.gpu_total || 0}个 {gpuPercent.toFixed(1)}%</span>
                                     </div>
-                                    <Progress percent={gpuPercent} strokeColor={getProgressColor(gpuPercent)}
-                                              showInfo={false} size="small"/>
+                                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                        <div className="h-2 transition-all"
+                                             style={{width: `${gpuPercent}%`, backgroundColor: getProgressColor(gpuPercent)}}></div>
+                                    </div>
                                 </div>
 
                                 {/* 温度/功耗 */}
@@ -863,15 +920,15 @@ function HostManage() {
         <div className="p-6">
             {/* 页面标题 */}
             <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
                     <CloudServerOutlined className="text-blue-600"/>
-                    主机管理
+                    物理主机管理
                 </h1>
-                <p className="text-gray-600 mt-1">管理所有虚拟化主机</p>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">管理所有虚拟化主机</p>
             </div>
 
             {/* 操作栏 */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 flex items-center justify-between">
+            <div className="glass-card p-4 mb-6 flex items-center justify-between">
                 <Space>
                     <Button type="primary" icon={<PlusOutlined/>} onClick={handleAdd}>
                         添加主机
@@ -880,9 +937,9 @@ function HostManage() {
                         刷新
                     </Button>
                 </Space>
-                <div className="text-sm text-gray-500 flex items-center gap-2">
+                <div className="text-sm text-gray-600 dark:text-gray-300 flex items-center gap-2">
                     <InfoCircleOutlined/>
-                    共 <span className="font-medium text-gray-700">{Object.keys(hosts).length}</span> 个主机
+                    共 <span className="font-medium text-gray-800 dark:text-gray-100">{Object.keys(hosts).length}</span> 个主机
                 </div>
             </div>
 

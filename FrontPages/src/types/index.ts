@@ -130,6 +130,15 @@ export interface NATRule {
   description?: string;
   enabled: boolean;
   created_time?: string;
+  // 老前端字段名兼容
+  id?: number;
+  public_port?: number;
+  private_port?: number;
+  internal_ip?: string;
+  wan_port?: number | string;
+  lan_port?: number | string;
+  lan_addr?: string;
+  nat_tips?: string;
 }
 
 // 反向代理配置
@@ -138,6 +147,7 @@ export interface ProxyConfig {
   domain: string;
   backend_ip?: string;
   backend_port: number;
+  proxy_type?: 'http' | 'https';
   ssl_enabled: boolean;
   ssl_cert_path?: string;
   ssl_key_path?: string;

@@ -8,6 +8,8 @@ import App from './App'
 import './index.css'
 // 导入国际化模块（会自动挂载到 window 对象）
 import { initI18n } from './utils/i18n'
+// 导入主题管理
+import { ThemeProvider } from './contexts/ThemeContext'
 
 // 设置dayjs为中文
 dayjs.locale('zh-cn')
@@ -22,9 +24,12 @@ initI18n().then(() => {
 // 渲染React应用
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {/* Ant Design中文配置 */}
-    <ConfigProvider locale={zhCN}>
-      <App />
-    </ConfigProvider>
+    {/* 主题管理 */}
+    <ThemeProvider>
+      {/* Ant Design中文配置 */}
+      <ConfigProvider locale={zhCN}>
+        <App />
+      </ConfigProvider>
+    </ThemeProvider>
   </React.StrictMode>,
 )

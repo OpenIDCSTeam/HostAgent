@@ -112,7 +112,7 @@ class HostServer(BasicServer):
     def HSUnload(self) -> ZMessage:
         try:
             # 专用操作 =========================================================
-            # 检查VM Rest Server是否运行 ======================================
+            # 检查VM Rest Server是否运行 =======================================
             if self.vmrest_pid is None:
                 return ZMessage(
                     success=False, action="HSUnload",
@@ -530,6 +530,24 @@ class HostServer(BasicServer):
             logger.error(f"获取虚拟机截图失败: {str(e)}")
             traceback.print_exc()
             return ""
+
+    # 获取虚拟机实际状态（从API）==============================================
+    def VMStatusAPI(self, vm_name: str) -> str:
+        """从VMWare Workstation API获取虚拟机实际状态"""
+        try:
+            result = self.vmrest_api.powers_get(vm_name)
+            if result.success and result.results:
+                power_state = result.results.get('power_state', '')
+                # 映射VMWare状态到中文状态
+                state_map = {
+                    'poweredOn': '运行中',
+                    'poweredOff': '已关机',
+                    'suspended': '已暂停'
+                }
+                return state_map.get(power_state, '未知')
+        except Exception as e:
+            logger.warning(f"从API获取虚拟机 {vm_name} 状态失败: {str(e)}")
+        return ""
 
     # 虚拟机控制台 =============================================================
     def VMRemote(self, vm_uuid: str, ip_addr: str = "127.0.0.1") -> ZMessage:

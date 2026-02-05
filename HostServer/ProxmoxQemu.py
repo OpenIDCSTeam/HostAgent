@@ -50,8 +50,8 @@ class HostServer(BasicServer):
             logger.info("PVE连接成功")
             return self.proxmox, ZMessage(success=True, action="api_conn")
         except Exception as e:
-            logger.error(f"Failed to connect to Proxmox server: {str(e)}")
-            traceback.print_exc()
+            logger.error(f"PVE连接失败: {str(e)}")
+            # traceback.print_exc()
             self.proxmox = None
             return None, ZMessage(
                 success=False, action="_connect_proxmox",
@@ -702,6 +702,38 @@ class HostServer(BasicServer):
 
         super().VMPowers(vm_name, power)
         return hs_result
+
+    # 获取虚拟机实际状态（从API）==============================================
+    def VMStatusAPI(self, vm_name: str) -> str:
+        """从Proxmox API获取虚拟机实际状态"""
+        try:
+            client, result = self.api_conn()
+            if not result.success:
+                return ""
+            
+            vm_conf = self.VMSelect(vm_name)
+            if vm_conf is None:
+                return ""
+            
+            vmid = self.get_vmid(vm_conf)
+            if vmid is None:
+                return ""
+            
+            vm = client.nodes(self.hs_config.launch_path).qemu(vmid)
+            status = vm.status.current.get()
+            
+            if status:
+                vm_status = status.get('status', '')
+                # 映射Proxmox状态到中文状态
+                state_map = {
+                    'running': '运行中',
+                    'stopped': '已关机',
+                    'paused': '已暂停'
+                }
+                return state_map.get(vm_status, '未知')
+        except Exception as e:
+            logger.warning(f"从API获取虚拟机 {vm_name} 状态失败: {str(e)}")
+        return ""
 
     # 设置虚拟机密码 ###########################################################
     def VMPasswd(self, vm_name: str, os_pass: str) -> ZMessage:

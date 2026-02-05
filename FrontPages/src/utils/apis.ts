@@ -11,7 +11,6 @@ import type {
   ProxyConfig,
   SystemStats,
   PaginationParams,
-  PaginatedResponse,
 } from '@/types';
 
 // ============================================================================
@@ -526,7 +525,7 @@ export const deleteWebProxy = (
 /**
  * 获取用户列表
  */
-export const getUsers = (params?: PaginationParams): Promise<ApiResponse<PaginatedResponse<User>>> => {
+export const getUsers = (params?: PaginationParams): Promise<ApiResponse<User[]>> => {
   return http.get('/api/users', { params });
 };
 

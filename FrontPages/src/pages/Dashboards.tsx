@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Row, Col, Card, Statistic, Button, Modal, Form, Input, Select, Slider, Progress, Tag, message, Space, Divider } from 'antd'
+import { Row, Col, Card, Button, Modal, Form, Input, Select, Slider, Progress, Tag, message, Space, Divider, Typography } from 'antd'
+
+const { Title } = Typography
 import {
   DesktopOutlined,
   CloudServerOutlined,
@@ -537,73 +539,146 @@ function Dashboards() {
    */
   const renderAdminView = () => (
     <>
-      {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className="mb-6">
+      {/* 统计卡片 - 重新设计 */}
+      <Row gutter={[24, 24]} className="mb-6">
         <Col xs={24} sm={8}>
-          <Card className="hover:shadow-lg transition-shadow">
-            <Statistic
-              title="主机总数"
-              value={systemStats.host_count}
-              prefix={<CloudServerOutlined style={{ color: '#3b82f6' }} />}
-              valueStyle={{ color: '#1f2937' }}
-            />
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <Button type="link" onClick={() => navigate('/hosts')} className="p-0">
+          <Card 
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            style={{
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%)',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              borderRadius: '16px',
+              overflow: 'hidden'
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{
+                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+              }}>
+                <CloudServerOutlined className="text-white text-2xl" />
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-gray-500 dark:text-gray-300 mb-1">主机总数</div>
+                <div className="text-4xl font-bold" style={{
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  {systemStats.host_count}
+                </div>
+              </div>
+            </div>
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <Button 
+                type="link" 
+                onClick={() => navigate('/hosts')} 
+                className="p-0 text-blue-600 hover:text-blue-700"
+              >
                 管理主机 →
               </Button>
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card className="hover:shadow-lg transition-shadow">
-            <Statistic
-              title="虚拟机总数"
-              value={systemStats.vm_count}
-              prefix={<DesktopOutlined style={{ color: '#8b5cf6' }} />}
-              valueStyle={{ color: '#1f2937' }}
-            />
-            <div className="mt-2 text-sm text-gray-600">
-              <CheckCircleOutlined className="text-green-500" /> 运行中: {systemStats.running_vm_count}
+          <Card 
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            style={{
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
+              border: '1px solid rgba(139, 92, 246, 0.2)',
+              borderRadius: '16px',
+              overflow: 'hidden'
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{
+                background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
+              }}>
+                <DesktopOutlined className="text-white text-2xl" />
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-gray-500 dark:text-gray-300 mb-1">虚拟机总数</div>
+                <div className="text-4xl font-bold" style={{
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  {systemStats.vm_count}
+                </div>
+              </div>
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              <CheckCircleOutlined className="text-green-500" /> 运行中: <span className="font-semibold">{systemStats.running_vm_count}</span>
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card className="hover:shadow-lg transition-shadow">
-            <Statistic
-              title="系统状态"
-              value="正常运行"
-              prefix={<CheckCircleOutlined style={{ color: '#10b981' }} />}
-              valueStyle={{ color: '#10b981', fontSize: '20px' }}
-            />
-            <div className="mt-2 text-sm text-gray-600">
-              最后更新: {lastUpdate}
+          <Card 
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            style={{
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.2)',
+              borderRadius: '16px',
+              overflow: 'hidden'
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+              }}>
+                <CheckCircleOutlined className="text-white text-2xl" />
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-gray-500 dark:text-gray-300 mb-1">系统状态</div>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  正常运行
+                </div>
+              </div>
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              最后更新: <span className="font-semibold">{lastUpdate}</span>
             </div>
           </Card>
         </Col>
       </Row>
 
       {/* 主要内容区域 */}
-      <Row gutter={[16, 16]}>
+      <Row gutter={[24, 24]}>
         {/* 主机列表 */}
         <Col xs={24} lg={16}>
-          <Card title={<><CloudServerOutlined className="mr-2" />主机概览</>} extra={<Button type="link" onClick={() => navigate('/hosts')}>查看全部 →</Button>}>
-            <div className="space-y-2">
+          <Card 
+            title={<><CloudServerOutlined className="mr-2" />主机概览</>} 
+            extra={<Button type="link" onClick={() => navigate('/hosts')}>查看全部 →</Button>}
+            className="glass-card"
+            style={{ borderRadius: '16px' }}
+          >
+            <div className="space-y-3">
               {Object.entries(hosts).slice(0, 5).map(([name, host]) => (
                 <div
                   key={name}
-                  className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition"
+                  className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md cursor-pointer transition-all duration-300"
                   onClick={() => navigate(`/hosts`)}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                      <CloudServerOutlined className="text-white" />
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                    }}>
+                      <CloudServerOutlined className="text-white text-lg" />
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-800">{name}</div>
-                      <div className="text-xs text-gray-600">{host.addr || '未配置'}</div>
+                      <div className="font-semibold text-gray-800 dark:text-gray-100 text-base">{name}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{host.addr || '未配置'}</div>
                     </div>
                   </div>
-                  <div className="text-sm text-gray-600">{host.vm_count || 0} 台VM</div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold" style={{
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent'
+                    }}>
+                      {host.vm_count || 0}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">台虚拟机</div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -612,52 +687,82 @@ function Dashboards() {
 
         {/* 快速操作 */}
         <Col xs={24} lg={8}>
-          <Card title={<><InfoCircleOutlined className="mr-2" />快速操作</>}>
+          <Card 
+            title={<><InfoCircleOutlined className="mr-2" />快速操作</>}
+            className="glass-card"
+            style={{ borderRadius: '16px' }}
+          >
             <Space direction="vertical" className="w-full" size="middle">
-              <Button
-                block
-                size="large"
-                icon={<PlusOutlined />}
+              <div
+                className="p-4 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-md"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%)',
+                  border: '1px solid rgba(59, 130, 246, 0.2)'
+                }}
                 onClick={() => navigate('/hosts')}
-                className="h-auto py-3"
               >
-                <div className="text-left">
-                  <div className="font-semibold">添加主机</div>
-                  <div className="text-xs text-gray-500">添加新的虚拟化主机</div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                  }}>
+                    <PlusOutlined className="text-white" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-800 dark:text-gray-100">添加主机</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">添加新的虚拟化主机</div>
+                  </div>
                 </div>
-              </Button>
-              <Button
-                block
-                size="large"
-                icon={<SettingOutlined />}
+              </div>
+              <div
+                className="p-4 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-md"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
+                  border: '1px solid rgba(139, 92, 246, 0.2)'
+                }}
                 onClick={() => navigate('/settings')}
-                className="h-auto py-3"
               >
-                <div className="text-left">
-                  <div className="font-semibold">系统设置</div>
-                  <div className="text-xs text-gray-500">管理Token和系统配置</div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
+                  }}>
+                    <SettingOutlined className="text-white" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-800 dark:text-gray-100">系统设置</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">管理Token和系统配置</div>
+                  </div>
                 </div>
-              </Button>
-              <Button
-                block
-                size="large"
-                icon={<SaveOutlined />}
+              </div>
+              <div
+                className="p-4 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-md"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)',
+                  border: '1px solid rgba(16, 185, 129, 0.2)'
+                }}
                 onClick={handleSaveAll}
-                className="h-auto py-3"
-                type="primary"
               >
-                <div className="text-left">
-                  <div className="font-semibold">保存配置</div>
-                  <div className="text-xs">保存所有主机和虚拟机配置</div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                  }}>
+                    <SaveOutlined className="text-white" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-800 dark:text-gray-100">保存配置</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">保存所有主机和虚拟机配置</div>
+                  </div>
                 </div>
-              </Button>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              </div>
+              <div className="p-4 rounded-xl" style={{
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.02) 100%)',
+                border: '1px solid rgba(59, 130, 246, 0.15)'
+              }}>
                 <div className="flex items-center gap-2 mb-2">
-                  <InfoCircleOutlined className="text-blue-600" />
-                  <span className="text-xs font-semibold text-gray-700">提示</span>
+                  <InfoCircleOutlined className="text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">提示</span>
                 </div>
-                <p className="text-xs text-gray-600">
-                  通过<span className="font-medium text-blue-600">主机管理</span>页面可以管理主机和虚拟机。支持使用API+Token进行自动化管理。
+                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                  通过<span className="font-medium text-blue-600 dark:text-blue-400">主机管理</span>页面可以管理主机和虚拟机。支持使用API+Token进行自动化管理。
                 </p>
               </div>
             </Space>
@@ -678,14 +783,14 @@ function Dashboards() {
         {/* 资源使用情况 - 第一行 */}
         <Row gutter={[16, 16]} className="mb-4">
           <Col xs={12} sm={8} lg={4}>
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="glass-card hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                   <ThunderboltOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 mb-1">CPU核心</div>
-                  <div className="text-lg font-bold text-gray-800">
+                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">CPU核心</div>
+                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
                     {userQuota.used_cpu}/{userQuota.quota_cpu}
                   </div>
                 </div>
@@ -694,62 +799,71 @@ function Dashboards() {
             </Card>
           </Col>
           <Col xs={12} sm={8} lg={4}>
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="glass-card hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center">
                   <PlayCircleOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 mb-1">GPU显存</div>
-                  <div className="text-lg font-bold text-gray-800">
-                    {(userQuota.used_gpu / 1024).toFixed(1)}/{(userQuota.quota_gpu / 1024).toFixed(1)}GB
+                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">GPU显存使用率</div>
+                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                    {Math.round((userQuota.used_gpu / userQuota.quota_gpu) * 100)}%
                   </div>
                 </div>
               </div>
               <Progress percent={Math.round((userQuota.used_gpu / userQuota.quota_gpu) * 100)} size="small" strokeColor="#ec4899" />
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {(userQuota.used_gpu / 1024).toFixed(1)}/{(userQuota.quota_gpu / 1024).toFixed(1)}GB
+              </div>
             </Card>
           </Col>
           <Col xs={12} sm={8} lg={4}>
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="glass-card hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
                   <RadarChartOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 mb-1">内存</div>
-                  <div className="text-lg font-bold text-gray-800">
-                    {(userQuota.used_ram / 1024).toFixed(1)}/{(userQuota.quota_ram / 1024).toFixed(1)}GB
+                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">内存使用率</div>
+                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                    {Math.round((userQuota.used_ram / userQuota.quota_ram) * 100)}%
                   </div>
                 </div>
               </div>
               <Progress percent={Math.round((userQuota.used_ram / userQuota.quota_ram) * 100)} size="small" strokeColor="#10b981" />
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {(userQuota.used_ram / 1024).toFixed(1)}/{(userQuota.quota_ram / 1024).toFixed(1)}GB
+              </div>
             </Card>
           </Col>
           <Col xs={12} sm={8} lg={4}>
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="glass-card hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
                   <HddOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 mb-1">磁盘</div>
-                  <div className="text-lg font-bold text-gray-800">
-                    {(userQuota.used_ssd / 1024).toFixed(1)}/{(userQuota.quota_ssd / 1024).toFixed(1)}GB
+                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">存储使用率</div>
+                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                    {Math.round((userQuota.used_ssd / userQuota.quota_ssd) * 100)}%
                   </div>
                 </div>
               </div>
               <Progress percent={Math.round((userQuota.used_ssd / userQuota.quota_ssd) * 100)} size="small" strokeColor="#8b5cf6" />
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {(userQuota.used_ssd / 1024).toFixed(1)}/{(userQuota.quota_ssd / 1024).toFixed(1)}GB
+              </div>
             </Card>
           </Col>
           <Col xs={12} sm={8} lg={4}>
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="glass-card hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center">
                   <GlobalOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 mb-1">流量</div>
-                  <div className="text-lg font-bold text-gray-800">
+                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">流量</div>
+                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
                     {(userQuota.used_traffic / 1024).toFixed(1)}/{(userQuota.quota_traffic / 1024).toFixed(1)}GB
                   </div>
                 </div>
@@ -758,14 +872,14 @@ function Dashboards() {
             </Card>
           </Col>
           <Col xs={12} sm={8} lg={4}>
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="glass-card hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
                   <ApiOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 mb-1">NAT端口</div>
-                  <div className="text-lg font-bold text-gray-800">
+                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">NAT端口</div>
+                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
                     {userQuota.used_nat_ports}/{userQuota.quota_nat_ports}
                   </div>
                 </div>
@@ -778,14 +892,14 @@ function Dashboards() {
         {/* 资源使用情况 - 第二行 */}
         <Row gutter={[16, 16]} className="mb-6">
           <Col xs={12} sm={8} lg={4}>
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="glass-card hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
                   <CloudOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 mb-1">WEB代理</div>
-                  <div className="text-lg font-bold text-gray-800">
+                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">WEB代理</div>
+                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
                     {userQuota.used_web_proxy}/{userQuota.quota_web_proxy}
                   </div>
                 </div>
@@ -794,14 +908,14 @@ function Dashboards() {
             </Card>
           </Col>
           <Col xs={12} sm={8} lg={4}>
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="glass-card hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
                   <UploadOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 mb-1">上行带宽</div>
-                  <div className="text-lg font-bold text-gray-800">
+                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">上行带宽</div>
+                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
                     {userQuota.used_bandwidth_up}/{userQuota.quota_bandwidth_up}Mbps
                   </div>
                 </div>
@@ -810,14 +924,14 @@ function Dashboards() {
             </Card>
           </Col>
           <Col xs={12} sm={8} lg={4}>
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="glass-card hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg flex items-center justify-center">
                   <DownloadOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 mb-1">下行带宽</div>
-                  <div className="text-lg font-bold text-gray-800">
+                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">下行带宽</div>
+                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
                     {userQuota.used_bandwidth_down}/{userQuota.quota_bandwidth_down}Mbps
                   </div>
                 </div>
@@ -826,17 +940,17 @@ function Dashboards() {
             </Card>
           </Col>
           <Col xs={12} sm={8} lg={4}>
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="glass-card hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
                   <DatabaseOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 mb-1">我的虚拟机</div>
-                  <div className="text-lg font-bold text-gray-800">{myVMCount}</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">我的虚拟机</div>
+                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">{myVMCount}</div>
                 </div>
               </div>
-              <div className="text-xs text-gray-600">
+              <div className="text-xs text-gray-600 dark:text-gray-300">
                 <CheckCircleOutlined className="text-green-500" /> 运行中: {myRunningVMCount}
               </div>
             </Card>
@@ -845,6 +959,7 @@ function Dashboards() {
 
         {/* 我的虚拟机列表 */}
         <Card
+          className="glass-card"
           title={<><DesktopOutlined className="mr-2" />我的虚拟机</>}
           extra={
             <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenCreateVM}>
@@ -854,9 +969,9 @@ function Dashboards() {
         >
           {myVMs.length === 0 ? (
             <div className="text-center py-8">
-              <DesktopOutlined className="text-gray-300 text-5xl mb-4" />
-              <p className="text-gray-500">暂无虚拟机</p>
-              <p className="text-xs text-gray-400 mt-1">请联系管理员为您分配权限</p>
+              <DesktopOutlined className="text-gray-300 dark:text-gray-600 text-5xl mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">暂无虚拟机</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">请联系管理员为您分配权限</p>
             </div>
           ) : (
             <Row gutter={[16, 16]}>
@@ -867,15 +982,15 @@ function Dashboards() {
 
                 return (
                   <Col xs={24} lg={12} key={vm.uuid}>
-                    <Card className="hover:shadow-lg transition-shadow">
+                    <Card className="glass-card hover:shadow-lg transition-shadow">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
                             <DesktopOutlined className="text-white text-xl" />
                           </div>
                           <div>
-                            <div className="font-semibold text-gray-800">{vm.display_name || vm.uuid}</div>
-                            <div className="text-sm text-gray-500">{vm.host} - {config.os_name || '未知系统'}</div>
+                            <div className="font-semibold text-gray-800 dark:text-gray-100">{vm.display_name || vm.uuid}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{vm.host} - {config.os_name || '未知系统'}</div>
                           </div>
                         </div>
                         {getVMStatusTag(vm)}
@@ -883,60 +998,60 @@ function Dashboards() {
 
                       {/* 基础资源信息 */}
                       <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-                        <div className="flex items-center gap-2 text-gray-600">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                           <ThunderboltOutlined />
-                          <span>CPU: <span className="font-medium text-gray-800">{config.cpu_num || 0} 核</span></span>
+                          <span>CPU: <span className="font-medium text-gray-800 dark:text-gray-100">{config.cpu_num || 0} 核</span></span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-600">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                           <RadarChartOutlined />
-                          <span>内存: <span className="font-medium text-gray-800">{formatMemory(config.mem_num)}</span></span>
+                          <span>内存: <span className="font-medium text-gray-800 dark:text-gray-100">{formatMemory(config.mem_num)}</span></span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-600">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                           <HddOutlined />
-                          <span>硬盘: <span className="font-medium text-gray-800">{formatMemory(config.hdd_num)}</span></span>
+                          <span>硬盘: <span className="font-medium text-gray-800 dark:text-gray-100">{formatMemory(config.hdd_num)}</span></span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-600">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                           <PlayCircleOutlined />
-                          <span>显存: <span className="font-medium text-gray-800">{formatMemory(config.gpu_mem)}</span></span>
+                          <span>显存: <span className="font-medium text-gray-800 dark:text-gray-100">{formatMemory(config.gpu_mem)}</span></span>
                         </div>
                       </div>
 
                       {/* 端口信息 */}
-                      <div className="grid grid-cols-2 gap-3 text-sm mb-4 p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-2 text-gray-600">
+                      <div className="grid grid-cols-2 gap-3 text-sm mb-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                           <ApiOutlined />
-                          <span>NAT端口: <span className="font-medium text-gray-800">{config.nat_num || 0}个</span></span>
+                          <span>NAT端口: <span className="font-medium text-gray-800 dark:text-gray-100">{config.nat_num || 0}个</span></span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-600">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                           <CloudOutlined />
-                          <span>Web代理: <span className="font-medium text-gray-800">{config.web_num || 0}个</span></span>
+                          <span>Web代理: <span className="font-medium text-gray-800 dark:text-gray-100">{config.web_num || 0}个</span></span>
                         </div>
                       </div>
 
                       {/* 网卡信息 */}
-                      <div className="text-sm p-3 bg-blue-50 rounded-lg border border-blue-200 mb-4">
-                        <div className="flex items-center gap-2 text-blue-700 font-medium mb-2">
+                      <div className="text-sm p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 mb-4">
+                        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-medium mb-2">
                           <GlobalOutlined />
                           <span>网卡信息</span>
                         </div>
                         <div className="space-y-1 text-xs">
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-500 w-12">IPv4:</span>
-                            <span className="font-mono text-gray-700">{firstNic.ip4_addr || '-'}</span>
+                            <span className="text-gray-500 dark:text-gray-400 w-12">IPv4:</span>
+                            <span className="font-mono text-gray-700 dark:text-gray-200">{firstNic.ip4_addr || '-'}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-500 w-12">IPv6:</span>
-                            <span className="font-mono text-gray-700">{firstNic.ip6_addr || '未配置'}</span>
+                            <span className="text-gray-500 dark:text-gray-400 w-12">IPv6:</span>
+                            <span className="font-mono text-gray-700 dark:text-gray-200">{firstNic.ip6_addr || '未配置'}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-500 w-12">MAC:</span>
-                            <span className="font-mono text-gray-700">{firstNic.mac_addr || '-'}</span>
+                            <span className="text-gray-500 dark:text-gray-400 w-12">MAC:</span>
+                            <span className="font-mono text-gray-700 dark:text-gray-200">{firstNic.mac_addr || '-'}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* 操作按钮 */}
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
                         <Button type="link" onClick={() => navigate(`/hosts/${vm.host}/vms/${vm.uuid}`)}>
                           查看详情
                         </Button>
@@ -959,14 +1074,34 @@ function Dashboards() {
   }
 
   return (
-    <div>
+    <div style={{ 
+      padding: '32px',
+      minHeight: '100vh'
+    }}>
       {/* 页面标题 */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-          <DesktopOutlined className="text-blue-600" />
-          仪表盘
-        </h1>
-        <p className="text-gray-600 mt-1">系统概览与快速操作</p>
+      <div style={{ marginBottom: '32px' }}>
+        <Title 
+          level={2} 
+          style={{ 
+            margin: 0,
+            fontSize: '32px',
+            fontWeight: 700,
+            color: 'var(--text-primary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}
+        >
+          <DesktopOutlined style={{ width: '36px', height: '36px', color: 'var(--accent-primary)' }} />
+          全局系统概览
+        </Title>
+        <div style={{ 
+          marginTop: '8px',
+          fontSize: '14px',
+          color: 'var(--text-secondary)'
+        }}>
+          系统概览与快速操作
+        </div>
       </div>
 
       {/* 根据用户角色渲染不同视图 */}
@@ -1153,12 +1288,12 @@ function Dashboards() {
       >
         <Row gutter={[16, 16]}>
           <Col span={12}>
-            <Button block type="primary" style={{ backgroundColor: '#10b981' }} onClick={() => handlePowerAction('start')}>
+            <Button block type="primary" className="bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700" onClick={() => handlePowerAction('start')}>
               启动
             </Button>
           </Col>
           <Col span={12}>
-            <Button block style={{ backgroundColor: '#eab308', color: 'white' }} onClick={() => handlePowerAction('stop')}>
+            <Button block className="bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white" onClick={() => handlePowerAction('stop')}>
               关机
             </Button>
           </Col>
@@ -1173,7 +1308,7 @@ function Dashboards() {
             </Button>
           </Col>
           <Col span={12}>
-            <Button block type="primary" style={{ backgroundColor: '#6366f1' }} onClick={() => handlePowerAction('resume')}>
+            <Button block type="primary" className="bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700" onClick={() => handlePowerAction('resume')}>
               恢复
             </Button>
           </Col>

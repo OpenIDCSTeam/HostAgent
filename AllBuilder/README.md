@@ -19,17 +19,25 @@ AllBuilder/
 │
 ├── cx_Freeze 构建
 │   ├── build_cxfreeze.py       # cx_Freeze 打包脚本
-│   ├── build_cxfreeze.bat      # Windows 批处理脚本
-│   └── build_cxfreeze.sh       # Linux/Mac Shell 脚本
+│   ├── build_cxfreeze.bat      # Windows 批处理脚本（仅后端）
+│   ├── build_cxfreeze.sh       # Linux/Mac Shell 脚本（仅后端）
+│   ├── build_cxfreeze_full.bat # Windows 完整打包（前端+后端）
+│   └── build_cxfreeze_full.sh  # Linux/Mac 完整打包（前端+后端）
 │
-└── Websockify 代理构建
-    ├── build_vncproxy.py       # PyInstaller 打包脚本
-    └── websockify.spec         # PyInstaller 配置文件
+├── Websockify 代理构建
+│   ├── build_vncproxy.py       # PyInstaller 打包脚本
+│   └── websockify.spec         # PyInstaller 配置文件
+│
+└── 文档
+    ├── README_CXFREEZE_REACT.md  # React 前端 + Python 后端打包指南
+    └── QUICKSTART_CXFREEZE.md    # cx_Freeze 快速开始指南
 ```
 
 ## 🚀 快速开始
 
 ### 方式一：使用批处理/Shell脚本（推荐）
+
+#### 打包 Python 后端（传统方式）
 
 **Windows 用户**：
 ```batch
@@ -43,6 +51,25 @@ cd AllBuilder
 chmod +x build_nuitkaui.sh
 ./build_nuitkaui.sh
 ```
+
+#### 打包 Python 后端 + React 前端（完整方式）
+
+如果你的项目包含 React 前端（位于 `FrontPages/` 目录），使用以下命令：
+
+**Windows 用户**：
+```batch
+cd AllBuilder
+build_cxfreeze_full.bat
+```
+
+**Linux/Mac 用户**：
+```bash
+cd AllBuilder
+chmod +x build_cxfreeze_full.sh
+./build_cxfreeze_full.sh
+```
+
+> 💡 **提示**：完整打包会自动构建 React 前端，并将其集成到 Python 后端的静态文件目录中。
 
 ### 方式二：使用 Python 脚本
 
@@ -78,6 +105,8 @@ python build_nuitkaui.py
 | [快速开始](NUITKA_QUICKSTART.md) | 5分钟快速入门指南 |
 | [完整打包文档](NUITKA_BUILD.md) | 详细的打包配置和优化说明 |
 | [文件清单](NUITKA_FILES.md) | 所有构建文件的详细说明 |
+| [React 前端打包指南](README_CXFREEZE_REACT.md) | Python 后端 + React 前端完整打包方案 |
+| [cx_Freeze 快速开始](QUICKSTART_CXFREEZE.md) | cx_Freeze 一键打包指南 |
 
 ## ⚙️ 环境要求
 

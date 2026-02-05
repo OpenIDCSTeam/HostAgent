@@ -203,6 +203,36 @@ class HostServer(BasicServer):
             traceback.print_exc()
             return {}
 
+    # 获取虚拟机实际状态（从API）==============================================
+    def VMStatusAPI(self, vm_name: str) -> str:
+        """从Hyper-V API获取虚拟机实际状态"""
+        try:
+            connect_result = self.hyperv_api.connect()
+            if not connect_result.success:
+                return ""
+            
+            vm_info = self.hyperv_api.get_vm_info(vm_name)
+            self.hyperv_api.disconnect()
+            
+            if vm_info:
+                state = vm_info.get('State', 0)
+                # 映射Hyper-V状态到中文状态
+                # State: 2=Running, 3=Off, 9=Paused, 32768=Paused-Critical
+                state_map = {
+                    2: '运行中',
+                    3: '已关机',
+                    9: '已暂停',
+                    32768: '已暂停'
+                }
+                return state_map.get(state, '未知')
+        except Exception as e:
+            logger.warning(f"从API获取虚拟机 {vm_name} 状态失败: {str(e)}")
+            try:
+                self.hyperv_api.disconnect()
+            except:
+                pass
+        return ""
+
     # 扫描虚拟机 ####################################################################
     def VMDetect(self) -> ZMessage:
         """扫描虚拟机"""

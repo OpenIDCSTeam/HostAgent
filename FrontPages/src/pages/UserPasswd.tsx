@@ -121,23 +121,23 @@ function UserPasswd() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* 顶部图标和标题 */}
         <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+          <div className="mx-auto h-16 w-16 bg-blue-600 dark:bg-blue-500 rounded-xl flex items-center justify-center shadow-lg">
             <LockOutlined className="text-white text-3xl" style={{ fontSize: 32 }} />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
             重置密码
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
             请输入您的新密码
           </p>
         </div>
 
         {/* 表单卡片 */}
-        <div className="bg-white rounded-xl shadow-xl p-8">
+        <div className="glass-card p-8">
           <Form
             form={form}
             name="resetPassword"
@@ -149,7 +149,7 @@ function UserPasswd() {
             {/* 新密码输入框 */}
             <Form.Item
               label={
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                   新密码 <span className="text-red-500">*</span>
                 </span>
               }
@@ -170,7 +170,7 @@ function UserPasswd() {
             {/* 确认密码输入框 */}
             <Form.Item
               label={
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                   确认新密码 <span className="text-red-500">*</span>
                 </span>
               }
@@ -211,7 +211,7 @@ function UserPasswd() {
             {/* 密码强度指示器 */}
             <div>
               <div className="flex items-center justify-between text-sm mb-1">
-                <span className="text-gray-600">密码强度</span>
+                <span className="text-gray-600 dark:text-gray-300">密码强度</span>
                 <span className="font-medium" style={{ color: passwordStrength.color }}>
                   {passwordStrength.text}
                 </span>
@@ -243,7 +243,7 @@ function UserPasswd() {
             <div className="text-center">
               <Link 
                 to="/login" 
-                className="text-sm text-blue-600 hover:text-blue-500 transition"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition"
               >
                 返回登录
               </Link>
@@ -252,7 +252,7 @@ function UserPasswd() {
         </div>
 
         {/* 底部提示信息 */}
-        <div className="text-center text-xs text-gray-500">
+        <div className="text-center text-xs text-gray-500 dark:text-gray-400">
           <p>如果您遇到问题，请联系管理员</p>
         </div>
       </div>

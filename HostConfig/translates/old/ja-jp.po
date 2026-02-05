@@ -1,0 +1,5310 @@
+# Japanese translations for OpenIDCS
+# Copyright (C) 2024 OpenIDCS Team
+# This file is distributed under the same license as the OpenIDCS package.
+#
+
+msgid ""
+msgstr ""
+"Project-Id-Version: OpenIDCS 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-15 19:17:42\n"
+"PO-Revision-Date: 2024-01-15 19:17:42\n"
+"Last-Translator: OpenIDCS Team\n"
+"Language-Team: Japanese\n"
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# HostServer.py
+msgid "登录"
+msgstr "ログイン"
+
+msgid "用户名和密码不能为空"
+msgstr "ユーザー名とパスワードは必須です"
+
+msgid "用户名或密码错误"
+msgstr "ユーザー名またはパスワードが間違っています"
+
+msgid "用户已被禁用"
+msgstr "ユーザーは無効化されています"
+
+msgid "请先验证邮箱后再登录"
+msgstr "メールアドレスを認証してからログインしてください"
+
+msgid "登录成功"
+msgstr "ログイン成功"
+
+msgid "Admin用户已被禁用"
+msgstr "Adminユーザーは無効化されています"
+
+msgid "Token错误"
+msgstr "トークンエラー"
+
+msgid "登录失败"
+msgstr "ログイン失敗"
+
+msgid "仪表盘"
+msgstr "ダッシュボード"
+
+msgid "主机管理"
+msgstr "ホスト管理"
+
+msgid "日志管理"
+msgstr "ログ管理"
+
+msgid "任务管理"
+msgstr "タスク管理"
+
+msgid "虚拟机管理"
+msgstr "仮想マシン管理"
+
+msgid "系统设置"
+msgstr "システム設定"
+
+msgid "Web反向代理管理"
+msgstr "Webリバースプロキシ管理"
+
+msgid "个人设置"
+msgstr "個人設定"
+
+msgid "用户名、邮箱和密码不能为空"
+msgstr "ユーザー名、メールアドレス、パスワードは必須です"
+
+msgid "用户名长度必须在3-20个字符之间"
+msgstr "ユーザー名は3〜20文字である必要があります"
+
+msgid "不能使用admin作为用户名"
+msgstr "adminをユーザー名として使用することはできません"
+
+msgid "密码长度至少6个字符"
+msgstr "パスワードは6文字以上である必要があります"
+
+msgid "用户名已存在"
+msgstr "ユーザー名は既に存在します"
+
+msgid "邮箱已被注册"
+msgstr "メールアドレスは既に登録されています"
+
+msgid "注册失败，请重试"
+msgstr "登録に失敗しました。もう一度お試しください"
+
+msgid "注册成功！请查收验证邮件"
+msgstr "登録成功！認証メールをご確認ください"
+
+msgid "注册成功！请登录"
+msgstr "登録成功！ログインしてください"
+
+msgid "注册失败"
+msgstr "登録失敗"
+
+msgid "无效的验证链接"
+msgstr "無効な認証リンクです"
+
+msgid "验证链接无效或已过期"
+msgstr "認証リンクが無効または期限切れです"
+
+msgid "验证失败，请重试"
+msgstr "認証に失敗しました。もう一度お試しください"
+
+msgid "验证链接格式错误"
+msgstr "認証リンクの形式が正しくありません"
+
+msgid "新邮箱地址无效"
+msgstr "新しいメールアドレスが無効です"
+
+msgid "该邮箱已被其他用户使用"
+msgstr "このメールアドレスは既に他のユーザーによって使用されています"
+
+msgid "邮箱更新失败，请重试"
+msgstr "メールアドレスの更新に失敗しました。もう一度お試しください"
+
+msgid "验证邮箱变更失败"
+msgstr "メールアドレス変更の認証に失敗しました"
+
+msgid "未登录"
+msgstr "未ログイン"
+
+msgid "请填写完整信息"
+msgstr "すべての情報を入力してください"
+
+msgid "新密码与确认密码不一致"
+msgstr "新しいパスワードと確認パスワードが一致しません"
+
+msgid "新密码长度不能少于6位"
+msgstr "新しいパスワードは6文字以上である必要があります"
+
+msgid "密码修改成功"
+msgstr "パスワード変更成功"
+
+msgid "密码修改失败"
+msgstr "パスワード変更失敗"
+
+msgid "请输入新邮箱地址"
+msgstr "新しいメールアドレスを入力してください"
+
+msgid "请输入有效的邮箱地址"
+msgstr "有効なメールアドレスを入力してください"
+
+msgid "用户不存在"
+msgstr "ユーザーが存在しません"
+
+msgid "验证邮件已发送，请查收并点击验证链接完成邮箱修改"
+msgstr "認証メールを送信しました。メールを確認し、認証リンクをクリックしてメールアドレスを変更してください"
+
+msgid "验证邮件发送失败，请重试"
+msgstr "認証メールの送信に失敗しました。もう一度お試しください"
+
+msgid "邮件服务未启用"
+msgstr "メールサービスが有効化されていません"
+
+msgid "邮箱修改失败，请重试"
+msgstr "メールアドレス変更に失敗しました。もう一度お試しください"
+
+msgid "邮箱修改失败"
+msgstr "メールアドレス変更失敗"
+
+msgid "请输入邮箱地址"
+msgstr "メールアドレスを入力してください"
+
+msgid "系统未启用邮件验证功能"
+msgstr "システムでメール認証機能が有効化されていません"
+
+msgid "该邮箱未注册"
+msgstr "このメールアドレスは登録されていません"
+
+msgid "密码重置邮件已发送，请查收"
+msgstr "パスワードリセットメールを送信しました。ご確認ください"
+
+msgid "发送重置邮件失败"
+msgstr "リセットメールの送信に失敗しました"
+
+msgid "找回密码失败"
+msgstr "パスワード回復に失敗しました"
+
+msgid "重置密码"
+msgstr "パスワードリセット"
+
+msgid "密码与确认密码不一致"
+msgstr "パスワードと確認パスワードが一致しません"
+
+msgid "密码长度不能少于6位"
+msgstr "パスワードは6文字以上である必要があります"
+
+msgid "重置链接已过期或无效"
+msgstr "リセットリンクの有効期限が切れているか無効です"
+
+msgid "密码重置成功"
+msgstr "パスワードリセット成功"
+
+msgid "密码重置失败"
+msgstr "パスワードリセット失敗"
+
+msgid "用户管理"
+msgstr "ユーザー管理"
+
+msgid "未授权访问"
+msgstr "権限がありません"
+
+msgid "成功"
+msgstr "成功"
+
+msgid "没有访问该主机的权限"
+msgstr "このホストへのアクセス権限がありません"
+
+msgid "获取Token成功"
+msgstr "トークンの取得成功"
+
+msgid "获取Token失败"
+msgstr "トークンの取得失敗"
+
+msgid "Token不能为空"
+msgstr "トークンは空にできません"
+
+msgid "Token设置成功"
+msgstr "トークン設定成功"
+
+msgid "设置Token失败"
+msgstr "トークン設定失敗"
+
+msgid "Token重置成功"
+msgstr "トークンリセット成功"
+
+msgid "重置Token失败"
+msgstr "トークンリセット失敗"
+
+msgid "获取统计信息成功"
+msgstr "統計情報の取得成功"
+
+msgid "获取统计信息失败"
+msgstr "統計情報の取得失敗"
+
+msgid "资源配额重新计算完成"
+msgstr "リソースクォータの再計算完了"
+
+msgid "重新计算失败"
+msgstr "再計算失敗"
+
+msgid "获取成功"
+msgstr "取得成功"
+
+msgid "获取失败"
+msgstr "取得失敗"
+
+msgid "无效的请求数据"
+msgstr "無効なリクエストデータ"
+
+msgid "创建用户失败，请重试"
+msgstr "ユーザー作成に失敗しました。もう一度お試しください"
+
+msgid "更新用户权限和配额失败"
+msgstr "ユーザー権限とクォータの更新に失敗しました"
+
+msgid "用户创建成功"
+msgstr "ユーザー作成成功"
+
+msgid "创建失败"
+msgstr "作成失敗"
+
+msgid "更新成功"
+msgstr "更新成功"
+
+msgid "更新失败"
+msgstr "更新失敗"
+
+msgid "删除成功"
+msgstr "削除成功"
+
+msgid "删除失败"
+msgstr "削除失敗"
+
+msgid "请提供完整的邮件配置信息"
+msgstr "完全なメール設定情報を提供してください"
+
+msgid "邮箱地址格式不正确"
+msgstr "メールアドレスの形式が正しくありません"
+
+msgid "测试邮件发送成功"
+msgstr "テストメールの送信成功"
+
+msgid "测试邮件发送失败"
+msgstr "テストメールの送信失敗"
+
+msgid "获取语言列表失败"
+msgstr "言語リストの取得失敗"
+
+msgid "语言不存在"
+msgstr "言語が存在しません"
+
+msgid "获取翻译数据失败"
+msgstr "翻訳データの取得失敗"
+
+msgid "正在加载系统配置..."
+msgstr "システム設定を読み込んでいます..."
+
+msgid "系统配置加载完成"
+msgstr "システム設定の読み込み完了"
+
+msgid "加载配置失败"
+msgstr "設定の読み込み失敗"
+
+msgid "检测到多进程相关错误，将在用户访问时重试加载"
+msgstr "マルチプロセス関連のエラーを検出しました。ユーザーアクセス時に再試行します"
+
+msgid "正在加载翻译文件..."
+msgstr "翻訳ファイルを読み込んでいます..."
+
+msgid "翻译文件加载完成"
+msgstr "翻訳ファイルの読み込み完了"
+
+msgid "加载翻译文件失败"
+msgstr "翻訳ファイルの読み込み失敗"
+
+msgid "已生成访问Token"
+msgstr "アクセストークンを生成しました"
+
+msgid "已创建admin用户"
+msgstr "adminユーザーを作成しました"
+
+msgid "admin用户已存在，跳过创建"
+msgstr "adminユーザーは既に存在します。作成をスキップします"
+
+msgid "初始化admin用户失败"
+msgstr "adminユーザーの初期化に失敗しました"
+
+msgid "定时任务调度器启动成功"
+msgstr "スケジュールされたタスクスケジューラーの起動成功"
+
+msgid "启动定时任务调度器失败"
+msgstr "スケジュールされたタスクスケジューラーの起動失敗"
+
+msgid "OpenIDCS Server 启动"
+msgstr "OpenIDCS Server 起動"
+
+msgid "运行模式"
+msgstr "実行モード"
+
+msgid "打包模式 (Nuitka)"
+msgstr "パッケージモード (Nuitka)"
+
+msgid "开发模式"
+msgstr "開発モード"
+
+msgid "工作目录"
+msgstr "作業ディレクトリ"
+
+msgid "项目根目录"
+msgstr "プロジェクトルートディレクトリ"
+
+msgid "正在初始化应用..."
+msgstr "アプリケーションを初期化しています..."
+
+msgid "OpenIDCS Server 启动中..."
+msgstr "OpenIDCS Server 起動中..."
+
+msgid "访问地址"
+msgstr "アクセスアドレス"
+
+msgid "访问Token"
+msgstr "アクセストークン"
+
+msgid "使用生产模式启动 Flask 服务器..."
+msgstr "本番モードでFlaskサーバーを起動しています..."
+
+msgid "使用调试模式启动 Flask 服务器..."
+msgstr "デバッグモードでFlaskサーバーを起動しています..."
+
+msgid "程序被用户中断"
+msgstr "プログラムがユーザーによって中断されました"
+
+msgid "程序启动失败"
+msgstr "プログラムの起動に失敗しました"
+
+msgid "错误详情"
+msgstr "エラーの詳細"
+
+msgid "按回车键退出..."
+msgstr "Enterキーを押して終了..."
+
+msgid "执行定时任务出错"
+msgstr "スケジュールされたタスクの実行中にエラーが発生しました"
+
+msgid "初始执行完成"
+msgstr "初期実行完了"
+
+msgid "初始执行出错"
+msgstr "初期実行エラー"
+
+msgid "启动定时任务调度器..."
+msgstr "スケジュールされたタスクスケジューラーを起動しています..."
+
+msgid "定时任务已启动（后台运行），每60秒执行一次"
+msgstr "スケジュールされたタスクを起動しました（バックグラウンド実行）、60秒ごとに実行します"
+
+msgid "简体中文"
+msgstr "簡体字中国語"
+
+msgid "已加载"
+msgstr "読み込み済み"
+
+msgid "种语言"
+msgstr "種の言語"
+
+# HostModule/HostManager.py
+msgid "自动生成新Token"
+msgstr "新しいトークンを自動生成"
+
+msgid "主机已添加"
+msgstr "ホストが追加されました"
+
+msgid "不支持的主机类型"
+msgstr "サポートされていないホストタイプ"
+
+msgid "主机添加成功"
+msgstr "ホストの追加成功"
+
+msgid "添加主机失败"
+msgstr "ホストの追加に失敗しました"
+
+msgid "删除主机失败"
+msgstr "ホストの削除に失敗しました"
+
+msgid "主机未找到"
+msgstr "ホストが見つかりません"
+
+msgid "主机更新成功"
+msgstr "ホストの更新成功"
+
+msgid "修改主机失败"
+msgstr "ホストの変更に失敗しました"
+
+msgid "主机启用状态"
+msgstr "ホスト有効状態"
+
+msgid "修改主机状态失败"
+msgstr "ホスト状態の変更に失敗しました"
+
+msgid "加载数据时出错"
+msgstr "データの読み込み中にエラーが発生しました"
+
+msgid "保存数据时出错"
+msgstr "データの保存中にエラーが発生しました"
+
+msgid "Host does not support VM scanning"
+msgstr "ホストは仮想マシンのスキャンをサポートしていません"
+
+msgid "代理域名"
+msgstr "プロキシドメイン"
+
+msgid "已存在"
+msgstr "既に存在します"
+
+msgid "添加代理到HttpManage失败"
+msgstr "HttpManageへのプロキシ追加に失敗しました"
+
+msgid "HttpManage未初始化"
+msgstr "HttpManageが初期化されていません"
+
+msgid "保存代理配置到数据库失败"
+msgstr "プロキシ設定のデータベースへの保存に失敗しました"
+
+msgid "代理"
+msgstr "プロキシ"
+
+msgid "添加成功"
+msgstr "追加成功"
+
+msgid "添加全局代理失败"
+msgstr "グローバルプロキシの追加に失敗しました"
+
+msgid "添加代理失败"
+msgstr "プロキシの追加に失敗しました"
+
+msgid "不存在"
+msgstr "存在しません"
+
+msgid "从HttpManage删除代理失败"
+msgstr "HttpManageからのプロキシ削除に失敗しました"
+
+msgid "从数据库删除代理配置失败"
+msgstr "データベースからのプロキシ設定削除に失敗しました"
+
+msgid "删除成功"
+msgstr "削除成功"
+
+msgid "删除全局代理失败"
+msgstr "グローバルプロキシの削除に失敗しました"
+
+msgid "删除代理失败"
+msgstr "プロキシの削除に失敗しました"
+
+msgid "执行定时任务完成"
+msgstr "スケジュールされたタスクの実行完了"
+
+msgid "用户资源配额重新计算完成"
+msgstr "ユーザーリソースクォータの再計算完了"
+
+msgid "重新计算用户配额失败"
+msgstr "ユーザークォータの再計算に失敗しました"
+
+msgid "开始清理已删除虚拟机的状态数据"
+msgstr "削除された仮想マシンの状態データのクリーンアップを開始します"
+
+msgid "已清理已删除虚拟机状态"
+msgstr "削除された仮想マシン状態をクリーンアップしました"
+
+msgid "主机"
+msgstr "ホスト"
+
+msgid "虚拟机"
+msgstr "仮想マシン"
+
+msgid "清理完成，共删除"
+msgstr "クリーンアップ完了、合計削除"
+
+msgid "个已删除虚拟机的状态数据"
+msgstr "個の削除された仮想マシンの状態データ"
+
+msgid "没有需要清理的虚拟机状态数据"
+msgstr "クリーンアップが必要な仮想マシン状態データはありません"
+
+msgid "清理已删除虚拟机状态数据失败"
+msgstr "削除された仮想マシン状態データのクリーンアップに失敗しました"
+
+msgid "触发用户资源配额重新计算"
+msgstr "ユーザーリソースクォータの再計算をトリガー"
+
+msgid "执行"
+msgstr "実行"
+
+msgid "的定时任务"
+msgstr "のスケジュールされたタスク"
+
+# HostModule/HttpManager.py
+msgid "HttpManager初始化完成，管理端口"
+msgstr "HttpManager初期化完了、管理ポート"
+
+msgid "配置文件"
+msgstr "設定ファイル"
+
+msgid "令牌"
+msgstr "トークン"
+
+msgid "的SSH代理配置已存在"
+msgstr "のSSHプロキシ設定が既に存在します"
+
+msgid "SSH代理已添加"
+msgstr "SSHプロキシが追加されました"
+
+msgid "统一端口"
+msgstr "統一ポート"
+
+msgid "添加SSH代理配置时发生错误"
+msgstr "SSHプロキシ設定の追加中にエラーが発生しました"
+
+msgid "域名"
+msgstr "ドメイン"
+
+msgid "的配置已存在"
+msgstr "の設定が既に存在します"
+
+msgid "为临时代理，不写入数据库"
+msgstr "一時プロキシとして、データベースに書き込みません"
+
+msgid "添加代理配置时发生错误"
+msgstr "プロキシ設定の追加中にエラーが発生しました"
+
+msgid "未找到匹配的代理配置"
+msgstr "一致するプロキシ設定が見つかりません"
+
+msgid "当前已有的域名"
+msgstr "現在既存のドメイン"
+
+msgid "删除代理配置时发生错误"
+msgstr "プロキシ設定の削除中にエラーが発生しました"
+
+msgid "Caddy进程已启动，PID"
+msgstr "Caddyプロセスが起動しました、PID"
+
+msgid "错误: 找不到caddy可执行文件"
+msgstr "エラー: caddy実行ファイルが見つかりません"
+
+msgid "启动Caddy时发生错误"
+msgstr "Caddyの起動中にエラーが発生しました"
+
+msgid "Caddy进程已停止"
+msgstr "Caddyプロセスが停止しました"
+
+msgid "停止Caddy时发生错误"
+msgstr "Caddyの停止中にエラーが発生しました"
+
+msgid "重载服务命令"
+msgstr "サービス再ロードコマンド"
+
+msgid "Caddy配置已重载（管理端口"
+msgstr "Caddy設定を再ロードしました（管理ポート"
+
+msgid "重载失败，尝试启动服务"
+msgstr "再ロードに失敗しました、サービスの起動を試みます"
+
+msgid "重载Caddy配置时发生错误"
+msgstr "Caddy設定の再ロード中にエラーが発生しました"
+
+msgid "已从数据库加载"
+msgstr "データベースから読み込みました"
+
+msgid "个代理配置"
+msgstr "個のプロキシ設定"
+
+msgid "加载代理配置失败"
+msgstr "プロキシ設定の読み込みに失敗しました"
+
+msgid "保存代理到数据库失败"
+msgstr "プロキシのデータベースへの保存に失敗しました"
+
+msgid "从数据库删除代理失败"
+msgstr "データベースからのプロキシ削除に失敗しました"
+
+# HostModule/NetsManager.py
+msgid "爱快路由器管理类"
+msgstr "iKuaiルーター管理クラス"
+
+msgid "未知错误"
+msgstr "不明なエラー"
+
+msgid "登录失败"
+msgstr "ログイン失敗"
+
+msgid "响应不是有效的JSON格式"
+msgstr "応答が有効なJSON形式ではありません"
+
+msgid "登录失败，状态码"
+msgstr "ログイン失敗、ステータスコード"
+
+msgid "登录异常"
+msgstr "ログイン例外"
+
+msgid "请先登录"
+msgstr "先にログインしてください"
+
+msgid "API调用失败"
+msgstr "API呼び出し失敗"
+
+msgid "API调用异常"
+msgstr "API呼び出し例外"
+
+msgid "✅ 获取静态IP列表成功，共"
+msgstr "✅ 静的IPリストの取得成功、合計"
+
+msgid "条"
+msgstr "件"
+
+msgid "❌ 获取静态IP列表失败"
+msgstr "❌ 静的IPリストの取得失敗"
+
+msgid "✅ 获取端口映射列表成功，共"
+msgstr "✅ ポートマッピングリストの取得成功、合計"
+
+msgid "❌ 获取端口映射列表失败"
+msgstr "❌ ポートマッピングリストの取得失敗"
+
+msgid "✅ 获取ARP列表成功，共"
+msgstr "✅ ARPリストの取得成功、合計"
+
+msgid "❌ 获取ARP列表失败"
+msgstr "❌ ARPリストの取得失敗"
+
+msgid "🔍 准备添加DHCP - 提交参数"
+msgstr "🔍 DHCPの追加を準備 - パラメータを送信"
+
+msgid "✅ 静态IP添加成功"
+msgstr "✅ 静的IP追加成功"
+
+msgid "❌ 静态IP添加失败"
+msgstr "❌ 静的IP追加失敗"
+
+msgid "必须提供ip_addr或mac中的一个"
+msgstr "ip_addrまたはmacのいずれかを提供する必要があります"
+
+msgid "无法获取DHCP列表"
+msgstr "DHCPリストを取得できません"
+
+msgid "找到匹配的DHCP条目"
+msgstr "一致するDHCPエントリが見つかりました"
+
+msgid "未找到匹配的DHCP条目"
+msgstr "一致するDHCPエントリが見つかりません"
+
+msgid "🔍 准备删除DHCP - 提交参数"
+msgstr "🔍 DHCPの削除を準備 - パラメータを送信"
+
+msgid "✅ 静态IP删除成功"
+msgstr "✅ 静的IP削除成功"
+
+msgid "❌ 静态IP删除失败"
+msgstr "❌ 静的IP削除失敗"
+
+msgid "✅ 端口转发添加成功: 外部端口"
+msgstr "✅ ポート転送追加成功: 外部ポート"
+
+msgid "❌ 端口转发添加失败: 外部端口"
+msgstr "❌ ポート転送追加失敗: 外部ポート"
+
+msgid "必须提供lan_port或lan_addr中的一个"
+msgstr "lan_portまたはlan_addrのいずれかを提供する必要があります"
+
+msgid "无法获取端口映射列表"
+msgstr "ポートマッピングリストを取得できません"
+
+msgid "找到匹配的端口映射条目"
+msgstr "一致するポートマッピングエントリが見つかりました"
+
+msgid "WAN端口"
+msgstr "WANポート"
+
+msgid "LAN地址"
+msgstr "LANアドレス"
+
+msgid "未找到匹配的端口映射条目"
+msgstr "一致するポートマッピングエントリが見つかりません"
+
+msgid "🔍 准备删除端口映射 - 提交参数"
+msgstr "🔍 ポートマッピングの削除を準備 - パラメータを送信"
+
+msgid "✅ 端口转发删除成功"
+msgstr "✅ ポート転送削除成功"
+
+msgid "❌ 端口转发删除失败"
+msgstr "❌ ポート転送削除失敗"
+
+msgid "✅ ARP绑定添加成功"
+msgstr "✅ ARPバインド追加成功"
+
+msgid "❌ ARP绑定添加失败"
+msgstr "❌ ARPバインド追加失敗"
+
+msgid "无法获取ARP列表"
+msgstr "ARPリストを取得できません"
+
+msgid "找到匹配的ARP条目"
+msgstr "一致するARPエントリが見つかりました"
+
+msgid "未找到匹配的ARP条目"
+msgstr "一致するARPエントリが見つかりません"
+
+msgid "🔍 准备删除ARP - 提交参数"
+msgstr "🔍 ARPの削除を準備 - パラメータを送信"
+
+msgid "✅ ARP绑定删除成功"
+msgstr "✅ ARPバインド削除成功"
+
+msgid "❌ ARP绑定删除失败"
+msgstr "❌ ARPバインド削除失敗"
+
+msgid "登录成功"
+msgstr "ログイン成功"
+
+msgid "静态IP添加成功"
+msgstr "静的IP追加成功"
+
+msgid "获取静态IP列表"
+msgstr "静的IPリストを取得"
+
+msgid "静态IP删除成功"
+msgstr "静的IP削除成功"
+
+msgid "静态ARP绑定添加成功"
+msgstr "静的ARPバインド追加成功"
+
+msgid "获取静态ARP绑定列表"
+msgstr "静的ARPバインドリストを取得"
+
+msgid "静态ARP绑定删除成功"
+msgstr "静的ARPバインド削除成功"
+
+msgid "端口转发添加成功"
+msgstr "ポート転送追加成功"
+
+msgid "获取端口转发列表"
+msgstr "ポート転送リストを取得"
+
+msgid "端口转发删除成功"
+msgstr "ポート転送削除成功"
+
+# HostModule/RestManager.py
+msgid "未授权访问"
+msgstr "権限がありません"
+
+msgid "主机名称和类型不能为空"
+msgstr "ホスト名とタイプは必須です"
+
+msgid "配置不能为空"
+msgstr "設定は空にできません"
+
+msgid "主机已删除"
+msgstr "ホストが削除されました"
+
+msgid "主机不存在"
+msgstr "ホストが存在しません"
+
+msgid "Token已重置"
+msgstr "トークンがリセットされました"
+
+msgid "Token已设置"
+msgstr "トークンが設定されました"
+
+msgid "配置已保存"
+msgstr "設定が保存されました"
+
+msgid "两次输入的密码不一致"
+msgstr "2回入力したパスワードが一致しません"
+
+msgid "新密码长度不能少于6位"
+msgstr "新しいパスワードは6文字以上である必要があります"
+
+msgid "重置中..."
+msgstr "リセット中..."
+
+msgid "仪表盘"
+msgstr "ダッシュボード"
+
+msgid "系统概览与快速操作"
+msgstr "システム概要とクイック操作"
+
+msgid "主机概览"
+msgstr "ホスト概要"
+
+msgid "查看全部"
+msgstr "すべて表示"
+
+msgid "快速操作"
+msgstr "クイック操作"
+
+msgid "添加主机"
+msgstr "ホストを追加"
+
+msgid "添加新的虚拟化主机"
+msgstr "新しい仮想化ホストを追加"
+
+msgid "系统设置"
+msgstr "システム設定"
+
+msgid "管理Token和系统配置"
+msgstr "トークンとシステム設定の管理"
+
+msgid "保存配置"
+msgstr "設定を保存"
+
+msgid "保存所有主机和虚拟机配置"
+msgstr "すべてのホストと仮想マシン設定を保存"
+
+msgid "提示"
+msgstr "ヒント"
+
+msgid "通过主机管理页面可以管理主机和虚拟机。支持使用API+Token进行自动化管理。"
+msgstr "ホスト管理ページでホストと仮想マシンを管理できます。API+Tokenを使用した自動化管理をサポートしています。"
+
+msgid "CPU核心"
+msgstr "CPUコア"
+
+msgid "GPU显存"
+msgstr "GPUメモリ"
+
+msgid "内存"
+msgstr "メモリ"
+
+msgid "磁盘"
+msgstr "ディスク"
+
+msgid "流量"
+msgstr "トラフィック"
+
+msgid "NAT端口"
+msgstr "NATポート"
+
+msgid "WEB代理"
+msgstr "WEBプロキシ"
+
+msgid "上行带宽"
+msgstr "上り帯域幅"
+
+msgid "下行带宽"
+msgstr "下り帯域幅"
+
+msgid "我的虚拟机"
+msgstr "マイ仮想マシン"
+
+msgid "运行中"
+msgstr "実行中"
+
+msgid "创建虚拟机"
+msgstr "仮想マシンを作成"
+
+msgid "基本信息"
+msgstr "基本情報"
+
+msgid "密码和端口配置"
+msgstr "パスワードとポート設定"
+
+msgid "硬件配置"
+msgstr "ハードウェア設定"
+
+msgid "网络配置"
+msgstr "ネットワーク設定"
+
+msgid "网卡配置"
+msgstr "ネットワークカード設定"
+
+msgid "IP配额信息"
+msgstr "IPクォータ情報"
+
+msgid "添加网卡"
+msgstr "ネットワークカードを追加"
+
+msgid "取消"
+msgstr "キャンセル"
+
+msgid "电源操作"
+msgstr "電源操作"
+
+msgid "选择对虚拟机 \""
+msgstr "仮想マシン \""
+
+msgid "\"执行的操作"
+msgstr "\"に対する操作を選択"
+
+msgid "启动"
+msgstr "起動"
+
+msgid "关机"
+msgstr "シャットダウン"
+
+msgid "重启"
+msgstr "再起動"
+
+msgid "暂停"
+msgstr "一時停止"
+
+msgid "恢复"
+msgstr "再開"
+
+msgid "强制关机"
+msgstr "強制シャットダウン"
+
+msgid "强制重启"
+msgstr "強制再起動"
+
+msgid "暂无虚拟机"
+msgstr "仮想マシンがありません"
+
+msgid "请联系管理员为您分配权限"
+msgstr "権限の割り当てについては管理者にお問い合わせください"
+
+msgid "内网IP配额:"
+msgstr "プライベートIPクォータ:"
+
+msgid "公网IP配额:"
+msgstr "パブリックIPクォータ:"
+
+msgid "创建虚拟机将消耗相应的资源配额"
+msgstr "仮想マシンの作成により、対応するリソースクォータが消費されます"
+
+msgid "保存失败"
+msgstr "保存失敗"
+
+msgid "配置已加载"
+msgstr "設定が読み込まれました"
+
+msgid "加载失败"
+msgstr "読み込み失敗"
+
+msgid "获取日志成功"
+msgstr "ログの取得成功"
+
+msgid "获取日志失败"
+msgstr "ログの取得失敗"
+
+msgid "主机名称不能为空"
+msgstr "ホスト名は必須です"
+
+msgid "获取任务成功"
+msgstr "タスクの取得成功"
+
+msgid "获取任务失败"
+msgstr "タスクの取得失敗"
+
+msgid "虚拟机不存在"
+msgstr "仮想マシンが存在しません"
+
+msgid "没有访问该虚拟机的权限"
+msgstr "この仮想マシンへのアクセス権限がありません"
+
+msgid "只有主用户可以删除虚拟机"
+msgstr "メインユーザーのみが仮想マシンを削除できます"
+
+msgid "CPU核心数不能少于1核"
+msgstr "CPUコア数は1以上である必要があります"
+
+msgid "内存不能少于1GB"
+msgstr "メモリは1GB以上である必要があります"
+
+msgid "硬盘大小不能少于GB"
+msgstr "ハードディスクサイズはGB以上である必要があります"
+
+msgid "NAT端口数量不能少于1"
+msgstr "NATポート数は1以上である必要があります"
+
+msgid "Web代理数量不能少于0"
+msgstr "Webプロキシ数は0以上である必要があります"
+
+msgid "流量不能少于0"
+msgstr "トラフィックは0以上である必要があります"
+
+msgid "上行带宽不能少于0"
+msgstr "上り帯域幅は0以上である必要があります"
+
+msgid "下行带宽不能少于0"
+msgstr "下り帯域幅は0以上である必要があります"
+
+msgid "CPU配额为0，不允许创建虚拟机"
+msgstr "CPUクォータが0の場合、仮想マシンの作成は許可されません"
+
+msgid "CPU配额不足，需要核"
+msgstr "CPUクォータ不足、必要コア数"
+
+msgid "，可用"
+msgstr "、利用可能"
+
+msgid "，可用"
+msgstr "、利用可能"
+
+msgid "内存配额不足，需要"
+msgstr "メモリクォータ不足、必要"
+
+msgid "，可用"
+msgstr "、利用可能"
+
+msgid "GB"
+msgstr "GB"
+
+msgid "硬盘配额为0，不允许创建虚拟机"
+msgstr "ハードディスククォータが0の場合、仮想マシンの作成は許可されません"
+
+msgid "硬盘配额不足，需要"
+msgstr "ハードディスククォータ不足、必要"
+
+msgid "GB"
+msgstr "GB"
+
+msgid "，可用"
+msgstr "、利用可能"
+
+msgid "GB"
+msgstr "GB"
+
+msgid "GPU配额为0，不允许创建虚拟机"
+msgstr "GPUクォータが0の場合、仮想マシンの作成は許可されません"
+
+msgid "GPU显存配额不足，需要"
+msgstr "GPUメモリクォータ不足、必要"
+
+msgid "GB"
+msgstr "GB"
+
+msgid "，可用"
+msgstr "、利用可能"
+
+msgid "GB"
+msgstr "GB"
+
+msgid "流量配额为0，不允许创建虚拟机"
+msgstr "トラフィッククォータが0の場合、仮想マシンの作成は許可されません"
+
+msgid "流量配额不足，需要"
+msgstr "トラフィッククォータ不足、必要"
+
+msgid "GB"
+msgstr "GB"
+
+msgid "，可用"
+msgstr "、利用可能"
+
+msgid "GB"
+msgstr "GB"
+
+msgid "上行带宽配额为0，不允许创建虚拟机"
+msgstr "上り帯域幅クォータが0の場合、仮想マシンの作成は許可されません"
+
+msgid "上行带宽配额不足，需要"
+msgstr "上り帯域幅クォータ不足、必要"
+
+msgid "Mbps"
+msgstr "Mbps"
+
+msgid "，可用"
+msgstr "、利用可能"
+
+msgid "Mbps"
+msgstr "Mbps"
+
+msgid "下行带宽配额为0，不允许创建虚拟机"
+msgstr "下り帯域幅クォータが0の場合、仮想マシンの作成は許可されません"
+
+msgid "下行带宽配额不足，需要"
+msgstr "下り帯域幅クォータ不足、必要"
+
+msgid "Mbps"
+msgstr "Mbps"
+
+msgid "，可用"
+msgstr "、利用可能"
+
+msgid "Mbps"
+msgstr "Mbps"
+
+msgid "NAT端口配额为0，不允许创建虚拟机"
+msgstr "NATポートクォータが0の場合、仮想マシンの作成は許可されません"
+
+msgid "NAT端口配额不足，需要"
+msgstr "NATポートクォータ不足、必要"
+
+msgid "个"
+msgstr "個"
+
+msgid "，可用"
+msgstr "、利用可能"
+
+msgid "个"
+msgstr "個"
+
+msgid "Web代理配额为0，不允许创建虚拟机"
+msgstr "Webプロキシクォータが0の場合、仮想マシンの作成は許可されません"
+
+msgid "Web代理配额不足，需要"
+msgstr "Webプロキシクォータ不足、必要"
+
+msgid "个"
+msgstr "個"
+
+msgid "，可用"
+msgstr "、利用可能"
+
+msgid "个"
+msgstr "個"
+
+msgid "无可用IP配额，不允许创建虚拟机"
+msgstr "利用可能なIPクォータがない場合、仮想マシンの作成は許可されません"
+
+msgid "内网IP配额为0，不允许创建虚拟机"
+msgstr "プライベートIPクォータが0の場合、仮想マシンの作成は許可されません"
+
+msgid "内网IP配额不足，需要"
+msgstr "プライベートIPクォータ不足、必要"
+
+msgid "个"
+msgstr "個"
+
+msgid "，可用"
+msgstr "、利用可能"
+
+msgid "个"
+msgstr "個"
+
+msgid "公网IP配额为0，不允许创建虚拟机"
+msgstr "パブリックIPクォータが0の場合、仮想マシンの作成は許可されません"
+
+msgid "公网IP配额不足，需要"
+msgstr "パブリックIPクォータ不足、必要"
+
+msgid "个"
+msgstr "個"
+
+msgid "，可用"
+msgstr "、利用可能"
+
+msgid "个"
+msgstr "個"
+
+msgid "虚拟机更新成功"
+msgstr "仮想マシンの更新成功"
+
+msgid "更新失败"
+msgstr "更新失敗"
+
+msgid "虚拟机已删除"
+msgstr "仮想マシンが削除されました"
+
+msgid "操作失败"
+msgstr "操作失敗"
+
+msgid "用户名不能为空"
+msgstr "ユーザー名は必須です"
+
+msgid "用户已经是所有者"
+msgstr "ユーザーは既に所有者です"
+
+msgid "用户不是所有者"
+msgstr "ユーザーは所有者ではありません"
+
+msgid "不能删除主所有者（第一个所有者）"
+msgstr "メイン所有者（最初の所有者）を削除できません"
+
+msgid "至少需要保留一个所有者"
+msgstr "少なくとも1人の所有者を保持する必要があります"
+
+msgid "新所有者用户名不能为空"
+msgstr "新しい所有者のユーザー名は必須です"
+
+msgid "必须确认移交所有权"
+msgstr "所有権の移譲を確認する必要があります"
+
+msgid "只有主所有者可以移交虚拟机所有权"
+msgstr "メイン所有者のみが仮想マシンの所有権を移譲できます"
+
+msgid "移交失败：新所有者没有访问主机的权限"
+msgstr "移譲失敗: 新しい所有者にホストへのアクセス権限がありません"
+
+msgid "移交失败：新所有者资源配额不足"
+msgstr "移譲失敗: 新しい所有者のリソースクォータが不足しています"
+
+msgid "虚拟机所有权已成功移交给"
+msgstr "仮想マシンの所有権を正常に移譲しました"
+
+msgid "新密码不能为空"
+msgstr "新しいパスワードは必須です"
+
+msgid "密码修改成功"
+msgstr "パスワード変更成功"
+
+msgid "密码修改失败"
+msgstr "パスワード変更失敗"
+
+msgid "不支持的操作"
+msgstr "サポートされていない操作"
+
+msgid "电源操作成功"
+msgstr "電源操作成功"
+
+msgid "获取成功"
+msgstr "取得成功"
+
+msgid "无法获取VNC控制台地址"
+msgstr "VNCコンソールアドレスを取得できません"
+
+msgid "获取VNC控制台失败"
+msgstr "VNCコンソールの取得に失敗しました"
+
+msgid "NAT规则添加成功"
+msgstr "NATルール追加成功"
+
+msgid "NAT规则不存在"
+msgstr "NATルールが存在しません"
+
+msgid "NAT规则索引无效"
+msgstr "NATルールのインデックスが無効です"
+
+msgid "NAT规则已删除"
+msgstr "NATルールが削除されました"
+
+msgid "网卡列表为空"
+msgstr "ネットワークカードリストが空です"
+
+msgid "网卡不存在"
+msgstr "ネットワークカードが存在しません"
+
+msgid "网卡添加成功"
+msgstr "ネットワークカード追加成功"
+
+msgid "添加网卡失败"
+msgstr "ネットワークカードの追加に失敗しました"
+
+msgid "网卡已删除"
+msgstr "ネットワークカードが削除されました"
+
+msgid "删除网卡失败"
+msgstr "ネットワークカードの削除に失敗しました"
+
+msgid "网卡配置已更新"
+msgstr "ネットワークカード設定が更新されました"
+
+msgid "修改网卡失败"
+msgstr "ネットワークカードの変更に失敗しました"
+
+msgid "代理配置添加成功"
+msgstr "プロキシ設定追加成功"
+
+msgid "代理配置不存在"
+msgstr "プロキシ設定が存在しません"
+
+msgid "代理配置索引无效"
+msgstr "プロキシ設定のインデックスが無効です"
+
+msgid "代理配置已删除"
+msgstr "プロキシ設定が削除されました"
+
+msgid "域名不能为空"
+msgstr "ドメインは必須です"
+
+msgid "域名已存在"
+msgstr "ドメインは既に存在します"
+
+msgid "代理配置更新成功"
+msgstr "プロキシ設定更新成功"
+
+msgid "磁盘名称不能为空"
+msgstr "ディスク名は必須です"
+
+msgid "磁盘名称只能包含数字、字母和下划线，不能包含特殊符号和中文"
+msgstr "ディスク名は数字、英字、アンダースコアのみを含むことができ、特殊記号と中国語は使用できません"
+
+msgid "磁盘已挂载，无需重复挂载"
+msgstr "ディスクは既にマウントされています。重複マウントは不要です"
+
+msgid "磁盘大小至少为1024MB"
+msgstr "ディスクサイズは少なくとも1024MBである必要があります"
+
+msgid "数据盘挂载成功"
+msgstr "データディスクのマウント成功"
+
+msgid "数据盘不存在"
+msgstr "データディスクが存在しません"
+
+msgid "数据盘已卸载"
+msgstr "データディスクがアンマウントされました"
+
+msgid "目标虚拟机不能为空"
+msgstr "ターゲット仮想マシンは必須です"
+
+msgid "目标虚拟机不存在"
+msgstr "ターゲット仮想マシンが存在しません"
+
+msgid "数据盘所有权移交成功"
+msgstr "データディスク所有権の移譲成功"
+
+msgid "数据盘已删除"
+msgstr "データディスクが削除されました"
+
+msgid "挂载名称不能为空"
+msgstr "マウント名は必須です"
+
+msgid "ISO文件不能为空"
+msgstr "ISOファイルは必須です"
+
+msgid "ISO挂载成功"
+msgstr "ISOマウント成功"
+
+msgid "ISO配置不存在"
+msgstr "ISO設定が存在しません"
+
+msgid "ISO不存在"
+msgstr "ISOが存在しません"
+
+msgid "ISO已卸载"
+msgstr "ISOがアンマウントされました"
+
+msgid "备份说明不能为空"
+msgstr "バックアップ説明は必須です"
+
+msgid "备份创建成功"
+msgstr "バックアップ作成成功"
+
+msgid "备份名称不能为空"
+msgstr "バックアップ名は必須です"
+
+msgid "备份还原成功"
+msgstr "バックアップ復元成功"
+
+msgid "备份已删除"
+msgstr "バックアップが削除されました"
+
+msgid "备份扫描成功"
+msgstr "バックアップスキャン成功"
+
+msgid "扫描失败"
+msgstr "スキャン失敗"
+
+msgid "获取全局代理配置失败"
+msgstr "グローバルプロキシ設定の取得に失敗しました"
+
+msgid "域名地址不能为空"
+msgstr "ドメインアドレスは必須です"
+
+msgid "内网地址不能为空"
+msgstr "プライベートアドレスは必須です"
+
+msgid "内网端口不能为空"
+msgstr "プライベートポートは必須です"
+
+msgid "添加全局代理配置失败"
+msgstr "グローバルプロキシ設定の追加に失敗しました"
+
+msgid "删除全局代理配置失败"
+msgstr "グローバルプロキシ設定の削除に失敗しました"
+
+msgid "MAC地址参数缺失"
+msgstr "MACアドレスパラメータがありません"
+
+msgid "状态数据为空"
+msgstr "状態データが空です"
+
+msgid "虚拟机状态已更新"
+msgstr "仮想マシン状態が更新されました"
+
+msgid "状态数据处理失败"
+msgstr "状態データ処理失敗"
+
+msgid "未找到MAC地址的虚拟机"
+msgstr "MACアドレスの仮想マシンが見つかりません"
+
+msgid "端口映射创建失败"
+msgstr "ポートマッピングの作成に失敗しました"
+
+msgid "端口映射删除失败"
+msgstr "ポートマッピングの削除に失敗しました"
+
+msgid "挂载失败"
+msgstr "マウント失敗"
+
+msgid "卸载失败"
+msgstr "アンマウント失敗"
+
+msgid "移交失败"
+msgstr "移譲失敗"
+
+msgid "删除失败"
+msgstr "削除失敗"
+
+msgid "添加代理失败"
+msgstr "プロキシ追加失敗"
+
+msgid "删除代理失败"
+msgstr "プロキシ削除失敗"
+
+msgid "自动分配IP失败"
+msgstr "IPの自動割り当てに失敗しました"
+
+msgid "绑定静态IP失败"
+msgstr "静的IPのバインドに失敗しました"
+
+# HostModule/SSHDManager.py
+msgid "paramiko 库未安装"
+msgstr "paramikoライブラリがインストールされていません"
+
+msgid "SSH 连接成功"
+msgstr "SSH接続成功"
+
+msgid "SSH 连接失败"
+msgstr "SSH接続失敗"
+
+msgid "SSH 未连接"
+msgstr "SSH未接続"
+
+msgid "命令执行失败"
+msgstr "コマンド実行失敗"
+
+msgid "无法在范围内找到可用端口"
+msgstr "範囲内で使用可能なポートが見つかりません"
+
+msgid "端口转发已启动"
+msgstr "ポート転送が開始されました"
+
+msgid "启动端口转发失败"
+msgstr "ポート転送の開始に失敗しました"
+
+# HostModule/Translation.py
+msgid "翻译目录不存在"
+msgstr "翻訳ディレクトリが存在しません"
+
+msgid "已加载"
+msgstr "読み込み済み"
+
+msgid "种语言"
+msgstr "種の言語"
+
+msgid "加载语言文件失败"
+msgstr "言語ファイルの読み込みに失敗しました"
+
+msgid "已加载语言"
+msgstr "言語を読み込みました"
+
+msgid "条翻译"
+msgstr "件の翻訳"
+
+msgid "读取语言文件"
+msgstr "言語ファイルを読み込む"
+
+msgid "失败"
+msgstr "失敗"
+
+msgid "已保存语言文件"
+msgstr "言語ファイルを保存しました"
+
+msgid "保存语言文件失败"
+msgstr "言語ファイルの保存に失敗しました"
+
+# HostModule/UserManager.py
+msgid "用户认证和权限管理模块"
+msgstr "ユーザー認証と権限管理モジュール"
+
+msgid "提供密码加密、用户认证、权限检查等功能"
+msgstr "パスワード暗号化、ユーザー認証、権限チェックなどの機能を提供します"
+
+msgid "用户认证管理类"
+msgstr "ユーザー認証管理クラス"
+
+msgid "密码加密"
+msgstr "パスワード暗号化"
+
+msgid "验证密码"
+msgstr "パスワード検証"
+
+msgid "生成随机token"
+msgstr "ランダムトークンを生成"
+
+msgid "从session获取当前用户信息"
+msgstr "セッションから現在のユーザー情報を取得"
+
+msgid "设置用户session"
+msgstr "ユーザーセッションを設定"
+
+msgid "清除session"
+msgstr "セッションをクリア"
+
+msgid "需要登录的装饰器（用户登录或Token登录）"
+msgstr "ログインが必要なデコレーター（ユーザーログインまたはトークンログイン）"
+
+msgid "需要管理员权限的装饰器"
+msgstr "管理者権限が必要なデコレーター"
+
+msgid "需要管理员权限"
+msgstr "管理者権限が必要"
+
+msgid "需要特定权限的装饰器"
+msgstr "特定の権限が必要なデコレーター"
+
+"需要"
+
+"需要"
+
+"需要"
+
+"需要"
+
+"权限"
+
+"权限"
+
+msgid "检查用户是否有访问指定主机的权限"
+msgstr "ユーザーが指定されたホストへのアクセス権限を持っているかを確認"
+
+msgid "检查用户是否有虚拟机操作权限"
+msgstr "ユーザーが仮想マシン操作権限を持っているかを確認"
+
+msgid "没有创建虚拟机的权限"
+msgstr "仮想マシンを作成する権限がありません"
+
+msgid "没有删除虚拟机的权限"
+msgstr "仮想マシンを削除する権限がありません"
+
+msgid "没有修改虚拟机的权限"
+msgstr "仮想マシンを変更する権限がありません"
+
+msgid "检查用户资源配额"
+msgstr "ユーザーリソースクォータを確認"
+
+msgid "CPU核心"
+msgstr "CPUコア"
+
+msgid "内存"
+msgstr "メモリ"
+
+msgid "磁盘"
+msgstr "ディスク"
+
+msgid "GPU显存"
+msgstr "GPUメモリ"
+
+msgid "NAT端口"
+msgstr "NATポート"
+
+msgid "WEB代理"
+msgstr "WEBプロキシ"
+
+msgid "内网IP"
+msgstr "プライベートIP"
+
+msgid "公网IP"
+msgstr "パブリックIP"
+
+msgid "流量"
+msgstr "トラフィック"
+
+msgid "上行带宽"
+msgstr "上り帯域幅"
+
+msgid "下行带宽"
+msgstr "下り帯域幅"
+
+"配额不足，"
+
+"配额不足，"
+
+"已使用"
+
+"已使用"
+
+"/"
+
+"/"
+
+msgid "邮件服务类（使用Resend API）"
+msgstr "メールサービスクラス（Resend API使用）"
+
+msgid "发送验证邮件"
+msgstr "認証メールを送信"
+
+msgid "邮件服务未配置"
+msgstr "メールサービスが設定されていません"
+
+msgid "OpenIDCS - 邮箱验证"
+msgstr "OpenIDCS - メールアドレス認証"
+
+msgid "欢迎注册 OpenIDCS"
+msgstr "OpenIDCSへようこそ"
+
+"您好 "
+
+"您好 "
+
+msgid "请点击下面的链接验证您的邮箱："
+msgstr "以下のリンクをクリックしてメールアドレスを認証してください："
+
+msgid "如果您没有注册账号，请忽略此邮件。"
+msgstr "アカウントを登録していない場合は、このメールを無視してください。"
+
+msgid "此链接24小时内有效。"
+msgstr "このリンクは24時間有効です。"
+
+"验证邮件已发送到 "
+
+"验证邮件已发送到 "
+
+"发送邮件失败: "
+
+"发送邮件失败: "
+
+"发送邮件异常: "
+
+"发送邮件异常: "
+
+msgid "发送测试邮件"
+msgstr "テストメールを送信"
+
+msgid "OpenIDCS - 测试邮件"
+msgstr "OpenIDCS - テストメール"
+
+msgid "测试邮件"
+msgstr "テストメール"
+
+msgid "您好，"
+msgstr "こんにちは、"
+
+msgid "这是一封来自 OpenIDCS 系统的测试邮件。"
+msgstr "これはOpenIDCSシステムからのテストメールです。"
+
+msgid "如果您收到这封邮件，说明邮件服务配置正常。"
+msgstr "このメールを受け取った場合、メールサービス設定は正常です。"
+
+
+msgid "OpenIDCS 系统"
+msgstr "OpenIDCS システム"
+
+msgid "测试邮件已发送到 "
+msgstr "テストメールが送信されました "
+
+msgid "发送测试邮件失败: "
+msgstr "テストメールの送信に失敗しました: "
+
+msgid "发送测试邮件异常: "
+msgstr "テストメール送信の例外: "
+
+msgid "获取当前时间字符串"
+msgstr "現在時刻の文字列を取得"
+
+msgid "发送密码重置邮件"
+msgstr "パスワードリセットメールを送信"
+
+msgid "OpenIDCS - 密码重置"
+msgstr "OpenIDCS - パスワードリセット"
+
+msgid "密码重置请求"
+msgstr "パスワードリセットリクエスト"
+
+msgid "我们收到了您的密码重置请求。"
+msgstr "パスワードリセットリクエストを受け取りました。"
+
+msgid "请点击下面的链接重置您的密码："
+msgstr "以下のリンクをクリックしてパスワードをリセットしてください："
+
+msgid "如果您没有请求重置密码，请忽略此邮件。"
+msgstr "パスワードリセットを要求していない場合は、このメールを無視してください。"
+
+"密码重置邮件已发送到 "
+
+"密码重置邮件已发送到 "
+
+"发送密码重置邮件失败: "
+
+"发送密码重置邮件失败: "
+
+"发送密码重置邮件异常: "
+
+"发送密码重置邮件异常: "
+
+msgid "发送邮箱变更验证邮件"
+msgstr "メールアドレス変更認証メールを送信"
+
+msgid "OpenIDCS - 邮箱变更验证"
+msgstr "OpenIDCS - メールアドレス変更認証"
+
+msgid "邮箱变更验证"
+msgstr "メールアドレス変更認証"
+
+msgid "我们收到了您的邮箱变更请求。"
+msgstr "メールアドレス変更リクエストを受け取りました。"
+
+msgid "请点击下面的链接验证您的新邮箱地址："
+msgstr "以下のリンクをクリックして新しいメールアドレスを認証してください："
+
+msgid "验证成功后，您的账号邮箱将更新为此邮箱地址。"
+msgstr "認証に成功すると、アカウントのメールアドレスがこのアドレスに更新されます。"
+
+msgid "如果您没有请求变更邮箱，请忽略此邮件。"
+msgstr "メールアドレス変更を要求していない場合は、このメールを無視してください。"
+
+"邮箱变更验证邮件已发送到 "
+
+"邮箱变更验证邮件已发送到 "
+
+"发送邮箱变更验证邮件失败: "
+
+"发送邮箱变更验证邮件失败: "
+
+"发送邮箱变更验证邮件异常: "
+
+"发送邮箱变更验证邮件异常: "
+
+# HostModule/DataManager.py
+msgid "字段已存在，跳过"
+msgstr "フィールドは既に存在します。スキップします"
+
+msgid "数据库初始化完成"
+msgstr "データベース初期化完了"
+
+msgid "数据库初始化错误"
+msgstr "データベース初期化エラー"
+
+msgid "警告: SQL文件不存在"
+msgstr "警告: SQLファイルが存在しません"
+
+msgid "当前工作目录"
+msgstr "現在の作業ディレクトリ"
+
+msgid "项目根目录"
+msgstr "プロジェクトルートディレクトリ"
+
+msgid "已创建默认管理员用户: admin/admin123"
+msgstr "デフォルト管理者ユーザーを作成しました: admin/admin123"
+
+msgid "创建默认管理员用户失败"
+msgstr "デフォルト管理者ユーザーの作成に失敗しました"
+
+msgid "已存在管理员用户，跳过默认用户创建"
+msgstr "管理者ユーザーは既に存在します。デフォルトユーザーの作成をスキップします"
+
+msgid "创建默认管理员用户时出错"
+msgstr "デフォルト管理者ユーザーの作成中にエラーが発生しました"
+
+msgid "已创建默认全局配置"
+msgstr "デフォルトグローバル設定を作成しました"
+
+msgid "更新全局配置错误"
+msgstr "グローバル設定更新エラー"
+
+msgid "保存主机配置错误"
+msgstr "ホスト設定保存エラー"
+
+msgid "删除主机配置错误"
+msgstr "ホスト設定削除エラー"
+
+msgid "添加主机状态失败"
+msgstr "ホスト状態の追加に失敗しました"
+
+msgid "保存主机状态错误"
+msgstr "ホスト状態保存エラー"
+
+msgid "发现需要删除的虚拟机"
+msgstr "削除が必要な仮想マシンを発見"
+
+msgid "已删除"
+msgstr "削除しました"
+
+msgid "个不存在的虚拟机配置"
+msgstr "個の存在しない仮想マシン設定"
+
+msgid "保存虚拟机存储配置错误"
+msgstr "仮想マシンストレージ設定保存エラー"
+
+msgid "更新虚拟机配置时间戳错误"
+msgstr "仮想マシン設定タイムスタンプ更新エラー"
+
+msgid "虚拟机"
+msgstr "仮想マシン"
+
+msgid "的状态数据格式异常（字典），已转换为列表"
+msgstr "の状態データ形式が異常（辞書）、リストに変換しました"
+
+msgid "虚拟机"
+msgstr "仮想マシン"
+
+msgid "的状态数据格式未知，已重置为空列表"
+msgstr "の状態データ形式が不明、空リストにリセットしました"
+
+"流量累加: 之前="
+
+"流量累加: 之前="
+
+"MB, 本次="
+
+"MB, 本次="
+
+"MB, 累计="
+
+"MB, 累计="
+
+msgid "MB"
+msgstr "MB"
+
+msgid "首次上报流量"
+msgstr "初回トラフィック報告"
+
+msgid "更新虚拟机"
+msgstr "仮想マシンを更新"
+
+msgid "状态，记录数"
+msgstr "状態、記録数"
+
+msgid "插入虚拟机"
+msgstr "仮想マシンを挿入"
+
+msgid "状态，记录数"
+msgstr "状態、記録数"
+
+msgid "虚拟机"
+msgstr "仮想マシン"
+
+msgid "状态保存成功"
+msgstr "状態保存成功"
+
+msgid "添加虚拟机状态失败"
+msgstr "仮想マシン状態の追加に失敗しました"
+
+msgid "开始保存虚拟机状态，主机"
+msgstr "仮想マシン状態の保存を開始、ホスト"
+
+msgid "虚拟机数量"
+msgstr "仮想マシン数"
+
+msgid "已清除旧状态，删除行数"
+msgstr "古い状態をクリアしました、削除行数"
+
+msgid "虚拟机状态保存成功，共插入"
+msgstr "仮想マシン状態保存成功、合計挿入"
+
+msgid "条记录"
+msgstr "件のレコード"
+
+msgid "保存虚拟机状态错误"
+msgstr "仮想マシン状態保存エラー"
+
+msgid "虚拟机"
+msgstr "仮想マシン"
+
+msgid "已离线，最后上报时间(UTC)"
+msgstr "オフライン、最終報告時刻(UTC)"
+
+msgid "本地时间"
+msgstr "ローカル時刻"
+
+msgid "距今"
+msgstr "現在から"
+
+msgid "秒"
+msgstr "秒"
+
+msgid "解析时间戳失败"
+msgstr "タイムスタンプ解析失敗"
+
+msgid "删除虚拟机状态数据: 主机"
+msgstr "仮想マシン状態データを削除: ホスト"
+
+msgid "删除行数"
+msgstr "削除行数"
+
+msgid "删除虚拟机状态数据失败"
+msgstr "仮想マシン状態データの削除に失敗しました"
+
+msgid "保存虚拟机任务错误"
+msgstr "仮想マシンタスク保存エラー"
+
+msgid "保存全局代理配置错误"
+msgstr "グローバルプロキシ設定保存エラー"
+
+msgid "添加全局代理配置错误"
+msgstr "グローバルプロキシ設定追加エラー"
+
+msgid "删除全局代理配置错误"
+msgstr "グローバルプロキシ設定削除エラー"
+
+msgid "添加日志失败"
+msgstr "ログの追加に失敗しました"
+
+msgid "清理日志失败"
+msgstr "ログのクリーンアップに失敗しました"
+
+msgid "保存日志记录错误"
+msgstr "ログレコード保存エラー"
+
+msgid "保存主机完整数据错误"
+msgstr "ホスト完全データ保存エラー"
+
+msgid "创建用户失败（用户名或邮箱已存在）"
+msgstr "ユーザー作成失作成失敗（ユーザー名またはメールアドレスが既に存在します）"
+
+msgid "创建用户错误"
+msgstr "ユーザー作成エラー"
+
+msgid "更新用户错误"
+msgstr "ユーザー更新エラー"
+
+msgid "删除用户错误"
+msgstr "ユーザー削除エラー"
+
+msgid "更新用户登录时间错误"
+msgstr "ユーザーログイン時刻更新エラー"
+
+msgid "删除重置token错误"
+msgstr "リセットトークン削除エラー"
+
+msgid "更新系统设置错误"
+msgstr "システム設定更新エラー"
+
+# HostServer/BasicServer.py
+msgid "日志系统已初始化"
+msgstr "ログシステムが初期化されました"
+
+msgid "日志系统初始化失败"
+msgstr "ログシステム初期化失敗"
+
+msgid "添加日志失败"
+msgstr "ログの追加に失敗しました"
+
+msgid "不支持的操作系统"
+msgstr "サポートされていないオペレーティングシステム"
+
+msgid "主机状态已保存"
+msgstr "ホスト状態が保存されました"
+
+msgid "保存数据失败"
+msgstr "データ保存失敗"
+
+msgid "主机日志已保存"
+msgstr "ホストログが保存されました"
+
+msgid "虚拟机配置已保存"
+msgstr "仮想マシン設定が保存されました"
+
+msgid "从数据库加载数据失败"
+msgstr "データベースからのデータ読み込みに失敗しました"
+
+msgid "无法获取SSH端口"
+msgstr "SSHポートを取得できません"
+
+msgid "端口已被占用"
+msgstr "ポートは既に使用されています"
+
+msgid "虚拟机不存在"
+msgstr "仮想マシンが存在しません"
+
+msgid "当主机为远程IP时，必须先添加NAT映射才能代理"
+msgstr "ホストがリモートIPの場合、プロキシするには先にNATマッピングを追加する必要があります"
+
+msgid "当前映射的本地端口缺少NAT映射，请先添加映射"
+msgstr "現在マッピングされたローカルポートにNATマッピングがありません。先にマッピングを追加してください"
+
+msgid "域名 "
+msgstr "ドメイン "
+
+msgid "已存在"
+msgstr "既に存在します"
+
+msgid "网络检查失败"
+msgstr "ネットワークチェック失敗"
+
+msgid "网络静态绑定失败"
+msgstr "ネットワーク静的バインド失敗"
+
+msgid "VNC服务启动失败"
+msgstr "VNCサービス起動失敗"
+
+msgid "绑定静态IP"
+msgstr "静的IPをバインド"
+
+msgid "静态IP绑定成功"
+msgstr "静的IPバインド成功"
+
+msgid "静态IP绑定失败"
+msgstr "静的IPバインド失敗"
+
+msgid "静态IP绑定异常"
+msgstr "静的IPバインド例外"
+
+msgid "未找到IP地址"
+msgstr "IPアドレスが見つかりません"
+
+msgid "请补全实现"
+msgstr "実装を完了してください"
+
+msgid "SSH连接失败，无法同步端口转发"
+msgstr "SSH接続失敗、ポート転送を同期できません"
+
+msgid "删除多余的端口转发"
+msgstr "余分なポート転送を削除"
+
+msgid "端口映射变更，删除旧转发"
+msgstr "ポートマッピングの変更、古い転送を削除"
+
+msgid "添加端口转发"
+msgstr "ポート転送を追加"
+
+msgid "添加端口转发失败"
+msgstr "ポート転送の追加に失敗しました"
+
+msgid "端口转发同步完成: 删除 "
+msgstr "ポート転送同期完了: 削除 "
+
+msgid "个，添加 "
+msgstr "個、追加 "
+
+msgid "个"
+msgstr "個"
+
+msgid "同步端口转发时出错"
+msgstr "ポート転送の同期中にエラーが発生しました"
+
+msgid "SSH 连接失败"
+msgstr "SSH接続失敗"
+
+msgid "端口 "
+msgstr "ポート "
+
+msgid "已被占用"
+msgstr "は既に使用されています"
+
+msgid "端口 "
+msgstr "ポート "
+
+msgid "成功映射到 "
+msgstr "正常にマッピングされました "
+
+msgid ":"
+msgstr ":"
+
+msgid "端口映射失败"
+msgstr "ポートマッピング失敗"
+
+msgid "端口 "
+msgstr "ポート "
+
+msgid "映射已删除"
+msgstr "マッピングが削除されました"
+
+msgid "删除备份"
+msgstr "バックアップを削除"
+
+msgid "共删除 "
+msgstr "合計削除 "
+
+msgid "个备份文件"
+msgstr "個のバックアップファイル"
+
+msgid "已删除 "
+msgstr "削除しました "
+
+msgid "个备份文件"
+msgstr "個のバックアップファイル"
+
+msgid "扫描备份目录失败"
+msgstr "バックアップディレクトリのスキャンに失敗しました"
+
+msgid "指定磁盘已删除"
+msgstr "指定したディスクが削除されました"
+
+msgid "删除挂载路径"
+msgstr "マウントパスを削除"
+
+msgid "删除挂载失败"
+msgstr "マウントの削除に失敗しました"
+
+msgid "删除成功"
+msgstr "削除成功"
+
+msgid "宿主机加载成功"
+msgstr "ホストマシンの読み込み成功"
+
+msgid "VM Rest服务器已停止"
+msgstr "VM Restサーバーが停止しました"
+
+msgid "虚拟机创建成功"
+msgstr "仮想マシン作成成功"
+
+msgid "虚拟机 "
+msgstr "仮想マシン "
+
+msgid "配置已更新"
+msgstr "設定が更新されました"
+
+msgid "操作成功完成"
+msgstr "操作が正常に完了しました"
+
+msgid "备份文件不存在"
+msgstr "バックアップファイルが存在しません"
+
+msgid "备份文件已删除"
+msgstr "バックアップファイルが削除されました"
+
+msgid "备份文件名格式不正确"
+msgstr "バックアップファイル名の形式が正しくありません"
+
+msgid "解析备份时间失败"
+msgstr "バックアップ時刻解析失敗"
+
+msgid "个备份文件已加载"
+msgstr "個のバックアップファイルが読み込まれました"
+
+msgid "虚拟盘不存在"
+msgstr "仮想ディスクが存在しません"
+
+msgid "磁盘删除成功"
+msgstr "ディスク削除成功"
+
+msgid "磁盘"
+msgstr "ディスク"
+
+msgid "成功"
+msgstr "成功"
+
+msgid "挂载"
+msgstr "マウント"
+
+msgid "卸载"
+msgstr "アンマウント"
+
+msgid "ISO镜像文件不存在"
+msgstr "ISOイメージファイルが存在しません"
+
+msgid "挂载名称已存在"
+msgstr "マウント名は既に存在します"
+
+msgid "ISO挂载成功"
+msgstr "ISOマウント成功"
+
+msgid "ISO镜像不存在"
+msgstr "ISOイメージが存在しません"
+
+msgid "ISO卸载成功"
+msgstr "ISOアンマウント成功"
+
+msgid "ISO镜像"
+msgstr "ISOイメージ"
+
+msgid "成功"
+msgstr "成功"
+
+msgid "源虚拟机不存在"
+msgstr "ソース仮想マシンが存在しません"
+
+msgid "目标虚拟机不存在"
+msgstr "ターゲット仮想マシンが存在しません"
+
+msgid "磁盘不存在"
+msgstr "ディスクが存在しません"
+
+msgid "磁盘已挂载，无法移交。请先卸载磁盘后再进行移交操作"
+msgstr "ディスクは既にマウントされています。移譲できません。先にディスクをアンマウントしてから移譲操作を行ってください"
+
+msgid "磁盘文件已从 "
+msgstr "ディスクファイルが "
+
+msgid "移动到 "
+msgstr "から移動しました "
+
+msgid "源磁盘文件 "
+msgstr "ソースディスクファイル "
+
+msgid "不存在"
+msgstr "が存在しません"
+
+msgid "磁盘 "
+msgstr "ディスク "
+
+msgid "已从虚拟机 "
+msgstr "は仮想マシン "
+
+msgid "移交到 "
+msgstr "から移譲されました "
+
+msgid "磁盘移交成功"
+msgstr "ディスク移譲成功"
+
+msgid "磁盘移交失败"
+msgstr "ディスク移譲失敗"
+
+msgid "用户已经是虚拟机所有者"
+msgstr "ユーザーは既に仮想マシンの所有者です"
+
+msgid "虚拟机 "
+msgstr "仮想マシン "
+
+msgid "所有权从 "
+msgstr "の所有権が "
+
+msgid "移交给 "
+msgstr "から "
+
+msgid "，保留权限: "
+msgstr "に移譲されました、権限を保持: "
+
+msgid "虚拟机所有权已成功移交给 "
+msgstr "仮想マシンの所有権を正常に移譲しました "
+
+msgid "的 vc_port 为空"
+msgstr "の vc_port が空です"
+
+msgid "VNC端口为空"
+msgstr "VNCポートが空です"
+
+msgid "的 vc_pass 为空"
+msgstr "の vc_pass が空です"
+
+msgid "VNC密码为空"
+msgstr "VNCパスワードが空です"
+
+msgid "虚拟机控制台访问失败"
+msgstr "仮想マシンコンソールアクセス失敗"
+
+msgid "7z可执行文件不存在"
+msgstr "7z実行ファイルが存在しません"
+
+msgid "7z压缩失败"
+msgstr "7z圧縮失敗"
+
+msgid "7z解压失败"
+msgstr "7z解凍失敗"
+
+msgid "准备"
+msgstr "準備"
+
+msgid "ISO"
+msgstr "ISO"
+
+msgid "ISO文件不存在"
+msgstr "ISOファイルが存在しません"
+
+# HostServer/Workstation.py
+msgid "未找到vmrest.exe文件"
+msgstr "vmrest.exeファイルが見つかりません"
+
+msgid "VM Rest Server未运行"
+msgstr "VM Rest Serverが実行されていません"
+
+msgid "获取虚拟机列表失败"
+msgstr "仮想マシンリストの取得に失敗しました"
+
+msgid "发现并添加虚拟机"
+msgstr "仮想マシンを発見し追加"
+
+msgid "保存扫描的虚拟机到数据库失败"
+msgstr "スキャンされた仮想マシンのデータベース保存に失敗しました"
+
+msgid "扫描完成。共扫描到"
+msgstr "スキャン完了。合計スキャン "
+
+msgid "台虚拟机，新增"
+msgstr "台の仮想マシン、新規追加 "
+
+msgid "台虚拟机配置。"
+msgstr "台の仮想マシン設定。"
+
+msgid "扫描虚拟机时出错"
+msgstr "仮想マシンのスキャン中にエラーが発生しました"
+
+msgid "安装系统失败"
+msgstr "システムインストール失敗"
+
+msgid "注册虚拟机失败"
+msgstr "仮想マシン登録失敗"
+
+msgid "虚拟机创建失败"
+msgstr "仮想マシン作成失敗"
+
+msgid "虚拟机 "
+msgstr "仮想マシン "
+
+msgid "不存在"
+msgstr "が存在しません"
+
+msgid "虚拟机 "
+msgstr "仮想マシン "
+
+msgid "网络配置更新失败"
+msgstr "ネットワーク設定更新失敗"
+
+msgid "虚拟机 "
+msgstr "仮想マシン "
+
+msgid "VMX文件写入失败"
+msgstr "VMXファイル書き込み失敗"
+
+msgid "虚拟机 "
+msgstr "仮想マシン "
+
+msgid "启动失败"
+msgstr "起動失敗"
+
+msgid "虚拟机 "
+msgstr "仮想マシン "
+
+msgid "不存在"
+msgstr "が存在しません"
+
+# HostServer/LXContainer.py
+msgid "缺少证书路径，请设置启动路径为证书路径"
+msgstr "証明書パスがありません。起動パスを証明書パスに設定してください"
+
+msgid "证书文件未找到，请检查"
+msgstr "証明書ファイルが見つかりません。確認してください"
+
+msgid "Crontabs: LXD连接失败，使用本地状态"
+msgstr "Crontabs: LXD接続失敗、ローカル状態を使用"
+
+msgid "远程主机状态已保存"
+msgstr "リモートホスト状態が保存されました"
+
+msgid "获取远程主机状态失败"
+msgstr "リモートホスト状態の取得に失敗しました"
+
+msgid "Crontabs 执行失败"
+msgstr "Crontabs実行失敗"
+
+msgid "无法连接到LXD获取状态"
+msgstr "LXDに接続して状態を取得できません"
+
+msgid "获取LXD主机状态失败"
+msgstr "LXDホスト状態の取得に失敗しました"
+
+msgid "发现并添加容器"
+msgstr "コンテナを発見し追加"
+
+msgid "规范化为"
+msgstr "正規化: "
+
+msgid "扫描完成。共扫描到"
+msgstr "スキャン完了。合計スキャン "
+
+msgid "个容器，新增"
+msgstr "個のコンテナ、新規追加 "
+
+msgid "个容器配置。"
+msgstr "個のコンテナ設定。"
+
+msgid "扫描容器时出错"
+msgstr "コンテナのスキャン中にエラーが発生しました"
+
+msgid "禁止为同一容器分配多个相同类型的网卡。"
+msgstr "同じコンテナに複数の同じタイプのネットワークカードを割り当てることは禁止されています。"
+
+msgid "网卡"
+msgstr "ネットワークカード"
+
+msgid "都是"
+msgstr "は両方とも"
+
+msgid "类型"
+msgstr "タイプ"
+
+msgid "的IP地址"
+msgstr "のIPアドレス"
+
+msgid "已被其他虚拟机使用"
+msgstr "は既に他の仮想マシンで使用されています"
+
+msgid "的网络类型"
+msgstr "のネットワークタイプ"
+
+msgid "未在ipaddr_maps中配置"
+msgstr "がipaddr_mapsで設定されていません"
+
+msgid "的ipaddr_maps配置不完整（缺少from或nums）"
+msgstr "のipaddr_maps設定が不完全（fromまたはnumsが欠けています）"
+
+msgid "为网卡"
+msgstr "ネットワークカード"
+
+msgid "自动分配IP"
+msgstr "のIP自動割り当て"
+
+msgid "范围"
+msgstr "範囲"
+
+msgid "处理IP分配时出错"
+msgstr "IP割り当て処理中にエラーが発生しました"
+
+msgid "无法为网卡"
+msgstr "ネットワークカード"
+
+msgid "分配IP地址，所有IP已被占用或无可用IP"
+msgstr "にIPアドレスを割り当てることができません。すべてのIPが使用中か利用可能なIPがありません"
+
+msgid "网络配置检查完成"
+msgstr "ネットワーク設定チェック完了"
+
+msgid "网络检查时出错"
+msgstr "ネットワークチェック中にエラーが発生しました"
+
+msgid "网络检查失败"
+msgstr "ネットワークチェック失敗"
+
+msgid "容器"
+msgstr "コンテナ"
+
+msgid "主机网络"
+msgstr "ホストネットワーク"
+
+msgid "未配置"
+msgstr "未設定"
+
+msgid "连接容器网络"
+msgstr "コンテナネットワークに接続"
+
+msgid "网络配置成功"
+msgstr "ネットワーク設定成功"
+
+msgid "删除容器网络设备"
+msgstr "コンテナネットワークデバイスを削除"
+
+msgid "网络配置失败"
+msgstr "ネットワーク設定失敗"
+
+msgid "容器名已规范化"
+msgstr "コンテナ名が正規化されました"
+
+msgid "容器创建失败"
+msgstr "コンテナ作成失敗"
+
+msgid "模板文件未找到"
+msgstr "テンプレートファイルが見つかりません"
+
+msgid "搜索路径"
+msgstr "検索パス"
+
+msgid "可用模板"
+msgstr "利用可能なテンプレート"
+
+msgid "该目录下没有可用的 .tar.gz 模板文件"
+msgstr "このディレクトリには使用可能な .tar.gz テンプレートファイルがありません"
+
+msgid "LXD镜像未找到"
+msgstr "LXDイメージが見つかりません"
+
+msgid "可用镜像别名"
+msgstr "利用可能なイメージエイリアス"
+
+msgid "没有可用的LXD镜像，请使用 'lxc image list' 查看"
+msgstr "使用可能なLXDイメージがありません。'lxc image list'を使用して確認してください"
+
+msgid "容器启动失败"
+msgstr "コンテナ起動失敗"
+
+msgid "容器更新失败"
+msgstr "コンテナ更新失敗"
+
+msgid "删除容器失败"
+msgstr "コンテナ削除失敗"
+
+msgid "无法冻结容器"
+msgstr "コンテナをフリーズできません"
+
+msgid "当前状态"
+msgstr "現在の状態"
+
+msgid "无法解冻容器"
+msgstr "コンテナを解凍できません"
+
+msgid "电源操作失败"
+msgstr "電源操作失敗"
+
+msgid "设置密码失败"
+msgstr "パスワード設定失敗"
+
+msgid "虚拟机备份目录未设置，请联系管理员"
+msgstr "仮想マシンバックアップディレクトリが設定されていません。管理者にお問い合わせください"
+
+msgid "开始备份容器"
+msgstr "コンテナのバックアップを開始"
+
+msgid "删除旧的临时镜像"
+msgstr "古い一時イメージを削除"
+
+msgid "临时镜像已删除"
+msgstr "一時イメージが削除されました"
+
+msgid "容器备份完成，文件大小"
+msgstr "コンテナバックアップ完了、ファイルサイズ"
+
+msgid "容器备份成功，文件"
+msgstr "コンテナバックアップ成功、ファイル"
+
+msgid "容器"
+msgstr "コンテナ"
+
+msgid "已重新启动"
+msgstr "が再起動されました"
+
+msgid "重新启动失败"
+msgstr "再起動失敗"
+
+msgid "备份容器失败"
+msgstr "コンテナバックアップ失敗"
+
+msgid "备份失败"
+msgstr "バックアップ失敗"
+
+msgid "备份文件不存在"
+msgstr "バックアップファイルが存在しません"
+
+msgid "已删除旧容器"
+msgstr "古いコンテナを削除しました"
+
+msgid "开始恢复容器"
+msgstr "コンテナの復元を開始"
+
+msgid "备份文件"
+msgstr "バックアップファイル"
+
+msgid "删除旧的还原临时镜像"
+msgstr "古い復元一時イメージを削除"
+
+msgid "镜像导入成功"
+msgstr "イメージインポート成功"
+
+msgid "容器恢复成功"
+msgstr "コンテナ復元成功"
+
+msgid "还原临时镜像已删除"
+msgstr "復元一時イメージが削除されました"
+
+msgid "删除还原临时镜像失败"
+msgstr "復元一時イメージの削除に失敗しました"
+
+msgid "恢复容器失败"
+msgstr "コンテナ復元失敗"
+
+msgid "恢复失败"
+msgstr "復元失敗"
+
+msgid "磁盘挂载操作失败"
+msgstr "ディスクマウント操作失敗"
+
+msgid "当未设置主机密码时，必须添加一个端口映射到22端口"
+msgstr "ホストパスワードが設定されていない場合、ポートマッピングを22ポートに追加する必要があります"
+
+msgid "未找到当前虚拟机22端口对应端口映射信息，无法继续"
+msgstr "現在の仮想マシン22ポートに対応するポートマッピング情報が見つかりません。続行できません"
+
+msgid "主机外网IP不存在"
+msgstr "ホスト外網IPが存在しません"
+
+msgid "启动tty会话失败"
+msgstr "ttyセッション起動失敗"
+
+msgid "添加SSH代理失败"
+msgstr "SSHプロキシ追加失敗"
+
+msgid "SSH代理配置失败"
+msgstr "SSHプロキシ設定失敗"
+
+# HostServer/OCInterface.py
+msgid "无法连接到Docker获取状态"
+msgstr "Dockerに接続して状態を取得できません"
+
+msgid "获取Docker主机状态失败"
+msgstr "Dockerホスト状態の取得に失敗しました"
+
+msgid "Docker连接失败，跳过容器状态采集"
+msgstr "Docker接続失敗、コンテナ状態収集をスキップ"
+
+msgid "不存在，跳过"
+msgstr "が存在しません、スキップ"
+
+msgid "未运行，跳过"
+msgstr "が実行されていません、スキップ"
+
+msgid "状态已保存"
+msgstr "状態が保存されました"
+
+msgid "状态保存失败"
+msgstr "状態保存失敗"
+
+msgid "处理容器"
+msgstr "コンテナ"
+
+msgid "时出错"
+msgstr "の処理中にエラーが発生しました"
+
+msgid "容器状态采集失败"
+msgstr "コンテナ状態収集失敗"
+
+msgid "解析容器"
+msgstr "コンテナ"
+
+msgid "统计信息失败"
+msgstr "統計情報解析失敗"
+
+msgid "禁止为同一容器分配多个相同类型的网卡。网卡"
+msgstr "同じコンテナに複数の同じタイプのネットワークカードを割り当てることは禁止されています。ネットワークカード"
+
+msgid "无法获取Docker网络"
+msgstr "Dockerネットワークを取得できません"
+
+msgid "Docker网络"
+msgstr "Dockerネットワーク"
+
+msgid "没有IPAM配置"
+msgstr "IPAM設定がありません"
+
+msgid "无法为网卡"
+msgstr "ネットワークカード"
+
+msgid "分配IP地址，Docker网络"
+msgstr "にIPアドレスを割り当てることができません、Dockerネットワーク"
+
+msgid "中的所有IP已被占用或无可用IP"
+msgstr "のすべてのIPが使用中か利用可能なIPがありません"
+
+msgid "扫描完成。共扫描到"
+msgstr "スキャン完了。合計スキャン "
+
+msgid "个容器，新增"
+msgstr "個のコンテナ、新規追加 "
+
+msgid "个容器配置。"
+msgstr "個のコンテナ設定。"
+
+msgid "扫描容器时出错"
+msgstr "コンテナのスキャン中にエラーが発生しました"
+
+msgid "容器创建失败"
+msgstr "コンテナ作成失敗"
+
+msgid "无法加载镜像"
+msgstr "イメージを読み込めません"
+
+msgid "容器更新失败"
+msgstr "コンテナ更新失敗"
+
+msgid "网络配置更新失败"
+msgstr "ネットワーク設定更新失敗"
+
+msgid "配置更新成功"
+msgstr "設定更新成功"
+
+msgid "删除容器失败"
+msgstr "コンテナ削除失敗"
+
+msgid "删除镜像"
+msgstr "イメージを削除"
+
+msgid "共删除"
+msgstr "合計削除"
+
+msgid "个镜像标签"
+msgstr "個のイメージタグ"
+
+msgid "无法停止容器"
+msgstr "コンテナを停止できません"
+
+msgid "当前状态"
+msgstr "現在の状態"
+
+msgid "强制停止也失败"
+msgstr "強制停止も失敗しました"
+
+msgid "无法暂停容器"
+msgstr "コンテナを一時停止できません"
+
+msgid "无法恢复容器"
+msgstr "コンテナを再開できません"
+
+msgid "可能是权限不足，请检查Docker守护进程权限"
+msgstr "権限が不足している可能性があります。Dockerデーモンの権限を確認してください"
+
+msgid "操作超时，容器可能无响应"
+msgstr "操作タイムアウト、コンテナが応答しない可能性があります"
+
+msgid "容器状态冲突，可能有其他操作正在进行"
+msgstr "コンテナ状態の競合、他の操作が進行中の可能性があります"
+
+msgid "Docker API无法找到容器"
+msgstr "Docker APIでコンテナが見つかりません"
+
+msgid "未运行，请先启动容器"
+msgstr "実行されていません。先にコンテナを起動してください"
+
+msgid "设置密码失败"
+msgstr "パスワード設定失敗"
+
+msgid "的root密码已更新"
+msgstr "のrootパスワードが更新されました"
+
+msgid "密码设置成功"
+msgstr "パスワード設定成功"
+
+msgid "虚拟机备份目录未设置，请联系管理员"
+msgstr "仮想マシンバックアップディレクトリが設定されていません。管理者にお問い合わせください"
+
+msgid "已停止"
+msgstr "が停止しました"
+
+msgid "在远程服务器执行备份命令"
+msgstr "リモートサーバーでバックアップコマンドを実行"
+
+msgid "远程备份完成"
+msgstr "リモートバックアップ完了"
+
+msgid "开始备份容器"
+msgstr "コンテナのバックアップを開始"
+
+msgid "备份完成，文件大小"
+msgstr "バックアップ完了、ファイルサイズ"
+
+msgid "容器备份成功，文件"
+msgstr "コンテナバックアップ成功、ファイル"
+
+msgid "已重新启动"
+msgstr "が再起動されました"
+
+msgid "检查备份文件是否存在"
+msgstr "バックアップファイルが存在するかを確認"
+
+msgid "从远程主机恢复备份"
+msgstr "リモートホストからバックアップを復元"
+
+msgid "远程导入镜像失败"
+msgstr "リモートイメージインポート失敗"
+
+msgid "无法导入镜像"
+msgstr "イメージをインポートできません"
+
+msgid "从备份文件导入镜像"
+msgstr "バックアップファイルからイメージをインポート"
+
+msgid "未知备份文件格式"
+msgstr "不明なバックアップファイル形式"
+
+msgid "恢复成功"
+msgstr "復元成功"
+
+msgid "Docker容器不支持动态磁盘挂载"
+msgstr "Dockerコンテナは動的ディスクマウントをサポートしていません"
+
+msgid "Docker containers do not support ISO mounting"
+msgstr "DockerコンテナはISOマウントをサポートしていません"
+
+msgid "当未设置主机密码时，必须添加一个端口映射到22端口"
+msgstr "ホストパスワードが設定されていない場合、ポートマッピングを22ポートに追加する必要があります"
+
+msgid "未找到当前虚拟机22端口对应端口映射信息，无法继续"
+msgstr "現在の仮想マシン22ポートに対応するポートマッピング情報が見つかりません。続行できません"
+
+# HostServer/ProxmoxQemu.py
+msgid "连接PVE"
+msgstr "PVEに接続"
+
+msgid "分配VMID失败"
+msgstr "VMID割り当て失敗"
+
+msgid "无法连接到Proxmox获取VMID"
+msgstr "Proxmoxに接続してVMIDを取得できません"
+
+msgid "从API获取到虚拟机"
+msgstr "APIから仮想マシンを取得"
+
+msgid "的VMID"
+msgstr "のVMID"
+
+msgid "未找到虚拟机"
+msgstr "仮想マシンが見つかりません"
+
+msgid "获取VMID时出错"
+msgstr "VMID取得中にエラーが発生しました"
+
+msgid "Proxmox连接失败，使用本地状态"
+msgstr "Proxmox接続失敗、ローカル状態を使用"
+
+msgid "Proxmox主机状态已更新"
+msgstr "Proxmoxホスト状態が更新されました"
+
+msgid "Crontabs执行失败"
+msgstr "Crontabs実行失敗"
+
+msgid "无法连接到Proxmox获取状态"
+msgstr "Proxmoxに接続して状態を取得できません"
+
+msgid "获取Proxmox主机状态失败"
+msgstr "Proxmoxホスト状態の取得に失敗しました"
+
+msgid "发现并添加虚拟机"
+msgstr "仮想マシンを発見し追加"
+
+msgid "Failed to save scanned DockManage to database"
+msgstr "スキャンされた仮想マシンのデータベース保存に失敗しました"
+
+msgid "扫描完成。共扫描到"
+msgstr "スキャン完了。合計スキャン "
+
+msgid "个虚拟机，新增"
+msgstr "個の仮想マシン、新規追加 "
+
+msgid "个虚拟机配置。"
+msgstr "個の仮想マシン設定。"
+
+msgid "扫描虚拟机时出错"
+msgstr "仮想マシンのスキャン中にエラーが発生しました"
+
+msgid "创建成功"
+msgstr "作成成功"
+
+msgid "iKuai路由器绑定失败"
+msgstr "iKuaiルーターバインド失敗"
+
+msgid "虚拟机创建失败"
+msgstr "仮想マシン作成失敗"
+
+msgid "的VMID未找到"
+msgstr "のVMIDが見つかりません"
+
+msgid "未指定系统镜像"
+msgstr "システムイメージが指定されていません"
+
+msgid "未配置镜像路径"
+msgstr "イメージパスが設定されていません"
+
+msgid "通过SSH复制镜像"
+msgstr "SSH経由でイメージをコピー"
+
+msgid "复制镜像失败"
+msgstr "イメージコピー失敗"
+
+msgid "本地复制镜像"
+msgstr "ローカルでイメージをコピー"
+
+msgid "系统安装完成"
+msgstr "システムインストール完了"
+
+msgid "安装成功"
+msgstr "インストール成功"
+
+msgid "配置已更新"
+msgstr "設定が更新されました"
+
+msgid "虚拟机启动失败"
+msgstr "仮想マシン起動失敗"
+
+msgid "虚拟机更新失败"
+msgstr "仮想マシン更新失敗"
+
+msgid "VMID未找到"
+msgstr "VMIDが見つかりません"
+
+msgid "删除虚拟机失败"
+msgstr "仮想マシン削除失敗"
+
+msgid "已启动"
+msgstr "が起動しました"
+
+msgid "已经在运行"
+msgstr "は既に実行中です"
+
+msgid "已经停止"
+msgstr "は既に停止しています"
+
+msgid "已重启"
+msgstr "が再起動しました"
+
+msgid "已暂停"
+msgstr "が一時停止しました"
+
+msgid "未运行，无法暂停"
+msgstr "実行されていません。一時停止できません"
+
+msgid "未暂停，无法恢复"
+msgstr "一時停止していません。再開できません"
+
+msgid "通过agent设置密码失败"
+msgstr "エージェント経由でのパスワード設定失敗"
+
+msgid "设置密码失败，请确保虚拟机已安装qemu-guest-agent"
+msgstr "パスワード設定失敗。仮想マシンにqemu-guest-agentがインストールされているか確認してください"
+
+msgid "备份任务已创建"
+msgstr "バックアップタスクが作成されました"
+
+msgid "虚拟机备份成功，文件"
+msgstr "仮想マシンバックアップ成功、ファイル"
+
+msgid "备份虚拟机失败"
+msgstr "仮想マシンバックアップ失敗"
+
+msgid "备份"
+msgstr "バックアップ"
+
+msgid "开始恢复虚拟机"
+msgstr "仮想マシンの復元を開始"
+
+msgid "恢复虚拟机失败"
+msgstr "仮想マシン復元失敗"
+
+msgid "硬盘已挂载到虚拟机"
+msgstr "ハードディスクが仮想マシンにマウントされました"
+
+msgid "硬盘已从虚拟机"
+msgstr "ハードディスクが仮想マシン"
+
+msgid "硬盘"
+msgstr "ハードディスク"
+
+msgid "成功"
+msgstr "成功"
+
+msgid "硬盘挂载操作失败"
+msgstr "ハードディスクマウント操作失敗"
+
+msgid "ISO已挂载到虚拟机"
+msgstr "ISOが仮想マシンにマウントされました"
+
+msgid "ISO已从虚拟机"
+msgstr "ISOが仮想マシン"
+
+msgid "ISO镜像"
+msgstr "ISOイメージ"
+
+msgid "成功"
+msgstr "成功"
+
+msgid "ISO镜像挂载操作失败"
+msgstr "ISOイメージマウント操作失敗"
+
+# HostServer/VPCTemplate.py
+msgid "未实现"
+msgstr "未実装"
+
+# HostServer/Win64HyperV.py
+msgid "Hyper-V虚拟机管理模块"
+msgstr "Hyper-V仮想マシン管理モジュール"
+
+msgid "支持Windows Hyper-V虚拟机的创建、管理、电源控制等功能"
+msgstr "Windows Hyper-V仮想マシンの作成、管理、電源制御などの機能をサポート"
+
+msgid "Hyper-V宿主机服务类"
+msgstr "Hyper-Vホストマシンサービスクラス"
+
+msgid "远程主机状态已保存"
+msgstr "リモートホスト状態が保存されました"
+
+msgid "获取远程主机状态失败"
+msgstr "リモートホスト状態の取得に失敗しました"
+
+msgid "无法连接到Hyper-V获取状态"
+msgstr "Hyper-Vに接続して状態を取得できません"
+
+msgid "获取Hyper-V主机状态失败"
+msgstr "Hyper-Vホスト状態の取得に失敗しました"
+
+msgid "成功连接到Hyper-V主机"
+msgstr "Hyper-Vホストへの接続に成功しました"
+
+msgid "无法连接到Hyper-V主机"
+msgstr "Hyper-Vホストに接続できません"
+
+msgid "停止VNC服务失败"
+msgstr "VNCサービス停止失敗"
+
+msgid "发现并添加虚拟机"
+msgstr "仮想マシンを発見し追加"
+
+msgid "保存扫描的虚拟机到数据库失败"
+msgstr "スキャンされた仮想マシンのデータベース保存に失敗しました"
+
+msgid "扫描完成。共扫描到"
+msgstr "スキャン完了。合計スキャン "
+
+msgid "台虚拟机，新增"
+msgstr "台の仮想マシン、新規追加 "
+
+msgid "台虚拟机配置。"
+msgstr "台の仮想マシン設定。"
+
+msgid "扫描虚拟机时出错"
+msgstr "仮想マシンのスキャン中にエラーが発生しました"
+
+msgid "虚拟机创建失败"
+msgstr "仮想マシン作成失敗"
+
+msgid "镜像文件不存在"
+msgstr "イメージファイルが存在しません"
+
+msgid "ISO镜像"
+msgstr "ISOイメージ"
+
+msgid "已挂载到虚拟机"
+msgstr "が仮想マシンにマウントされました"
+
+msgid "磁盘镜像已复制到"
+msgstr "ディスクイメージが"
+
+msgid "系统安装完成"
+msgstr "システムインストール完了"
+
+msgid "安装失败"
+msgstr "インストール失敗"
+
+msgid "安装虚拟机失败"
+msgstr "仮想マシンインストール失敗"
+
+msgid "虚拟机配置更新失败"
+msgstr "仮想マシン設定更新失敗"
+
+msgid "Hyper-V磁盘扩容功能待实现"
+msgstr "Hyper-Vディスク拡張機能は実装待ちです"
+
+msgid "虚拟机网络配置更新失败"
+msgstr "仮想マシンネットワーク設定更新失敗"
+
+msgid "虚拟机启动失败"
+msgstr "仮想マシン起動失敗"
+
+msgid "删除虚拟机失败"
+msgstr "仮想マシン削除失敗"
+
+msgid "虚拟机删除成功"
+msgstr "仮想マシン削除成功"
+
+# MainObject/Config/IPConfig.py
+msgid "无法为网卡 "
+msgstr "ネットワークカード "
+
+msgid "网络配置检查完成"
+msgstr "ネットワーク設定チェック完了"
+
+msgid "不支持的电源操作"
+msgstr "サポートされていない電源操作"
+
+msgid "电源操作失败"
+msgstr "電源操作失敗"
+
+msgid "虚拟机备份成功"
+msgstr "仮想マシンバックアップ成功"
+
+msgid "备份失败"
+msgstr "バックアップ失敗"
+
+msgid "虚拟机恢复成功"
+msgstr "仮想マシン復元成功"
+
+msgid "恢复失败"
+msgstr "復元失敗"
+
+msgid "磁盘"
+msgstr "ディスク"
+
+msgid "成功"
+msgstr "成功"
+
+msgid "磁盘操作失败"
+msgstr "ディスク操作失敗"
+
+msgid "备份名称格式不正确"
+msgstr "バックアップ名の形式が正しくありません"
+
+msgid "备份快照已删除"
+msgstr "バックアップスナップショットが削除されました"
+
+msgid "删除备份失败"
+msgstr "バックアップ削除失敗"
+
+msgid "虚拟盘不存在"
+msgstr "仮想ディスクが存在しません"
+
+msgid "磁盘删除成功"
+msgstr "ディスク削除成功"
+
+msgid "删除磁盘失败"
+msgstr "ディスク削除失敗"
+
+msgid "ISO镜像"
+msgstr "ISOイメージ"
+
+msgid "成功"
+msgstr "成功"
+
+msgid "ISO操作失败"
+msgstr "ISO操作失敗"
+
+msgid "ISO卸载警告"
+msgstr "ISOアンマウント警告"
+
+msgid "ISO卸载成功"
+msgstr "ISOアンマウント成功"
+
+msgid "个备份快照已加载"
+msgstr "個のバックアップスナップショットが読み込まれました"
+
+msgid "加载备份失败"
+msgstr "バックアップ読み込み失敗"
+
+msgid "准备挂载ISO"
+msgstr "ISOマウントを準備"
+
+msgid "准备卸载ISO"
+msgstr "ISOアンマウントを準備"
+
+msgid "ISO文件不存在"
+msgstr "ISOファイルが存在しません"
+
+msgid "ISO挂载成功"
+msgstr "ISOマウント成功"
+
+# HostServer/vSphereESXi.py
+msgid "WebMKS远程控制台已初始化"
+msgstr "WebMKSリモートコンソールが初期化されました"
+
+msgid "ESXi远程主机状态已更新"
+msgstr "ESXiリモートホスト状態が更新されました"
+
+msgid "获取ESXi远程主机状态失败"
+msgstr "ESXiリモートホスト状態の取得に失敗しました"
+
+msgid "无法连接到ESXi获取状态"
+msgstr "ESXiに接続して状態を取得できません"
+
+msgid "获取ESXi主机状态失败"
+msgstr "ESXiホスト状態の取得に失敗しました"
+
+msgid "获取ESXi远程主机状态成功"
+msgstr "ESXiリモートホスト状態の取得成功"
+
+msgid "成功连接到ESXi主机"
+msgstr "ESXiホストへの接続に成功しました"
+
+msgid "无法连接到ESXi主机"
+msgstr "ESXiホストに接続できません"
+
+msgid "虚拟机 "
+msgstr "仮想マシン "
+
+msgid "创建成功"
+msgstr "作成成功"
+
+msgid "虚拟机 "
+msgstr "仮想マシン "
+
+msgid "系统安装完成（硬盘已在创建时分配）"
+msgstr "システムインストール完了（ハードディスクは作成時に割り当て済み）"
+
+msgid "ESXi磁盘扩容功能待实现"
+msgstr "ESXiディスク拡張機能は実装待ちです"
+
+msgid "虚拟机 "
+msgstr "仮想マシン "
+
+msgid "网卡设备更新失败"
+msgstr "ネットワークカードデバイス更新失敗"
+
+msgid "虚拟机 "
+msgstr "仮想マシン "
+
+msgid "网络绑定更新失败"
+msgstr "ネットワークバインド更新失敗"
+
+msgid "虚拟机 "
+msgstr "仮想マシン "
+
+msgid "启动失败"
+msgstr "起動失敗"
+
+msgid "无法解析快照时间"
+msgstr "スナップショット時刻を解析できません"
+
+msgid "获取WebMKS远程访问失败"
+msgstr "WebMKSリモートアクセスの取得に失敗しました"
+
+msgid "获取WebMKS票据失败"
+msgstr "WebMKSチケットの取得に失敗しました"
+
+msgid "添加WebMKS代理失败"
+msgstr "WebMKSプロキシ追加失敗"
+
+msgid "WebMKS代理配置失败"
+msgstr "WebMKSプロキシ設定失敗"
+
+# HostServer/OCInterfaceAPI/IPTablesAPI.py
+msgid "获取主机端口失败"
+msgstr "ホストポートの取得に失敗しました"
+
+msgid "添加 PREROUTING 规则失败"
+msgstr "PREROUTINGルールの追加に失敗しました"
+
+msgid "添加 OUTPUT 规则失败"
+msgstr "OUTPUTルールの追加に失敗しました"
+
+msgid "添加 FORWARD 规则失败"
+msgstr "FORWARDルールの追加に失敗しました"
+
+msgid "端口映射已添加: 主机"
+msgstr "ポートマッピングが追加されました: ホスト"
+
+msgid "端口映射已删除: 主机"
+msgstr "ポートマッピングが削除されました: ホスト"
+
+msgid "SSH连接成功"
+msgstr "SSH接続成功"
+
+# HostServer/OCInterfaceAPI/OCIConnects.py
+msgid "docker SDK不可用，Docker功能将被禁用"
+msgstr "docker SDKが使用不可、Docker機能は無効化されます"
+
+msgid "docker SDK未安装"
+msgstr "docker SDKがインストールされていません"
+
+msgid "连接到本地Docker服务器"
+msgstr "ローカルDockerサーバーに接続"
+
+msgid "成功连接到Docker服务器"
+msgstr "Dockerサーバーへの接続に成功しました"
+
+msgid "连接到Docker服务器失败"
+msgstr "Dockerサーバーへの接続に失敗しました"
+
+msgid "连接到Docker失败"
+msgstr "Docker接続失敗"
+
+msgid "paramiko不可用，远程SSH执行将被禁用"
+msgstr "paramikoが使用不可、リモートSSH実行は無効化されます"
+
+msgid "SSH 转发需要 paramiko 库，但未安装"
+msgstr "SSH転送にはparamikoライブラリが必要ですが、インストールされていません"
+
+msgid "使用 SSH 转发连接 Docker"
+msgstr "SSH転送を使用してDockerに接続"
+
+msgid "SSH 连接失败"
+msgstr "SSH接続失敗"
+
+msgid "端口转发失败"
+msgstr "ポート転送失敗"
+
+msgid "SSH 端口转发已建立"
+msgstr "SSHポート転送が確立されました"
+
+msgid "TLS certificates not found in"
+msgstr "TLS証明書が見つかりません: "
+
+msgid "Docker连接已断开"
+msgstr "Docker接続が切断されました"
+
+msgid "镜像文件未找到"
+msgstr "イメージファイルが見つかりません"
+
+msgid "从"
+msgstr "から"
+
+msgid "加载镜像"
+msgstr "イメージを読み込む"
+
+msgid "镜像加载成功"
+msgstr "イメージ読み込み成功"
+
+msgid "镜像"
+msgstr "イメージ"
+
+msgid "已存在于本地"
+msgstr "は既にローカルに存在します"
+
+msgid "从仓库拉取镜像"
+msgstr "リポジトリからイメージをプル"
+
+msgid "镜像"
+msgstr "イメージ"
+
+msgid "拉取成功"
+msgstr "プル成功"
+
+msgid "加载镜像失败"
+msgstr "イメージ読み込み失敗"
+
+msgid "列出容器失败"
+msgstr "コンテナリスト表示失敗"
+
+msgid "获取容器"
+msgstr "コンテナを取得"
+
+msgid "失败"
+msgstr "失敗"
+
+msgid "容器"
+msgstr "コンテナ"
+
+msgid "已存在"
+msgstr "は既に存在します"
+
+msgid "容器"
+msgstr "コンテナ"
+
+msgid "创建成功"
+msgstr "作成成功"
+
+msgid "创建容器失败"
+msgstr "コンテナ作成失敗"
+
+msgid "容器"
+msgstr "コンテナ"
+
+msgid "不存在"
+msgstr "が存在しません"
+
+msgid "容器"
+msgstr "コンテナ"
+
+msgid "删除成功"
+msgstr "削除成功"
+
+msgid "删除容器失败"
+msgstr "コンテナ削除失敗"
+
+msgid "容器"
+msgstr "コンテナ"
+
+msgid "已启动"
+msgstr "が起動しました"
+
+msgid "容器"
+msgstr "コンテナ"
+
+msgid "已经在运行"
+msgstr "は既に実行中です"
+
+msgid "容器"
+msgstr "コンテナ"
+
+msgid "已停止"
+msgstr "が停止しました"
+
+msgid "容器"
+msgstr "コンテナ"
+
+msgid "已经停止"
+msgstr "は既に停止しています"
+
+msgid "容器"
+msgstr "コンテナ"
+
+msgid "已重启"
+msgstr "が再起動しました"
+
+msgid "容器"
+msgstr "コンテナ"
+
+msgid "操作失败"
+msgstr "操作失敗"
+
+msgid "容器"
+msgstr "コンテナ"
+
+msgid "未运行"
+msgstr "は実行されていません"
+
+msgid "执行命令失败"
+msgstr "コマンド実行失敗"
+
+msgid "容器密码已设置"
+msgstr "コンテナパスワードが設定されました"
+
+msgid "容器重新创建成功"
+msgstr "コンテナ再作成成功"
+
+msgid "容器重新创建失败"
+msgstr "コンテナ再作成失敗"
+
+msgid "获取容器IP失败"
+msgstr "コンテナIPの取得に失敗しました"
+
+# HostServer/OCInterfaceAPI/PortForward.py
+msgid "SSH连接未建立"
+msgstr "SSH接続が確立されていません"
+
+msgid "命令执行超时"
+msgstr "コマンド実行タイムアウト"
+
+msgid "获取socat进程列表失败"
+msgstr "socatプロセスリストの取得に失敗しました"
+
+msgid "无法解析PID"
+msgstr "PIDを解析できません"
+
+msgid "发现端口转发"
+msgstr "ポート転送を発見"
+
+msgid "解析socat进程行失败"
+msgstr "socatプロセス行の解析に失敗しました"
+
+msgid "不支持的协议类型"
+msgstr "サポートされていないプロトコルタイプ"
+
+msgid "启动socat失败"
+msgstr "socat起動失敗"
+
+msgid "端口转发创建后未找到对应进程"
+msgstr "ポート転送作成後に対応するプロセスが見つかりません"
+
+msgid "端口转发已添加"
+msgstr "ポート転送が追加されました"
+
+msgid "正在查找端口"
+msgstr "ポートを検索中"
+
+msgid "的转发进程"
+msgstr "の転送プロセス"
+
+msgid "当前共有"
+msgstr "現在合計"
+
+msgid "个端口转发"
+msgstr "個のポート転送"
+
+msgid "找到匹配的转发"
+msgstr "一致する転送が見つかりました"
+
+msgid "未找到端口"
+msgstr "ポートが見つかりません"
+
+msgid "正在终止进程 PID"
+msgstr "プロセスPIDを終了中"
+
+msgid "kill命令执行成功"
+msgstr "killコマンド実行成功"
+
+msgid "进程"
+msgstr "プロセス"
+
+msgid "仍在运行，尝试强制终止"
+msgstr "はまだ実行中、強制終了を試みます"
+
+msgid "已强制终止进程"
+msgstr "プロセスを強制終了しました"
+
+msgid "强制终止进程失败"
+msgstr "プロセスの強制終了に失敗しました"
+
+msgid "已成功停止端口转发进程"
+msgstr "ポート転送プロセスを正常に停止しました"
+
+msgid "停止进程失败"
+msgstr "プロセス停止失敗"
+
+# HostServer/OCInterfaceAPI/SSHTerminal.py
+msgid "不支持的平台"
+msgstr "サポートされていないプラットフォーム"
+
+msgid "找到ttyd"
+msgstr "ttydが見つかりました"
+
+msgid "ttyd未找到"
+msgstr "ttydが見つかりません"
+
+msgid "ttyd可执行文件未找到"
+msgstr "ttyd実行ファイルが見つかりません"
+
+msgid "已停止端口上ttyd会话"
+msgstr "ポート上のttydセッションを停止しました"
+
+# HostServer/WorkstationAPI/VMWRestAPI.py
+msgid "不支持的HTTP方法"
+msgstr "サポートされていないHTTPメソッド"
+
+msgid "请求成功"
+msgstr "リクエスト成功"
+
+msgid "HTTP错误"
+msgstr "HTTPエラー"
+
+msgid ":"
+msgstr ":"
+
+msgid "连接失败: 无法连接到"
+msgstr "接続失敗: 接続できません"
+
+msgid "请求超时: 操作耗时过长"
+msgstr "リクエストタイムアウト: 操作時間が長すぎます"
+
+msgid "请求异常"
+msgstr "リクエスト例外"
+
+msgid "未知错误: "
+msgstr "不明なエラー: "
+
+msgid "- "
+msgstr "- "
+
+msgid "电源操作成功"
+msgstr "電源操作成功"
+
+msgid "连接失败: 无法连接到 "
+msgstr "接続失敗: 接続できません "
+
+msgid "，请检查VMware REST API服务是否启动"
+msgstr "、VMware REST APIサービスが起動しているか確認してください"
+
+msgid "请求超时: 操作耗时过长，请稍后重试"
+msgstr "リクエストタイムアウト: 操作時間が長すぎます。しばらくしてからもう一度お試しください"
+
+msgid "未找到虚拟机: "
+msgstr "仮想マシンが見つかりません: "
+
+msgid "设置电源状态失败: "
+msgstr "電源状態設定失敗: "
+
+msgid "- "
+msgstr "- "
+
+msgid "开始扩展硬盘: "
+msgstr "ハードディスク拡張を開始: "
+
+msgid "MB"
+msgstr "MB"
+
+msgid "执行命令: "
+msgstr "コマンド実行: "
+
+msgid "硬盘扩展失败: "
+msgstr "ハードディスク拡張失敗: "
+
+msgid "硬盘扩展成功"
+msgstr "ハードディスク拡張成功"
+
+msgid "硬盘扩展完成: "
+msgstr "ハードディスク拡張完了: "
+
+msgid "MB"
+msgstr "MB"
+
+# MainObject/Server/VMStatus.py
+msgid "网卡 "
+msgstr "ネットワークカード "
+
+msgid "信息: "
+msgstr "情報: "
+
+msgid "网卡发送流量(MByte): "
+msgstr "ネットワークカード送信トラフィック(MByte): "
+
+msgid "网卡接收流量(MByte): "
+msgstr "ネットワークカード受信トラフィック(MByte): "
+
+msgid "当前双向流量(MByte): "
+msgstr "現在双方向トラフィック(MByte): "
+
+msgid "当前上行带宽(MByte): "
+msgstr "現在上り帯域幅(MByte): "
+
+msgid "当前下行带宽(MByte): "
+msgstr "現在下り帯域幅(MByte): "
+
+# MainObject/Server/HSEngine.py
+msgid "1、不支持直通分配GPU设备，但可分配虚拟显存"
+msgstr "1. GPUデバイスのパススルー割り当てはサポートしていませんが、仮想メモリを割り当てることができます"
+
+msgid "2、暂不支持获取虚拟机GPU使用率和显存使用率"
+msgstr "2. 仮想マシンのGPU使用率とメモリ使用率の取得は一時的にサポートしていません"
+
+msgid "1、不支持分配GPU设备，不支持设置显存的大小"
+msgstr "1. GPUデバイスの割り当て、メモリサイズの設定はサポートしていません"
+
+msgid "2、不支持挂载ISO镜像、不支持挂载额外的硬盘"
+msgstr "2. ISOイメージのマウント、追加ハードディスクのマウントはサポートしていません"
+
+msgid "1、无法单独限制上下行带宽，取二者最低值分配"
+msgstr "1. 上りと下りの帯域幅を個別に制限できません。低い方の値を割り当てます"
+
+# VNCConsole/VNCSManager.py
+msgid "已加载 VNC"
+msgstr "VNCを読み込みました"
+
+msgid "->"
+msgstr "->"
+
+msgid "Web 资源路径"
+msgstr "Webリソースパス"
+
+msgid "Websockify 可执行文件"
+msgstr "Websockify実行ファイル"
+
+msgid "配置文件路径"
+msgstr "設定ファイルパス"
+
+msgid "是否为打包环境"
+msgstr "パッケージ化環境かどうか"
+
+msgid "Web 资源路径不存在"
+msgstr "Webリソースパスが存在しません"
+
+msgid "尝试查找可能的路径:"
+msgstr "可能なパスを検索中:"
+
+msgid "存在"
+msgstr "存在します"
+
+msgid "不存在"
+msgstr "存在しません"
+
+msgid "找到 Web 资源路径"
+msgstr "Webリソースパスが見つかりました"
+
+msgid "无法找到 Web 资源路径，websockify 可能无法正常工作"
+msgstr "Webリソースパスが見つかりません。websockifyが正常に動作しない可能性があります"
+
+msgid "启动 websockify"
+msgstr "websockifyを起動"
+
+msgid "执行命令"
+msgstr "コマンド実行"
+
+msgid "websockify 已启动，支持"
+msgstr "websockifyが起動しました、サポート: "
+
+msgid "个连接"
+msgstr "接続"
+
+msgid "启动失败"
+msgstr "起動失敗"
+
+msgid "websockify 已停止"
+msgstr "websockifyが停止しました"
+
+msgid "VNC 目标"
+msgstr "VNCターゲット"
+
+msgid "已存在，token"
+msgstr "は既に存在します、トークン"
+
+msgid ":"
+msgstr ":"
+
+msgid "已添加 VNC"
+msgstr "VNCを追加しました"
+
+msgid ", token"
+msgstr "、トークン"
+
+msgid ":"
+msgstr ":"
+
+msgid "已删除 VNC"
+msgstr "VNCを削除しました"
+
+msgid ":"
+msgstr ":"
+
+msgid "未找到 VNC"
+msgstr "VNCが見つかりません"
+
+msgid ":"
+msgstr ":"
+
+msgid "警告: 没有可用的VNC连接"
+msgstr "警告: 使用可能なVNC接続がありません"
+
+msgid "当前没有VNC连接"
+msgstr "現在VNC接続がありません"
+
+msgid "当前VNC连接列表:"
+msgstr "現在のVNC接続リスト:"
+
+msgid "websockify 服务已在运行中"
+msgstr "websockifyサービスは既に実行中です"
+
+msgid "websockify 服务已在新进程中启动 (PID: "
+msgstr "websockifyサービスが新しいプロセスで起動されました (PID: "
+
+msgid ")"
+msgstr ")"
+
+msgid "没有运行中的 websockify 服务"
+msgstr "実行中のwebsockifyサービスがありません"
+
+msgid "正在关闭 websockify 服务进程 (PID: "
+msgstr "websockifyサービスプロセスを閉じています (PID: "
+
+msgid ")..."
+msgstr ")..."
+
+msgid "进程未响应，强制关闭..."
+msgstr "プロセスが応答しません。強制終了しています..."
+
+msgid "websockify 服务进程已关闭"
+msgstr "websockifyサービスプロセスが閉じられました"
+
+msgid "websockify 服务进程已停止"
+msgstr "websockifyサービスプロセスが停止しました"
+
+# AllBuilder/build_nuitkaui.py
+msgid "包含的包:"
+msgstr "含まれるパッケージ:"
+
+msgid "核心包"
+msgstr "コアパッケージ"
+
+msgid "个"
+msgstr "個"
+
+msgid "可选包"
+msgstr "オプションパッケージ"
+
+msgid "已安装"
+msgstr "インストール済み"
+
+msgid "跳过的包（未安装）"
+msgstr "スキップされたパッケージ（未インストール）"
+
+msgid "未安装"
+msgstr "未インストール"
+
+msgid "Nuitka已安装"
+msgstr "Nuitkaがインストールされています"
+
+msgid "Nuitka未安装"
+msgstr "Nuitkaがインストールされていません"
+
+msgid "检查Nuitka时出错"
+msgstr "Nuitkaのチェック中にエラーが発生しました"
+
+msgid "正在安装Nuitka..."
+msgstr "Nuitkaをインストールしています..."
+
+msgid "Nuitka安装成功"
+msgstr "Nuitkaインストール成功"
+
+msgid "Nuitka安装失败"
+msgstr "Nuitkaインストール失敗"
+
+msgid "清理构建目录"
+msgstr "ビルドディレクトリをクリーンアップ"
+
+msgid "Nuitka打包工具"
+msgstr "Nuitkaパッケージングツール"
+
+msgid "项目根目录"
+msgstr "プロジェクトルートディレクトリ"
+
+msgid "错误"
+msgstr "エラー"
+
+msgid "找不到主脚本"
+msgstr "メインスクリプトが見つかりません"
+
+msgid "是否安装Nuitka"
+msgstr "Nuitkaをインストールしますか"
+
+msgid "取消打包"
+msgstr "パッケージングをキャンセル"
+
+msgid "开始打包..."
+msgstr "パッケージングを開始..."
+
+msgid "执行命令:"
+msgstr "コマンド実行:"
+
+msgid "打包成功"
+msgstr "パッケージング成功"
+
+msgid "输出目录"
+msgstr "出力ディレクトリ"
+
+msgid "打包失败"
+msgstr "パッケージング失敗"
+
+msgid "退出码"
+msgstr "終了コード"
+
+msgid "请查看上方的详细错误信息"
+msgstr "上記の詳細なエラー情報を確認してください"
+
+msgid "打包已取消"
+msgstr "パッケージングがキャンセルされました"
+
+# AllBuilder/build_vncproxy.py
+msgid "找不到 websockify 脚本"
+msgstr "websockifyスクリプトが見つかりません"
+
+msgid "找不到 spec 文件"
+msgstr "specファイルが見つかりません"
+
+msgid "请确保 websockify.spec 文件存在于项目根目录"
+msgstr "websockify.specファイルがプロジェクトルートディレクトリに存在することを確認してください"
+
+msgid "构建缓存目录"
+msgstr "ビルドキャッシュディレクトリ"
+
+msgid "脚本"
+msgstr "スクリプト"
+
+msgid "模块目录"
+msgstr "モジュールディレクトリ"
+
+msgid "文件"
+msgstr "ファイル"
+
+msgid "删除旧的 exe 文件"
+msgstr "古いexeファイルを削除"
+
+msgid "旧文件已删除"
+msgstr "古いファイルが削除されました"
+
+msgid "可执行文件位置"
+msgstr "実行ファイルの場所"
+
+msgid "文件大小"
+msgstr "ファイルサイズ"
+
+msgid "已复制到"
+msgstr "にコピーしました"
+
+msgid "找不到输出文件"
+msgstr "出力ファイルが見つかりません"
+
+msgid "发生错误"
+msgstr "エラーが発生しました"
+
+msgid "打包工具"
+msgstr "パッケージングツール"
+
+msgid "未安装 PyInstaller"
+msgstr "PyInstallerがインストールされていません"
+
+msgid "请先安装"
+msgstr "先にインストールしてください"
+
+# MainObject/Config/IPConfig.py
+msgid "无法为网卡 %(nic_name)s 分配IPv4地址，类型: %(nic_type)s，所有IP已被占用或无可用IP段配置"
+msgstr "ネットワークカード %(nic_name)s にIPv4アドレスを割り当てることができません、タイプ: %(nic_type)s、すべてのIPが使用中か利用可能なIPセグメント設定がありません"
+
+msgid "网络配置检查完成"
+msgstr "ネットワーク設定チェック完了"
+
+# 前端 - 登录页面
+msgid "虚拟化管理平台"
+msgstr "仮想化管理プラットフォーム"
+
+msgid "用户登录"
+msgstr "ユーザーログイン"
+
+msgid "Token登录"
+msgstr "トークンログイン"
+
+msgid "访问Token"
+msgstr "アクセストークン"
+
+msgid "请输入访问Token"
+msgstr "アクセストークンを入力してください"
+
+msgid "登 录"
+msgstr "ログイン"
+
+msgid "还没有账号？立即注册"
+msgstr "アカウントをお持ちでないですか？今すぐ登録"
+
+msgid "忘记密码？"
+msgstr "パスワードをお忘れですか？"
+
+msgid "找回密码"
+msgstr "パスワードを回復"
+
+msgid "通过邮件重置您的密码"
+msgstr "メールでパスワードをリセット"
+
+msgid "请输入注册时使用的邮箱"
+msgstr "登録時に使用したメールアドレスを入力してください"
+
+msgid "我们将向此邮箱发送密码重置链接"
+msgstr "このメールアドレスにパスワードリセットリンクを送信します"
+
+msgid "取消"
+msgstr "キャンセル"
+
+msgid "发送重置邮件"
+msgstr "リセットメールを送信"
+
+msgid "发送中..."
+msgstr "送信中..."
+
+msgid "重置邮件已发送，请查收"
+msgstr "リセットメールを送信しました。ご確認ください"
+
+msgid "发送失败，请重试"
+msgstr "送信失敗。もう一度お試しください"
+
+msgid "启动服务时会在控制台显示访问Token"
+msgstr "サービス起動時にコンソールにアクセストークンが表示されます"
+
+msgid "登录失败，请重试"
+msgstr "ログイン失敗。もう一度お試しください"
+
+# 前端 - 注册页面
+msgid "用户注册"
+msgstr "ユーザー登録"
+
+msgid "3-20位字母、数字或下划线"
+msgstr "3〜20文字の英字、数字、アンダースコア"
+
+msgid "请输入邮箱地址"
+msgstr "メールアドレスを入力してください"
+
+msgid "至少6位字符"
+msgstr "6文字以上"
+
+msgid "请再次输入密码"
+msgstr "パスワードをもう一度入力してください"
+
+msgid "注 册"
+msgstr "登録"
+
+msgid "已有账号？立即登录"
+msgstr "アカウントをお持ちですか？今すぐログイン"
+
+msgid "两次输入的密码不一致"
+msgstr "2回入力したパスワードが一致しません"
+
+msgid "注册成功！"
+msgstr "登録成功！"
+
+msgid "注册失败，请重试"
+msgstr "登録失敗。もう一度お試しください"
+
+# 前端 - 重置密码页面
+msgid "请输入您的新密码"
+msgstr "新しいパスワードを入力してください"
+
+msgid "新密码 *"
+msgstr "新しいパスワード *"
+
+msgid "确认新密码 *"
+msgstr "新しいパスワード（確認） *"
+
+msgid "请输入新密码（至少6位）"
+msgstr "新しいパスワードを入力してください（6文字以上）"
+
+msgid "请再次输入新密码"
+msgstr "新しいパスワードをもう一度入力してください"
+
+msgid "密码强度"
+msgstr "パスワード強度"
+
+msgid "返回登录"
+msgstr "ログインに戻る"
+
+msgid "如果您遇到问题，请联系管理员"
+msgstr "問題がある場合は、管理者にお問い合わせください"
+
+msgid "重置链接无效"
+msgstr "リセットリンクが無効です"
+
+msgid "重置中..."
+msgstr "リセット中..."
+
+# 前端 - 通用
+msgid "弱"
+msgstr "弱"
+
+msgid "中等"
+msgstr "中"
+
+msgid "强"
+msgstr "強"
+
+# 前端 - 个人设置页面
+msgid "个人设置"
+msgstr "個人設定"
+
+msgid "管理您的个人信息和账户设置"
+msgstr "個人情報とアカウント設定の管理"
+
+msgid "个人信息"
+msgstr "個人情報"
+
+msgid "用户名"
+msgstr "ユーザー名"
+
+msgid "邮箱地址"
+msgstr "メールアドレス"
+
+msgid "注册时间"
+msgstr "登録時刻"
+
+msgid "修改邮箱"
+msgstr "メールアドレスを変更"
+
+msgid "当前邮箱"
+msgstr "現在のメールアドレス"
+
+msgid "新邮箱地址 *"
+msgstr "新しいメールアドレス *"
+
+msgid "请输入新邮箱地址"
+msgstr "新しいメールアドレスを入力してください"
+
+msgid "修改密码"
+msgstr "パスワードを変更"
+
+msgid "新密码 *"
+msgstr "新しいパスワード *"
+
+msgid "请输入新密码（至少6位）"
+msgstr "新しいパスワードを入力してください（6文字以上）"
+
+msgid "确认新密码 *"
+msgstr "新しいパスワード（確認） *"
+
+msgid "请再次输入新密码"
+msgstr "新しいパスワードをもう一度入力してください"
+
+msgid "权限信息"
+msgstr "権限情報"
+
+msgid "虚拟机权限"
+msgstr "仮想マシン権限"
+
+msgid "创建虚拟机"
+msgstr "仮想マシンを作成"
+
+msgid "编辑虚拟机"
+msgstr "仮想マシンを編集"
+
+msgid "删除虚拟机"
+msgstr "仮想マシンを削除"
+
+msgid "账户状态"
+msgstr "アカウント状態"
+
+msgid "管理员"
+msgstr "管理者"
+
+msgid "已启用"
+msgstr "有効"
+
+msgid "已验证"
+msgstr "認証済み"
+
+msgid "已开启"
+msgstr "オン"
+
+msgid "已关闭"
+msgstr "オフ"
+
+msgid "是"
+msgstr "はい"
+
+msgid "否"
+msgstr "いいえ"
+
+msgid "未验证"
+msgstr "未認証"
+
+msgid "已禁用"
+msgstr "無効"
+
+msgid "分配的主机"
+msgstr "割り当てられたホスト"
+
+msgid "加载中..."
+msgstr "読み込み中..."
+
+msgid "未分配主机"
+msgstr "ホストが割り当てられていません"
+
+msgid "资源配额"
+msgstr "リソースクォータ"
+
+msgid "CPU核心"
+msgstr "CPUコア"
+
+msgid "内存"
+msgstr "メモリ"
+
+msgid "磁盘"
+msgstr "ディスク"
+
+msgid "GPU显存"
+msgstr "GPUメモリ"
+
+msgid "流量"
+msgstr "トラフィック"
+
+msgid "上行带宽"
+msgstr "上り帯域幅"
+
+msgid "下行带宽"
+msgstr "下り帯域幅"
+
+msgid "NAT配额"
+msgstr "NATクォータ"
+
+msgid "WEB配额"
+msgstr "WEBクォータ"
+
+msgid "修改中..."
+msgstr "変更中..."
+
+msgid "验证邮件已发送，请查收并点击验证链接完成邮箱修改"
+msgstr "認証メールを送信しました。メールを確認し、認証リンクをクリックしてメールアドレスを変更してください"
+
+msgid "邮箱修改失败，请重试"
+msgstr "メールアドレス変更失敗。もう一度お試しください"
+
+msgid "新密码与确认密码不一致"
+msgstr "新しいパスワードと確認パスワードが一致しません"
+
+msgid "新密码长度不能少于6位"
+msgstr "新しいパスワードは6文字以上である必要があります"
+
+msgid "密码修改失败，请重试"
+msgstr "パスワード変更失敗。もう一度お試しください"
+
+msgid "加载用户信息失败"
+msgstr "ユーザー情報の読み込みに失敗しました"
+
+# 前端 - 系统设置页面
+msgid "系统设置"
+msgstr "システム設定"
+
+msgid "管理访问Token和系统配置"
+msgstr "アクセストークンとシステム設定の管理"
+
+msgid "访问Token管理"
+msgstr "アクセストークン管理"
+
+msgid "当前Token"
+msgstr "現在のトークン"
+
+msgid "留空则自动生成随机Token"
+msgstr "空欄にするとランダムトークンが自動生成されます"
+
+msgid "设置"
+msgstr "設定"
+
+msgid "重置Token"
+msgstr "トークンをリセット"
+
+msgid "安全提示"
+msgstr "セキュリティヒント"
+
+msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
+msgstr "トークンをリセットすると、古いトークンを使用するすべてのAPI呼び出しが無効になります。すべての関連設定を更新してください。"
+
+msgid "API接口说明"
+msgstr "APIインターフェース説明"
+
+msgid "认证方式"
+msgstr "認証方式"
+
+msgid "在请求头中添加："
+msgstr "リクエストヘッダーに追加："
+
+msgid "主要接口"
+msgstr "主要インターフェース"
+
+msgid "获取主机列表"
+msgstr "ホストリストを取得"
+
+msgid "添加主机"
+msgstr "ホストを追加"
+
+msgid "获取虚拟机列表"
+msgstr "仮想マシンリストを取得"
+
+msgid "创建虚拟机"
+msgstr "仮想マシンを作成"
+
+msgid "电源操作"
+msgstr "電源操作"
+
+msgid "数据管理"
+msgstr "データ管理"
+
+msgid "保存配置"
+msgstr "設定を保存"
+
+msgid "将当前配置保存到文件"
+msgstr "現在の設定をファイルに保存"
+
+msgid "重新加载配置"
+msgstr "設定を再読み込み"
+
+msgid "从文件重新加载配置"
+msgstr "ファイルから設定を再読み込み"
+
+msgid "系统信息"
+msgstr "システム情報"
+
+msgid "系统名称"
+msgstr "システム名"
+
+msgid "版本"
+msgstr "バージョン"
+
+msgid "主机数量"
+msgstr "ホスト数"
+
+msgid "虚拟机数量"
+msgstr "仮想マシン数"
+
+msgid "用户注册设置"
+msgstr "ユーザー登録設定"
+
+msgid "开放注册"
+msgstr "登録を許可"
+
+msgid "允许新用户注册账号"
+msgstr "新しいユーザーのアカウント登録を許可"
+
+msgid "邮箱验证"
+msgstr "メール認証"
+
+msgid "注册时需要验证邮箱"
+msgstr "登録時にメール認証が必要"
+
+msgid "新用户默认资源配额"
+msgstr "新ユーザーのデフォルトリソースクォータ"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "内存(GB)"
+msgstr "メモリ(GB)"
+
+msgid "磁盘(GB)"
+msgstr "ディスク(GB)"
+
+msgid "NAT端口"
+msgstr "NATポート"
+
+msgid "Web代理"
+msgstr "Webプロキシ"
+
+msgid "上行带宽(Mbps)"
+msgstr "上り帯域幅(Mbps)"
+
+msgid "下行带宽(Mbps)"
+msgstr "下り帯域幅(Mbps)"
+
+msgid "每月流量(GB)"
+msgstr "月間トラフィック(GB)"
+
+msgid "新用户默认权限"
+msgstr "新ユーザーのデフォルト権限"
+
+msgid "允许创建虚拟机"
+msgstr "仮想マシンの作成を許可"
+
+msgid "允许修改虚拟机"
+msgstr "仮想マシンの変更を許可"
+
+msgid "允许删除虚拟机"
+msgstr "仮想マシンの削除を許可"
+
+msgid "保存设置"
+msgstr "設定を保存"
+
+msgid "邮件服务配置"
+msgstr "メールサービス設定"
+
+msgid "Resend 邮件服务"
+msgstr "Resendメールサービス"
+
+msgid "访问 resend.com 获取API Key"
+msgstr "resend.comにアクセスしてAPIキーを取得"
+
+msgid "发件邮箱"
+msgstr "送信元メールアドレス"
+
+msgid "发送域名"
+msgstr "送信ドメイン"
+
+msgid "API Key"
+msgstr "APIキー"
+
+msgid "测试邮件发送"
+msgstr "テストメールの送信"
+
+msgid "测试邮箱"
+msgstr "テストメールアドレス"
+
+msgid "发送测试邮件"
+msgstr "テストメールを送信"
+
+msgid "注册设置已保存"
+msgstr "登録設定が保存されました"
+
+msgid "邮件配置已保存"
+msgstr "メール設定が保存されました"
+
+msgid "请输入测试邮箱地址"
+msgstr "テストメールアドレスを入力してください"
+
+msgid "请先配置发件邮箱和API Key"
+msgstr "先に送信元メールアドレスとAPIキーを設定してください"
+
+msgid "测试邮件发送成功，请查收"
+msgstr "テストメールの送信に成功しました。ご確認ください"
+
+msgid "Token已复制到剪贴板"
+msgstr "トークンをクリップボードにコピーしました"
+
+msgid "Token设置成功"
+msgstr "トークン設定成功"
+
+msgid "确定要重置Token吗？所有使用旧Token的API调用都将失效。"
+msgstr "トークンをリセットしてもよろしいですか？古いトークンを使用するすべてのAPI呼び出しが無効になります。"
+
+msgid "Token已重置"
+msgstr "トークンがリセットされました"
+
+msgid "配置已保存"
+msgstr "設定が保存されました"
+
+msgid "配置已重新加载"
+msgstr "設定が再読み込みされました"
+
+msgid "确认删除"
+msgstr "削除の確認"
+
+msgid "此操作将永久删除虚拟机"
+msgstr "この操作は仮想マシンを永久に削除します"
+
+msgid "且不可恢复"
+msgstr "復元はできません"
+
+msgid "请输入虚拟机名称以确认删除："
+msgstr "削除を確認するために仮想マシン名を入力してください："
+
+msgid "输入虚拟机名称"
+msgstr "仮想マシン名を入力"
+
+msgid "确认删除"
+msgstr "削除を確認"
+
+msgid "确定要对虚拟机"
+msgstr "仮想マシン"
+
+msgid "执行"
+msgstr "に対して"
+
+msgid "操作吗"
+msgstr "操作を実行してもよろしいですか"
+
+msgid "关机"
+msgstr "シャットダウン"
+
+msgid "重启"
+msgstr "再起動"
+
+msgid "暂停"
+msgstr "一時停止"
+
+msgid "恢复"
+msgstr "再開"
+
+msgid "强制关机"
+msgstr "強制シャットダウン"
+
+msgid "强制重启"
+msgstr "強制再起動"
+
+msgid "为虚拟机"
+msgstr "仮想マシン"
+
+msgid "重装系统"
+msgstr "のシステム再インストール"
+
+msgid "选择操作系统："
+msgstr "オペレーティングシステムを選択："
+
+msgid "请选择操作系统"
+msgstr "オペレーティングシステムを選択してください"
+
+msgid "我已备份数据，确认重装系统将清空系统盘数据"
+msgstr "データをバックアップしました。システム再インストールによりシステムディスクのデータがクリアされることを確認します"
+
+msgid "NAT端口转发规则"
+msgstr "NATポート転送ルール"
+
+msgid "IP地址管理"
+msgstr "IPアドレス管理"
+
+msgid "添加IP地址"
+msgstr "IPアドレスを追加"
+
+msgid "网卡名称"
+msgstr "ネットワークカード名"
+
+msgid "MAC地址"
+msgstr "MACアドレス"
+
+msgid "IPv4地址"
+msgstr "IPv4アドレス"
+
+msgid "IPv6地址"
+msgstr "IPv6アドレス"
+
+msgid "网关"
+msgstr "ゲートウェイ"
+
+msgid "掩码"
+msgstr "サブネットマスク"
+
+msgid "DNS"
+msgstr "DNS"
+
+msgid "操作"
+msgstr "操作"
+
+msgid "添加规则"
+msgstr "ルールを追加"
+
+msgid "反向代理配置"
+msgstr "リバースプロキシ設定"
+
+msgid "添加代理"
+msgstr "プロキシを追加"
+
+msgid "数据盘管理"
+msgstr "データディスク管理"
+
+msgid "挂载数据盘"
+msgstr "データディスクをマウント"
+
+msgid "未挂载"
+msgstr "未マウント"
+
+msgid "磁盘名称"
+msgstr "ディスク名"
+
+msgid "容量"
+msgstr "容量"
+
+msgid "ISO镜像管理"
+msgstr "ISOイメージ管理"
+
+msgid "备份管理"
+msgstr "バックアップ管理"
+
+msgid "创建备份"
+msgstr "バックアップを作成"
+
+msgid "备份名称"
+msgstr "バックアップ名"
+
+msgid "备份注释"
+msgstr "バックアップコメント"
+
+msgid "虚拟机分享管理"
+msgstr "仮想マシン共有管理"
+
+msgid "添加使用者"
+msgstr "ユーザーを追加"
+
+msgid "(主所有者)"
+msgstr "(メイン所有者)"
+
+msgid "添加分享人"
+msgstr "共有ユーザーを追加"
+
+msgid "用户名"
+msgstr "ユーザー名"
+
+msgid "请输入用户名"
+msgstr "ユーザー名を入力してください"
+
+msgid "添加后该用户将共享此虚拟机的访问权限，但不会占用该用户的资源配额"
+msgstr "追加後、このユーザーはこの仮想マシンのアクセス権限を共有しますが、ユーザーのリソースクォータは消費しません"
+
+msgid "新的共享者必须拥有对应主机的访问权限才能看到该虚拟机"
+msgstr "新しい共有者は、対応するホストへのアクセス権限を持っている必要があります"
+
+msgid "创建备份"
+msgstr "バックアップを作成"
+
+msgid "备份说明"
+msgstr "バックアップ説明"
+
+msgid "例如: 系统更新前备份"
+msgstr "例: システム更新前のバックアップ"
+
+msgid "请输入备份的说明信息"
+msgstr "バックアップの説明を入力してください"
+
+msgid "备份可能需要数十分钟，取决于虚拟机硬盘大小，请耐心等待！"
+msgstr "バックアップには数十分かかる場合があります。仮想マシンのハードディスクサイズによって異なります。しばらくお待ちください！"
+
+msgid "我已确认停止当前虚拟机进行备份操作（未保存的数据将丢失）"
+msgstr "現在の仮想マシンを停止してバックアップ操作を行うことを確認します（未保存のデータは失われます）"
+
+msgid "挂载ISO镜像"
+msgstr "ISOイメージをマウント"
+
+msgid "选择ISO镜像"
+msgstr "ISOイメージを選択"
+
+msgid "请选择ISO镜像文件"
+msgstr "ISOイメージファイルを選択してください"
+
+msgid "从服务器可用的ISO镜像中选择"
+msgstr "サーバーで利用可能なISOイメージから選択"
+
+msgid "挂载名称"
+msgstr "マウント名"
+
+msgid "例如: system_iso"
+msgstr "例: system_iso"
+
+msgid "(仅支持英文和数字)"
+msgstr "（英数字のみ対応）"
+
+msgid "挂载名称只能包含英文字母和数字"
+msgstr "マウント名は英数字のみを含むことができます"
+
+msgid "备注"
+msgstr "備考"
+
+msgid "例如: 系统安装盘"
+msgstr "例: システムインストールディスク"
+
+msgid "可选，用于说明此ISO的用途"
+msgstr "オプション、このISOの用途を説明するために使用"
+
+msgid "我已同意强制关机此虚拟机"
+msgstr "この仮想マシンを強制シャットダウンすることに同意します"
+
+msgid "挂载数据盘"
+msgstr "データディスクをマウント"
+
+msgid "磁盘名称"
+msgstr "ディスク名"
+
+msgid "例如: data_disk"
+msgstr "例: data_disk"
+
+msgid "只能包含数字和字母，不能包含特殊符号和中文"
+msgstr "数字と英字のみを含むことができ、特殊記号と中国語は使用できません"
+
+msgid "磁盘大小 (MB)"
+msgstr "ディスクサイズ (MB)"
+
+msgid "例如: 1024"
+msgstr "例: 1024"
+
+msgid "最小1024MB (1GB)"
+msgstr "最小1024MB (1GB)"
+
+msgid "磁盘类型"
+msgstr "ディスクタイプ"
+
+msgid "普通磁盘"
+msgstr "通常ディスク"
+
+msgid "添加反向代理"
+msgstr "リバースプロキシを追加"
+
+msgid "域名"
+msgstr "ドメイン"
+
+msgid "后端IP"
+msgstr "バックエンドIP"
+
+msgid "从虚拟机网卡地址中选择"
+msgstr "仮想マシンのネットワークカードアドレスから選択"
+
+msgid "后端端口"
+msgstr "バックエンドポート"
+
+msgid "启用 HTTPS (SSL/TLS)"
+msgstr "HTTPS (SSL/TLS) を有効化"
+
+msgid "描述"
+msgstr "説明"
+
+msgid "网卡类型"
+msgstr "ネットワークカードタイプ"
+
+msgid "内网(NAT)"
+msgstr "プライベート(NAT)"
+
+msgid "选择网卡类型后可查看配额状态"
+msgstr "ネットワークカードタイプを選択すると、クォータ状態を確認できます"
+
+msgid "IPv4地址"
+msgstr "IPv4アドレス"
+
+msgid "留空自动分配，例如: 192.168.1.100"
+msgstr "空欄にすると自動割り当て、例: 192.168.1.100"
+
+msgid "留空将由后端自动分配IP地址"
+msgstr "空欄にするとバックエンドが自動的にIPアドレスを割り当てます"
+
+msgid "IPv6地址"
+msgstr "IPv6アドレス"
+
+msgid "例如: 2001:db8::1"
+msgstr "例: 2001:db8::1"
+
+msgid "网关"
+msgstr "ゲートウェイ"
+
+msgid "例如: 192.168.1.1"
+msgstr "例: 192.168.1.1"
+
+msgid "子网掩码"
+msgstr "サブネットマスク"
+
+msgid "添加NAT端口转发规则"
+msgstr "NATポート転送ルールを追加"
+
+msgid "外网端口 (WAN)"
+msgstr "外側ポート (WAN)"
+
+msgid "留空自动分配"
+msgstr "空欄にすると自動割り当て"
+
+msgid "留空将自动分配可用端口"
+msgstr "空欄にすると利用可能なポートを自動割り当てます"
+
+msgid "内网端口 (LAN)"
+msgstr "内側ポート (LAN)"
+
+msgid "内网地址"
+msgstr "プライベートアドレス"
+
+msgid "从虚拟机已分配的IP地址中选择"
+msgstr "仮想マシンに割り当てられたIPアドレスから選択"
+
+msgid "备注"
+msgstr "備考"
+
+msgid "主机总数"
+msgstr "ホスト総数"
+
+msgid "退出"
+msgstr "ログアウト"
+
+msgid "虚拟机总数"
+msgstr "仮想マシン総数"
+
+msgid "系统状态"
+msgstr "システム状態"
+
+msgid "正常运行"
+msgstr "正常稼働"
+
+msgid "最后更新"
+msgstr "最終更新"
+
+msgid "通过"
+msgstr "経由"
+
+msgid "页面可以管理主机和虚拟机。支持使用API+Token进行自动化管理。"
+msgstr "このページでホストと仮想マシンを管理できます。API+Tokenを使用した自動化管理をサポートしています。"
+
+msgid "管理主机"
+msgstr "ホストを管理"
+
+msgid "扫描虚拟机"
+msgstr "仮想マシンをスキャン"
+
+msgid "返回主机列表"
+msgstr "ホストリストに戻る"
+
+msgid "内存"
+msgstr "メモリ"
+
+msgid "显存"
+msgstr "メモリ"
+
+msgid "硬盘"
+msgstr "ハードディスク"
+
+msgid "Web代理"
+msgstr "Webプロキシ"
+
+msgid "NAT端口"
+msgstr "NATポート"
+
+msgid "网卡信息"
+msgstr "ネットワークカード情報"
+
+msgid "查看详情"
+msgstr "詳細を表示"
+
+msgid "VNC控制台"
+msgstr "VNCコンソール"
+
+msgid "编辑"
+msgstr "編集"
+
+msgid "删除"
+msgstr "削除"
+
+msgid "电源管理"
+msgstr "電源管理"
+
+msgid "刷新"
+msgstr "更新"
+
+msgid "共"
+msgstr "合計"
+
+msgid "台虚拟机"
+msgstr "台の仮想マシン"
+
+msgid "虚拟机"
+msgstr "仮想マシン"
+
+msgid "操作系统"
+msgstr "オペレーティングシステム"
+
+msgid "系统密码"
+msgstr "システムパスワード"
+
+msgid "VNC密码"
+msgstr "VNCパスワード"
+
+msgid "VNC端口"
+msgstr "VNCポート"
+
+msgid "资源配置"
+msgstr "リソース設定"
+
+msgid "虚拟机UUID"
+msgstr "仮想マシンUUID"
+
+msgid "CPU核心数量"
+msgstr "CPUコア数"
+
+msgid "RAM内存(MB)"
+msgstr "RAMメモリ(MB)"
+
+msgid "HDD硬盘(MB)"
+msgstr "HDDハードディスク(MB)"
+
+msgid "GPU显卡(ID)"
+msgstr "GPUグラフィック(ID)"
+
+msgid "GPU显存(MB)"
+msgstr "GPUメモリ(MB)"
+
+msgid "上行带宽Mb"
+msgstr "上り帯域幅Mb"
+
+msgid "下行带宽Mb"
+msgstr "下り帯域幅Mb"
+
+msgid "流量限制MB"
+msgstr "トラフィック制限MB"
+
+msgid "Web代理数量"
+msgstr "Webプロキシ数"
+
+msgid "NAT端口数量"
+msgstr "NATポート数"
+
+msgid "网卡列表"
+msgstr "ネットワークカードリスト"
+
+msgid "IP配额状态:"
+msgstr "IPクォータ状態:"
+
+msgid "IP配额充足"
+msgstr "IPクォータは十分です"
+
+msgid "已使用"
+msgstr "使用済み"
+
+msgid "公网"
+msgstr "パブリック"
+
+msgid "内网"
+msgstr "プライベート"
+
+msgid "暂停虚拟机"
+msgstr "仮想マシンを一時停止"
+
+msgid "恢复虚拟机"
+msgstr "仮想マシンを再開"
+
+msgid "编辑配置"
+msgstr "設定を編集"
+
+msgid "重装系统"
+msgstr "システムを再インストール"
+
+msgid "VNC"
+msgstr "VNC"
+
+msgid "控制台"
+msgstr "コンソール"
+
+msgid "修改系统密码"
+msgstr "システムパスワードを変更"
+
+msgid "虚拟机IPv4地址"
+msgstr "仮想マシンIPv4アドレス"
+
+msgid "虚拟机IPv6地址"
+msgstr "仮想マシンIPv6アドレス"
+
+msgid "外网访问IP"
+msgstr "外網アクセスIP"
+
+msgid "系统密码"
+msgstr "システムパスワード"
+
+msgid "VNC密码"
+msgstr "VNCパスワード"
+
+msgid "未知"
+msgstr "不明"
+
+msgid "NAT端口转发"
+msgstr "NATポート転送"
+
+msgid "IP地址管理"
+msgstr "IPアドレス管理"
+
+msgid "数据盘"
+msgstr "データディスク"
+
+msgid "ISO挂载"
+msgstr "ISOマウント"
+
+msgid "备份管理"
+msgstr "バックアップ管理"
+
+msgid "至少8位，包含字母、数字、特殊符号中的两种"
+msgstr "8文字以上、英字、数字、特殊記号のうち2種類を含む"
+
+msgid "密码长度不得低于8位，且至少包含字母、数字、符号中的两种"
+msgstr "パスワードは8文字以上、かつ英字、数字、記号のうち2種類を含む必要があります"
+
+msgid "已确认此虚拟机可能需要强制关闭以修改密码"
+msgstr "この仮想マシンはパスワード変更のために強制シャットダウンが必要な可能性があることを確認しました"
+
+msgid "需要关机才能修改：VMware Workstation Pro"
+msgstr "変更にはシャットダウンが必要：VMware Workstation Pro"
+
+msgid "需要开机才能修改：Docker/Podman/LXD(LXC)"
+msgstr "変更には起動が必要：Docker/Podman/LXD(LXC)"
+
+msgid "修改前请核对VM状态，否则可能无法修改成功"
+msgstr "変更前にVM状態を確認してください。そうしないと変更に失敗する可能性があります"
+
+msgid "地址"
+msgstr "アドレス"
+
+msgid "外网IP"
+msgstr "外網IP"
+
+msgid "爱快OS"
+msgstr "iKuai OS"
+
+msgid "端口范围"
+msgstr "ポート範囲"
+
+msgid "系统映射"
+msgstr "システムマッピング"
+
+msgid "个"
+msgstr "個"
+
+msgid "台"
+msgstr "台"
+
+msgid "系统盘"
+msgstr "システムディスク"
+
+msgid "网络"
+msgstr "ネットワーク"
+
+msgid "温度/功耗"
+msgstr "温度/消費電力"
+
+msgid "管理所有虚拟化主机"
+msgstr "すべての仮想化ホストを管理"
+
+msgid "查看系统运行日志和事件记录"
+msgstr "システム実行ログとイベント記録を表示"
+
+msgid "主机筛选"
+msgstr "ホストフィルタ"
+
+msgid "日志记录"
+msgstr "ログ記録"
+
+msgid "警告"
+msgstr "警告"
+
+msgid "留空则自动生成随机Token"
+msgstr "空欄にするとランダムトークンが自動生成されます"
+
+msgid "信息"
+msgstr "情報"
+
+msgid "自动刷新"
+msgstr "自動更新"
+
+msgid "清空显示"
+msgstr "表示をクリア"
+
+msgid "调试"
+msgstr "デバッグ"
+
+msgid "邮箱"
+msgstr "メール"
+
+msgid "角色"
+msgstr "役割"
+
+msgid "状态"
+msgstr "状態"
+
+msgid "基础配额"
+msgstr "基本クォータ"
+
+msgid "GPU Memory"
+msgstr "GPUメモリ"
+
+msgid "带宽/流量"
+msgstr "帯域幅/トラフィック"
+
+msgid "网络服务"
+msgstr "ネットワークサービス"
+
+msgid "IP配额"
+msgstr "IPクォータ"
+
+msgid "管理系统用户、权限和"
+msgstr "システムユーザー、権限、および"
+
+msgid "总代理数"
+msgstr "総プロキシ数"
+
+msgid "HTTP代理"
+msgstr "HTTPプロキシ"
+
+msgid "HTTPS代理"
+msgstr "HTTPSプロキシ"
+
+msgid "后端地址"
+msgstr "バックエンドアドレス"
+
+msgid "协议"
+msgstr "プロトコル"
+
+msgid "主机数"
+msgstr "ホスト数"
+
+msgid "管理所有 的"
+msgstr "すべての "
+
+msgid "普通用户"
+msgstr "一般ユーザー"
+
+msgid "启用"
+msgstr "有効化"
+
+msgid "上行"
+msgstr "上り"
+
+msgid "下行"
+msgstr "下り"
+
+msgid "流量"
+msgstr "トラフィック"
+
+msgid "个主机"
+msgstr "個のホスト"
+
+msgid "服务器名称 *"
+msgstr "サーバー名 *"
+
+msgid "服务器类型 *"
+msgstr "サーバータイプ *"
+
+msgid "请选择类型"
+msgstr "タイプを選択してください"
+
+msgid "服务器地址"
+msgstr "サーバーアドレス"
+
+msgid "服务器用户"
+msgstr "サーバーユーザー"
+
+msgid "服务器密码"
+msgstr "サーバーパスワード"
+
+msgid "Virtual Machine前缀"
+msgstr "仮想マシンプレフィックス"
+
+msgid "过滤器名称"
+msgstr "フィルター名"
+
+msgid "存储路径配置"
+msgstr "ストレージパス設定"
+
+msgid "模板存储路径"
+msgstr "テンプレートストレージパス"
+
+msgid "光盘存储路径"
+msgstr "光学ディスクストレージパス"
+
+msgid "系统存储路径"
+msgstr "システムストレージパス"
+
+msgid "备份存储路径"
+msgstr "バックアップストレージパス"
+
+msgid "数据存储路径"
+msgstr "データストレージパス"
+
+msgid "程序启动路径"
+msgstr "プログラム起動パス"
+
+msgid "虚拟化程序路径"
+msgstr "仮想化プログラムパス"
+
+msgid "服务访问端口"
+msgstr "サービスアクセスポート"
+
+msgid "服务器Public IP"
+msgstr "サーバーパブリックIP"
+
+msgid "共享IP设备名"
+msgstr "共有IPデバイス名"
+
+msgid "独立IP设备名"
+msgstr "独立IPデバイス名"
+
+msgid "爱快OS配置"
+msgstr "iKuai OS設定"
+
+msgid "爱快OS地址"
+msgstr "iKuai OSアドレス"
+
+msgid "爱快OSUsername"
+msgstr "iKuai OSユーザー名"
+
+msgid "爱快OS管理员用户名"
+msgstr "iKuai OS管理者ユーザー名"
+
+msgid "爱快OS密码"
+msgstr "iKuai OSパスワード"
+
+msgid "爱快OS管理员密码"
+msgstr "iKuai OS管理者パスワード"
+
+msgid "端口配置"
+msgstr "ポート設定"
+
+msgid "TCP端口起始"
+msgstr "TCPポート開始"
+
+msgid "TCP端口结束"
+msgstr "TCPポート終了"
+
+msgid "VNC服务端口"
+msgstr "VNCサービスポート"
+
+msgid "VM Count限制"
+msgstr "仮想マシン数制限"
+
+msgid "系统映射配置"
+msgstr "システムマッピング設定"
+
+msgid "配置System Name与镜像文件的映射关系"
+msgstr "システム名とイメージファイルのマッピング関係を設定"
+
+msgid "外部显示System Name"
+msgstr "外部表示システム名"
+
+msgid "镜像文件(带后缀)"
+msgstr "イメージファイル（拡張子付き）"
+
+msgid "最低大小(GB)"
+msgstr "最小サイズ(GB)"
+
+msgid "添加系统映射"
+msgstr "システムマッピングを追加"
+
+msgid "ISO image映射配置"
+msgstr "ISOイメージマッピング設定"
+
+msgid "显示名称"
+msgstr "表示名"
+
+msgid "ISO文件名"
+msgstr "ISOファイル名"
+
+msgid "添加镜像映射"
+msgstr "イメージマッピングを追加"
+
+msgid "IP地址池配置"
+msgstr "IPアドレスプール設定"
+
+msgid "配置Virtual Machine可分配IP addresses段"
+msgstr "仮想マシンに割り当て可能なIPアドレス範囲を設定"
+
+msgid "Add IP Address池"
+msgstr "IPアドレスプールを追加"
+
+msgid "DNS服务器配置"
+msgstr "DNSサーバー設定"
+
+msgid "DNS服务器（多个用逗号分隔）"
+msgstr "DNSサーバー（複数はカンマで区切り）"
+
+msgid "Reinstall system for统一配置DNS服务器"
+msgstr "システム再インストール時のDNSサーバー統一設定"
+
+msgid "API扩展选项 (JSON格式)"
+msgstr "API拡張オプション（JSON形式）"
+
+msgid "反向代理"
+msgstr "リバースプロキシ"
+
+msgid "添加反向代理"
+msgstr "リバースプロキシを追加"
+
+msgid "后端地址"
+msgstr "バックエンドアドレス"
+
+msgid "协议"
+msgstr "プロトコル"
+
+msgid "描述"
+msgstr "説明"
+
+msgid "操作"
+msgstr "操作"
+
+msgid "总代理数"
+msgstr "総プロキシ数"
+
+msgid "HTTP代理"
+msgstr "HTTPプロキシ"
+
+msgid "HTTPS代理"
+msgstr "HTTPSプロキシ"
+
+msgid "主机数"
+msgstr "ホスト数"
+
+msgid "所有主机"
+msgstr "すべてのホスト"
+
+msgid "所有协议"
+msgstr "すべてのプロトコル"
+
+msgid "刷新"
+msgstr "更新"
+
+msgid "反向代理配置"
+msgstr "リバースプロキシ設定"
+
+msgid "管理"
+msgstr "管理"
+
+msgid "所有"
+msgstr "すべて"
+
+msgid "内存"
+msgstr "メモリ"
+
+msgid "显存"
+msgstr "VRAM"
+
+msgid "硬盘"
+msgstr "ディスク"
+
+msgid "个"
+msgstr "個"
+
+msgid "暂无端口转发规则"
+msgstr "ポート転送ルールなし"
+
+msgid "暂无"
+msgstr "なし"
+
+msgid "配置"
+msgstr "設定"
+
+msgid "可分配"
+msgstr "割り当て可能"
+
+msgid "段"
+msgstr "範囲"
+
+msgid "配置名称"
+msgstr "設定名"
+
+msgid "版本"
+msgstr "バージョン"
+
+msgid "网络类型"
+msgstr "ネットワークタイプ"
+
+msgid "数量"
+msgstr "数量"
+
+msgid "起始IP地址"
+msgstr "開始IPアドレス"
+
+msgid "网关地址"
+msgstr "ゲートウェイアドレス"
+
+msgid "池"
+msgstr "プール"
+
+msgid "保存"
+msgstr "保存"
+
+msgid "扫描虚拟机"
+msgstr "仮想マシンをスキャン"
+
+msgid "停止"
+msgstr "停止"
+
+msgid "编辑"
+msgstr "編集"
+
+msgid "删除"
+msgstr "削除"
+
+msgid "下"
+msgstr "下"
+
+msgid "的"
+msgstr "の"
+
+msgid "随机"
+msgstr "ランダム"
+
+msgid "地址"
+msgstr "アドレス"
+
+msgid "执行"
+msgstr "実行"
+
+msgid "启动"
+msgstr "起動"
+
+msgid "确认"
+msgstr "確認"
+
+msgid "留空自动分配"
+msgstr "空白で自動割り当て"
+
+msgid "例如"
+msgstr "例えば"
+
+msgid "添加"
+msgstr "追加"
+
+msgid "端口用途说明"
+msgstr "ポート用途説明"

@@ -242,6 +242,34 @@ class HostServer(BasicServer):
         # 通用操作 =============================================================
         return super().VMStatus(vm_name)
 
+    # 获取虚拟机实际状态（从API）==============================================
+    def VMStatusAPI(self, vm_name: str) -> str:
+        """从vSphere ESXi API获取虚拟机实际状态"""
+        try:
+            connect_result = self.esxi_api.connect()
+            if not connect_result.success:
+                return ""
+            
+            vm_status = self.esxi_api.get_vm_status(vm_name)
+            self.esxi_api.disconnect()
+            
+            if vm_status:
+                power_state = vm_status.get('power_state', '')
+                # 映射vSphere状态到中文状态
+                state_map = {
+                    'poweredOn': '运行中',
+                    'poweredOff': '已关机',
+                    'suspended': '已暂停'
+                }
+                return state_map.get(power_state, '未知')
+        except Exception as e:
+            logger.warning(f"从API获取虚拟机 {vm_name} 状态失败: {str(e)}")
+            try:
+                self.esxi_api.disconnect()
+            except:
+                pass
+        return ""
+
     # 虚拟机扫描 ===============================================================
     def VMDetect(self) -> ZMessage:
         # 专用操作 =============================================================

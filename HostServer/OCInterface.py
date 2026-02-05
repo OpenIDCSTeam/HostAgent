@@ -1004,6 +1004,34 @@ class HostServer(BasicServer):
         super().VMPowers(vm_name, power)
         return hs_result
 
+    # 获取虚拟机实际状态（从API）==============================================
+    def VMStatusAPI(self, vm_name: str) -> str:
+        """从Docker API获取容器实际状态"""
+        try:
+            client, result = self.api_conn()
+            if not result.success:
+                return ""
+            
+            container = client.containers.get(vm_name)
+            container.reload()
+            
+            # 映射Docker状态到中文状态
+            state_map = {
+                'running': '运行中',
+                'exited': '已关机',
+                'paused': '已暂停',
+                'dead': '已关机',
+                'created': '已关机',
+                'restarting': '重启中'
+            }
+            return state_map.get(container.status, '未知')
+        except NotFound:
+            logger.warning(f"容器 {vm_name} 不存在")
+            return ""
+        except Exception as e:
+            logger.warning(f"从API获取容器 {vm_name} 状态失败: {str(e)}")
+        return ""
+
     # 设置虚拟机密码 ###########################################################
     def VMPasswd(self, vm_name: str, os_pass: str) -> ZMessage:
         # 专用操作 =============================================================

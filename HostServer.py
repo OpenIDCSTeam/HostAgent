@@ -9,7 +9,7 @@ import threading
 import traceback
 import json
 from functools import wraps
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, g
+from flask import Flask, request, jsonify, session, redirect, url_for, g, send_from_directory
 
 from loguru import logger
 from HostModule.HostManager import HostManage
@@ -25,10 +25,13 @@ else:
     # 开发环境：从当前文件所在目录查找
     project_root = os.path.dirname(os.path.abspath(__file__))
 
+# 配置模板和静态文件目录
+# WebDesigns: 传统 Jinja2 模板（用于兼容旧页面）
+# static: React 前端构建产物
 template_folder = os.path.join(project_root, 'WebDesigns')
 static_folder = os.path.join(project_root, 'static')
 
-app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
+app = Flask(__name__, template_folder=template_folder, static_folder=static_folder, static_url_path='')
 app.secret_key = secrets.token_hex(32)
 
 # 全局主机管理实例
@@ -69,23 +72,81 @@ def api_response_wrapper(code=200, msg='成功', data=None):
 
 
 # 页面路由 ####################################################################
+# React 前端路由处理
+# 对于所有非 API 路由，返回 React 的 index.html，让前端路由接管
 
-# 首页重定向 ##################################################################
-@app.route('/')
-def index():
-    if session.get('logged_in'):
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_react_app(path):
+    """
+    提供 React 前端服务
+    - 如果请求的是 API 路由，交给 API 处理器
+    - 如果请求的是静态文件且存在，返回静态文件
+    - 否则返回 index.html，让 React Router 处理路由
+    """
+    # API 路由由其他路由处理器接管
+    if path.startswith('api/'):
+        return {'error': 'API endpoint not found'}, 404
+    
+    # 检查是否是静态文件请求
+    static_file_path = os.path.join(static_folder, path)
+    if path and os.path.isfile(static_file_path):
+        # 使用 send_from_directory 正确处理 MIME 类型
+        response = send_from_directory(static_folder, path)
+        
+        # 显式设置JavaScript文件的MIME类型（修复Windows上的MIME类型问题）
+        if path.endswith('.js'):
+            response.headers['Content-Type'] = 'application/javascript; charset=utf-8'
+        elif path.endswith('.mjs'):
+            response.headers['Content-Type'] = 'application/javascript; charset=utf-8'
+        elif path.endswith('.css'):
+            response.headers['Content-Type'] = 'text/css; charset=utf-8'
+        elif path.endswith('.json'):
+            response.headers['Content-Type'] = 'application/json; charset=utf-8'
+        elif path.endswith('.woff2'):
+            response.headers['Content-Type'] = 'font/woff2'
+        elif path.endswith('.woff'):
+            response.headers['Content-Type'] = 'font/woff'
+        elif path.endswith('.ttf'):
+            response.headers['Content-Type'] = 'font/ttf'
+        
+        return response
+    
+    # 返回 React 的 index.html
+    index_path = os.path.join(static_folder, 'index.html')
+    if os.path.isfile(index_path):
+        return send_from_directory(static_folder, 'index.html')
+    else:
+        # 如果 React 前端未构建，返回提示信息
+        return '''
+        <html>
+            <head><title>OpenIDCS - 前端未构建</title></head>
+            <body style="font-family: Arial, sans-serif; padding: 50px; text-align: center;">
+                <h1>⚠️ React 前端未构建</h1>
+                <p>请先构建 React 前端：</p>
+                <pre style="background: #f5f5f5; padding: 20px; border-radius: 5px; display: inline-block; text-align: left;">
+cd FrontPages
+npm install
+npm run build
+cd ..
+mkdir -p static
+cp -r FrontPages/dist/* static/
+                </pre>
+                <p>或使用一键打包脚本：</p>
+                <pre style="background: #f5f5f5; padding: 20px; border-radius: 5px; display: inline-block; text-align: left;">
+cd AllBuilder
+./build_cxfreeze_full.bat  # Windows
+./build_cxfreeze_full.sh   # Linux/Mac
+                </pre>
+            </body>
+        </html>
+        ''', 503
 
 
-# 登录页面 ####################################################################
-@app.route('/login', methods=['GET', 'POST'])
-@app.route('/api/login', methods=['GET', 'POST'])
+# 登录API ####################################################################
+@app.route('/api/login', methods=['POST'])
 def login():
     try:
-        if request.method == 'GET':
-            return render_template('login.html', title='OpenIDCS - 登录')
-
         # POST登录处理
         data = request.get_json() or request.form
         login_type = data.get('login_type', 'token')
@@ -160,130 +221,20 @@ def login():
         return api_response_wrapper(500, f'登录失败: {str(e)}')
 
 
-# 退出登录 ####################################################################
-@app.route('/logout')
-@app.route('/api/logout')
+# 退出登录API ################################################################
+@app.route('/api/logout', methods=['POST'])
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    return api_response_wrapper(200, '退出成功')
 
 
-# 仪表盘页面 ##################################################################
-@app.route('/admin')
-@require_auth
-def dashboard():
-    return render_template(
-        'dashboard.html',
-        title='OpenIDCS - 仪表盘',
-        username=session.get('username', 'admin')
-    )
 
 
-# 主机管理页面（仅管理员）#####################################################
-@app.route('/hosts')
-@require_admin
-def hosts_page():
-    from MainObject.Server.HSEngine import HEConfig
-    return render_template(
-        'hosts.html',
-        title='OpenIDCS - 主机管理',
-        username=session.get('username', 'admin'),
-        engine_config=HEConfig
-    )
 
-
-# 日志管理页面（仅管理员）#####################################################
-@app.route('/debug')
-@require_admin
-def logs_page():
-    return render_template(
-        'logs.html',
-        title='OpenIDCS - 日志管理',
-        username=session.get('username', 'admin')
-    )
-
-
-# 任务管理页面（仅管理员）#####################################################
-@app.route('/tasks')
-@require_admin
-def tasks_page():
-    return render_template(
-        'tasks.html',
-        title='OpenIDCS - 任务管理',
-        username=session.get('username', 'admin')
-    )
-
-
-# 虚拟机管理页面（仅管理员）###############################################
-@app.route('/hosts/<hs_name>/vms')
-@require_admin
-def vms_page(hs_name):
-    return render_template(
-        'vms.html',
-        title=f'OpenIDCS - 虚拟机管理 - {hs_name}',
-        username=session.get('username', 'admin'),
-        hs_name=hs_name
-    )
-
-
-# 虚拟机详情页面 ################################################################
-@app.route('/hosts/<hs_name>/vms/<vm_uuid>')
-@require_auth
-def vm_detail_page(hs_name, vm_uuid):
-    return render_template(
-        'vm_detail.html',
-        title=f'OpenIDCS - {vm_uuid}',
-        username=session.get('username', 'admin'),
-        hs_name=hs_name,
-        vm_uuid=vm_uuid
-    )
-
-
-# 设置页面（仅管理员）#########################################################
-@app.route('/settings')
-@require_admin
-def settings_page():
-    return render_template(
-        'settings.html',
-        title='OpenIDCS - 系统设置',
-        username=session.get('username', 'admin')
-    )
-
-
-# Web反向代理管理页面（仅管理员）###########################################
-@app.route('/web_proxys')
-@require_admin
-def web_proxys_page():
-    return render_template(
-        'web_proxys.html',
-        title='OpenIDCS - Web反向代理管理',
-        username=session.get('username', 'admin')
-    )
-
-
-# 个人设置页面 ################################################################
-@app.route('/profile')
-@require_auth
-def profile_page():
-    return render_template(
-        'profile.html',
-        title='OpenIDCS - 个人设置',
-        username=session.get('username', 'user')
-    )
-
-
-# 用户注册 ####################################################################
-@app.route('/register', methods=['GET', 'POST'])
-@app.route('/api/register', methods=['GET', 'POST'])
+# 用户注册API ################################################################
+@app.route('/api/register', methods=['POST'])
 def register():
     try:
-        if request.method == 'GET':
-            # 检查是否开放注册
-            settings = db.get_system_settings()
-            if settings.get('registration_enabled') != '1':
-                return redirect(url_for('login'))
-            return render_template('register.html')
-        
         # POST注册处理
         data = request.get_json() or request.form
         username = data.get('username', '').strip()
@@ -373,20 +324,20 @@ def verify_email():
     try:
         token = request.args.get('token', '')
         if not token:
-            return '无效的验证链接'
+            return redirect('/?verified=error&msg=invalid_link')
         
         user_data = db.get_user_by_verify_token(token)
         if not user_data:
-            return '验证链接无效或已过期'
+            return redirect('/?verified=error&msg=expired')
         
         # 验证邮箱
         if db.verify_user_email(user_data['id']):
-            return redirect(url_for('login') + '?verified=1')
+            return redirect('/?verified=success')
         else:
-            return '验证失败，请重试'
+            return redirect('/?verified=error&msg=failed')
     except Exception as e:
         logger.error(f"验证邮箱失败: {e}")
-        return '验证失败，请重试'
+        return redirect('/?verified=error&msg=exception')
 
 @app.route('/verify-email-change')
 def verify_email_change():
@@ -394,13 +345,13 @@ def verify_email_change():
     try:
         token = request.args.get('token', '')
         if not token:
-            return '无效的验证链接'
+            return redirect('/profile?email_changed=error&msg=invalid_link')
         
         # 解析token中的邮箱地址
         import base64
         try:
             if ':' not in token:
-                return '验证链接格式错误'
+                return redirect('/profile?email_changed=error&msg=invalid_format')
             
             email_base64, random_value = token.split(':', 1)
             
@@ -408,32 +359,32 @@ def verify_email_change():
             email_bytes = base64.urlsafe_b64decode(email_base64 + '=' * (-len(email_base64) % 4))
             new_email = email_bytes.decode()
         except:
-            return '验证链接格式错误'
+            return redirect('/profile?email_changed=error&msg=decode_failed')
         
- # 直接根据verify_token字段查找用户
+        # 直接根据verify_token字段查找用户
         user_data = db.get_user_by_verify_token(token)
         if not user_data:
-            return '验证链接无效或已过期'
+            return redirect('/profile?email_changed=error&msg=expired')
         if not new_email:
-            return '新邮箱地址无效'
+            return redirect('/profile?email_changed=error&msg=invalid_email')
         
         # 再次检查邮箱是否已被其他用户使用
         existing_user = db.get_user_by_email(new_email)
         if existing_user and existing_user['id'] != user_data['id']:
-            return '该邮箱已被其他用户使用'
+            return redirect('/profile?email_changed=error&msg=email_taken')
         
         # 更新用户邮箱
         success = db.update_user(user_data['id'], email=new_email)
         if success:
             # 清除验证token
             db.set_user_verify_token(user_data['id'], '')
-            return redirect(url_for('profile_page') + '?email_changed=1')
+            return redirect('/profile?email_changed=success')
         else:
-            return '邮箱更新失败，请重试'
+            return redirect('/profile?email_changed=error&msg=update_failed')
             
     except Exception as e:
         logger.error(f"验证邮箱变更失败: {e}")
-        return '验证失败，请重试'
+        return redirect('/profile?email_changed=error&msg=exception')
 
 @app.route('/api/users/change-password', methods=['POST'])
 @require_login
@@ -590,14 +541,6 @@ def forgot_password():
         return jsonify({'code': 500, 'msg': '找回密码失败'})
 
 
-@app.route('/reset-password')
-def reset_password_page():
-    """密码重置页面"""
-    token = request.args.get('token')
-    return render_template('reset_password.html',
-                           title='OpenIDCS - 重置密码',
-                           token=token)
-
 
 @app.route('/api/system/reset-password', methods=['POST'])
 def reset_password():
@@ -635,14 +578,6 @@ def reset_password():
         logger.error(f"密码重置失败: {e}")
         return jsonify({'code': 500, 'msg': '密码重置失败'})
 
-
-@app.route('/users')
-@require_admin
-def users_page():
-    """用户管理页面（仅管理员）"""
-    return render_template('users.html',
-                           title='OpenIDCS - 用户管理',
-                           username=session.get('username', 'admin'))
 
 
 # ============================================================================
@@ -867,9 +802,9 @@ def api_delete_host(hs_name):
 # 电源控制 ########################################################################
 @app.route('/api/server/powers/<hs_name>', methods=['POST'])
 @require_admin
-def api_host_power(hs_name):
-    """主机电源控制（启用/禁用）"""
-    return rest_manager.host_power(hs_name)
+def api_host_enable(hs_name):
+    """主机启用控制（启用/禁用）"""
+    return rest_manager.host_enable(hs_name)
 
 
 # 主机状态 ########################################################################
@@ -1859,9 +1794,9 @@ if __name__ == '__main__':
             logger.info("使用生产模式启动 Flask 服务器...")
             app.run(host='0.0.0.0', port=1880, debug=False, use_reloader=False)
         else:
-            # 开发环境可以使用调试模式
-            logger.info("使用调试模式启动 Flask 服务器...")
-            app.run(host='0.0.0.0', port=1880, debug=True, use_reloader=False)
+            # 开发环境可以使用调试模式和自动重载
+            logger.info("使用调试模式启动 Flask 服务器（已启用自动重载）...")
+            app.run(host='0.0.0.0', port=1880, debug=True, use_reloader=True)
     except KeyboardInterrupt:
         logger.info("\n程序被用户中断")
         sys.exit(0)

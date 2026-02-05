@@ -59,9 +59,9 @@ function UserPostin() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen flex items-center justify-center py-8">
+    <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 min-h-screen flex items-center justify-center py-8">
       {/* 注册卡片容器 */}
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+      <div className="glass-card p-8 w-full max-w-md">
         {/* 头部图标和标题 */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -69,8 +69,8 @@ function UserPostin() {
               <UserAddOutlined className="text-white text-5xl" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">用户注册</h1>
-          <p className="text-gray-600 flex items-center justify-center gap-2">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">用户注册</h1>
+          <p className="text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2">
             <span className="iconify" data-icon="mdi:server-network"></span>
             OpenIDCS 虚拟化管理平台
           </p>

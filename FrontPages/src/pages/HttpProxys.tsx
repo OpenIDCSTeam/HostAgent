@@ -298,6 +298,7 @@ function HttpProxys() {
       okText: '删除',
       okType: 'danger',
       cancelText: '取消',
+      mask: false,
       onOk: async () => {
         try {
           const response = await api.deleteWebProxy(
@@ -331,7 +332,7 @@ function HttpProxys() {
           href={`http${record.ssl_enabled ? 's' : ''}://${domain}`}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: '#2563eb', fontWeight: 500 }}
+          className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
         >
           {domain}
         </a>
@@ -353,7 +354,7 @@ function HttpProxys() {
       title: '后端地址',
       key: 'backend',
       render: (_, record: WebProxy) => (
-        <code style={{ fontSize: '0.875rem' }}>
+        <code className="text-sm text-gray-800 dark:text-gray-200">
           {record.backend_ip || 'auto'}:{record.backend_port}
         </code>
       )
@@ -384,7 +385,7 @@ function HttpProxys() {
       title: '描述',
       dataIndex: 'description',
       key: 'description',
-      render: (desc: string) => <span style={{ color: '#6b7280' }}>{desc || '-'}</span>
+      render: (desc: string) => <span className="text-gray-600 dark:text-gray-400">{desc || '-'}</span>
     },
     {
       title: '操作',
@@ -416,93 +417,159 @@ function HttpProxys() {
   return (
     <div style={{ padding: '24px' }}>
       {/* 页面标题 */}
-      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <GlobalOutlined style={{ color: '#2563eb', fontSize: '2rem' }} />
-            Web反向代理管理
-          </h1>
-          <p style={{ color: '#6b7280', marginTop: '8px', marginBottom: 0 }}>管理所有虚拟机的Web反向代理配置</p>
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
+              <GlobalOutlined className="text-blue-600 dark:text-blue-400" />
+              反向代理管理
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">管理所有虚拟机的Web反向代理配置</p>
+          </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={showAddModal}
+            size="large"
+            className="gradient-button"
+          >
+            添加反向代理
+          </Button>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={showAddModal}
-          size="large"
-        >
-          添加反向代理
-        </Button>
       </div>
 
-      {/* 统计卡片 */}
-      <Row gutter={16} style={{ marginBottom: '24px' }}>
+      {/* 统计卡片 - 重新设计 */}
+      <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} md={6}>
-          <Card>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>总代理数</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', margin: '4px 0 0 0' }}>
+          <Card 
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            style={{
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%)',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              borderRadius: '16px'
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{
+                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+              }}>
+                <GlobalOutlined className="text-white text-xl" />
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">总代理数</div>
+                <div className="text-3xl font-bold" style={{
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
                   {statistics.total}
-                </p>
+                </div>
               </div>
-              <GlobalOutlined style={{ fontSize: '2.5rem', color: '#3b82f6' }} />
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>HTTP代理</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', margin: '4px 0 0 0' }}>
+          <Card 
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            style={{
+              background: 'linear-gradient(135deg, rgba(107, 114, 128, 0.1) 0%, rgba(75, 85, 99, 0.05) 100%)',
+              border: '1px solid rgba(107, 114, 128, 0.2)',
+              borderRadius: '16px'
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{
+                background: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
+              }}>
+                <UnlockOutlined className="text-white text-xl" />
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">HTTP代理</div>
+                <div className="text-3xl font-bold" style={{
+                  background: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
                   {statistics.http}
-                </p>
+                </div>
               </div>
-              <UnlockOutlined style={{ fontSize: '2.5rem', color: '#6b7280' }} />
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>HTTPS代理</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', margin: '4px 0 0 0' }}>
+          <Card 
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            style={{
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.2)',
+              borderRadius: '16px'
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+              }}>
+                <LockOutlined className="text-white text-xl" />
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">HTTPS代理</div>
+                <div className="text-3xl font-bold" style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
                   {statistics.https}
-                </p>
+                </div>
               </div>
-              <LockOutlined style={{ fontSize: '2.5rem', color: '#10b981' }} />
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>主机数</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', margin: '4px 0 0 0' }}>
-                  {statistics.hosts}
-                </p>
+          <Card 
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            style={{
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
+              border: '1px solid rgba(139, 92, 246, 0.2)',
+              borderRadius: '16px'
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{
+                background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
+              }}>
+                <CloudServerOutlined className="text-white text-xl" />
               </div>
-              <CloudServerOutlined style={{ fontSize: '2.5rem', color: '#8b5cf6' }} />
+              <div className="text-right">
+                <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">主机数</div>
+                <div className="text-3xl font-bold" style={{
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  {statistics.hosts}
+                </div>
+              </div>
             </div>
           </Card>
         </Col>
       </Row>
 
-      {/* 筛选和搜索 */}
-      <Card style={{ marginBottom: '24px' }}>
+      {/* 筛选和搜索 - 优化设计 */}
+      <Card 
+        className="glass-card mb-6"
+        style={{ borderRadius: '16px' }}
+      >
         <Space size="middle" style={{ width: '100%', flexWrap: 'wrap' }}>
           <Input
-            placeholder="搜索域名、虚拟机名称..."
-            style={{ width: 300 }}
+            placeholder="🔍 搜索域名、虚拟机名称..."
+            style={{ width: 300, borderRadius: '8px' }}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
           />
           <Select
             placeholder="所有主机"
-            style={{ width: 150 }}
+            style={{ width: 150, borderRadius: '8px' }}
             value={hostFilter || undefined}
             onChange={setHostFilter}
             allowClear
@@ -515,7 +582,7 @@ function HttpProxys() {
           </Select>
           <Select
             placeholder="所有协议"
-            style={{ width: 120 }}
+            style={{ width: 120, borderRadius: '8px' }}
             value={protocolFilter || undefined}
             onChange={setProtocolFilter}
             allowClear
@@ -526,25 +593,39 @@ function HttpProxys() {
           <Button
             icon={<ReloadOutlined />}
             onClick={loadProxys}
+            style={{ borderRadius: '8px' }}
           >
             刷新
           </Button>
         </Space>
       </Card>
 
-      {/* 代理列表表格 */}
-      <Card>
+      {/* 代理列表表格 - 优化设计 */}
+      <Card 
+        className="glass-card"
+        style={{ borderRadius: '16px' }}
+      >
         <Table
           columns={columns}
           dataSource={filteredProxies}
           rowKey={(record) => `${record.hostName}-${record.vmUuid}-${record.proxy_index}`}
           loading={loading}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total) => `共 ${total} 条记录`
+          }}
           locale={{
             emptyText: (
               <div style={{ padding: '48px 0', textAlign: 'center' }}>
-                <GlobalOutlined style={{ fontSize: '5rem', color: '#d1d5db' }} />
-                <p style={{ color: '#6b7280', marginTop: '16px', fontSize: '1.125rem' }}>暂无反向代理配置</p>
-                <Button type="primary" onClick={showAddModal} style={{ marginTop: '16px' }}>
+                <GlobalOutlined className="text-gray-300 dark:text-gray-600" style={{ fontSize: '5rem' }} />
+                <p className="text-gray-600 dark:text-gray-400 mt-4 text-lg">暂无反向代理配置</p>
+                <Button 
+                  type="primary" 
+                  onClick={showAddModal} 
+                  style={{ marginTop: '16px' }}
+                  className="gradient-button"
+                >
                   添加第一个代理
                 </Button>
               </div>

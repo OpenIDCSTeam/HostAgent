@@ -1,5309 +1,2432 @@
-# Portuguese (Brazil) translations for OpenIDCS
+# OpenIDCS Portuguese Translation File
 # Copyright (C) 2024 OpenIDCS Team
 # This file is distributed under the same license as the OpenIDCS package.
 #
-
 msgid ""
 msgstr ""
 "Project-Id-Version: OpenIDCS 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-15 19:17:42\n"
-"PO-Revision-Date: 2024-01-15 19:17:42\n"
-"Last-Translator: OpenIDCS Team\n"
-"Language-Team: Portuguese (Brazil)\n"
-"Language: pt_BR\n"
+"POT-Creation-Date: 2026-02-05 15:46\n"
+"PO-Revision-Date: 2026-02-05 15:46\n"
+"Last-Translator: Auto Generated\n"
+"Language-Team: Portuguese\n"
+"Language: pt\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-# HostServer.py
-msgid "登录"
-msgstr "UserLogins"
-
-msgid "用户名和密码不能为空"
-msgstr "Nome de usuário e senha não podem estar vazios"
-
-msgid "用户名或密码错误"
-msgstr "Nome de usuário ou senha incorretos"
-
-msgid "用户已被禁用"
-msgstr "Usuário foi desativado"
-
-msgid "请先验证邮箱后再登录"
-msgstr "Por favor, verifique seu e-mail antes de fazer login"
-
-msgid "登录成功"
-msgstr "UserLogins realizado com sucesso"
-
-msgid "Admin用户已被禁用"
-msgstr "Usuário Admin foi desativado"
-
-msgid "Token错误"
-msgstr "Token inválido"
-
-msgid "登录失败"
-msgstr "Falha no login"
-
-msgid "仪表盘"
-msgstr "Painel"
-
-msgid "主机管理"
-msgstr "Gerenciamento de HostManage"
-
-msgid "日志管理"
-msgstr "Gerenciamento de LogsManage"
-
-msgid "任务管理"
-msgstr "Gerenciamento de Tarefas"
-
-msgid "虚拟机管理"
-msgstr "Gerenciamento de Máquinas Virtuais"
-
-msgid "系统设置"
-msgstr "Configurações do Sistema"
-
-msgid "Web反向代理管理"
-msgstr "Gerenciamento de Proxy Reverso Web"
-
-msgid "个人设置"
-msgstr "Configurações Pessoais"
-
-msgid "用户名、邮箱和密码不能为空"
-msgstr "Nome de usuário, e-mail e senha não podem estar vazios"
-
-msgid "用户名长度必须在3-20个字符之间"
-msgstr "O nome de usuário deve ter entre 3 e 20 caracteres"
-
-msgid "不能使用admin作为用户名"
-msgstr "Não é possível usar 'admin' como nome de usuário"
-
-msgid "密码长度至少6个字符"
-msgstr "A senha deve ter pelo menos 6 caracteres"
-
-msgid "用户名已存在"
-msgstr "Nome de usuário já existe"
-
-msgid "邮箱已被注册"
-msgstr "E-mail já está registrado"
-
-msgid "注册失败，请重试"
-msgstr "Falha no registro, tente novamente"
-
-msgid "注册成功！请查收验证邮件"
-msgstr "Registro realizado com sucesso! Por favor, verifique o e-mail de confirmação"
-
-msgid "注册成功！请登录"
-msgstr "Registro realizado com sucesso! Por favor, faça login"
-
-msgid "注册失败"
-msgstr "Falha no registro"
-
-msgid "无效的验证链接"
-msgstr "Link de verificação inválido"
-
-msgid "验证链接无效或已过期"
-msgstr "Link de verificação inválido ou expirado"
-
-msgid "验证失败，请重试"
-msgstr "Falha na verificação, tente novamente"
-
-msgid "验证链接格式错误"
-msgstr "Formato do link de verificação incorreto"
-
-msgid "新邮箱地址无效"
-msgstr "Novo endereço de e-mail inválido"
-
-msgid "该邮箱已被其他用户使用"
-msgstr "Este e-mail já está sendo usado por outro usuário"
-
-msgid "邮箱更新失败，请重试"
-msgstr "Falha ao atualizar o e-mail, tente novamente"
-
-msgid "验证邮箱变更失败"
-msgstr "Falha na verificação de alteração de e-mail"
-
-msgid "未登录"
-msgstr "Não logado"
-
-msgid "请填写完整信息"
-msgstr "Por favor, preencha todas as informações"
-
-msgid "新密码与确认密码不一致"
-msgstr "A nova senha e a confirmação não coincidem"
-
-msgid "新密码长度不能少于6位"
-msgstr "A nova senha deve ter pelo menos 6 caracteres"
-
-msgid "密码修改成功"
-msgstr "Senha alterada com sucesso"
-
-msgid "密码修改失败"
-msgstr "Falha ao alterar senha"
-
-msgid "请输入新邮箱地址"
-msgstr "Por favor, insira o novo endereço de e-mail"
-
-msgid "请输入有效的邮箱地址"
-msgstr "Por favor, insira um endereço de e-mail válido"
-
-msgid "用户不存在"
-msgstr "Usuário não existe"
-
-msgid "验证邮件已发送，请查收并点击验证链接完成邮箱修改"
-msgstr "E-mail de verificação enviado, por favor, verifique e clique no link para completar a alteração"
-
-msgid "验证邮件发送失败，请重试"
-msgstr "Falha ao enviar e-mail de verificação, tente novamente"
-
-msgid "邮件服务未启用"
-msgstr "Serviço de e-mail não ativado"
-
-msgid "邮箱修改失败，请重试"
-msgstr "Falha ao alterar e-mail, tente novamente"
-
-msgid "邮箱修改失败"
-msgstr "Falha ao alterar e-mail"
-
-msgid "请输入邮箱地址"
-msgstr "Por favor, insira o endereço de e-mail"
-
-msgid "系统未启用邮件验证功能"
-msgstr "Sistema não tem verificação de e-mail ativada"
-
-msgid "该邮箱未注册"
-msgstr "Este e-mail não está registrado"
-
-msgid "密码重置邮件已发送，请查收"
-msgstr "E-mail de redefinição de senha enviado, por favor, verifique"
-
-msgid "发送重置邮件失败"
-msgstr "Falha ao enviar e-mail de redefinição"
-
-msgid "找回密码失败"
-msgstr "Falha na recuperação de senha"
-
-msgid "重置密码"
-msgstr "Redefinir Senha"
-
-msgid "密码与确认密码不一致"
-msgstr "Senha e confirmação não coincidem"
-
-msgid "密码长度不能少于6位"
-msgstr "A senha deve ter pelo menos 6 caracteres"
-
-msgid "重置链接已过期或无效"
-msgstr "Link de redefinição expirado ou inválido"
-
-msgid "密码重置成功"
-msgstr "Senha redefinida com sucesso"
-
-msgid "密码重置失败"
-msgstr "Falha ao redefinir senha"
-
-msgid "用户管理"
-msgstr "Gerenciamento de Usuários"
-
-msgid "未授权访问"
-msgstr "Acesso não autorizado"
-
-msgid "成功"
-msgstr "Sucesso"
-
-msgid "没有访问该主机的权限"
-msgstr "Sem permissão para acessar este host"
-
-msgid "获取Token成功"
-msgstr "Token obtido com sucesso"
-
-msgid "获取Token失败"
-msgstr "Falha ao obter Token"
-
-msgid "Token不能为空"
-msgstr "Token não pode estar vazio"
-
-msgid "Token设置成功"
-msgstr "Token configurado com sucesso"
-
-msgid "设置Token失败"
-msgstr "Falha ao configurar Token"
-
-msgid "Token重置成功"
-msgstr "Token redefinido com sucesso"
-
-msgid "重置Token失败"
-msgstr "Falha ao redefinir Token"
-
-msgid "获取统计信息成功"
-msgstr "Estatísticas obtidas com sucesso"
-
-msgid "获取统计信息失败"
-msgstr "Falha ao obter estatísticas"
-
-msgid "资源配额重新计算完成"
-msgstr "Recálculo de cotas de recursos concluído"
-
-msgid "重新计算失败"
-msgstr "Falha no recálculo"
-
-msgid "获取成功"
-msgstr "Obtido com sucesso"
-
-msgid "获取失败"
-msgstr "Falha ao obter"
-
-msgid "无效的请求数据"
-msgstr "Dados de solicitação inválidos"
-
-msgid "创建用户失败，请重试"
-msgstr "Falha ao criar usuário, tente novamente"
-
-msgid "更新用户权限和配额失败"
-msgstr "Falha ao atualizar permissões e cotas do usuário"
-
-msgid "用户创建成功"
-msgstr "Usuário criado com sucesso"
-
-msgid "创建失败"
-msgstr "Falha na criação"
-
-msgid "更新成功"
-msgstr "Atualizado com sucesso"
-
-msgid "更新失败"
-msgstr "Falha na atualização"
-
-msgid "删除成功"
-msgstr "Excluído com sucesso"
-
-msgid "删除失败"
-msgstr "Falha na exclusão"
-
-msgid "请提供完整的邮件配置信息"
-msgstr "Por favor, forneça informações completas de configuração de e-mail"
-
-msgid "邮箱地址格式不正确"
-msgstr "Formato do endereço de e-mail incorreto"
-
-msgid "测试邮件发送成功"
-msgstr "E-mail de teste enviado com sucesso"
-
-msgid "测试邮件发送失败"
-msgstr "Falha ao enviar e-mail de teste"
-
-msgid "获取语言列表失败"
-msgstr "Falha ao obter lista de idiomas"
-
-msgid "语言不存在"
-msgstr "Idioma não existe"
-
-msgid "获取翻译数据失败"
-msgstr "Falha ao obter dados de tradução"
-
-msgid "正在加载系统配置..."
-msgstr "Carregando configurações do sistema..."
-
-msgid "系统配置加载完成"
-msgstr "Configurações do sistema carregadas"
-
-msgid "加载配置失败"
-msgstr "Falha ao carregar configurações"
-
-msgid "检测到多进程相关错误，将在用户访问时重试加载"
-msgstr "Erro relacionado a multiprocessamento detectado, tentará carregar novamente quando o usuário acessar"
-
-msgid "正在加载翻译文件..."
-msgstr "Carregando arquivos de tradução..."
-
-msgid "翻译文件加载完成"
-msgstr "Arquivos de tradução carregados"
-
-msgid "加载翻译文件失败"
-msgstr "Falha ao carregar arquivos de tradução"
-
-msgid "已生成访问Token"
-msgstr "Token de acesso gerado"
-
-msgid "已创建admin用户"
-msgstr "Usuário admin criado"
-
-msgid "admin用户已存在，跳过创建"
-msgstr "Usuário admin já existe, pulando criação"
-
-msgid "初始化admin用户失败"
-msgstr "Falha ao inicializar usuário admin"
-
-msgid "定时任务调度器启动成功"
-msgstr "Agendador de tarefas iniciado com sucesso"
-
-msgid "启动定时任务调度器失败"
-msgstr "Falha ao iniciar agendador de tarefas"
-
-msgid "OpenIDCS Server 启动"
-msgstr "Iniciando OpenIDCS Server"
-
-msgid "运行模式"
-msgstr "Modo de Execução"
-
-msgid "打包模式 (Nuitka)"
-msgstr "Modo Empacotado (Nuitka)"
-
-msgid "开发模式"
-msgstr "Modo de Desenvolvimento"
-
-msgid "工作目录"
-msgstr "Diretório de Trabalho"
-
-msgid "项目根目录"
-msgstr "Diretório Raiz do Projeto"
-
-msgid "正在初始化应用..."
-msgstr "Inicializando aplicação..."
-
-msgid "OpenIDCS Server 启动中..."
-msgstr "OpenIDCS Server iniciando..."
-
-msgid "访问地址"
-msgstr "Endereço de Acesso"
-
 msgid "访问Token"
-msgstr "Token de Acesso"
-
-msgid "使用生产模式启动 Flask 服务器..."
-msgstr "Iniciando servidor Flask em modo de produção..."
-
-msgid "使用调试模式启动 Flask 服务器..."
-msgstr "Iniciando servidor Flask em modo de depuração..."
-
-msgid "程序被用户中断"
-msgstr "Programa interrompido pelo usuário"
-
-msgid "程序启动失败"
-msgstr "Falha ao iniciar programa"
-
-msgid "错误详情"
-msgstr "Detalhes do Erro"
-
-msgid "按回车键退出..."
-msgstr "Pressione Enter para sair..."
-
-msgid "执行定时任务出错"
-msgstr "Erro ao executar tarefa agendada"
-
-msgid "初始执行完成"
-msgstr "Execução inicial concluída"
-
-msgid "初始执行出错"
-msgstr "Erro na execução inicial"
-
-msgid "启动定时任务调度器..."
-msgstr "Iniciando agendador de tarefas..."
-
-msgid "定时任务已启动（后台运行），每60秒执行一次"
-msgstr "Tarefas agendadas iniciadas (executando em segundo plano), a cada 60 segundos"
-
-msgid "简体中文"
-msgstr "Chinês Simplificado"
-
-msgid "已加载"
-msgstr "Carregado"
-
-msgid "种语言"
-msgstr "idiomas"
-
-# HostModule/HostManager.py
-msgid "自动生成新Token"
-msgstr "Gerar novo Token automaticamente"
-
-msgid "主机已添加"
-msgstr "Host adicionado"
-
-msgid "不支持的主机类型"
-msgstr "Tipo de host não suportado"
-
-msgid "主机添加成功"
-msgstr "Host adicionado com sucesso"
-
-msgid "添加主机失败"
-msgstr "Falha ao adicionar host"
-
-msgid "删除主机失败"
-msgstr "Falha ao excluir host"
-
-msgid "主机未找到"
-msgstr "Host não encontrado"
-
-msgid "主机更新成功"
-msgstr "Host atualizado com sucesso"
-
-msgid "修改主机失败"
-msgstr "Falha ao modificar host"
-
-msgid "主机启用状态"
-msgstr "Status de ativação do host"
-
-msgid "修改主机状态失败"
-msgstr "Falha ao modificar status do host"
-
-msgid "加载数据时出错"
-msgstr "Erro ao carregar dados"
-
-msgid "保存数据时出错"
-msgstr "Erro ao salvar dados"
-
-msgid "Host does not support VM scanning"
-msgstr "Host não suporta varredura de máquinas virtuais"
-
-msgid "代理域名"
-msgstr "Domínio do Proxy"
-
-msgid "已存在"
-msgstr "Já existe"
-
-msgid "添加代理到HttpManage失败"
-msgstr "Falha ao adicionar proxy ao HttpManage"
-
-msgid "HttpManage未初始化"
-msgstr "HttpManage não inicializado"
-
-msgid "保存代理配置到数据库失败"
-msgstr "Falha ao salvar configuração de proxy no banco de dados"
-
-msgid "代理"
-msgstr "Proxy"
-
-msgid "添加成功"
-msgstr "Adicionado com sucesso"
-
-msgid "添加全局代理失败"
-msgstr "Falha ao adicionar proxy global"
-
-msgid "添加代理失败"
-msgstr "Falha ao adicionar proxy"
-
-msgid "不存在"
-msgstr "Não existe"
-
-msgid "从HttpManage删除代理失败"
-msgstr "Falha ao excluir proxy do HttpManage"
-
-msgid "从数据库删除代理配置失败"
-msgstr "Falha ao excluir configuração de proxy do banco de dados"
-
-msgid "删除成功"
-msgstr "Excluído com sucesso"
-
-msgid "删除全局代理失败"
-msgstr "Falha ao excluir proxy global"
-
-msgid "删除代理失败"
-msgstr "Falha ao excluir proxy"
-
-msgid "执行定时任务完成"
-msgstr "Execução de tarefa agendada concluída"
-
-msgid "用户资源配额重新计算完成"
-msgstr "Recálculo de cotas de recursos do usuário concluído"
-
-msgid "重新计算用户配额失败"
-msgstr "Falha ao recalcular cota do usuário"
-
-msgid "开始清理已删除虚拟机的状态数据"
-msgstr "Iniciando limpeza de dados de estado de máquinas virtuais excluídas"
-
-msgid "已清理已删除虚拟机状态"
-msgstr "Dados de estado de máquinas virtuais excluídas limpos"
-
-msgid "主机"
-msgstr "Host"
-
-msgid "虚拟机"
-msgstr "Máquina Virtual"
-
-msgid "清理完成，共删除"
-msgstr "Limpeza concluída, excluídos no total"
-
-msgid "个已删除虚拟机的状态数据"
-msgstr "dados de estado de máquinas virtuais excluídas"
-
-msgid "没有需要清理的虚拟机状态数据"
-msgstr "Não há dados de estado de máquinas virtuais para limpar"
-
-msgid "清理已删除虚拟机状态数据失败"
-msgstr "Falha ao limpar dados de estado de máquinas virtuais excluídas"
-
-msgid "触发用户资源配额重新计算"
-msgstr "Acionar recálculo de cotas de recursos do usuário"
-
-msgid "执行"
-msgstr "Executar"
-
-msgid "的定时任务"
-msgstr "tarefa agendada"
-
-# HostModule/HttpManager.py
-msgid "HttpManager初始化完成，管理端口"
-msgstr "HttpManager inicializado, porta de gerenciamento"
-
-msgid "配置文件"
-msgstr "Arquivo de Configuração"
-
-msgid "令牌"
-msgstr "Token"
-
-msgid "的SSH代理配置已存在"
-msgstr "Configuração de proxy SSH já existe"
-
-msgid "SSH代理已添加"
-msgstr "Proxy SSH adicionado"
-
-msgid "统一端口"
-msgstr "Porta Unificada"
-
-msgid "添加SSH代理配置时发生错误"
-msgstr "Erro ao adicionar configuração de proxy SSH"
-
-msgid "域名"
-msgstr "Domínio"
-
-msgid "的配置已存在"
-msgstr "configuração já existe"
-
-msgid "为临时代理，不写入数据库"
-msgstr "É um proxy temporário, não será salvo no banco de dados"
-
-msgid "添加代理配置时发生错误"
-msgstr "Erro ao adicionar configuração de proxy"
-
-msgid "未找到匹配的代理配置"
-msgstr "Configuração de proxy correspondente não encontrada"
-
-msgid "当前已有的域名"
-msgstr "Domínios atuais"
-
-msgid "删除代理配置时发生错误"
-msgstr "Erro ao excluir configuração de proxy"
-
-msgid "Caddy进程已启动，PID"
-msgstr "Processo Caddy iniciado, PID"
-
-msgid "错误: 找不到caddy可执行文件"
-msgstr "Erro: arquivo executável caddy não encontrado"
-
-msgid "启动Caddy时发生错误"
-msgstr "Erro ao iniciar Caddy"
-
-msgid "Caddy进程已停止"
-msgstr "Processo Caddy parado"
-
-msgid "停止Caddy时发生错误"
-msgstr "Erro ao parar Caddy"
-
-msgid "重载服务命令"
-msgstr "Comando de recarregamento de serviço"
-
-msgid "Caddy配置已重载（管理端口"
-msgstr "Configuração do Caddy recarregada (porta de gerenciamento"
-
-msgid "重载失败，尝试启动服务"
-msgstr "Falha ao recarregar, tentando iniciar serviço"
-
-msgid "重载Caddy配置时发生错误"
-msgstr "Erro ao recarregar configuração do Caddy"
-
-msgid "已从数据库加载"
-msgstr "Carregado do banco de dados"
-
-msgid "个代理配置"
-msgstr "configurações de proxy"
-
-msgid "加载代理配置失败"
-msgstr "Falha ao carregar configurações de proxy"
-
-msgid "保存代理到数据库失败"
-msgstr "Falha ao salvar proxy no banco de dados"
-
-msgid "从数据库删除代理失败"
-msgstr "Falha ao excluir proxy do banco de dados"
-
-# HostModule/NetsManager.py
-msgid "爱快路由器管理类"
-msgstr "Classe de gerenciamento do roteador iKuai"
-
-msgid "未知错误"
-msgstr "Erro desconhecido"
-
-msgid "登录失败"
-msgstr "Falha no login"
-
-msgid "响应不是有效的JSON格式"
-msgstr "Resposta não está em formato JSON válido"
-
-msgid "登录失败，状态码"
-msgstr "Falha no login, código de status"
-
-msgid "登录异常"
-msgstr "Exceção de login"
-
-msgid "请先登录"
-msgstr "Por favor, faça login primeiro"
-
-msgid "API调用失败"
-msgstr "Falha na chamada de API"
-
-msgid "API调用异常"
-msgstr "Exceção na chamada de API"
-
-msgid "✅ 获取静态IP列表成功，共"
-msgstr "✅ Lista de IPs estáticos obtida com sucesso, total de"
-
-msgid "条"
-msgstr "itens"
-
-msgid "❌ 获取静态IP列表失败"
-msgstr "❌ Falha ao obter lista de IPs estáticos"
-
-msgid "✅ 获取端口映射列表成功，共"
-msgstr "✅ Lista de mapeamentos de porta obtida com sucesso, total de"
-
-msgid "❌ 获取端口映射列表失败"
-msgstr "❌ Falha ao obter lista de mapeamentos de porta"
-
-msgid "✅ 获取ARP列表成功，共"
-msgstr "✅ Lista ARP obtida com sucesso, total de"
-
-msgid "❌ 获取ARP列表失败"
-msgstr "❌ Falha ao obter lista ARP"
-
-msgid "🔍 准备添加DHCP - 提交参数"
-msgstr "🔍 Preparando para adicionar DHCP - enviando parâmetros"
-
-msgid "✅ 静态IP添加成功"
-msgstr "✅ IP estático adicionado com sucesso"
-
-msgid "❌ 静态IP添加失败"
-msgstr "❌ Falha ao adicionar IP estático"
-
-msgid "必须提供ip_addr或mac中的一个"
-msgstr "Deve fornecer ip_addr ou mac"
-
-msgid "无法获取DHCP列表"
-msgstr "Não é possível obter lista DHCP"
-
-msgid "找到匹配的DHCP条目"
-msgstr "Entrada DHCP correspondente encontrada"
-
-msgid "未找到匹配的DHCP条目"
-msgstr "Entrada DHCP correspondente não encontrada"
-
-msgid "🔍 准备删除DHCP - 提交参数"
-msgstr "🔍 Preparando para excluir DHCP - enviando parâmetros"
-
-msgid "✅ 静态IP删除成功"
-msgstr "✅ IP estático excluído com sucesso"
-
-msgid "❌ 静态IP删除失败"
-msgstr "❌ Falha ao excluir IP estático"
-
-msgid "✅ 端口转发添加成功: 外部端口"
-msgstr "✅ Encaminhamento de porta adicionado com sucesso: porta externa"
-
-msgid "❌ 端口转发添加失败: 外部端口"
-msgstr "❌ Falha ao adicionar encaminhamento de porta: porta externa"
-
-msgid "必须提供lan_port或lan_addr中的一个"
-msgstr "Deve fornecer lan_port ou lan_addr"
-
-msgid "无法获取端口映射列表"
-msgstr "Não é possível obter lista de mapeamentos de porta"
-
-msgid "找到匹配的端口映射条目"
-msgstr "Entrada de mapeamento de porta correspondente encontrada"
-
-msgid "WAN端口"
-msgstr "Porta WAN"
-
-msgid "LAN地址"
-msgstr "Endereço LAN"
-
-msgid "未找到匹配的端口映射条目"
-msgstr "Entrada de mapeamento de porta correspondente não encontrada"
-
-msgid "🔍 准备删除端口映射 - 提交参数"
-msgstr "🔍 Preparando para excluir mapeamento de porta - enviando parâmetros"
-
-msgid "✅ 端口转发删除成功"
-msgstr "✅ Encaminhamento de porta excluído com sucesso"
-
-msgid "❌ 端口转发删除失败"
-msgstr "❌ Falha ao excluir encaminhamento de porta"
-
-msgid "✅ ARP绑定添加成功"
-msgstr "✅ Vinculação ARP adicionada com sucesso"
-
-msgid "❌ ARP绑定添加失败"
-msgstr "❌ Falha ao adicionar vinculação ARP"
-
-msgid "无法获取ARP列表"
-msgstr "Não é possível obter lista ARP"
-
-msgid "找到匹配的ARP条目"
-msgstr "Entrada ARP correspondente encontrada"
-
-msgid "未找到匹配的ARP条目"
-msgstr "Entrada ARP correspondente não encontrada"
-
-msgid "🔍 准备删除ARP - 提交参数"
-msgstr "🔍 Preparando para excluir ARP - enviando parâmetros"
-
-msgid "✅ ARP绑定删除成功"
-msgstr "✅ Vinculação ARP excluída com sucesso"
-
-msgid "❌ ARP绑定删除失败"
-msgstr "❌ Falha ao excluir vinculação ARP"
-
-msgid "登录成功"
-msgstr "UserLogins realizado com sucesso"
-
-msgid "静态IP添加成功"
-msgstr "IP estático adicionado com sucesso"
-
-msgid "获取静态IP列表"
-msgstr "Obter lista de IPs estáticos"
-
-msgid "静态IP删除成功"
-msgstr "IP estático excluído com sucesso"
-
-msgid "静态ARP绑定添加成功"
-msgstr "Vinculação ARP estática adicionada com sucesso"
-
-msgid "获取静态ARP绑定列表"
-msgstr "Obter lista de vinculações ARP estáticas"
-
-msgid "静态ARP绑定删除成功"
-msgstr "Vinculação ARP estática excluída com sucesso"
-
-msgid "端口转发添加成功"
-msgstr "Encaminhamento de porta adicionado com sucesso"
-
-msgid "获取端口转发列表"
-msgstr "Obter lista de encaminhamentos de porta"
-
-msgid "端口转发删除成功"
-msgstr "Encaminhamento de porta excluído com sucesso"
-
-# HostModule/RestManager.py
-msgid "未授权访问"
-msgstr "Acesso não autorizado"
-
-msgid "主机名称和类型不能为空"
-msgstr "Nome e tipo do host não podem estar vazios"
-
-msgid "配置不能为空"
-msgstr "Configuração não pode estar vazia"
-
-msgid "主机已删除"
-msgstr "Host excluído"
-
-msgid "主机不存在"
-msgstr "Host não existe"
-
-msgid "Token已重置"
-msgstr "Token redefinido"
-
-msgid "Token已设置"
-msgstr "Token definido"
-
-msgid "配置已保存"
-msgstr "Configuração salva"
-
-msgid "两次输入的密码不一致"
-msgstr "As senhas inseridas não coincidem"
-
-msgid "新密码长度不能少于6位"
-msgstr "A nova senha deve ter pelo menos 6 caracteres"
-
-msgid "重置中..."
-msgstr "Redefinindo..."
-
-msgid "仪表盘"
-msgstr "Painel"
-
-msgid "系统概览与快速操作"
-msgstr "Visão geral do sistema e operações rápidas"
-
-msgid "主机概览"
-msgstr "Visão geral de hosts"
-
-msgid "查看全部"
-msgstr "Ver tudo"
-
-msgid "快速操作"
-msgstr "Operações rápidas"
-
-msgid "添加主机"
-msgstr "Adicionar Host"
-
-msgid "添加新的虚拟化主机"
-msgstr "Adicionar novo host de virtualização"
-
-msgid "系统设置"
-msgstr "Configurações do Sistema"
-
-msgid "管理Token和系统配置"
-msgstr "Gerenciar Token e configurações do sistema"
-
-msgid "保存配置"
-msgstr "Salvar Configuração"
-
-msgid "保存所有主机和虚拟机配置"
-msgstr "Salvar todas as configurações de hosts e máquinas virtuais"
-
-msgid "提示"
-msgstr "Dica"
-
-msgid "通过主机管理页面可以管理主机和虚拟机。支持使用API+Token进行自动化管理。"
-msgstr "Através da página de gerenciamento de hosts, é possível gerenciar hosts e máquinas virtuais. Suporta gerenciamento automatizado usando API+Token."
-
-msgid "CPU核心"
-msgstr "Núcleos de CPU"
-
-msgid "GPU显存"
-msgstr "Memória de Vídeo GPU"
-
-msgid "内存"
-msgstr "Memória"
-
-msgid "磁盘"
-msgstr "Disco"
-
-msgid "流量"
-msgstr "Tráfego"
-
-msgid "NAT端口"
-msgstr "Porta NAT"
-
-msgid "WEB代理"
-msgstr "Proxy WEB"
-
-msgid "上行带宽"
-msgstr "Banda Larga de Upload"
-
-msgid "下行带宽"
-msgstr "Banda Larga de Download"
-
-msgid "我的虚拟机"
-msgstr "Minhas Máquinas Virtuais"
-
-msgid "运行中"
-msgstr "Em execução"
-
-msgid "创建虚拟机"
-msgstr "Criar Máquina Virtual"
-
-msgid "基本信息"
-msgstr "Informações Básicas"
-
-msgid "密码和端口配置"
-msgstr "Configuração de senha e portas"
-
-msgid "硬件配置"
-msgstr "Configuração de Hardware"
-
-msgid "网络配置"
-msgstr "Configuração de Rede"
-
-msgid "网卡配置"
-msgstr "Configuração de Placa de Rede"
-
-msgid "IP配额信息"
-msgstr "Informações de Cota de IP"
-
-msgid "添加网卡"
-msgstr "Adicionar Placa de Rede"
-
-msgid "取消"
-msgstr "Cancelar"
-
-msgid "电源操作"
-msgstr "Operações de Energia"
-
-msgid "选择对虚拟机 \""
-msgstr "Selecione a operação para a máquina virtual \""
-
-msgid "\"执行的操作"
-msgstr "\"a executar"
-
-msgid "启动"
-msgstr "Iniciar"
-
-msgid "关机"
-msgstr "Desligar"
-
-msgid "重启"
-msgstr "Reiniciar"
-
-msgid "暂停"
-msgstr "Pausar"
-
-msgid "恢复"
-msgstr "Retomar"
-
-msgid "强制关机"
-msgstr "Forçar Desligamento"
-
-msgid "强制重启"
-msgstr "Forçar Reinicialização"
-
-msgid "暂无虚拟机"
-msgstr "Nenhuma máquina virtual"
-
-msgid "请联系管理员为您分配权限"
-msgstr "Por favor, contate o administrador para obter permissões"
-
-msgid "内网IP配额:"
-msgstr "Cota de IP da rede interna:"
-
-msgid "公网IP配额:"
-msgstr "Cota de IP da rede externa:"
-
-msgid "创建虚拟机将消耗相应的资源配额"
-msgstr "A criação de máquinas virtuais consumirá as cotas de recursos correspondentes"
-
-msgid "保存失败"
-msgstr "Falha ao salvar"
-
-msgid "配置已加载"
-msgstr "Configuração carregada"
-
-msgid "加载失败"
-msgstr "Falha ao carregar"
-
-msgid "获取日志成功"
-msgstr "LogsManage obtidos com sucesso"
-
-msgid "获取日志失败"
-msgstr "Falha ao obter logs"
-
-msgid "主机名称不能为空"
-msgstr "Nome do host não pode estar vazio"
-
-msgid "获取任务成功"
-msgstr "Tarefas obtidas com sucesso"
-
-msgid "获取任务失败"
-msgstr "Falha ao obter tarefas"
-
-msgid "虚拟机不存在"
-msgstr "Máquina virtual não existe"
-
-msgid "没有访问该虚拟机的权限"
-msgstr "Sem permissão para acessar esta máquina virtual"
-
-msgid "只有主用户可以删除虚拟机"
-msgstr "Apenas o usuário principal pode excluir a máquina virtual"
-
-msgid "CPU核心数不能少于1核"
-msgstr "O número de núcleos de CPU não pode ser menor que 1"
-
-msgid "内存不能少于1GB"
-msgstr "A memória não pode ser menor que 1GB"
-
-msgid "硬盘大小不能少于GB"
-msgstr "O tamanho do disco não pode ser menor que GB"
-
-msgid "NAT端口数量不能少于1"
-msgstr "O número de portas NAT não pode ser menor que 1"
-
-msgid "Web代理数量不能少于0"
-msgstr "O número de proxies Web não pode ser menor que 0"
-
-msgid "流量不能少于0"
-msgstr "O tráfego não pode ser menor que 0"
-
-msgid "上行带宽不能少于0"
-msgstr "A banda larga de upload não pode ser menor que 0"
-
-msgid "下行带宽不能少于0"
-msgstr "A banda larga de download não pode ser menor que 0"
-
-msgid "CPU配额为0，不允许创建虚拟机"
-msgstr "Cota de CPU é 0, não é permitido criar máquina virtual"
-
-msgid "CPU配额不足，需要核"
-msgstr "Cota de CPU insuficiente, necessita de"
-
-msgid "，可用"
-msgstr ", disponível"
-
-msgid "，可用"
-msgstr ", disponível"
-
-msgid "内存配额不足，需要"
-msgstr "Cota de memória insuficiente, necessita de"
-
-msgid "，可用"
-msgstr ", disponível"
-
-msgid "GB"
-msgstr "GB"
-
-msgid "硬盘配额为0，不允许创建虚拟机"
-msgstr "Cota de disco é 0, não é permitido criar máquina virtual"
-
-msgid "硬盘配额不足，需要"
-msgstr "Cota de disco insuficiente, necessita de"
-
-msgid "GB"
-msgstr "GB"
-
-msgid "，可用"
-msgstr ", disponível"
-
-msgid "GB"
-msgstr "GB"
-
-msgid "GPU配额为0，不允许创建虚拟机"
-msgstr "Cota de GPU é 0, não é permitido criar máquina virtual"
-
-msgid "GPU显存配额不足，需要"
-msgstr "Cota de memória de vídeo GPU insuficiente, necessita de"
-
-msgid "GB"
-msgstr "GB"
-
-msgid "，可用"
-msgstr ", disponível"
-
-msgid "GB"
-msgstr "GB"
-
-msgid "流量配额为0，不允许创建虚拟机"
-msgstr "Cota de tráfego é 0, não é permitido criar máquina virtual"
-
-msgid "流量配额不足，需要"
-msgstr "Cota de tráfego insuficiente, necessita de"
-
-msgid "GB"
-msgstr "GB"
-
-msgid "，可用"
-msgstr ", disponível"
-
-msgid "GB"
-msgstr "GB"
-
-msgid "上行带宽配额为0，不允许创建虚拟机"
-msgstr "Cota de banda larga de upload é 0, não é permitido criar máquina virtual"
-
-msgid "上行带宽配额不足，需要"
-msgstr "Cota de banda larga de upload insuficiente, necessita de"
-
-msgid "Mbps"
-msgstr "Mbps"
-
-msgid "，可用"
-msgstr ", disponível"
-
-msgid "Mbps"
-msgstr "Mbps"
-
-msgid "下行带宽配额为0，不允许创建虚拟机"
-msgstr "Cota de banda larga de download é 0, não é permitido criar máquina virtual"
-
-msgid "下行带宽配额不足，需要"
-msgstr "Cota de banda larga de download insuficiente, necessita de"
-
-msgid "Mbps"
-msgstr "Mbps"
-
-msgid "，可用"
-msgstr ", disponível"
-
-msgid "Mbps"
-msgstr "Mbps"
-
-msgid "NAT端口配额为0，不允许创建虚拟机"
-msgstr "Cota de portas NAT é 0, não é permitido criar máquina virtual"
-
-msgid "NAT端口配额不足，需要"
-msgstr "Cota de portas NAT insuficiente, necessita de"
-
-msgid "个"
-msgstr ""
-
-msgid "，可用"
-msgstr ", disponível"
-
-msgid "个"
-msgstr ""
-
-msgid "Web代理配额为0，不允许创建虚拟机"
-msgstr "Cota de proxies Web é 0, não é permitido criar máquina virtual"
-
-msgid "Web代理配额不足，需要"
-msgstr "Cota de proxies Web insuficiente, necessita de"
-
-msgid "个"
-msgstr ""
-
-msgid "，可用"
-msgstr ", disponível"
-
-msgid "个"
-msgstr ""
-
-msgid "无可用IP配额，不允许创建虚拟机"
-msgstr "Sem cota de IP disponível, não é permitido criar máquina virtual"
-
-msgid "内网IP配额为0，不允许创建虚拟机"
-msgstr "Cota de IP da rede interna é 0, não é permitido criar máquina virtual"
-
-msgid "内网IP配额不足，需要"
-msgstr "Cota de IP da rede interna insuficiente, necessita de"
-
-msgid "个"
-msgstr ""
-
-msgid "，可用"
-msgstr ", disponível"
-
-msgid "个"
-msgstr ""
-
-msgid "公网IP配额为0，不允许创建虚拟机"
-msgstr "Cota de IP da rede externa é 0, não é permitido criar máquina virtual"
-
-msgid "公网IP配额不足，需要"
-msgstr "Cota de IP da rede externa insuficiente, necessita de"
-
-msgid "个"
-msgstr ""
-
-msgid "，可用"
-msgstr ", disponível"
-
-msgid "个"
-msgstr ""
-
-msgid "虚拟机更新成功"
-msgstr "Máquina virtual atualizada com sucesso"
-
-msgid "更新失败"
-msgstr "Falha na atualização"
-
-msgid "虚拟机已删除"
-msgstr "Máquina virtual excluída"
-
-msgid "操作失败"
-msgstr "Operação falhou"
-
-msgid "用户名不能为空"
-msgstr "Nome de usuário não pode estar vazio"
-
-msgid "用户已经是所有者"
-msgstr "O usuário já é proprietário"
-
-msgid "用户不是所有者"
-msgstr "O usuário não é proprietário"
-
-msgid "不能删除主所有者（第一个所有者）"
-msgstr "Não é possível excluir o proprietário principal (primeiro proprietário)"
-
-msgid "至少需要保留一个所有者"
-msgstr "É necessário manter pelo menos um proprietário"
-
-msgid "新所有者用户名不能为空"
-msgstr "Nome de usuário do novo proprietário não pode estar vazio"
-
-msgid "必须确认移交所有权"
-msgstr "Deve confirmar a transferência de propriedade"
-
-msgid "只有主所有者可以移交虚拟机所有权"
-msgstr "Apenas o proprietário principal pode transferir a propriedade da máquina virtual"
-
-msgid "移交失败：新所有者没有访问主机的权限"
-msgstr "Falha na transferência: o novo proprietário não tem permissão para acessar o host"
-
-msgid "移交失败：新所有者资源配额不足"
-msgstr "Falha na transferência: cota de recursos do novo proprietário insuficiente"
-
-msgid "虚拟机所有权已成功移交给"
-msgstr "Propriedade da máquina virtual transferida com sucesso para"
-
-msgid "新密码不能为空"
-msgstr "Nova senha não pode estar vazia"
-
-msgid "密码修改成功"
-msgstr "Senha alterada com sucesso"
-
-msgid "密码修改失败"
-msgstr "Falha ao alterar senha"
-
-msgid "不支持的操作"
-msgstr "Operação não suportada"
-
-msgid "电源操作成功"
-msgstr "Operação de energia realizada com sucesso"
-
-msgid "获取成功"
-msgstr "Obtido com sucesso"
-
-msgid "无法获取VNC控制台地址"
-msgstr "Não é possível obter endereço do console VNC"
-
-msgid "获取VNC控制台失败"
-msgstr "Falha ao obter console VNC"
-
-msgid "NAT规则添加成功"
-msgstr "Regra NAT adicionada com sucesso"
-
-msgid "NAT规则不存在"
-msgstr "Regra NAT não existe"
-
-msgid "NAT规则索引无效"
-msgstr "Índice da regra NAT inválido"
-
-msgid "NAT规则已删除"
-msgstr "Regra NAT excluída"
-
-msgid "网卡列表为空"
-msgstr "Lista de placas de rede vazia"
-
-msgid "网卡不存在"
-msgstr "Placa de rede não existe"
-
-msgid "网卡添加成功"
-msgstr "Placa de rede adicionada com sucesso"
-
-msgid "添加网卡失败"
-msgstr "Falha ao adicionar placa de rede"
-
-msgid "网卡已删除"
-msgstr "Placa de rede excluída"
-
-msgid "删除网卡失败"
-msgstr "Falha ao excluir placa de rede"
-
-msgid "网卡配置已更新"
-msgstr "Configuração da placa de rede atualizada"
-
-msgid "修改网卡失败"
-msgstr "Falha ao modificar placa de rede"
-
-msgid "代理配置添加成功"
-msgstr "Configuração de proxy adicionada com sucesso"
-
-msgid "代理配置不存在"
-msgstr "Configuração de proxy não existe"
-
-msgid "代理配置索引无效"
-msgstr "Índice da configuração de proxy inválido"
-
-msgid "代理配置已删除"
-msgstr "Configuração de proxy excluída"
-
-msgid "域名不能为空"
-msgstr "Domínio não pode estar vazio"
-
-msgid "域名已存在"
-msgstr "Domínio já existe"
-
-msgid "代理配置更新成功"
-msgstr "Configuração de proxy atualizada com sucesso"
-
-msgid "磁盘名称不能为空"
-msgstr "Nome do disco não pode estar vazio"
-
-msgid "磁盘名称只能包含数字、字母和下划线，不能包含特殊符号和中文"
-msgstr "Nome do disco só pode conter números, letras e sublinhados, não pode conter símbolos especiais e caracteres chineses"
-
-msgid "磁盘已挂载，无需重复挂载"
-msgstr "Disco já montado, não é necessário montar novamente"
-
-msgid "磁盘大小至少为1024MB"
-msgstr "O tamanho do disco deve ser pelo menos 1024MB"
-
-msgid "数据盘挂载成功"
-msgstr "Disco de dados montado com sucesso"
-
-msgid "数据盘不存在"
-msgstr "Disco de dados não existe"
-
-msgid "数据盘已卸载"
-msgstr "Disco de dados desmontado"
-
-msgid "目标虚拟机不能为空"
-msgstr "Máquina virtual de destino não pode estar vazia"
-
-msgid "目标虚拟机不存在"
-msgstr "Máquina virtual de destino não existe"
-
-msgid "数据盘所有权移交成功"
-msgstr "Propriedade do disco de dados transferida com sucesso"
-
-msgid "数据盘已删除"
-msgstr "Disco de dados excluído"
-
-msgid "挂载名称不能为空"
-msgstr "Nome de montagem não pode estar vazio"
-
-msgid "ISO文件不能为空"
-msgstr "Arquivo ISO não pode estar vazio"
-
-msgid "ISO挂载成功"
-msgstr "ISO montado com sucesso"
-
-msgid "ISO配置不存在"
-msgstr "Configuração ISO não existe"
-
-msgid "ISO不存在"
-msgstr "ISO não existe"
-
-msgid "ISO已卸载"
-msgstr "ISO desmontado"
-
-msgid "备份说明不能为空"
-msgstr "Descrição do backup não pode estar vazia"
-
-msgid "备份创建成功"
-msgstr "Backup criado com sucesso"
-
-msgid "备份名称不能为空"
-msgstr "Nome do backup não pode estar vazio"
-
-msgid "备份还原成功"
-msgstr "Backup restaurado com sucesso"
-
-msgid "备份已删除"
-msgstr "Backup excluído"
-
-msgid "备份扫描成功"
-msgstr "Backup escaneado com sucesso"
-
-msgid "扫描失败"
-msgstr "Falha na varredura"
-
-msgid "获取全局代理配置失败"
-msgstr "Falha ao obter configuração de proxy global"
-
-msgid "域名地址不能为空"
-msgstr "Endereço de domínio não pode estar vazio"
-
-msgid "内网地址不能为空"
-msgstr "Endereço da rede interna não pode estar vazio"
-
-msgid "内网端口不能为空"
-msgstr "Porta da rede interna não pode estar vazia"
-
-msgid "添加全局代理配置失败"
-msgstr "Falha ao adicionar configuração de proxy global"
-
-msgid "删除全局代理配置失败"
-msgstr "Falha ao excluir configuração de proxy global"
-
-msgid "MAC地址参数缺失"
-msgstr "Parâmetro de endereço MAC ausente"
-
-msgid "状态数据为空"
-msgstr "Dados de estado vazios"
-
-msgid "虚拟机状态已更新"
-msgstr "Estado da máquina virtual atualizado"
-
-msgid "状态数据处理失败"
-msgstr "Falha ao processar dados de estado"
-
-msgid "未找到MAC地址的虚拟机"
-msgstr "Máquina virtual com endereço MAC não encontrada"
-
-msgid "端口映射创建失败"
-msgstr "Falha ao criar mapeamento de porta"
-
-msgid "端口映射删除失败"
-msgstr "Falha ao excluir mapeamento de porta"
-
-msgid "挂载失败"
-msgstr "Falha ao montar"
-
-msgid "卸载失败"
-msgstr "Falha ao desmontar"
-
-msgid "移交失败"
-msgstr "Falha na transferência"
-
-msgid "删除失败"
-msgstr "Falha na exclusão"
-
-msgid "添加代理失败"
-msgstr "Falha ao adicionar proxy"
-
-msgid "删除代理失败"
-msgstr "Falha ao excluir proxy"
-
-msgid "自动分配IP失败"
-msgstr "Falha na alocação automática de IP"
-
-msgid "绑定静态IP失败"
-msgstr "Falha ao vincular IP estático"
-
-# HostModule/SSHDManager.py
-msgid "paramiko 库未安装"
-msgstr "Biblioteca paramiko não instalada"
-
-msgid "SSH 连接成功"
-msgstr "Conexão SSH realizada com sucesso"
-
-msgid "SSH 连接失败"
-msgstr "Falha na conexão SSH"
-
-msgid "SSH 未连接"
-msgstr "SSH não conectado"
-
-msgid "命令执行失败"
-msgstr "Falha na execução do comando"
-
-msgid "无法在范围内找到可用端口"
-msgstr "Não é possível encontrar porta disponível no intervalo"
-
-msgid "端口转发已启动"
-msgstr "Encaminhamento de porta iniciado"
-
-msgid "启动端口转发失败"
-msgstr "Falha ao iniciar encaminhamento de porta"
-
-# HostModule/Translation.py
-msgid "翻译目录不存在"
-msgstr "Diretório de tradução não existe"
-
-msgid "已加载"
-msgstr "Carregado"
-
-msgid "种语言"
-msgstr "idiomas"
-
-msgid "加载语言文件失败"
-msgstr "Falha ao carregar arquivos de idioma"
-
-msgid "已加载语言"
-msgstr "Idioma carregado"
-
-msgid "条翻译"
-msgstr "traduções"
-
-msgid "读取语言文件"
-msgstr "Lendo arquivo de idioma"
-
-msgid "失败"
-msgstr "Falha"
-
-msgid "已保存语言文件"
-msgstr "Arquivo de idioma salvo"
-
-msgid "保存语言文件失败"
-msgstr "Falha ao salvar arquivo de idioma"
-
-# HostModule/UserManager.py
-msgid "用户认证和权限管理模块"
-msgstr "Módulo de autenticação de usuário e gerenciamento de permissões"
-
-msgid "提供密码加密、用户认证、权限检查等功能"
-msgstr "Fornece funções como criptografia de senha, autenticação de usuário, verificação de permissões, etc."
-
-msgid "用户认证管理类"
-msgstr "Classe de gerenciamento de autenticação de usuário"
-
-msgid "密码加密"
-msgstr "Criptografia de senha"
-
-msgid "验证密码"
-msgstr "Verificar senha"
-
-msgid "生成随机token"
-msgstr "Gerar token aleatório"
-
-msgid "从session获取当前用户信息"
-msgstr "Obter informações do usuário atual da sessão"
-
-msgid "设置用户session"
-msgstr "Definir sessão do usuário"
-
-msgid "清除session"
-msgstr "Limpar sessão"
-
-msgid "需要登录的装饰器（用户登录或Token登录）"
-msgstr "Decorador que requer login (login do usuário ou login por Token)"
-
-msgid "需要管理员权限的装饰器"
-msgstr "Decorador que requer permissão de administrador"
-
-msgid "需要管理员权限"
-msgstr "Requer permissão de administrador"
-
-msgid "需要特定权限的装饰器"
-msgstr "Decorador que requer permissão específica"
-
-"需要"
-
-"需要"
-
-"需要"
-
-"需要"
-
-"权限"
-
-"权限"
-
-msgid "检查用户是否有访问指定主机的权限"
-msgstr "Verificar se o usuário tem permissão para acessar o host especificado"
-
-msgid "检查用户是否有虚拟机操作权限"
-msgstr "Verificar se o usuário tem permissão para operar máquinas virtuais"
-
-msgid "没有创建虚拟机的权限"
-msgstr "Sem permissão para criar máquinas virtuais"
-
-msgid "没有删除虚拟机的权限"
-msgstr "Sem permissão para excluir máquinas virtuais"
-
-msgid "没有修改虚拟机的权限"
-msgstr "Sem permissão para modificar máquinas virtuais"
-
-msgid "检查用户资源配额"
-msgstr "Verificar cota de recursos do usuário"
-
-msgid "CPU核心"
-msgstr "Núcleos de CPU"
-
-msgid "内存"
-msgstr "Memória"
-
-msgid "磁盘"
-msgstr "Disco"
-
-msgid "GPU显存"
-msgstr "Memória de Vídeo GPU"
-
-msgid "NAT端口"
-msgstr "Porta NAT"
-
-msgid "WEB代理"
-msgstr "Proxy WEB"
-
-msgid "内网IP"
-msgstr "IP da rede interna"
-
-msgid "公网IP"
-msgstr "IP da rede externa"
-
-msgid "流量"
-msgstr "Tráfego"
-
-msgid "上行带宽"
-msgstr "Banda Larga de Upload"
-
-msgid "下行带宽"
-msgstr "Banda Larga de Download"
-
-"配额不足，"
-
-"配额不足，"
-
-"已使用"
-
-"已使用"
-
-"/"
-
-"/"
-
-msgid "邮件服务类（使用Resend API）"
-msgstr "Classe de serviço de e-mail (usando API Resend)"
-
-msgid "发送验证邮件"
-msgstr "Enviar e-mail de verificação"
-
-msgid "邮件服务未配置"
-msgstr "Serviço de e-mail não configurado"
-
-msgid "OpenIDCS - 邮箱验证"
-msgstr "OpenIDCS - Verificação de E-mail"
-
-msgid "欢迎注册 OpenIDCS"
-msgstr "Bem-vindo ao registro OpenIDCS"
-
-"您好 "
-
-"您好 "
-
-msgid "请点击下面的链接验证您的邮箱："
-msgstr "Por favor, clique no link abaixo para verificar seu e-mail:"
-
-msgid "如果您没有注册账号，请忽略此邮件。"
-msgstr "Se você não se registrou, por favor, ignore este e-mail."
-
-msgid "此链接24小时内有效。"
-msgstr "Este link é válido por 24 horas."
-
-"验证邮件已发送到 "
-
-"验证邮件已发送到 "
-
-"发送邮件失败: "
-
-"发送邮件失败: "
-
-"发送邮件异常: "
-
-"发送邮件异常: "
-
-msgid "发送测试邮件"
-msgstr "Enviar e-mail de teste"
-
-msgid "OpenIDCS - 测试邮件"
-msgstr "OpenIDCS - E-mail de Teste"
-
-msgid "测试邮件"
-msgstr "E-mail de Teste"
-
-msgid "您好，"
-msgstr "Olá,"
-
-msgid "这是一封来自 OpenIDCS 系统的测试邮件。"
-msgstr "Este é um e-mail de teste do sistema OpenIDCS."
-
-msgid "如果您收到这封邮件，说明邮件服务配置正常。"
-msgstr "Se você recebeu este e-mail, significa que a configuração do serviço de e-mail está normal."
-
-msgid "OpenIDCS 系统"
-msgstr "Sistema OpenIDCS"
-
-msgid "测试邮件已发送到 "
-msgstr "E-mail de teste enviado para "
-
-msgid "发送测试邮件失败: "
-msgstr "Falha ao enviar e-mail de teste: "
-
-msgid "发送测试邮件异常: "
-msgstr "Exceção ao enviar e-mail de teste: "
-
-msgid "获取当前时间字符串"
-msgstr "Obter string de tempo atual"
-
-msgid "发送密码重置邮件"
-msgstr "Enviar e-mail de redefinição de senha"
-
-msgid "OpenIDCS - 密码重置"
-msgstr "OpenIDCS - Redefinição de Senha"
-
-msgid "密码重置请求"
-msgstr "Solicitação de Redefinição de Senha"
-
-msgid "我们收到了您的密码重置请求。"
-msgstr "Recebemos sua solicitação de redefinição de senha."
-
-msgid "请点击下面的链接重置您的密码："
-msgstr "Por favor, clique no link abaixo para redefinir sua senha:"
-
-msgid "如果您没有请求重置密码，请忽略此邮件。"
-msgstr "Se você não solicitou a redefinição de senha, por favor, ignore este e-mail."
-
-"密码重置邮件已发送到 "
-
-"密码重置邮件已发送到 "
-
-"发送密码重置邮件失败: "
-
-"发送密码重置邮件失败: "
-
-"发送密码重置邮件异常: "
-
-"发送密码重置邮件异常: "
-
-msgid "发送邮箱变更验证邮件"
-msgstr "Enviar e-mail de verificação de alteração de e-mail"
-
-msgid "OpenIDCS - 邮箱变更验证"
-msgstr "OpenIDCS - Verificação de Alteração de E-mail"
-
-msgid "邮箱变更验证"
-msgstr "Verificação de Alteração de E-mail"
-
-msgid "我们收到了您的邮箱变更请求。"
-msgstr "Recebemos sua solicitação de alteração de e-mail."
-
-msgid "请点击下面的链接验证您的新邮箱地址："
-msgstr "Por favor, clique no link abaixo para verificar seu novo endereço de e-mail:"
-
-msgid "验证成功后，您的账号邮箱将更新为此邮箱地址。"
-msgstr "Após a verificação bem-sucedida, o e-mail da sua conta será atualizado para este endereço."
-
-msgid "如果您没有请求变更邮箱，请忽略此邮件。"
-msgstr "Se você não solicitou a alteração de e-mail, por favor, ignore este e-mail."
-
-"邮箱变更验证邮件已发送到 "
-
-"邮箱变更验证邮件已发送到 "
-
-"发送邮箱变更验证邮件失败: "
-
-"发送邮箱变更验证邮件失败: "
-
-"发送邮箱变更验证邮件异常: "
-
-"发送邮箱变更验证邮件异常: "
-
-# HostModule/DataManager.py
-msgid "字段已存在，跳过"
-msgstr "Campo já existe, pulando"
-
-msgid "数据库初始化完成"
-msgstr "Inicialização do banco de dados concluída"
-
-msgid "数据库初始化错误"
-msgstr "Erro na inicialização do banco de dados"
-
-msgid "警告: SQL文件不存在"
-msgstr "Aviso: arquivo SQL não existe"
-
-msgid "当前工作目录"
-msgstr "Diretório de trabalho atual"
-
-msgid "项目根目录"
-msgstr "Diretório raiz do projeto"
-
-msgid "已创建默认管理员用户: admin/admin123"
-msgstr "Usuário administrador padrão criado: admin/admin123"
-
-msgid "创建默认管理员用户失败"
-msgstr "Falha ao criar usuário administrador padrão"
-
-msgid "已存在管理员用户，跳过默认用户创建"
-msgstr "Usuário administrador já existe, pulando criação de usuário padrão"
-
-msgid "创建默认管理员用户时出错"
-msgstr "Erro ao criar usuário administrador padrão"
-
-msgid "已创建默认全局配置"
-msgstr "Configuração global padrão criada"
-
-msgid "更新全局配置错误"
-msgstr "Erro ao atualizar configuração global"
-
-msgid "保存主机配置错误"
-msgstr "Erro ao salvar configuração do host"
-
-msgid "删除主机配置错误"
-msgstr "Erro ao excluir configuração do host"
-
-msgid "添加主机状态失败"
-msgstr "Falha ao adicionar status do host"
-
-msgid "保存主机状态错误"
-msgstr "Erro ao salvar status do host"
-
-msgid "发现需要删除的虚拟机"
-msgstr "Máquina virtual encontrada que precisa ser excluída"
-
-msgid "已删除"
-msgstr "Excluído"
-
-msgid "个不存在的虚拟机配置"
-msgstr "configurações de máquinas virtuais inexistentes"
-
-msgid "保存虚拟机存储配置错误"
-msgstr "Erro ao salvar configuração de armazenamento da máquina virtual"
-
-msgid "更新虚拟机配置时间戳错误"
-msgstr "Erro ao atualizar timestamp da configuração da máquina virtual"
-
-msgid "虚拟机"
-msgstr "Máquina Virtual"
-
-msgid "的状态数据格式异常（字典），已转换为列表"
-msgstr "formato de dados de estado anormal (dicionário), convertido para lista"
-
-msgid "虚拟机"
-msgstr "Máquina Virtual"
-
-msgid "的状态数据格式未知，已重置为空列表"
-msgstr "formato de dados de estado desconhecido, redefinido para lista vazia"
-
-"流量累加: 之前="
-
-"流量累加: 之前="
-
-"MB, 本次="
-
-"MB, 本次="
-
-"MB, 累计="
-
-"MB, 累计="
-
-msgid "MB"
-msgstr "MB"
-
-msgid "首次上报流量"
-msgstr "Primeiro relatório de tráfego"
-
-msgid "更新虚拟机"
-msgstr "Atualizando máquina virtual"
-
-msgid "状态，记录数"
-msgstr "estado, número de registros"
-
-msgid "插入虚拟机"
-msgstr "Inserindo máquina virtual"
-
-msgid "状态，记录数"
-msgstr "estado, número de registros"
-
-msgid "虚拟机"
-msgstr "Máquina Virtual"
-
-msgid "状态保存成功"
-msgstr "Estado salvo com sucesso"
-
-msgid "添加虚拟机状态失败"
-msgstr "Falha ao adicionar estado da máquina virtual"
-
-msgid "开始保存虚拟机状态，主机"
-msgstr "Iniciando salvamento do estado da máquina virtual, host"
-
-msgid "虚拟机数量"
-msgstr "Número de máquinas virtuais"
-
-msgid "已清除旧状态，删除行数"
-msgstr "Estado antigo limpo, linhas excluídas"
-
-msgid "虚拟机状态保存成功，共插入"
-msgstr "Estado da máquina virtual salvo com sucesso, total inserido"
-
-msgid "条记录"
-msgstr "registros"
-
-msgid "保存虚拟机状态错误"
-msgstr "Erro ao salvar estado da máquina virtual"
-
-msgid "虚拟机"
-msgstr "Máquina Virtual"
-
-msgid "已离线，最后上报时间(UTC)"
-msgstr "offline, último tempo de relatório (UTC)"
-
-msgid "本地时间"
-msgstr "Tempo local"
-
-msgid "距今"
-msgstr "até agora"
-
-msgid "秒"
-msgstr "segundos"
-
-msgid "解析时间戳失败"
-msgstr "Falha ao analisar timestamp"
-
-msgid "删除虚拟机状态数据: 主机"
-msgstr "Excluindo dados de estado da máquina virtual: host"
-
-msgid "删除行数"
-msgstr "Linhas excluídas"
-
-msgid "删除虚拟机状态数据失败"
-msgstr "Falha ao excluir dados de estado da máquina virtual"
-
-msgid "保存虚拟机任务错误"
-msgstr "Erro ao salvar tarefa da máquina virtual"
-
-msgid "保存全局代理配置错误"
-msgstr "Erro ao salvar configuração de proxy global"
-
-msgid "添加全局代理配置错误"
-msgstr "Erro ao adicionar configuração de proxy global"
-
-msgid "删除全局代理配置错误"
-msgstr "Erro ao excluir configuração de proxy global"
-
-msgid "添加日志失败"
-msgstr "Falha ao adicionar log"
-
-msgid "清理日志失败"
-msgstr "Falha ao limpar logs"
-
-msgid "保存日志记录错误"
-msgstr "Erro ao salvar registros de log"
-
-msgid "保存主机完整数据错误"
-msgstr "Erro ao salvar dados completos do host"
-
-msgid "创建用户失败（用户名或邮箱已存在）"
-msgstr "Falha ao criar usuário (nome de usuário ou e-mail já existe)"
-
-msgid "创建用户错误"
-msgstr "Erro ao criar usuário"
-
-msgid "更新用户错误"
-msgstr "Erro ao atualizar usuário"
-
-msgid "删除用户错误"
-msgstr "Erro ao excluir usuário"
-
-msgid "更新用户登录时间错误"
-msgstr "Erro ao atualizar tempo de login do usuário"
-
-msgid "删除重置token错误"
-msgstr "Erro ao excluir token de redefinição"
-
-msgid "更新系统设置错误"
-msgstr "Erro ao atualizar configurações do sistema"
-
-# HostServer/BasicServer.py
-msgid "日志系统已初始化"
-msgstr "Sistema de logs inicializado"
-
-msgid "日志系统初始化失败"
-msgstr "Falha na inicialização do sistema de logs"
-
-msgid "添加日志失败"
-msgstr "Falha ao adicionar log"
-
-msgid "不支持的操作系统"
-msgstr "Sistema operacional não suportado"
-
-msgid "主机状态已保存"
-msgstr "Status do host salvo"
-
-msgid "保存数据失败"
-msgstr "Falha ao salvar dados"
-
-msgid "主机日志已保存"
-msgstr "Log do host salvo"
-
-msgid "虚拟机配置已保存"
-msgstr "Configuração da máquina virtual salva"
-
-msgid "从数据库加载数据失败"
-msgstr "Falha ao carregar dados do banco de dados"
-
-msgid "无法获取SSH端口"
-msgstr "Não é possível obter porta SSH"
-
-msgid "端口已被占用"
-msgstr "Porta já está em uso"
-
-msgid "虚拟机不存在"
-msgstr "Máquina virtual não existe"
-
-msgid "当主机为远程IP时，必须先添加NAT映射才能代理"
-msgstr "Quando o host é um IP remoto, é necessário adicionar mapeamento NAT primeiro para poder fazer proxy"
-
-msgid "当前映射的本地端口缺少NAT映射，请先添加映射"
-msgstr "A porta local mapeada atual não tem mapeamento NAT, por favor adicione o mapeamento primeiro"
-
-msgid "域名 "
-msgstr "Domínio "
-
-msgid "已存在"
-msgstr "Já existe"
-
-msgid "网络检查失败"
-msgstr "Falha na verificação de rede"
-
-msgid "网络静态绑定失败"
-msgstr "Falha na vinculação estática de rede"
-
-msgid "VNC服务启动失败"
-msgstr "Falha ao iniciar serviço VNC"
-
-msgid "绑定静态IP"
-msgstr "Vincular IP estático"
-
-msgid "静态IP绑定成功"
-msgstr "Vinculação de IP estático realizada com sucesso"
-
-msgid "静态IP绑定失败"
-msgstr "Falha na vinculação de IP estático"
-
-msgid "静态IP绑定异常"
-msgstr "Exceção na vinculação de IP estático"
-
-msgid "未找到IP地址"
-msgstr "Endereço IP não encontrado"
-
-msgid "请补全实现"
-msgstr "Por favor, complete a implementação"
-
-msgid "SSH连接失败，无法同步端口转发"
-msgstr "Falha na conexão SSH, não é possível sincronizar encaminhamento de porta"
-
-msgid "删除多余的端口转发"
-msgstr "Excluir encaminhamentos de porta desnecessários"
-
-msgid "端口映射变更，删除旧转发"
-msgstr "Alteração no mapeamento de porta, excluindo encaminhamento antigo"
-
-msgid "添加端口转发"
-msgstr "Adicionar encaminhamento de porta"
-
-msgid "添加端口转发失败"
-msgstr "Falha ao adicionar encaminhamento de porta"
-
-msgid "端口转发同步完成: 删除 "
-msgstr "Sincronização de encaminhamento de porta concluída: excluídos "
-
-msgid "个，添加 "
-msgstr ", adicionados "
-
-msgid "个"
-msgstr ""
-
-msgid "同步端口转发时出错"
-msgstr "Erro ao sincronizar encaminhamento de porta"
-
-msgid "SSH 连接失败"
-msgstr "Falha na conexão SSH"
-
-msgid "端口 "
-msgstr "Porta "
-
-msgid "已被占用"
-msgstr "já está em uso"
-
-msgid "端口 "
-msgstr "Porta "
-
-msgid "成功映射到 "
-msgstr "mapeado com sucesso para "
-
-msgid ":"
-msgstr ":"
-
-msgid "端口映射失败"
-msgstr "Falha no mapeamento de porta"
-
-msgid "端口 "
-msgstr "Porta "
-
-msgid "映射已删除"
-msgstr "Mapeamento excluído"
-
-msgid "删除备份"
-msgstr "Excluir backup"
-
-msgid "共删除 "
-msgstr "Excluídos no total "
-
-msgid "个备份文件"
-msgstr "arquivos de backup"
-
-msgid "已删除 "
-msgstr "Excluídos "
-
-msgid "个备份文件"
-msgstr "arquivos de backup"
-
-msgid "扫描备份目录失败"
-msgstr "Falha ao varrer diretório de backup"
-
-msgid "指定磁盘已删除"
-msgstr "Disco especificado excluído"
-
-msgid "删除挂载路径"
-msgstr "Excluir caminho de montagem"
-
-msgid "删除挂载失败"
-msgstr "Falha ao excluir montagem"
-
-msgid "删除成功"
-msgstr "Excluído com sucesso"
-
-msgid "宿主机加载成功"
-msgstr "Host carregado com sucesso"
-
-msgid "VM Rest服务器已停止"
-msgstr "Servidor VM Rest parado"
-
-msgid "虚拟机创建成功"
-msgstr "Máquina virtual criada com sucesso"
-
-msgid "虚拟机 "
-msgstr "Máquina virtual "
-
-msgid "配置已更新"
-msgstr "Configuração atualizada"
-
-msgid "操作成功完成"
-msgstr "Operação concluída com sucesso"
-
-msgid "备份文件不存在"
-msgstr "Arquivo de backup não existe"
-
-msgid "备份文件已删除"
-msgstr "Arquivo de backup excluído"
-
-msgid "备份文件名格式不正确"
-msgstr "Formato do nome do arquivo de backup incorreto"
-
-msgid "解析备份时间失败"
-msgstr "Falha ao analisar tempo de backup"
-
-msgid "个备份文件已加载"
-msgstr "arquivos de backup carregados"
-
-msgid "虚拟盘不存在"
-msgstr "Disco virtual não existe"
-
-msgid "磁盘删除成功"
-msgstr "Disco excluído com sucesso"
-
-msgid "磁盘"
-msgstr "Disco"
-
-msgid "成功"
-msgstr "Sucesso"
-
-msgid "挂载"
-msgstr "Montar"
-
-msgid "卸载"
-msgstr "Desmontar"
-
-msgid "ISO镜像文件不存在"
-msgstr "Arquivo de imagem ISO não existe"
-
-msgid "挂载名称已存在"
-msgstr "Nome de montagem já existe"
-
-msgid "ISO挂载成功"
-msgstr "ISO montado com sucesso"
-
-msgid "ISO镜像不存在"
-msgstr "Imagem ISO não existe"
-
-msgid "ISO卸载成功"
-msgstr "ISO desmontado com sucesso"
-
-msgid "ISO镜像"
-msgstr "Imagem ISO"
-
-msgid "成功"
-msgstr "Sucesso"
-
-msgid "源虚拟机不存在"
-msgstr "Máquina virtual de origem não existe"
-
-msgid "目标虚拟机不存在"
-msgstr "Máquina virtual de destino não existe"
-
-msgid "磁盘不存在"
-msgstr "Disco não existe"
-
-msgid "磁盘已挂载，无法移交。请先卸载磁盘后再进行移交操作"
-msgstr "Disco já montado, não é possível transferir. Por favor, desmonte o disco primeiro antes de realizar a transferência"
-
-msgid "磁盘文件已从 "
-msgstr "Arquivo de disco já movido de "
-
-msgid "移动到 "
-msgstr "para "
-
-msgid "源磁盘文件 "
-msgstr "Arquivo de disco de origem "
-
-msgid "不存在"
-msgstr "não existe"
-
-msgid "磁盘 "
-msgstr "Disco "
-
-msgid "已从虚拟机 "
-msgstr "já foi transferido da máquina virtual "
-
-msgid "移交到 "
-msgstr "para "
-
-msgid "磁盘移交成功"
-msgstr "Transferência de disco realizada com sucesso"
-
-msgid "磁盘移交失败"
-msgstr "Falha na transferência de disco"
-
-msgid "用户已经是虚拟机所有者"
-msgstr "Usuário já é proprietário da máquina virtual"
-
-msgid "虚拟机 "
-msgstr "Máquina virtual "
-
-msgid "所有权从 "
-msgstr "propriedade transferida de "
-
-msgid "移交给 "
-msgstr "para "
-
-msgid "，保留权限: "
-msgstr ", mantendo permissões: "
-
-msgid "虚拟机所有权已成功移交给 "
-msgstr "Propriedade da máquina virtual transferida com sucesso para "
-
-msgid "的 vc_port 为空"
-msgstr "vc_port está vazio"
-
-msgid "VNC端口为空"
-msgstr "Porta VNC está vazia"
-
-msgid "的 vc_pass 为空"
-msgstr "vc_pass está vazio"
-
-msgid "VNC密码为空"
-msgstr "Senha VNC está vazia"
-
-msgid "虚拟机控制台访问失败"
-msgstr "Falha ao acessar console da máquina virtual"
-
-msgid "7z可执行文件不存在"
-msgstr "Arquivo executável 7z não existe"
-
-msgid "7z压缩失败"
-msgstr "Falha na compactação 7z"
-
-msgid "7z解压失败"
-msgstr "Falha na descompactação 7z"
-
-msgid "准备"
-msgstr "Preparando"
-
-msgid "ISO"
-msgstr "ISO"
-
-msgid "ISO文件不存在"
-msgstr "Arquivo ISO não existe"
-
-# HostServer/Workstation.py
-msgid "未找到vmrest.exe文件"
-msgstr "Arquivo vmrest.exe não encontrado"
-
-msgid "VM Rest Server未运行"
-msgstr "VM Rest Server não está em execução"
-
-msgid "获取虚拟机列表失败"
-msgstr "Falha ao obter lista de máquinas virtuais"
-
-msgid "发现并添加虚拟机"
-msgstr "Máquinas virtuais descobertas e adicionadas"
-
-msgid "保存扫描的虚拟机到数据库失败"
-msgstr "Falha ao salvar máquinas virtuais escaneadas no banco de dados"
-
-msgid "扫描完成。共扫描到"
-msgstr "Varredura concluída. Total escaneado:"
-
-msgid "台虚拟机，新增"
-msgstr "máquinas virtuais, adicionadas"
-
-msgid "台虚拟机配置。"
-msgstr "configurações de máquinas virtuais."
-
-msgid "扫描虚拟机时出错"
-msgstr "Erro ao escanear máquinas virtuais"
-
-msgid "安装系统失败"
-msgstr "Falha na instalação do sistema"
-
-msgid "注册虚拟机失败"
-msgstr "Falha ao registrar máquina virtual"
-
-msgid "虚拟机创建失败"
-msgstr "Falha na criação da máquina virtual"
-
-msgid "虚拟机 "
-msgstr "Máquina virtual "
-
-msgid "不存在"
-msgstr "não existe"
-
-msgid "虚拟机 "
-msgstr "Máquina virtual "
-
-msgid "网络配置更新失败"
-msgstr "Falha na atualização da configuração de rede"
-
-msgid "虚拟机 "
-msgstr "Máquina virtual "
-
-msgid "VMX文件写入失败"
-msgstr "Falha na gravação do arquivo VMX"
-
-msgid "虚拟机 "
-msgstr "Máquina virtual "
-
-msgid "启动失败"
-msgstr "Falha na inicialização"
-
-msgid "虚拟机 "
-msgstr "Máquina virtual "
-
-msgid "不存在"
-msgstr "não existe"
-
-# HostServer/LXContainer.py
-msgid "缺少证书路径，请设置启动路径为证书路径"
-msgstr "Caminho do certificado ausente, por favor defina o caminho de inicialização como caminho do certificado"
-
-msgid "证书文件未找到，请检查"
-msgstr "Arquivo de certificado não encontrado, por favor, verifique"
-
-msgid "Crontabs: LXD连接失败，使用本地状态"
-msgstr "Crontabs: Falha na conexão LXD, usando estado local"
-
-msgid "远程主机状态已保存"
-msgstr "Estado do host remoto salvo"
-
-msgid "获取远程主机状态失败"
-msgstr "Falha ao obter estado do host remoto"
-
-msgid "Crontabs 执行失败"
-msgstr "Falha na execução do Crontabs"
-
-msgid "无法连接到LXD获取状态"
-msgstr "Não é possível conectar ao LXD para obter estado"
-
-msgid "获取LXD主机状态失败"
-msgstr "Falha ao obter estado do host LXD"
-
-msgid "发现并添加容器"
-msgstr "Contêineres descobertos e adicionados"
-
-msgid "规范化为"
-msgstr "Normalizado para"
-
-msgid "扫描完成。共扫描到"
-msgstr "Varredura concluída. Total escaneado:"
-
-msgid "个容器，新增"
-msgstr "contêineres, adicionados"
-
-msgid "个容器配置。"
-msgstr "configurações de contêineres."
-
-msgid "扫描容器时出错"
-msgstr "Erro ao escanear contêineres"
-
-msgid "禁止为同一容器分配多个相同类型的网卡。"
-msgstr "É proibido alocar múltiplas placas de rede do mesmo tipo para o mesmo contêiner."
-
-msgid "网卡"
-msgstr "Placa de rede"
-
-msgid "都是"
-msgstr "são todas"
-
-msgid "类型"
-msgstr "tipo"
-
-msgid "的IP地址"
-msgstr "endereço IP"
-
-msgid "已被其他虚拟机使用"
-msgstr "já está sendo usado por outra máquina virtual"
-
-msgid "的网络类型"
-msgstr "tipo de rede"
-
-msgid "未在ipaddr_maps中配置"
-msgstr "não configurado em ipaddr_maps"
-
-msgid "的ipaddr_maps配置不完整（缺少from或nums）"
-msgstr "configuração ipaddr_maps incompleta (falta from ou nums)"
-
-msgid "为网卡"
-msgstr "Para placa de rede"
-
-msgid "自动分配IP"
-msgstr "Alocar IP automaticamente"
-
-msgid "范围"
-msgstr "intervalo"
-
-msgid "处理IP分配时出错"
-msgstr "Erro ao processar alocação de IP"
-
-msgid "无法为网卡"
-msgstr "Não é possível para placa de rede"
-
-msgid "分配IP地址，所有IP已被占用或无可用IP"
-msgstr "alocar endereço IP, todos os IPs estão ocupados ou não há IPs disponíveis"
-
-msgid "网络配置检查完成"
-msgstr "Verificação de configuração de rede concluída"
-
-msgid "网络检查时出错"
-msgstr "Erro ao verificar rede"
-
-msgid "网络检查失败"
-msgstr "Falha na verificação de rede"
-
-msgid "容器"
-msgstr "Contêiner"
-
-msgid "主机网络"
-msgstr "Rede do host"
-
-msgid "未配置"
-msgstr "Não configurado"
-
-msgid "连接容器网络"
-msgstr "Conectar rede do contêiner"
-
-msgid "网络配置成功"
-msgstr "Configuração de rede realizada com sucesso"
-
-msgid "删除容器网络设备"
-msgstr "Excluir dispositivo de rede do contêiner"
-
-msgid "网络配置失败"
-msgstr "Falha na configuração de rede"
-
-msgid "容器名已规范化"
-msgstr "Nome do contêiner normalizado"
-
-msgid "容器创建失败"
-msgstr "Falha na criação do contêiner"
-
-msgid "模板文件未找到"
-msgstr "Arquivo de modelo não encontrado"
-
-msgid "搜索路径"
-msgstr "Caminho de busca"
-
-msgid "可用模板"
-msgstr "Modelos disponíveis"
-
-msgid "该目录下没有可用的 .tar.gz 模板文件"
-msgstr "Não há arquivos de modelo .tar.gz disponíveis neste diretório"
-
-msgid "LXD镜像未找到"
-msgstr "Imagem LXD não encontrada"
-
-msgid "可用镜像别名"
-msgstr "Apelidos de imagens disponíveis"
-
-msgid "没有可用的LXD镜像，请使用 'lxc image list' 查看"
-msgstr "Não há imagens LXD disponíveis, por favor, use 'lxc image list' para visualizar"
-
-msgid "容器启动失败"
-msgstr "Falha ao iniciar contêiner"
-
-msgid "容器更新失败"
-msgstr "Falha ao atualizar contêiner"
-
-msgid "删除容器失败"
-msgstr "Falha ao excluir contêiner"
-
-msgid "无法冻结容器"
-msgstr "Não é possível congelar contêiner"
-
-msgid "当前状态"
-msgstr "Estado atual"
-
-msgid "无法解冻容器"
-msgstr "Não é possível descongelar contêiner"
-
-msgid "电源操作失败"
-msgstr "Falha na operação de energia"
-
-msgid "设置密码失败"
-msgstr "Falha ao definir senha"
-
-msgid "虚拟机备份目录未设置，请联系管理员"
-msgstr "Diretório de backup da máquina virtual não definido, por favor, contate o administrador"
-
-msgid "开始备份容器"
-msgstr "Iniciando backup do contêiner"
-
-msgid "删除旧的临时镜像"
-msgstr "Excluir imagem temporária antiga"
-
-msgid "临时镜像已删除"
-msgstr "Imagem temporária excluída"
-
-msgid "容器备份完成，文件大小"
-msgstr "Backup do contêiner concluído, tamanho do arquivo"
-
-msgid "容器备份成功，文件"
-msgstr "Backup do contêiner realizado com sucesso, arquivo"
-
-msgid "容器"
-msgstr "Contêiner"
-
-msgid "已重新启动"
-msgstr "reiniciado"
-
-msgid "重新启动失败"
-msgstr "Falha ao reiniciar"
-
-msgid "备份容器失败"
-msgstr "Falha ao fazer backup do contêiner"
-
-msgid "备份失败"
-msgstr "Falha no backup"
-
-msgid "备份文件不存在"
-msgstr "Arquivo de backup não existe"
-
-msgid "已删除旧容器"
-msgstr "Contêiner antigo excluído"
-
-msgid "开始恢复容器"
-msgstr "Iniciando restauração do contêiner"
-
-msgid "备份文件"
-msgstr "Arquivo de backup"
-
-msgid "删除旧的还原临时镜像"
-msgstr "Excluir imagem temporária antiga de restauração"
-
-msgid "镜像导入成功"
-msgstr "Imagem importada com sucesso"
-
-msgid "容器恢复成功"
-msgstr "Contêiner restaurado com sucesso"
-
-msgid "还原临时镜像已删除"
-msgstr "Imagem temporária de restauração excluída"
-
-msgid "删除还原临时镜像失败"
-msgstr "Falha ao excluir imagem temporária de restauração"
-
-msgid "恢复容器失败"
-msgstr "Falha ao restaurar contêiner"
-
-msgid "恢复失败"
-msgstr "Falha na restauração"
-
-msgid "磁盘挂载操作失败"
-msgstr "Falha na operação de montagem de disco"
-
-msgid "当未设置主机密码时，必须添加一个端口映射到22端口"
-msgstr "Quando a senha do host não está definida, é necessário adicionar um mapeamento de porta para a porta 22"
-
-msgid "未找到当前虚拟机22端口对应端口映射信息，无法继续"
-msgstr "Informações de mapeamento de porta correspondentes à porta 22 da máquina virtual atual não encontradas, não é possível continuar"
-
-msgid "主机外网IP不存在"
-msgstr "IP externo do host não existe"
-
-msgid "启动tty会话失败"
-msgstr "Falha ao iniciar sessão tty"
-
-msgid "添加SSH代理失败"
-msgstr "Falha ao adicionar proxy SSH"
-
-msgid "SSH代理配置失败"
-msgstr "Falha na configuração de proxy SSH"
-
-# HostServer/OCInterface.py
-msgid "无法连接到Docker获取状态"
-msgstr "Não é possível conectar ao Docker para obter estado"
-
-msgid "获取Docker主机状态失败"
-msgstr "Falha ao obter estado do host Docker"
-
-msgid "Docker连接失败，跳过容器状态采集"
-msgstr "Falha na conexão com Docker, pulando coleta de estado de contêiner"
-
-msgid "不存在，跳过"
-msgstr "não existe, pulando"
-
-msgid "未运行，跳过"
-msgstr "não está em execução, pulando"
-
-msgid "状态已保存"
-msgstr "Estado salvo"
-
-msgid "状态保存失败"
-msgstr "Falha ao salvar estado"
-
-msgid "处理容器"
-msgstr "Processando contêiner"
-
-msgid "时出错"
-msgstr "erro ao processar"
-
-msgid "容器状态采集失败"
-msgstr "Falha na coleta de estado do contêiner"
-
-msgid "解析容器"
-msgstr "Analisando contêiner"
-
-msgid "统计信息失败"
-msgstr "Falha na análise de estatísticas"
-
-msgid "禁止为同一容器分配多个相同类型的网卡。网卡"
-msgstr "É proibido alocar múltiplas placas de rede do mesmo tipo para o mesmo contêiner. Placa de rede"
-
-msgid "无法获取Docker网络"
-msgstr "Não é possível obter rede Docker"
-
-msgid "Docker网络"
-msgstr "Rede Docker"
-
-msgid "没有IPAM配置"
-msgstr "Sem configuração IPAM"
-
-msgid "无法为网卡"
-msgstr "Não é possível para placa de rede"
-
-msgid "分配IP地址，Docker网络"
-msgstr "alocar endereço IP, rede Docker"
-
-msgid "中的所有IP已被占用或无可用IP"
-msgstr "todos os IPs estão ocupados ou não há IPs disponíveis"
-
-msgid "扫描完成。共扫描到"
-msgstr "Varredura concluída. Total escaneado:"
-
-msgid "个容器，新增"
-msgstr "contêineres, adicionados"
-
-msgid "个容器配置。"
-msgstr "configurações de contêineres."
-
-msgid "扫描容器时出错"
-msgstr "Erro ao escanear contêineres"
-
-msgid "容器创建失败"
-msgstr "Falha na criação do contêiner"
-
-msgid "无法加载镜像"
-msgstr "Não é possível carregar imagem"
-
-msgid "容器更新失败"
-msgstr "Falha ao atualizar contêiner"
-
-msgid "网络配置更新失败"
-msgstr "Falha na atualização da configuração de rede"
-
-msgid "配置更新成功"
-msgstr "Configuração atualizada com sucesso"
-
-msgid "删除容器失败"
-msgstr "Falha ao excluir contêiner"
-
-msgid "删除镜像"
-msgstr "Excluir imagem"
-
-msgid "共删除"
-msgstr "Excluídos no total"
-
-msgid "个镜像标签"
-msgstr "tags de imagem"
-
-msgid "无法停止容器"
-msgstr "Não é possível parar contêiner"
-
-msgid "当前状态"
-msgstr "Estado atual"
-
-msgid "强制停止也失败"
-msgstr "Parada forçada também falhou"
-
-msgid "无法暂停容器"
-msgstr "Não é possível pausar contêiner"
-
-msgid "无法恢复容器"
-msgstr "Não é possível retomar contêiner"
-
-msgid "可能是权限不足，请检查Docker守护进程权限"
-msgstr "Pode ser falta de permissões, por favor, verifique permissões do daemon Docker"
-
-msgid "操作超时，容器可能无响应"
-msgstr "Operação expirou, contêiner pode não estar respondendo"
-
-msgid "容器状态冲突，可能有其他操作正在进行"
-msgstr "Conflito de estado do contêiner, pode haver outra operação em andamento"
-
-msgid "Docker API无法找到容器"
-msgstr "API Docker não consegue encontrar contêiner"
-
-msgid "未运行，请先启动容器"
-msgstr "Não está em execução, por favor, inicie o contêiner primeiro"
-
-msgid "设置密码失败"
-msgstr "Falha ao definir senha"
-
-msgid "的root密码已更新"
-msgstr "senha root atualizada"
-
-msgid "密码设置成功"
-msgstr "Senha definida com sucesso"
-
-msgid "虚拟机备份目录未设置，请联系管理员"
-msgstr "Diretório de backup da máquina virtual não definido, por favor, contate o administrador"
-
-msgid "已停止"
-msgstr "Parado"
-
-msgid "在远程服务器执行备份命令"
-msgstr "Executando comando de backup no servidor remoto"
-
-msgid "远程备份完成"
-msgstr "Backup remoto concluído"
-
-msgid "开始备份容器"
-msgstr "Iniciando backup do contêiner"
-
-msgid "备份完成，文件大小"
-msgstr "Backup concluído, tamanho do arquivo"
-
-msgid "容器备份成功，文件"
-msgstr "Backup do contêiner realizado com sucesso, arquivo"
-
-msgid "已重新启动"
-msgstr "reiniciado"
-
-msgid "检查备份文件是否存在"
-msgstr "Verificar se arquivo de backup existe"
-
-msgid "从远程主机恢复备份"
-msgstr "Restaurar backup do host remoto"
-
-msgid "远程导入镜像失败"
-msgstr "Falha ao importar imagem remotamente"
-
-msgid "无法导入镜像"
-msgstr "Não é possível importar imagem"
-
-msgid "从备份文件导入镜像"
-msgstr "Importar imagem do arquivo de backup"
-
-msgid "未知备份文件格式"
-msgstr "Formato de arquivo de backup desconhecido"
-
-msgid "恢复成功"
-msgstr "Restauração realizada com sucesso"
-
-msgid "Docker容器不支持动态磁盘挂载"
-msgstr "Contêineres Docker não suportam montagem dinâmica de disco"
-
-msgid "Docker containers do not support ISO mounting"
-msgstr "Contêineres Docker não suportam montagem de ISO"
-
-msgid "当未设置主机密码时，必须添加一个端口映射到22端口"
-msgstr "Quando a senha do host não está definida, é necessário adicionar um mapeamento de porta para a porta 22"
-
-msgid "未找到当前虚拟机22端口对应端口映射信息，无法继续"
-msgstr "Informações de mapeamento de porta correspondentes à porta 22 da máquina virtual atual não encontradas, não é possível continuar"
-
-# HostServer/ProxmoxQemu.py
-msgid "连接PVE"
-msgstr "Conectando ao PVE"
-
-msgid "分配VMID失败"
-msgstr "Falha na alocação do VMID"
-
-msgid "无法连接到Proxmox获取VMID"
-msgstr "Não é possível conectar ao Proxmox para obter VMID"
-
-msgid "从API获取到虚拟机"
-msgstr "Máquina virtual obtida da API"
-
-msgid "的VMID"
-msgstr "VMID"
-
-msgid "未找到虚拟机"
-msgstr "Máquina virtual não encontrada"
-
-msgid "获取VMID时出错"
-msgstr "Erro ao obter VMID"
-
-msgid "Proxmox连接失败，使用本地状态"
-msgstr "Falha na conexão com Proxmox, usando estado local"
-
-msgid "Proxmox主机状态已更新"
-msgstr "Estado do host Proxmox atualizado"
-
-msgid "Crontabs执行失败"
-msgstr "Falha na execução do Crontabs"
-
-msgid "无法连接到Proxmox获取状态"
-msgstr "Não é possível conectar ao Proxmox para obter estado"
-
-msgid "获取Proxmox主机状态失败"
-msgstr "Falha ao obter estado do host Proxmox"
-
-msgid "发现并添加虚拟机"
-msgstr "Máquinas virtuais descobertas e adicionadas"
-
-msgid "Failed to save scanned DockManage to database"
-msgstr "Falha ao salvar máquinas virtuais escaneadas no banco de dados"
-
-msgid "扫描完成。共扫描到"
-msgstr "Varredura concluída. Total escaneado:"
-
-msgid "个虚拟机，新增"
-msgstr "máquinas virtuais, adicionadas"
-
-msgid "个虚拟机配置。"
-msgstr "configurações de máquinas virtuais."
-
-msgid "扫描虚拟机时出错"
-msgstr "Erro ao escanear máquinas virtuais"
-
-msgid "创建成功"
-msgstr "Criado com sucesso"
-
-msgid "iKuai路由器绑定失败"
-msgstr "Falha na vinculação do roteador iKuai"
-
-msgid "虚拟机创建失败"
-msgstr "Falha na criação da máquina virtual"
-
-msgid "的VMID未找到"
-msgstr "VMID não encontrado"
-
-msgid "未指定系统镜像"
-msgstr "Imagem do sistema não especificada"
-
-msgid "未配置镜像路径"
-msgstr "Caminho da imagem não configurado"
-
-msgid "通过SSH复制镜像"
-msgstr "Copiar imagem via SSH"
-
-msgid "复制镜像失败"
-msgstr "Falha ao copiar imagem"
-
-msgid "本地复制镜像"
-msgstr "Copiar imagem localmente"
-
-msgid "系统安装完成"
-msgstr "Instalação do sistema concluída"
-
-msgid "安装成功"
-msgstr "Instalação realizada com sucesso"
-
-msgid "配置已更新"
-msgstr "Configuração atualizada"
-
-msgid "虚拟机启动失败"
-msgstr "Falha ao iniciar máquina virtual"
-
-msgid "虚拟机更新失败"
-msgstr "Falha ao atualizar máquina virtual"
-
-msgid "VMID未找到"
-msgstr "VMID não encontrado"
-
-msgid "删除虚拟机失败"
-msgstr "Falha ao excluir máquina virtual"
-
-msgid "已启动"
-msgstr "Iniciado"
-
-msgid "已经在运行"
-msgstr "Já está em execução"
-
-msgid "已经停止"
-msgstr "Já está parado"
-
-msgid "已重启"
-msgstr "Reiniciado"
-
-msgid "已暂停"
-msgstr "Pausado"
-
-msgid "未运行，无法暂停"
-msgstr "Não está em execução, não é possível pausar"
-
-msgid "未暂停，无法恢复"
-msgstr "Não está pausado, não é possível retomar"
-
-msgid "通过agent设置密码失败"
-msgstr "Falha ao definir senha via agent"
-
-msgid "设置密码失败，请确保虚拟机已安装qemu-guest-agent"
-msgstr "Falha ao definir senha, por favor, certifique-se de que a máquina virtual tem o qemu-guest-agent instalado"
-
-msgid "备份任务已创建"
-msgstr "Tarefa de backup criada"
-
-msgid "虚拟机备份成功，文件"
-msgstr "Backup da máquina virtual realizado com sucesso, arquivo"
-
-msgid "备份虚拟机失败"
-msgstr "Falha ao fazer backup da máquina virtual"
-
-msgid "备份"
-msgstr "Backup"
-
-msgid "开始恢复虚拟机"
-msgstr "Iniciando restauração da máquina virtual"
-
-msgid "恢复虚拟机失败"
-msgstr "Falha ao restaurar máquina virtual"
-
-msgid "硬盘已挂载到虚拟机"
-msgstr "Disco montado na máquina virtual"
-
-msgid "硬盘已从虚拟机"
-msgstr "Disco removido da máquina virtual"
-
-msgid "硬盘"
-msgstr "Disco"
-
-msgid "成功"
-msgstr "Sucesso"
-
-msgid "硬盘挂载操作失败"
-msgstr "Falha na operação de montagem de disco"
-
-msgid "ISO已挂载到虚拟机"
-msgstr "ISO montado na máquina virtual"
-
-msgid "ISO已从虚拟机"
-msgstr "ISO removido da máquina virtual"
-
-msgid "ISO镜像"
-msgstr "Imagem ISO"
-
-msgid "成功"
-msgstr "Sucesso"
-
-msgid "ISO镜像挂载操作失败"
-msgstr "Falha na operação de montagem de imagem ISO"
-
-# HostServer/VPCTemplate.py
-msgid "未实现"
-msgstr "Não implementado"
-
-# HostServer/Win64HyperV.py
-msgid "Hyper-V虚拟机管理模块"
-msgstr "Módulo de gerenciamento de máquinas virtuais Hyper-V"
-
-msgid "支持Windows Hyper-V虚拟机的创建、管理、电源控制等功能"
-msgstr "Suporta criação, gerenciamento, controle de energia e outras funções para máquinas virtuais Windows Hyper-V"
-
-msgid "Hyper-V宿主机服务类"
-msgstr "Classe de serviço de host Hyper-V"
-
-msgid "远程主机状态已保存"
-msgstr "Estado do host remoto salvo"
-
-msgid "获取远程主机状态失败"
-msgstr "Falha ao obter estado do host remoto"
-
-msgid "无法连接到Hyper-V获取状态"
-msgstr "Não é possível conectar ao Hyper-V para obter estado"
-
-msgid "获取Hyper-V主机状态失败"
-msgstr "Falha ao obter estado do host Hyper-V"
-
-msgid "成功连接到Hyper-V主机"
-msgstr "Conectado com sucesso ao host Hyper-V"
-
-msgid "无法连接到Hyper-V主机"
-msgstr "Não é possível conectar ao host Hyper-V"
-
-msgid "停止VNC服务失败"
-msgstr "Falha ao parar serviço VNC"
-
-msgid "发现并添加虚拟机"
-msgstr "Máquinas virtuais descobertas e adicionadas"
-
-msgid "保存扫描的虚拟机到数据库失败"
-msgstr "Falha ao salvar máquinas virtuais escaneadas no banco de dados"
-
-msgid "扫描完成。共扫描到"
-msgstr "Varredura concluída. Total escaneado:"
-
-msgid "台虚拟机，新增"
-msgstr "máquinas virtuais, adicionadas"
-
-msgid "台虚拟机配置。"
-msgstr "configurações de máquinas virtuais."
-
-msgid "扫描虚拟机时出错"
-msgstr "Erro ao escanear máquinas virtuais"
-
-msgid "虚拟机创建失败"
-msgstr "Falha na criação da máquina virtual"
-
-msgid "镜像文件不存在"
-msgstr "Arquivo de imagem não existe"
-
-msgid "ISO镜像"
-msgstr "Imagem ISO"
-
-msgid "已挂载到虚拟机"
-msgstr "montado na máquina virtual"
-
-msgid "磁盘镜像已复制到"
-msgstr "Imagem de disco copiada para"
-
-msgid "系统安装完成"
-msgstr "Instalação do sistema concluída"
-
-msgid "安装失败"
-msgstr "Falha na instalação"
-
-msgid "安装虚拟机失败"
-msgstr "Falha ao instalar máquina virtual"
-
-msgid "虚拟机配置更新失败"
-msgstr "Falha na atualização da configuração da máquina virtual"
-
-msgid "Hyper-V磁盘扩容功能待实现"
-msgstr "Funcionalidade de expansão de disco Hyper-V pendente de implementação"
-
-msgid "虚拟机网络配置更新失败"
-msgstr "Falha na atualização da configuração de rede da máquina virtual"
-
-msgid "虚拟机启动失败"
-msgstr "Falha ao iniciar máquina virtual"
-
-msgid "删除虚拟机失败"
-msgstr "Falha ao excluir máquina virtual"
-
-msgid "虚拟机删除成功"
-msgstr "Máquina virtual excluída com sucesso"
-
-# MainObject/Config/IPConfig.py
-msgid "无法为网卡 "
-msgstr "Não é possível para placa de rede "
-
-msgid "网络配置检查完成"
-msgstr "Verificação de configuração de rede concluída"
-
-msgid "不支持的电源操作"
-msgstr "Operação de energia não suportada"
-
-msgid "电源操作失败"
-msgstr "Falha na operação de energia"
-
-msgid "虚拟机备份成功"
-msgstr "Backup da máquina virtual realizado com sucesso"
-
-msgid "备份失败"
-msgstr "Falha no backup"
-
-msgid "虚拟机恢复成功"
-msgstr "Restauração da máquina virtual realizada com sucesso"
-
-msgid "恢复失败"
-msgstr "Falha na restauração"
-
-msgid "磁盘"
-msgstr "Disco"
-
-msgid "成功"
-msgstr "Sucesso"
-
-msgid "磁盘操作失败"
-msgstr "Falha na operação de disco"
-
-msgid "备份名称格式不正确"
-msgstr "Formato do nome do backup incorreto"
-
-msgid "备份快照已删除"
-msgstr "Snapshot de backup excluído"
-
-msgid "删除备份失败"
-msgstr "Falha ao excluir backup"
-
-msgid "虚拟盘不存在"
-msgstr "Disco virtual não existe"
-
-msgid "磁盘删除成功"
-msgstr "Disco excluído com sucesso"
-
-msgid "删除磁盘失败"
-msgstr "Falha ao excluir disco"
-
-msgid "ISO镜像"
-msgstr "Imagem ISO"
-
-msgid "成功"
-msgstr "Sucesso"
-
-msgid "ISO操作失败"
-msgstr "Falha na operação ISO"
-
-msgid "ISO卸载警告"
-msgstr "Aviso de desmontagem de ISO"
-
-msgid "ISO卸载成功"
-msgstr "ISO desmontado com sucesso"
-
-msgid "个备份快照已加载"
-msgstr "snapshots de backup carregados"
-
-msgid "加载备份失败"
-msgstr "Falha ao carregar backup"
-
-msgid "准备挂载ISO"
-msgstr "Preparando para montar ISO"
-
-msgid "准备卸载ISO"
-msgstr "Preparando para desmontar ISO"
-
-msgid "ISO文件不存在"
-msgstr "Arquivo ISO não existe"
-
-msgid "ISO挂载成功"
-msgstr "ISO montado com sucesso"
-
-# HostServer/vSphereESXi.py
-msgid "WebMKS远程控制台已初始化"
-msgstr "Console remoto WebMKS inicializado"
-
-msgid "ESXi远程主机状态已更新"
-msgstr "Estado do host remoto ESXi atualizado"
-
-msgid "获取ESXi远程主机状态失败"
-msgstr "Falha ao obter estado do host remoto ESXi"
-
-msgid "无法连接到ESXi获取状态"
-msgstr "Não é possível conectar ao ESXi para obter estado"
-
-msgid "获取ESXi主机状态失败"
-msgstr "Falha ao obter estado do host ESXi"
-
-msgid "获取ESXi远程主机状态成功"
-msgstr "Estado do host remoto ESXi obtido com sucesso"
-
-msgid "成功连接到ESXi主机"
-msgstr "Conectado com sucesso ao host ESXi"
-
-msgid "无法连接到ESXi主机"
-msgstr "Não é possível conectar ao host ESXi"
-
-msgid "虚拟机 "
-msgstr "Máquina virtual "
-
-msgid "创建成功"
-msgstr "Criado com sucesso"
-
-msgid "虚拟机 "
-msgstr "Máquina virtual "
-
-msgid "系统安装完成（硬盘已在创建时分配）"
-msgstr "Instalação do sistema concluída (disco já alocado durante a criação)"
-
-msgid "ESXi磁盘扩容功能待实现"
-msgstr "Funcionalidade de expansão de disco ESXi pendente de implementação"
-
-msgid "虚拟机 "
-msgstr "Máquina virtual "
-
-msgid "网卡设备更新失败"
-msgstr "Falha na atualização do dispositivo de placa de rede"
-
-msgid "虚拟机 "
-msgstr "Máquina virtual "
-
-msgid "网络绑定更新失败"
-msgstr "Falha na atualização da vinculação de rede"
-
-msgid "虚拟机 "
-msgstr "Máquina virtual "
-
-msgid "启动失败"
-msgstr "Falha na inicialização"
-
-msgid "无法解析快照时间"
-msgstr "Não é possível analisar tempo do snapshot"
-
-msgid "获取WebMKS远程访问失败"
-msgstr "Falha ao obter acesso remoto WebMKS"
-
-msgid "获取WebMKS票据失败"
-msgstr "Falha ao obter ticket WebMKS"
-
-msgid "添加WebMKS代理失败"
-msgstr "Falha ao adicionar proxy WebMKS"
-
-msgid "WebMKS代理配置失败"
-msgstr "Falha na configuração de proxy WebMKS"
-
-# HostServer/OCInterfaceAPI/IPTablesAPI.py
-msgid "获取主机端口失败"
-msgstr "Falha ao obter porta do host"
-
-msgid "添加 PREROUTING 规则失败"
-msgstr "Falha ao adicionar regra PREROUTING"
-
-msgid "添加 OUTPUT 规则失败"
-msgstr "Falha ao adicionar regra OUTPUT"
-
-msgid "添加 FORWARD 规则失败"
-msgstr "Falha ao adicionar regra FORWARD"
-
-msgid "端口映射已添加: 主机"
-msgstr "Mapeamento de porta adicionado: host"
-
-msgid "端口映射已删除: 主机"
-msgstr "Mapeamento de porta excluído: host"
-
-msgid "SSH连接成功"
-msgstr "Conexão SSH realizada com sucesso"
-
-# HostServer/OCInterfaceAPI/OCIConnects.py
-msgid "docker SDK不可用，Docker功能将被禁用"
-msgstr "SDK docker não disponível, funcionalidades do Docker serão desativadas"
-
-msgid "docker SDK未安装"
-msgstr "SDK docker não instalado"
-
-msgid "连接到本地Docker服务器"
-msgstr "Conectando ao servidor Docker local"
-
-msgid "成功连接到Docker服务器"
-msgstr "Conectado com sucesso ao servidor Docker"
-
-msgid "连接到Docker服务器失败"
-msgstr "Falha ao conectar ao servidor Docker"
-
-msgid "连接到Docker失败"
-msgstr "Falha ao conectar ao Docker"
-
-msgid "paramiko不可用，远程SSH执行将被禁用"
-msgstr "paramiko não disponível, execução remota SSH será desativada"
-
-msgid "SSH 转发需要 paramiko 库，但未安装"
-msgstr "Encaminhamento SSH requer biblioteca paramiko, mas não está instalada"
-
-msgid "使用 SSH 转发连接 Docker"
-msgstr "Usando encaminhamento SSH para conectar ao Docker"
-
-msgid "SSH 连接失败"
-msgstr "Falha na conexão SSH"
-
-msgid "端口转发失败"
-msgstr "Falha no encaminhamento de porta"
-
-msgid "SSH 端口转发已建立"
-msgstr "Encaminhamento de porta SSH estabelecido"
-
-msgid "TLS certificates not found in"
-msgstr "Certificados TLS não encontrados em"
-
-msgid "Docker连接已断开"
-msgstr "Conexão Docker desconectada"
-
-msgid "镜像文件未找到"
-msgstr "Arquivo de imagem não encontrado"
-
-msgid "从"
-msgstr "De"
-
-msgid "加载镜像"
-msgstr "Carregar imagem"
-
-msgid "镜像加载成功"
-msgstr "Imagem carregada com sucesso"
-
-msgid "镜像"
-msgstr "Imagem"
-
-msgid "已存在于本地"
-msgstr "já existe localmente"
-
-msgid "从仓库拉取镜像"
-msgstr "Puxar imagem do repositório"
-
-msgid "镜像"
-msgstr "Imagem"
-
-msgid "拉取成功"
-msgstr "Puxado com sucesso"
-
-msgid "加载镜像失败"
-msgstr "Falha ao carregar imagem"
-
-msgid "列出容器失败"
-msgstr "Falha ao listar contêineres"
-
-msgid "获取容器"
-msgstr "Obter contêiner"
-
-msgid "失败"
-msgstr "Falha"
-
-msgid "容器"
-msgstr "Contêiner"
-
-msgid "已存在"
-msgstr "Já existe"
-
-msgid "容器"
-msgstr "Contêiner"
-
-msgid "创建成功"
-msgstr "Criado com sucesso"
-
-msgid "创建容器失败"
-msgstr "Falha ao criar contêiner"
-
-msgid "容器"
-msgstr "Contêiner"
-
-msgid "不存在"
-msgstr "Não existe"
-
-msgid "容器"
-msgstr "Contêiner"
-
-msgid "删除成功"
-msgstr "Excluído com sucesso"
-
-msgid "删除容器失败"
-msgstr "Falha ao excluir contêiner"
-
-msgid "容器"
-msgstr "Contêiner"
-
-msgid "已启动"
-msgstr "Iniciado"
-
-msgid "容器"
-msgstr "Contêiner"
-
-msgid "已经在运行"
-msgstr "Já está em execução"
-
-msgid "容器"
-msgstr "Contêiner"
-
-msgid "已停止"
-msgstr "Parado"
-
-msgid "容器"
-msgstr "Contêiner"
-
-msgid "已经停止"
-msgstr "Já está parado"
-
-msgid "容器"
-msgstr "Contêiner"
-
-msgid "已重启"
-msgstr "Reiniciado"
-
-msgid "容器"
-msgstr "Contêiner"
-
-msgid "操作失败"
-msgstr "Operação falhou"
-
-msgid "容器"
-msgstr "Contêiner"
-
-msgid "未运行"
-msgstr "Não está em execução"
-
-msgid "执行命令失败"
-msgstr "Falha na execução do comando"
-
-msgid "容器密码已设置"
-msgstr "Senha do contêiner definida"
-
-msgid "容器重新创建成功"
-msgstr "Contêiner recriado com sucesso"
-
-msgid "容器重新创建失败"
-msgstr "Falha ao recriar contêiner"
-
-msgid "获取容器IP失败"
-msgstr "Falha ao obter IP do contêiner"
-
-# HostServer/OCInterfaceAPI/PortForward.py
-msgid "SSH连接未建立"
-msgstr "Conexão SSH não estabelecida"
-
-msgid "命令执行超时"
-msgstr "Execução do comando expirou"
-
-msgid "获取socat进程列表失败"
-msgstr "Falha ao obter lista de processos socat"
-
-msgid "无法解析PID"
-msgstr "Não é possível analisar PID"
-
-msgid "发现端口转发"
-msgstr "Encaminhamento de porta descoberto"
-
-msgid "解析socat进程行失败"
-msgstr "Falha ao analisar linha de processo socat"
-
-msgid "不支持的协议类型"
-msgstr "Tipo de protocolo não suportado"
-
-msgid "启动socat失败"
-msgstr "Falha ao iniciar socat"
-
-msgid "端口转发创建后未找到对应进程"
-msgstr "Processo correspondente não encontrado após a criação do encaminhamento de porta"
-
-msgid "端口转发已添加"
-msgstr "Encaminhamento de porta adicionado"
-
-msgid "正在查找端口"
-msgstr "Procurando porta"
-
-msgid "的转发进程"
-msgstr "processo de encaminhamento"
-
-msgid "当前共有"
-msgstr "Atualmente há"
-
-msgid "个端口转发"
-msgstr "encaminhamentos de porta"
-
-msgid "找到匹配的转发"
-msgstr "Encaminhamento correspondente encontrado"
-
-msgid "未找到端口"
-msgstr "Porta não encontrada"
-
-msgid "正在终止进程 PID"
-msgstr "Terminando processo PID"
-
-msgid "kill命令执行成功"
-msgstr "Comando kill executado com sucesso"
-
-msgid "进程"
-msgstr "Processo"
-
-msgid "仍在运行，尝试强制终止"
-msgstr "ainda está em execução, tentando terminação forçada"
-
-msgid "已强制终止进程"
-msgstr "Processo terminado forçadamente"
-
-msgid "强制终止进程失败"
-msgstr "Falha na terminação forçada do processo"
-
-msgid "已成功停止端口转发进程"
-msgstr "Processo de encaminhamento de porta parado com sucesso"
-
-msgid "停止进程失败"
-msgstr "Falha ao parar processo"
-
-# HostServer/OCInterfaceAPI/SSHTerminal.py
-msgid "不支持的平台"
-msgstr "Plataforma não suportada"
-
-msgid "找到ttyd"
-msgstr "ttyd encontrado"
-
-msgid "ttyd未找到"
-msgstr "ttyd não encontrado"
-
-msgid "ttyd可执行文件未找到"
-msgstr "Arquivo executável ttyd não encontrado"
-
-msgid "已停止端口上ttyd会话"
-msgstr "Sessão ttyd na porta parada"
-
-# HostServer/WorkstationAPI/VMWRestAPI.py
-msgid "不支持的HTTP方法"
-msgstr "Método HTTP não suportado"
-
-msgid "请求成功"
-msgstr "Solicitação bem-sucedida"
-
-msgid "HTTP错误"
-msgstr "Erro HTTP"
-
-msgid ":"
-msgstr ":"
-
-msgid "连接失败: 无法连接到"
-msgstr "Falha na conexão: não é possível conectar a"
-
-msgid "请求超时: 操作耗时过长"
-msgstr "Solicitação expirou: operação demorou muito"
-
-msgid "请求异常"
-msgstr "Exceção na solicitação"
-
-msgid "未知错误: "
-msgstr "Erro desconhecido: "
-
-msgid "- "
-msgstr "- "
-
-msgid "电源操作成功"
-msgstr "Operação de energia realizada com sucesso"
-
-msgid "连接失败: 无法连接到 "
-msgstr "Falha na conexão: não é possível conectar a "
-
-msgid "，请检查VMware REST API服务是否启动"
-msgstr ", por favor, verifique se o serviço VMware REST API está iniciado"
-
-msgid "请求超时: 操作耗时过长，请稍后重试"
-msgstr "Solicitação expirou: operação demorou muito, por favor, tente novamente mais tarde"
-
-msgid "未找到虚拟机: "
-msgstr "Máquina virtual não encontrada: "
-
-msgid "设置电源状态失败: "
-msgstr "Falha ao definir estado de energia: "
-
-msgid "- "
-msgstr "- "
-
-msgid "开始扩展硬盘: "
-msgstr "Iniciando expansão do disco: "
-
-msgid "MB"
-msgstr "MB"
-
-msgid "执行命令: "
-msgstr "Executando comando: "
-
-msgid "硬盘扩展失败: "
-msgstr "Falha na expansão do disco: "
-
-msgid "硬盘扩展成功"
-msgstr "Expansão do disco realizada com sucesso"
-
-msgid "硬盘扩展完成: "
-msgstr "Expansão do disco concluída: "
-
-msgid "MB"
-msgstr "MB"
-
-# MainObject/Server/VMStatus.py
-msgid "网卡 "
-msgstr "Placa de rede "
-
-msgid "信息: "
-msgstr "informações: "
-
-msgid "网卡发送流量(MByte): "
-msgstr "Tráfego de envio da placa de rede (MByte): "
-
-msgid "网卡接收流量(MByte): "
-msgstr "Tráfego de recebimento da placa de rede (MByte): "
-
-msgid "当前双向流量(MByte): "
-msgstr "Tráfego bidirecional atual (MByte): "
-
-msgid "当前上行带宽(MByte): "
-msgstr "Banda larga de upload atual (MByte): "
-
-msgid "当前下行带宽(MByte): "
-msgstr "Banda larga de download atual (MByte): "
-
-# MainObject/Server/HSEngine.py
-msgid "1、不支持直通分配GPU设备，但可分配虚拟显存"
-msgstr "1. Não suporta alocação direta de dispositivo GPU, mas pode alocar memória de vídeo virtual"
-
-msgid "2、暂不支持获取虚拟机GPU使用率和显存使用率"
-msgstr "2. Temporariamente não suporta obter taxa de uso de GPU e memória de vídeo da máquina virtual"
-
-msgid "1、不支持分配GPU设备，不支持设置显存的大小"
-msgstr "1. Não suporta alocação de dispositivo GPU, não suporta definir tamanho da memória de vídeo"
-
-msgid "2、不支持挂载ISO镜像、不支持挂载额外的硬盘"
-msgstr "2. Não suporta montagem de imagem ISO, não suporta montagem de discos adicionais"
-
-msgid "1、无法单独限制上下行带宽，取二者最低值分配"
-msgstr "1. Não é possível limitar separadamente banda larga de upload e download, aloca o menor valor dos dois"
-
-# VNCConsole/VNCSManager.py
-msgid "已加载 VNC"
-msgstr "VNC carregado"
-
-msgid "->"
-msgstr "->"
-
-msgid "Web 资源路径"
-msgstr "Caminho de recursos Web"
-
-msgid "Websockify 可执行文件"
-msgstr "Arquivo executável Websockify"
-
-msgid "配置文件路径"
-msgstr "Caminho do arquivo de configuração"
-
-msgid "是否为打包环境"
-msgstr "É ambiente empacotado"
-
-msgid "Web 资源路径不存在"
-msgstr "Caminho de recursos Web não existe"
-
-msgid "尝试查找可能的路径:"
-msgstr "Tentando encontrar caminhos possíveis:"
-
-msgid "存在"
-msgstr "Existe"
-
-msgid "不存在"
-msgstr "Não existe"
-
-msgid "找到 Web 资源路径"
-msgstr "Caminho de recursos Web encontrado"
-
-msgid "无法找到 Web 资源路径，websockify 可能无法正常工作"
-msgstr "Não é possível encontrar caminho de recursos Web, websockify pode não funcionar corretamente"
-
-msgid "启动 websockify"
-msgstr "Iniciando websockify"
-
-msgid "执行命令"
-msgstr "Executando comando"
-
-msgid "websockify 已启动，支持"
-msgstr "websockify iniciado, suporta"
-
-msgid "个连接"
-msgstr "conexões"
-
-msgid "启动失败"
-msgstr "Falha na inicialização"
-
-msgid "websockify 已停止"
-msgstr "websockify parado"
-
-msgid "VNC 目标"
-msgstr "Destino VNC"
-
-msgid "已存在，token"
-msgstr "já existe, token"
-
-msgid ":"
-msgstr ":"
-
-msgid "已添加 VNC"
-msgstr "VNC adicionado"
-
-msgid ", token"
-msgstr ", token"
-
-msgid ":"
-msgstr ":"
-
-msgid "已删除 VNC"
-msgstr "VNC excluído"
-
-msgid ":"
-msgstr ":"
-
-msgid "未找到 VNC"
-msgstr "VNC não encontrado"
-
-msgid ":"
-msgstr ":"
-
-msgid "警告: 没有可用的VNC连接"
-msgstr "Aviso: não há conexões VNC disponíveis"
-
-msgid "当前没有VNC连接"
-msgstr "Atualmente não há conexões VNC"
-
-msgid "当前VNC连接列表:"
-msgstr "Lista de conexões VNC atuais:"
-
-msgid "websockify 服务已在运行中"
-msgstr "Serviço websockify já está em execução"
-
-msgid "websockify 服务已在新进程中启动 (PID: "
-msgstr "Serviço websockify iniciado em novo processo (PID: "
-
-msgid ")"
-msgstr ")"
-
-msgid "没有运行中的 websockify 服务"
-msgstr "Não há serviço websockify em execução"
-
-msgid "正在关闭 websockify 服务进程 (PID: "
-msgstr "Fechando processo do serviço websockify (PID: "
-
-msgid ")..."
-msgstr ")..."
-
-msgid "进程未响应，强制关闭..."
-msgstr "Processo não responde, fechando forçadamente..."
-
-msgid "websockify 服务进程已关闭"
-msgstr "Processo do serviço websockify fechado"
-
-msgid "websockify 服务进程已停止"
-msgstr "Processo do serviço websockify parado"
-
-# AllBuilder/build_nuitkaui.py
-msgid "包含的包:"
-msgstr "Pacotes incluídos:"
-
-msgid "核心包"
-msgstr "Pacotes principais"
-
-msgid "个"
-msgstr ""
-
-msgid "可选包"
-msgstr "Pacotes opcionais"
-
-msgid "已安装"
-msgstr "Instalado"
-
-msgid "跳过的包（未安装）"
-msgstr "Pacotes pulados (não instalados)"
-
-msgid "未安装"
-msgstr "Não instalado"
-
-msgid "Nuitka已安装"
-msgstr "Nuitka instalado"
-
-msgid "Nuitka未安装"
-msgstr "Nuitka não instalado"
-
-msgid "检查Nuitka时出错"
-msgstr "Erro ao verificar Nuitka"
-
-msgid "正在安装Nuitka..."
-msgstr "Instalando Nuitka..."
-
-msgid "Nuitka安装成功"
-msgstr "Nuitka instalado com sucesso"
-
-msgid "Nuitka安装失败"
-msgstr "Falha ao instalar Nuitka"
-
-msgid "清理构建目录"
-msgstr "Limpar diretório de build"
-
-msgid "Nuitka打包工具"
-msgstr "Ferramenta de empacotamento Nuitka"
-
-msgid "项目根目录"
-msgstr "Diretório raiz do projeto"
-
-msgid "错误"
-msgstr "Erro"
-
-msgid "找不到主脚本"
-msgstr "Script principal não encontrado"
-
-msgid "是否安装Nuitka"
-msgstr "Instalar Nuitka"
-
-msgid "取消打包"
-msgstr "Cancelar empacotamento"
-
-msgid "开始打包..."
-msgstr "Iniciando empacotamento..."
-
-msgid "执行命令:"
-msgstr "Executando comando:"
-
-msgid "打包成功"
-msgstr "Empacotamento realizado com sucesso"
-
-msgid "输出目录"
-msgstr "Diretório de saída"
-
-msgid "打包失败"
-msgstr "Falha no empacotamento"
-
-msgid "退出码"
-msgstr "Código de saída"
-
-msgid "请查看上方的详细错误信息"
-msgstr "Por favor, verifique informações detalhadas de erro acima"
-
-msgid "打包已取消"
-msgstr "Empacotamento cancelado"
-
-# AllBuilder/build_vncproxy.py
-msgid "找不到 websockify 脚本"
-msgstr "Script websockify não encontrado"
-
-msgid "找不到 spec 文件"
-msgstr "Arquivo spec não encontrado"
-
-msgid "请确保 websockify.spec 文件存在于项目根目录"
-msgstr "Por favor, certifique-se de que o arquivo websockify.spec existe no diretório raiz do projeto"
-
-msgid "构建缓存目录"
-msgstr "Diretório de cache de build"
-
-msgid "脚本"
-msgstr "Script"
-
-msgid "模块目录"
-msgstr "Diretório de módulos"
-
-msgid "文件"
-msgstr "Arquivo"
-
-msgid "删除旧的 exe 文件"
-msgstr "Excluir arquivo exe antigo"
-
-msgid "旧文件已删除"
-msgstr "Arquivo antigo excluído"
-
-msgid "可执行文件位置"
-msgstr "Localização do arquivo executável"
-
-msgid "文件大小"
-msgstr "Tamanho do arquivo"
-
-msgid "已复制到"
-msgstr "Copiado para"
-
-msgid "找不到输出文件"
-msgstr "Arquivo de saída não encontrado"
-
-msgid "发生错误"
-msgstr "Erro ocorreu"
-
-msgid "打包工具"
-msgstr "Ferramenta de empacotamento"
-
-msgid "未安装 PyInstaller"
-msgstr "PyInstaller não instalado"
-
-msgid "请先安装"
-msgstr "Por favor, instale primeiro"
-
-# MainObject/Config/IPConfig.py
-msgid "无法为网卡 %(nic_name)s 分配IPv4地址，类型: %(nic_type)s，所有IP已被占用或无可用IP段配置"
-msgstr "Não é possível alocar endereço IPv4 para placa de rede %(nic_name)s, tipo: %(nic_type)s, todos os IPs estão ocupados ou não há configuração de segmento de IP disponível"
-
-msgid "网络配置检查完成"
-msgstr "Verificação de configuração de rede concluída"
-
-# 前端 - 登录页面
-msgid "虚拟化管理平台"
-msgstr "Plataforma de Gerenciamento de Virtualização"
-
-msgid "用户登录"
-msgstr "UserLogins do Usuário"
-
-msgid "Token登录"
-msgstr "UserLogins por Token"
-
-msgid "访问Token"
-msgstr "Token de Acesso"
-
-msgid "请输入访问Token"
-msgstr "Por favor, insira o token de acesso"
-
-msgid "登 录"
-msgstr "ENTRAR"
-
-msgid "还没有账号？立即注册"
-msgstr "Não tem conta? Registre-se agora"
-
-msgid "忘记密码？"
-msgstr "Esqueceu a senha?"
-
-msgid "找回密码"
-msgstr "Recuperar Senha"
-
-msgid "通过邮件重置您的密码"
-msgstr "Redefina sua senha por e-mail"
-
-msgid "请输入注册时使用的邮箱"
-msgstr "Por favor, insira o e-mail usado no registro"
-
-msgid "我们将向此邮箱发送密码重置链接"
-msgstr "Enviaremos um link de redefinição de senha para este e-mail"
-
-msgid "取消"
-msgstr "Cancelar"
-
-msgid "发送重置邮件"
-msgstr "Enviar E-mail de Redefinição"
-
-msgid "发送中..."
-msgstr "Enviando..."
-
-msgid "重置邮件已发送，请查收"
-msgstr "E-mail de redefinição enviado, por favor, verifique"
-
-msgid "发送失败，请重试"
-msgstr "Falha no envio, tente novamente"
-
-msgid "启动服务时会在控制台显示访问Token"
-msgstr "O token de acesso será exibido no console ao iniciar o serviço"
-
-msgid "登录失败，请重试"
-msgstr "Falha no login, tente novamente"
-
-# 前端 - 注册页面
-msgid "用户注册"
-msgstr "Registro de Usuário"
-
-msgid "3-20位字母、数字或下划线"
-msgstr "3-20 caracteres, letras, números ou sublinhados"
-
-msgid "请输入邮箱地址"
-msgstr "Por favor, insira o endereço de e-mail"
-
-msgid "至少6位字符"
-msgstr "Pelo menos 6 caracteres"
-
-msgid "请再次输入密码"
-msgstr "Por favor, insira a senha novamente"
-
-msgid "注 册"
-msgstr "REGISTRAR"
-
-msgid "已有账号？立即登录"
-msgstr "Já tem conta? Faça login agora"
-
-msgid "两次输入的密码不一致"
-msgstr "As senhas inseridas não coincidem"
-
-msgid "注册成功！"
-msgstr "Registro realizado com sucesso!"
-
-msgid "注册失败，请重试"
-msgstr "Falha no registro, tente novamente"
-
-# 前端 - 重置密码页面
-msgid "请输入您的新密码"
-msgstr "Por favor, insira sua nova senha"
-
-msgid "新密码 *"
-msgstr "Nova Senha *"
-
-msgid "确认新密码 *"
-msgstr "Confirmar Nova Senha *"
-
-msgid "请输入新密码（至少6位）"
-msgstr "Por favor, insira a nova senha (pelo menos 6 caracteres)"
-
-msgid "请再次输入新密码"
-msgstr "Por favor, insira a nova senha novamente"
-
-msgid "密码强度"
-msgstr "Força da Senha"
-
-msgid "返回登录"
-msgstr "Voltar ao UserLogins"
-
-msgid "如果您遇到问题，请联系管理员"
-msgstr "Se você tiver problemas, por favor, contate o administrador"
-
-msgid "重置链接无效"
-msgstr "Link de redefinição inválido"
-
-msgid "重置中..."
-msgstr "Redefinindo..."
-
-# 前端 - 通用
-msgid "弱"
-msgstr "Fraca"
-
-msgid "中等"
-msgstr "Média"
-
-msgid "强"
-msgstr "Forte"
-
-# 前端 - 个人设置页面
-msgid "个人设置"
-msgstr "Configurações Pessoais"
-
-msgid "管理您的个人信息和账户设置"
-msgstr "Gerencie suas informações pessoais e configurações de conta"
-
-msgid "个人信息"
-msgstr "Informações Pessoais"
-
-msgid "用户名"
-msgstr "Nome de Usuário"
-
-msgid "邮箱地址"
-msgstr "Endereço de E-mail"
-
-msgid "注册时间"
-msgstr "Tempo de Registro"
-
-msgid "修改邮箱"
-msgstr "Alterar E-mail"
-
-msgid "当前邮箱"
-msgstr "E-mail Atual"
-
-msgid "新邮箱地址 *"
-msgstr "Novo Endereço de E-mail *"
-
-msgid "请输入新邮箱地址"
-msgstr "Por favor, insira o novo endereço de e-mail"
-
-msgid "修改密码"
-msgstr "Alterar Senha"
-
-msgid "新密码 *"
-msgstr "Nova Senha *"
-
-msgid "请输入新密码（至少6位）"
-msgstr "Por favor, insira a nova senha (pelo menos 6 caracteres)"
-
-msgid "确认新密码 *"
-msgstr "Confirmar Nova Senha *"
-
-msgid "请再次输入新密码"
-msgstr "Por favor, insira a nova senha novamente"
-
-msgid "权限信息"
-msgstr "Informações de Permissão"
-
-msgid "虚拟机权限"
-msgstr "Permissões de Máquina Virtual"
-
-msgid "创建虚拟机"
-msgstr "Criar Máquina Virtual"
-
-msgid "编辑虚拟机"
-msgstr "Editar Máquina Virtual"
-
-msgid "删除虚拟机"
-msgstr "Excluir Máquina Virtual"
-
-msgid "账户状态"
-msgstr "Estado da Conta"
-
-msgid "管理员"
-msgstr "Administrador"
-
-msgid "已启用"
-msgstr "Ativado"
-
-msgid "已验证"
-msgstr "Verificado"
-
-msgid "已开启"
-msgstr "Aberto"
-
-msgid "已关闭"
-msgstr "Fechado"
-
-msgid "是"
-msgstr "Sim"
-
-msgid "否"
-msgstr "Não"
-
-msgid "未验证"
-msgstr "Não Verificado"
-
-msgid "已禁用"
-msgstr "Desativado"
-
-msgid "分配的主机"
-msgstr "HostManage Atribuídos"
-
-msgid "加载中..."
-msgstr "Carregando..."
-
-msgid "未分配主机"
-msgstr "Nenhum host atribuído"
-
-msgid "资源配额"
-msgstr "Cota de Recursos"
-
-msgid "CPU核心"
-msgstr "Núcleos de CPU"
-
-msgid "内存"
-msgstr "Memória"
-
-msgid "磁盘"
-msgstr "Disco"
-
-msgid "GPU显存"
-msgstr "Memória de Vídeo GPU"
-
-msgid "流量"
-msgstr "Tráfego"
-
-msgid "上行带宽"
-msgstr "Banda Larga de Upload"
-
-msgid "下行带宽"
-msgstr "Banda Larga de Download"
-
-msgid "NAT配额"
-msgstr "Cota NAT"
-
-msgid "WEB配额"
-msgstr "Cota WEB"
-
-msgid "修改中..."
-msgstr "Modificando..."
-
-msgid "验证邮件已发送，请查收并点击验证链接完成邮箱修改"
-msgstr "E-mail de verificação enviado, por favor, verifique e clique no link para completar a alteração do e-mail"
-
-msgid "邮箱修改失败，请重试"
-msgstr "Falha ao alterar e-mail, tente novamente"
-
-msgid "新密码与确认密码不一致"
-msgstr "A nova senha e a confirmação não coincidem"
-
-msgid "新密码长度不能少于6位"
-msgstr "A nova senha deve ter pelo menos 6 caracteres"
-
-msgid "密码修改失败，请重试"
-msgstr "Falha ao alterar senha, tente novamente"
-
-msgid "加载用户信息失败"
-msgstr "Falha ao carregar informações do usuário"
-
-# 前端 - 系统设置页面
-msgid "系统设置"
-msgstr "Configurações do Sistema"
-
-msgid "管理访问Token和系统配置"
-msgstr "Gerenciar token de acesso e configurações do sistema"
-
-msgid "访问Token管理"
-msgstr "Gerenciamento de Token de Acesso"
-
-msgid "当前Token"
-msgstr "Token Atual"
-
-msgid "留空则自动生成随机Token"
-msgstr "Deixe em branco para gerar automaticamente um token aleatório"
-
-msgid "设置"
-msgstr "Definir"
-
-msgid "重置Token"
-msgstr "Redefinir Token"
-
-msgid "安全提示"
-msgstr "Dica de Segurança"
-
-msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
-msgstr "Após redefinir o token, todas as chamadas de API usando o token antigo ficarão inválidas. Por favor, certifique-se de atualizar todas as configurações relacionadas."
-
-msgid "API接口说明"
-msgstr "Descrição da Interface API"
-
-msgid "认证方式"
-msgstr "Método de Autenticação"
-
-msgid "在请求头中添加："
-msgstr "Adicione no cabeçalho da solicitação:"
-
-msgid "主要接口"
-msgstr "Interfaces Principais"
-
-msgid "获取主机列表"
-msgstr "Obter Lista de HostManage"
-
-msgid "添加主机"
-msgstr "Adicionar Host"
-
-msgid "获取虚拟机列表"
-msgstr "Obter Lista de Máquinas Virtuais"
-
-msgid "创建虚拟机"
-msgstr "Criar Máquina Virtual"
-
-msgid "电源操作"
-msgstr "Operação de Energia"
-
-msgid "数据管理"
-msgstr "Gerenciamento de Dados"
-
-msgid "保存配置"
-msgstr "Salvar Configuração"
-
-msgid "将当前配置保存到文件"
-msgstr "Salvar configuração atual para arquivo"
-
-msgid "重新加载配置"
-msgstr "Recarregar Configuração"
-
-msgid "从文件重新加载配置"
-msgstr "Recarregar configuração do arquivo"
-
-msgid "系统信息"
-msgstr "Informações do Sistema"
-
-msgid "系统名称"
-msgstr "Nome do Sistema"
-
-msgid "版本"
-msgstr "Versão"
-
-msgid "主机数量"
-msgstr "Número de HostManage"
-
-msgid "虚拟机数量"
-msgstr "Número de Máquinas Virtuais"
-
-msgid "用户注册设置"
-msgstr "Configurações de Registro de Usuário"
-
-msgid "开放注册"
-msgstr "Registro Aberto"
-
-msgid "允许新用户注册账号"
-msgstr "Permitir que novos usuários se registrem"
-
-msgid "邮箱验证"
-msgstr "Verificação de E-mail"
-
-msgid "注册时需要验证邮箱"
-msgstr "É necessário verificar o e-mail ao registrar"
-
-msgid "新用户默认资源配额"
-msgstr "Cota de recursos padrão para novos usuários"
-
-msgid "CPU"
-msgstr "CPU"
-
-msgid "内存(GB)"
-msgstr "Memória(GB)"
-
-msgid "磁盘(GB)"
-msgstr "Disco(GB)"
-
-msgid "NAT端口"
-msgstr "Porta NAT"
-
-msgid "Web代理"
-msgstr "Proxy Web"
-
-msgid "上行带宽(Mbps)"
-msgstr "Banda Larga de Upload(Mbps)"
-
-msgid "下行带宽(Mbps)"
-msgstr "Banda Larga de Download(Mbps)"
-
-msgid "每月流量(GB)"
-msgstr "Tráfego Mensal(GB)"
-
-msgid "新用户默认权限"
-msgstr "Permissões padrão para novos usuários"
-
-msgid "允许创建虚拟机"
-msgstr "Permitir criar máquinas virtuais"
-
-msgid "允许修改虚拟机"
-msgstr "Permitir modificar máquinas virtuais"
-
-msgid "允许删除虚拟机"
-msgstr "Permitir excluir máquinas virtuais"
-
-msgid "保存设置"
-msgstr "Salvar Configurações"
-
-msgid "邮件服务配置"
-msgstr "Configuração do Serviço de E-mail"
-
-msgid "Resend 邮件服务"
-msgstr "Serviço de E-mail Resend"
-
-msgid "访问 resend.com 获取API Key"
-msgstr "Acesse resend.com para obter API Key"
-
-msgid "发件邮箱"
-msgstr "E-mail do Remetente"
-
-msgid "发送域名"
-msgstr "Domínio de Envio"
-
-msgid "API Key"
-msgstr "API Key"
-
-msgid "测试邮件发送"
-msgstr "Enviar E-mail de Teste"
-
-msgid "测试邮箱"
-msgstr "E-mail de Teste"
-
-msgid "发送测试邮件"
-msgstr "Enviar E-mail de Teste"
-
-msgid "注册设置已保存"
-msgstr "Configurações de registro salvas"
-
-msgid "邮件配置已保存"
-msgstr "Configurações de e-mail salvas"
-
-msgid "请输入测试邮箱地址"
-msgstr "Por favor, insira o endereço de e-mail de teste"
-
-msgid "请先配置发件邮箱和API Key"
-msgstr "Por favor, configure o e-mail do remetente e API Key primeiro"
-
-msgid "测试邮件发送成功，请查收"
-msgstr "E-mail de teste enviado com sucesso, por favor, verifique"
-
-msgid "Token已复制到剪贴板"
-msgstr "Token copiado para a área de transferência"
-
-msgid "Token设置成功"
-msgstr "Token definido com sucesso"
-
-msgid "确定要重置Token吗？所有使用旧Token的API调用都将失效。"
-msgstr "Tem certeza que deseja redefinir o token? Todas as chamadas de API usando o token antigo ficarão inválidas."
-
-msgid "Token已重置"
-msgstr "Token redefinido"
-
-msgid "配置已保存"
-msgstr "Configuração salva"
-
-msgid "配置已重新加载"
-msgstr "Configuração recarregada"
-
-msgid "确认删除"
-msgstr "Confirmar Exclusão"
-
-msgid "此操作将永久删除虚拟机"
-msgstr "Esta operação excluirá permanentemente a máquina virtual"
-
-msgid "且不可恢复"
-msgstr "e não pode ser recuperada"
-
-msgid "请输入虚拟机名称以确认删除："
-msgstr "Por favor, insira o nome da máquina virtual para confirmar a exclusão:"
-
-msgid "输入虚拟机名称"
-msgstr "Inserir nome da máquina virtual"
-
-msgid "确认删除"
-msgstr "Confirmar Exclusão"
-
-msgid "确定要对虚拟机"
-msgstr "Tem certeza que deseja"
-
-msgid "执行"
-msgstr "executar"
-
-msgid "操作吗"
-msgstr "operação na máquina virtual"
-
-msgid "关机"
-msgstr "Desligar"
-
-msgid "重启"
-msgstr "Reiniciar"
-
-msgid "暂停"
-msgstr "Pausar"
-
-msgid "恢复"
-msgstr "Retomar"
-
-msgid "强制关机"
-msgstr "Forçar Desligamento"
-
-msgid "强制重启"
-msgstr "Forçar Reinicialização"
-
-msgid "为虚拟机"
-msgstr "Para máquina virtual"
-
-msgid "重装系统"
-msgstr "Reinstalar Sistema"
-
-msgid "选择操作系统："
-msgstr "Selecione o sistema operacional:"
-
-msgid "请选择操作系统"
-msgstr "Por favor, selecione o sistema operacional"
-
-msgid "我已备份数据，确认重装系统将清空系统盘数据"
-msgstr "Fiz backup dos dados, confirmo que a reinstalação do sistema limpará os dados do disco do sistema"
-
-msgid "NAT端口转发规则"
-msgstr "Regras de Encaminhamento de Porta NAT"
-
-msgid "IP地址管理"
-msgstr "Gerenciamento de Endereço IP"
-
-msgid "添加IP地址"
-msgstr "Adicionar Endereço IP"
-
-msgid "网卡名称"
-msgstr "Nome da Placa de Rede"
-
-msgid "MAC地址"
-msgstr "Endereço MAC"
-
-msgid "IPv4地址"
-msgstr "Endereço IPv4"
-
-msgid "IPv6地址"
-msgstr "Endereço IPv6"
-
-msgid "网关"
-msgstr "Gateway"
-
-msgid "掩码"
-msgstr "Máscara"
-
-msgid "DNS"
-msgstr "DNS"
-
-msgid "操作"
-msgstr "Operação"
-
-msgid "添加规则"
-msgstr "Adicionar Regra"
-
-msgid "反向代理配置"
-msgstr "Configuração de Proxy Reverso"
-
-msgid "添加代理"
-msgstr "Adicionar Proxy"
-
-msgid "数据盘管理"
-msgstr "Gerenciamento de Disco de Dados"
-
-msgid "挂载数据盘"
-msgstr "Montar Disco de Dados"
-
-msgid "未挂载"
-msgstr "Não Montado"
-
-msgid "磁盘名称"
-msgstr "Nome do Disco"
-
-msgid "容量"
-msgstr "Capacidade"
-
-msgid "ISO镜像管理"
-msgstr "Gerenciamento de Imagem ISO"
-
-msgid "备份管理"
-msgstr "Gerenciamento de Backup"
-
-msgid "创建备份"
-msgstr "Criar Backup"
-
-msgid "备份名称"
-msgstr "Nome do Backup"
-
-msgid "备份注释"
-msgstr "Comentário do Backup"
-
-msgid "虚拟机分享管理"
-msgstr "Gerenciamento de Compartilhamento de Máquina Virtual"
-
-msgid "添加使用者"
-msgstr "Adicionar Usuário"
-
-msgid "(主所有者)"
-msgstr "(Proprietário Principal)"
-
-msgid "添加分享人"
-msgstr "Adicionar Compartilhamento"
-
-msgid "用户名"
-msgstr "Nome de Usuário"
-
-msgid "请输入用户名"
-msgstr "Por favor, insira o nome de usuário"
-
-msgid "添加后该用户将共享此虚拟机的访问权限，但不会占用该用户的资源配额"
-msgstr "Após adicionar, este usuário compartilhará as permissões de acesso desta máquina virtual, mas não ocupará a cota de recursos do usuário"
-
-msgid "新的共享者必须拥有对应主机的访问权限才能看到该虚拟机"
-msgstr "Novos compartilhadores devem ter permissão de acesso ao host correspondente para poder ver esta máquina virtual"
-
-msgid "创建备份"
-msgstr "Criar Backup"
-
-msgid "备份说明"
-msgstr "Descrição do Backup"
-
-msgid "例如: 系统更新前备份"
-msgstr "Por exemplo: backup antes da atualização do sistema"
-
-msgid "请输入备份的说明信息"
-msgstr "Por favor, insira informações de descrição do backup"
-
-msgid "备份可能需要数十分钟，取决于虚拟机硬盘大小，请耐心等待！"
-msgstr "O backup pode levar dezenas de minutos, dependendo do tamanho do disco da máquina virtual, por favor, aguarde com paciência!"
-
-msgid "我已确认停止当前虚拟机进行备份操作（未保存的数据将丢失）"
-msgstr "Confirmo que parei a máquina virtual atual para realizar a operação de backup (dados não salvos serão perdidos)"
-
-msgid "挂载ISO镜像"
-msgstr "Montar Imagem ISO"
-
-msgid "选择ISO镜像"
-msgstr "Selecionar Imagem ISO"
-
-msgid "请选择ISO镜像文件"
-msgstr "Por favor, selecione o arquivo de imagem ISO"
-
-msgid "从服务器可用的ISO镜像中选择"
-msgstr "Selecione entre as imagens ISO disponíveis no servidor"
-
-msgid "挂载名称"
-msgstr "Nome de Montagem"
-
-msgid "例如: system_iso"
-msgstr "Por exemplo: system_iso"
-
-msgid "(仅支持英文和数字)"
-msgstr "(apenas inglês e números suportados)"
-
-msgid "挂载名称只能包含英文字母和数字"
-msgstr "Nome de montagem só pode conter letras inglesas e números"
-
-msgid "备注"
-msgstr "Observações"
-
-msgid "例如: 系统安装盘"
-msgstr "Por exemplo: disco de instalação do sistema"
-
-msgid "可选，用于说明此ISO的用途"
-msgstr "Opcional, usado para explicar o propósito desta ISO"
-
-msgid "我已同意强制关机此虚拟机"
-msgstr "Concordo em desligar forçadamente esta máquina virtual"
-
-msgid "挂载数据盘"
-msgstr "Montar Disco de Dados"
-
-msgid "磁盘名称"
-msgstr "Nome do Disco"
-
-msgid "例如: data_disk"
-msgstr "Por exemplo: data_disk"
-
-msgid "只能包含数字和字母，不能包含特殊符号和中文"
-msgstr "Só pode conter números e letras, não pode conter símbolos especiais e caracteres chineses"
-
-msgid "磁盘大小 (MB)"
-msgstr "Tamanho do Disco (MB)"
-
-msgid "例如: 1024"
-msgstr "Por exemplo: 1024"
-
-msgid "最小1024MB (1GB)"
-msgstr "Mínimo 1024MB (1GB)"
-
-msgid "磁盘类型"
-msgstr "Tipo de Disco"
-
-msgid "普通磁盘"
-msgstr "Disco Comum"
-
-msgid "添加反向代理"
-msgstr "Adicionar Proxy Reverso"
-
-msgid "域名"
-msgstr "Domínio"
-
-msgid "后端IP"
-msgstr "IP do Backend"
-
-msgid "从虚拟机网卡地址中选择"
-msgstr "Selecione entre os endereços da placa de rede da máquina virtual"
-
-msgid "后端端口"
-msgstr "Porta do Backend"
-
-msgid "启用 HTTPS (SSL/TLS)"
-msgstr "Ativar HTTPS (SSL/TLS)"
-
-msgid "描述"
-msgstr "Descrição"
-
-msgid "网卡类型"
-msgstr "Tipo de Placa de Rede"
-
-msgid "内网(NAT)"
-msgstr "Rede Interna (NAT)"
-
-msgid "选择网卡类型后可查看配额状态"
-msgstr "Após selecionar o tipo de placa de rede, você pode ver o status da cota"
-
-msgid "IPv4地址"
-msgstr "Endereço IPv4"
-
-msgid "留空自动分配，例如: 192.168.1.100"
-msgstr "Deixe em branco para alocar automaticamente, por exemplo: 192.168.1.100"
-
-msgid "留空将由后端自动分配IP地址"
-msgstr "Deixe em branco para alocar automaticamente o endereço IP pelo backend"
-
-msgid "IPv6地址"
-msgstr "Endereço IPv6"
-
-msgid "例如: 2001:db8::1"
-msgstr "Por exemplo: 2001:db8::1"
-
-msgid "网关"
-msgstr "Gateway"
-
-msgid "例如: 192.168.1.1"
-msgstr "Por exemplo: 192.168.1.1"
-
-msgid "子网掩码"
-msgstr "Máscara de Sub-rede"
-
-msgid "添加NAT端口转发规则"
-msgstr "Adicionar Regra de Encaminhamento de Porta NAT"
-
-msgid "外网端口 (WAN)"
-msgstr "Porta Externa (WAN)"
-
-msgid "留空自动分配"
-msgstr "Deixe em branco para alocar automaticamente"
-
-msgid "留空将自动分配可用端口"
-msgstr "Deixe em branco para alocar automaticamente porta disponível"
-
-msgid "内网端口 (LAN)"
-msgstr "Porta Interna (LAN)"
-
-msgid "内网地址"
-msgstr "Endereço da Rede Interna"
-
-msgid "从虚拟机已分配的IP地址中选择"
-msgstr "Selecione entre os endereços IP alocados da máquina virtual"
-
-msgid "备注"
-msgstr "Observações"
-
-msgid "主机总数"
-msgstr "Total de HostManage"
-
-msgid "退出"
-msgstr "Sair"
-
-msgid "虚拟机总数"
-msgstr "Total de Máquinas Virtuais"
-
-msgid "系统状态"
-msgstr "Estado do Sistema"
-
-msgid "正常运行"
-msgstr "Funcionando Normalmente"
-
-msgid "最后更新"
-msgstr "Última Atualização"
-
-msgid "通过"
-msgstr "Através"
-
-msgid "页面可以管理主机和虚拟机。支持使用API+Token进行自动化管理。"
-msgstr "Esta página pode gerenciar hosts e máquinas virtuais. Suporta gerenciamento automatizado usando API+Token."
-
-msgid "管理主机"
-msgstr "Gerenciar Host"
-
-msgid "扫描虚拟机"
-msgstr "Escanear Máquina Virtual"
-
-msgid "返回主机列表"
-msgstr "Voltar à Lista de HostManage"
-
-msgid "内存"
-msgstr "Memória"
-
-msgid "显存"
-msgstr "Memória de Vídeo"
-
-msgid "硬盘"
-msgstr "Disco Rígido"
-
-msgid "Web代理"
-msgstr "Proxy Web"
-
-msgid "NAT端口"
-msgstr "Porta NAT"
-
-msgid "网卡信息"
-msgstr "Informações da Placa de Rede"
-
-msgid "查看详情"
-msgstr "Ver Detalhes"
+msgstr "Token de acesso"
 
 msgid "VNC控制台"
-msgstr "Console VNC"
+msgstr "console VNC"
 
-msgid "编辑"
-msgstr "Editar"
+msgid "CPU核心"
+msgstr "Núcleo da CPU"
 
-msgid "删除"
-msgstr "Excluir"
+msgid "GPU显存"
+msgstr "Memória GPU"
 
-msgid "电源管理"
-msgstr "Gerenciamento de Energia"
+msgid "ISO镜像"
+msgstr "Imagem ISO"
 
-msgid "刷新"
-msgstr "Atualizar"
+msgid "NAT端口"
+msgstr "Porta NAT"
 
-msgid "共"
-msgstr "Total"
+msgid "Web代理"
+msgstr "Proxy da Web"
 
-msgid "台虚拟机"
-msgstr "máquinas virtuais"
+msgid "创建虚拟机"
+msgstr "Crie uma máquina virtual"
 
-msgid "虚拟机"
-msgstr "Máquina Virtual"
+msgid "删除虚拟机"
+msgstr "Excluir máquina virtual"
 
-msgid "操作系统"
-msgstr "Sistema Operacional"
+msgid "卸载ISO"
+msgstr "Desinstalar ISO"
 
-msgid "系统密码"
-msgstr "Senha do Sistema"
+msgid "卸载数据盘"
+msgstr "Desmonte o disco de dados"
 
-msgid "VNC密码"
-msgstr "Senha VNC"
+msgid "扫描虚拟机"
+msgstr "Digitalize máquinas virtuais"
 
-msgid "VNC端口"
-msgstr "Porta VNC"
+msgid "挂载ISO"
+msgstr "Montar ISO"
 
-msgid "资源配置"
-msgstr "Configuração de Recursos"
+msgid "挂载数据盘"
+msgstr "Montar disco de dados"
 
-msgid "虚拟机UUID"
-msgstr "UUID da Máquina Virtual"
+msgid "编辑虚拟机"
+msgstr "Editar máquina virtual"
 
-msgid "CPU核心数量"
-msgstr "Número de Núcleos de CPU"
+msgid "虚拟机详情"
+msgstr "Detalhes da máquina virtual"
 
-msgid "RAM内存(MB)"
-msgstr "Memória RAM (MB)"
-
-msgid "HDD硬盘(MB)"
-msgstr "Disco Rígido HDD (MB)"
-
-msgid "GPU显卡(ID)"
-msgstr "Placa de Vídeo GPU (ID)"
-
-msgid "GPU显存(MB)"
-msgstr "Memória de Vídeo GPU (MB)"
-
-msgid "上行带宽Mb"
-msgstr "Banda Larga de Upload (Mb)"
-
-msgid "下行带宽Mb"
-msgstr "Banda Larga de Download (Mb)"
-
-msgid "流量限制MB"
-msgstr "Limite de Tráfego (MB)"
-
-msgid "Web代理数量"
-msgstr "Número de Proxies Web"
-
-msgid "NAT端口数量"
-msgstr "Número de Portas NAT"
-
-msgid "网卡列表"
-msgstr "Lista de Placas de Rede"
-
-msgid "IP配额状态:"
-msgstr "Status da Cota de IP:"
-
-msgid "IP配额充足"
-msgstr "Cota de IP suficiente"
-
-msgid "已使用"
-msgstr "Usado"
-
-msgid "公网"
-msgstr "Rede Externa"
-
-msgid "内网"
-msgstr "Rede Interna"
-
-msgid "暂停虚拟机"
-msgstr "Pausar Máquina Virtual"
-
-msgid "恢复虚拟机"
-msgstr "Retomar Máquina Virtual"
-
-msgid "编辑配置"
-msgstr "Editar Configuração"
-
-msgid "重装系统"
-msgstr "Reinstalar Sistema"
-
-msgid "VNC"
-msgstr "VNC"
-
-msgid "控制台"
-msgstr "Console"
-
-msgid "修改系统密码"
-msgstr "Alterar Senha do Sistema"
-
-msgid "虚拟机IPv4地址"
-msgstr "Endereço IPv4 da Máquina Virtual"
-
-msgid "虚拟机IPv6地址"
-msgstr "Endereço IPv6 da Máquina Virtual"
-
-msgid "外网访问IP"
-msgstr "IP de Acesso Externo"
-
-msgid "系统密码"
-msgstr "Senha do Sistema"
-
-msgid "VNC密码"
-msgstr "Senha VNC"
-
-msgid "未知"
-msgstr "Desconhecido"
-
-msgid "NAT端口转发"
-msgstr "Encaminhamento de Porta NAT"
-
-msgid "IP地址管理"
-msgstr "Gerenciamento de Endereço IP"
-
-msgid "数据盘"
-msgstr "Disco de Dados"
-
-msgid "ISO挂载"
-msgstr "Montagem ISO"
-
-msgid "备份管理"
-msgstr "Gerenciamento de Backup"
-
-msgid "至少8位，包含字母、数字、特殊符号中的两种"
-msgstr "Pelo menos 8 caracteres, contendo dois entre letras, números e símbolos especiais"
-
-msgid "密码长度不得低于8位，且至少包含字母、数字、符号中的两种"
-msgstr "A senha deve ter pelo menos 8 caracteres e conter pelo menos dois entre letras, números e símbolos"
-
-msgid "已确认此虚拟机可能需要强制关闭以修改密码"
-msgstr "Confirmado que esta máquina virtual pode precisar ser desligada forçadamente para alterar a senha"
-
-msgid "需要关机才能修改：VMware Workstation Pro"
-msgstr "Precisa estar desligado para modificar: VMware Workstation Pro"
-
-msgid "需要开机才能修改：Docker/Podman/LXD(LXC)"
-msgstr "Precisa estar ligado para modificar: Docker/Podman/LXD(LXC)"
-
-msgid "修改前请核对VM状态，否则可能无法修改成功"
-msgstr "Por favor, verifique o estado da VM antes de modificar, caso contrário pode não ser possível modificar com sucesso"
-
-msgid "地址"
-msgstr "Endereço"
-
-msgid "外网IP"
-msgstr "IP Externo"
-
-msgid "爱快OS"
-msgstr "iKuai OS"
-
-msgid "端口范围"
-msgstr "Intervalo de Portas"
-
-msgid "系统映射"
-msgstr "Mapeamento do Sistema"
-
-msgid "个"
-msgstr ""
-
-msgid "台"
-msgstr ""
-
-msgid "系统盘"
-msgstr "Disco do Sistema"
-
-msgid "网络"
-msgstr "Rede"
-
-msgid "温度/功耗"
-msgstr "Temperatura/Consumo de Energia"
-
-msgid "管理所有虚拟化主机"
-msgstr "Gerenciar todos os hosts de virtualização"
-
-msgid "查看系统运行日志和事件记录"
-msgstr "Ver logs de execução do sistema e registros de eventos"
-
-msgid "主机筛选"
-msgstr "Filtro de Host"
-
-msgid "日志记录"
-msgstr "Registros de Log"
-
-msgid "警告"
-msgstr "Aviso"
-
-msgid "留空则自动生成随机Token"
-msgstr "Deixe em branco para gerar automaticamente um token aleatório"
-
-msgid "信息"
-msgstr "Informações"
-
-msgid "自动刷新"
-msgstr "Atualização Automática"
-
-msgid "清空显示"
-msgstr "Limpar Exibição"
-
-msgid "调试"
-msgstr "Depuração"
-
-msgid "邮箱"
-msgstr "E-mail"
-
-msgid "角色"
-msgstr "Função"
-
-msgid "状态"
-msgstr "Estado"
-
-msgid "基础配额"
-msgstr "Cota Básica"
-
-msgid "GPU Memory"
-msgstr "Memória de Vídeo GPU"
-
-msgid "带宽/流量"
-msgstr "Banda Larga/Tráfego"
-
-msgid "网络服务"
-msgstr "Serviço de Rede"
+msgid "IP地址"
+msgstr "Endereço IP"
 
 msgid "IP配额"
 msgstr "Cota de IP"
 
-msgid "管理系统用户、权限和"
-msgstr "Gerenciar usuários, permissões e cotas do sistema"
+msgid "上行带宽"
+msgstr "Largura de banda upstream"
 
-msgid "总代理数"
-msgstr "Total de Proxies"
+msgid "下拉菜单"
+msgstr "menu suspenso"
 
-msgid "HTTP代理"
-msgstr "Proxy HTTP"
+msgid "下行带宽"
+msgstr "Largura de banda de downlink"
 
-msgid "HTTPS代理"
-msgstr "Proxy HTTPS"
+msgid "个人信息"
+msgstr "informações pessoais"
 
-msgid "后端地址"
-msgstr "Endereço do Backend"
+msgid "个人设置"
+msgstr "configurações pessoais"
 
-msgid "协议"
-msgstr "Protocolo"
+msgid "个人资料"
+msgstr "dados pessoais"
 
-msgid "主机数"
-msgstr "Número de HostManage"
+msgid "为虚拟机"
+msgstr "para máquina virtual"
 
-msgid "管理所有 的"
-msgstr "Gerenciar todos os"
+msgid "主所有者"
+msgstr "proprietário principal"
 
-msgid "普通用户"
-msgstr "Usuário Comum"
+msgid "主机名称"
+msgstr "nome do host"
 
-msgid "启用"
-msgstr "Ativar"
+msgid "主机总数"
+msgstr "Número total de hosts"
 
-msgid "上行"
-msgstr "Upload"
+msgid "主机数量"
+msgstr "Número de hosts"
 
-msgid "下行"
-msgstr "Download"
+msgid "主机概览"
+msgstr "Visão geral do anfitrião"
 
-msgid "流量"
-msgstr "Tráfego"
+msgid "主机筛选"
+msgstr "Filtragem de host"
 
-msgid "个主机"
-msgstr "hosts"
+msgid "主机管理"
+msgstr "Gerenciamento de host"
 
-msgid "服务器名称 *"
-msgstr "Nome do Servidor *"
+msgid "主机类型"
+msgstr "Tipo de host"
 
-msgid "服务器类型 *"
-msgstr "Tipo de Servidor *"
+msgid "主机详情"
+msgstr "Detalhes do anfitrião"
 
-msgid "请选择类型"
-msgstr "Por favor, selecione o tipo"
+msgid "主要接口"
+msgstr "Interface principal"
 
-msgid "服务器地址"
-msgstr "Endereço do Servidor"
+msgid "任务列表"
+msgstr "lista de tarefas"
 
-msgid "服务器用户"
-msgstr "Usuário do Servidor"
+msgid "任务状态"
+msgstr "Status da tarefa"
 
-msgid "服务器密码"
-msgstr "Senha do Servidor"
+msgid "任务管理"
+msgstr "gerenciamento de tarefas"
 
-msgid "Virtual Machine前缀"
-msgstr "Prefixo da Máquina Virtual"
+msgid "任务类型"
+msgstr "Tipo de tarefa"
 
-msgid "过滤器名称"
-msgstr "Nome do Filtro"
+msgid "任务详情"
+msgstr "Detalhes da missão"
 
-msgid "存储路径配置"
-msgstr "Configuração do Caminho de Armazenamento"
+msgid "保存失败"
+msgstr "Falha ao salvar"
 
-msgid "模板存储路径"
-msgstr "Caminho de Armazenamento de Modelos"
+msgid "保存确认"
+msgstr "Salvar confirmação"
 
-msgid "光盘存储路径"
-msgstr "Caminho de Armazenamento de Discos Ópticos"
+msgid "保存设置"
+msgstr "Salvar configurações"
 
-msgid "系统存储路径"
-msgstr "Caminho de Armazenamento do Sistema"
+msgid "保存配置"
+msgstr "Salvar configuração"
 
-msgid "备份存储路径"
-msgstr "Caminho de Armazenamento de Backups"
+msgid "保持一致"
+msgstr "Seja consistente"
 
-msgid "数据存储路径"
-msgstr "Caminho de Armazenamento de Dados"
+msgid "修改密码"
+msgstr "Alterar a senha"
 
-msgid "程序启动路径"
-msgstr "Caminho de Inicialização do Programa"
+msgid "修改邮箱"
+msgstr "Modificar e-mail"
 
-msgid "虚拟化程序路径"
-msgstr "Caminho do Programa de Virtualização"
+msgid "停止刷新"
+msgstr "Pare de atualizar"
 
-msgid "服务访问端口"
-msgstr "Porta de Acesso ao Serviço"
+msgid "光盘镜像"
+msgstr "imagem do disco"
 
-msgid "服务器Public IP"
-msgstr "IP Público do Servidor"
+msgid "全部主机"
+msgstr "Todos os anfitriões"
 
-msgid "共享IP设备名"
-msgstr "Nome do Dispositivo de IP Compartilhado"
+msgid "全部状态"
+msgstr "Todos os status"
 
-msgid "独立IP设备名"
-msgstr "Nome do Dispositivo de IP Independente"
+msgid "全部级别"
+msgstr "Todos os níveis"
 
-msgid "爱快OS配置"
-msgstr "Configuração do iKuai OS"
+msgid "公网IP"
+msgstr "IP público"
 
-msgid "爱快OS地址"
-msgstr "Endereço do iKuai OS"
+msgid "公网端口"
+msgstr "Porta de rede pública"
 
-msgid "爱快OSUsername"
-msgstr "Nome de Usuário do iKuai OS"
+msgid "公网网桥"
+msgstr "Ponte de rede pública"
 
-msgid "爱快OS管理员用户名"
-msgstr "Nome de Usuário Administrador do iKuai OS"
+msgid "内网IP"
+msgstr "IP da intranet"
 
-msgid "爱快OS密码"
-msgstr "Senha do iKuai OS"
+msgid "内网地址"
+msgstr "Endereço da intranet"
 
-msgid "爱快OS管理员密码"
-msgstr "Senha Administrador do iKuai OS"
+msgid "内网端口"
+msgstr "Porta intranet"
 
-msgid "端口配置"
-msgstr "Configuração de Portas"
+msgid "内网网桥"
+msgstr "Ponte de intranet"
 
-msgid "TCP端口起始"
-msgstr "Porta TCP Inicial"
+msgid "分配主机"
+msgstr "Atribuir anfitrião"
 
-msgid "TCP端口结束"
-msgstr "Porta TCP Final"
+msgid "创建备份"
+msgstr "Criar backup"
 
-msgid "VNC服务端口"
-msgstr "Porta do Serviço VNC"
+msgid "创建失败"
+msgstr "Falha na criação"
 
-msgid "VM Count限制"
-msgstr "Limite de Contagem de DockManage"
+msgid "创建成功"
+msgstr "Criado com sucesso"
 
-msgid "系统映射配置"
-msgstr "Configuração do Mapeamento do Sistema"
+msgid "创建时间"
+msgstr "hora de criação"
 
-msgid "配置System Name与镜像文件的映射关系"
-msgstr "Configurar a relação de mapeamento entre o Nome do Sistema e o arquivo de imagem"
+msgid "创建用户"
+msgstr "Criar usuário"
 
-msgid "外部显示System Name"
-msgstr "Nome do Sistema Exibido Externamente"
+msgid "删除主机"
+msgstr "Excluir anfitrião"
 
-msgid "镜像文件(带后缀)"
-msgstr "Arquivo de Imagem (com sufixo)"
+msgid "删除代理"
+msgstr "Excluir proxy"
 
-msgid "最低大小(GB)"
-msgstr "Tamanho Mínimo (GB)"
+msgid "删除失败"
+msgstr "Falha na exclusão"
 
-msgid "添加系统映射"
-msgstr "Adicionar Mapeamento do Sistema"
+msgid "删除实例"
+msgstr "Excluir instância"
 
-msgid "ISO image映射配置"
-msgstr "Configuração do Mapeamento de Imagem ISO"
+msgid "删除成功"
+msgstr "Excluir com sucesso"
 
-msgid "显示名称"
-msgstr "Nome de Exibição"
+msgid "删除用户"
+msgstr "Excluir usuário"
 
-msgid "ISO文件名"
-msgstr "Nome do Arquivo ISO"
+msgid "删除硬盘"
+msgstr "Excluir disco rígido"
 
-msgid "添加镜像映射"
-msgstr "Adicionar Mapeamento de Imagem"
+msgid "加载失败"
+msgstr "Falha no carregamento"
 
-msgid "IP地址池配置"
-msgstr "Configuração do Pool de Endereços IP"
-
-msgid "配置Virtual Machine可分配IP addresses段"
-msgstr "Configurar os segmentos de endereços IP alocáveis para Máquinas Virtuais"
-
-msgid "Add IP Address池"
-msgstr "Adicionar Pool de Endereços IP"
-
-msgid "DNS服务器配置"
-msgstr "Configuração do Servidor DNS"
-
-msgid "DNS服务器（多个用逗号分隔）"
-msgstr "Servidor DNS (múltiplos separados por vírgula)"
-
-msgid "Reinstall system for统一配置DNS服务器"
-msgstr "Reinstalar sistema para configurar uniformemente o servidor DNS"
-
-msgid "API扩展选项 (JSON格式)"
-msgstr "Opções de Extensão da API (formato JSON)"
+msgid "卸载失败"
+msgstr "Falha na desinstalação"
 
 msgid "反向代理"
-msgstr "Proxy Reverso"
+msgstr "proxy reverso"
 
-msgid "添加反向代理"
-msgstr "Adicionar Proxy Reverso"
+msgid "发件邮箱"
+msgstr "Enviando e-mail"
+
+msgid "发送域名"
+msgstr "Enviar nome de domínio"
+
+msgid "台虚拟机"
+msgstr "máquina virtual"
+
+msgid "后端IP"
+msgstr "IP de back-end"
 
 msgid "后端地址"
-msgstr "Endereço Backend"
+msgstr "Endereço de back-end"
 
-msgid "协议"
-msgstr "Protocolo"
+msgid "后端端口"
+msgstr "porta de back-end"
 
-msgid "描述"
-msgstr "Descrição"
+msgid "启用失败"
+msgstr "Falha ao ativar"
 
-msgid "操作"
-msgstr "Ações"
+msgid "启用用户"
+msgstr "habilitar usuário"
+
+msgid "响应错误"
+msgstr "Erro de resposta"
+
+msgid "基本信息"
+msgstr "Informações básicas"
+
+msgid "基本配置"
+msgstr "Configuração básica"
+
+msgid "基础配额"
+msgstr "Cota básica"
+
+msgid "处理函数"
+msgstr "Função de manuseio"
+
+msgid "处理响应"
+msgstr "Lidar com resposta"
+
+msgid "备份名称"
+msgstr "Nome do backup"
+
+msgid "备份文件"
+msgstr "Arquivos de backup"
+
+msgid "备份注释"
+msgstr "Comentários de backup"
+
+msgid "备份管理"
+msgstr "Gerenciamento de backup"
+
+msgid "备份说明"
+msgstr "Instruções de backup"
+
+msgid "复制失败"
+msgstr "Falha na cópia"
+
+msgid "外网端口"
+msgstr "Porta de rede externa"
+
+msgid "子网掩码"
+msgstr "máscara de sub-rede"
+
+msgid "存储容量"
+msgstr "capacidade de armazenamento"
+
+msgid "完整数据"
+msgstr "dados completos"
+
+msgid "实例信息"
+msgstr "Informações da instância"
+
+msgid "实例名称"
+msgstr "Nome da instância"
+
+msgid "实例概览"
+msgstr "Visão geral da instância"
+
+msgid "容器管理"
+msgstr "Gerenciamento de contêineres"
+
+msgid "密码强度"
+msgstr "Força da senha"
+
+msgid "小写字母"
+msgstr "letras minúsculas"
+
+msgid "开放注册"
+msgstr "Inscrições abertas"
+
+msgid "强制关机"
+msgstr "Forçar desligamento"
+
+msgid "强制重启"
+msgstr "forçar reinicialização"
+
+msgid "当前邮箱"
+msgstr "E-mail atual"
+
+msgid "忘记密码"
+msgstr "esqueça a senha"
+
+msgid "快速操作"
+msgstr "Operação rápida"
 
 msgid "总代理数"
-msgstr "Total de Proxies"
+msgstr "Número total de agentes"
 
-msgid "HTTP代理"
-msgstr "Proxy HTTP"
-
-msgid "HTTPS代理"
-msgstr "Proxy HTTPS"
-
-msgid "主机数"
-msgstr "Número de HostManage"
+msgid "恢复失败"
+msgstr "Falha na recuperação"
 
 msgid "所有主机"
-msgstr "Todos os HostManage"
+msgstr "Todos os anfitriões"
 
 msgid "所有协议"
-msgstr "Todos os Protocolos"
+msgstr "Todos os acordos"
 
-msgid "刷新"
-msgstr "Atualizar"
+msgid "扫描备份"
+msgstr "Backup de verificação"
 
-msgid "反向代理配置"
-msgstr "Configuração de Proxy Reverso"
+msgid "扫描失败"
+msgstr "Falha na verificação"
 
-msgid "管理"
-msgstr "Gerenciar"
+msgid "找回密码"
+msgstr "Recuperar senha"
 
-msgid "所有"
-msgstr "Todos"
+msgid "挂载名称"
+msgstr "Nome da montagem"
 
-msgid "内存"
-msgstr "Memória"
+msgid "挂载失败"
+msgstr "Falha na montagem"
 
-msgid "显存"
-msgstr "VRAM"
+msgid "接口类型"
+msgstr "Tipo de interface"
 
-msgid "硬盘"
-msgstr "Disco"
+msgid "提示信息"
+msgstr "Mensagem de alerta"
 
-msgid "个"
-msgstr ""
+msgid "操作失败"
+msgstr "Falha na operação"
 
-msgid "暂无端口转发规则"
-msgstr "Nenhuma Regra de Encaminhamento de Porta"
+msgid "操作成功"
+msgstr "Operação bem-sucedida"
 
-msgid "暂无"
-msgstr "Nenhum"
+msgid "操作系统"
+msgstr "sistema operacional"
 
-msgid "配置"
-msgstr "Configuração"
+msgid "操作结果"
+msgstr "Resultado da operação"
 
-msgid "可分配"
-msgstr "Alocável"
+msgid "收件邮箱"
+msgstr "Recebendo e-mail"
 
-msgid "段"
-msgstr "Segmento"
+msgid "数十分钟"
+msgstr "dezenas de minutos"
 
-msgid "配置名称"
-msgstr "Nome da Configuração"
+msgid "数据磁盘"
+msgstr "disco de dados"
 
-msgid "版本"
-msgstr "Versão"
+msgid "数据管理"
+msgstr "Gerenciamento de dados"
 
-msgid "网络类型"
-msgstr "Tipo de Rede"
+msgid "数据结构"
+msgstr "estrutura de dados"
 
-msgid "数量"
-msgstr "Quantidade"
+msgid "日志查看"
+msgstr "Visualização de registro"
 
-msgid "起始IP地址"
-msgstr "Endereço IP Inicial"
+msgid "日志管理"
+msgstr "Gerenciamento de registros"
+
+msgid "日志级别"
+msgstr "Nível de registro"
+
+msgid "日志记录"
+msgstr "registro"
+
+msgid "日志详情"
+msgstr "Detalhes do registro"
+
+msgid "显示名称"
+msgstr "nome de exibição"
+
+msgid "显示条数"
+msgstr "Número de exibição"
+
+msgid "普通用户"
+msgstr "Usuário comum"
+
+msgid "暂无主机"
+msgstr "Nenhum anfitrião ainda"
+
+msgid "暂无备份"
+msgstr "Ainda não há backup"
+
+msgid "更新主机"
+msgstr "Atualizar anfitrião"
+
+msgid "更新代理"
+msgstr "agente de atualização"
+
+msgid "更新失败"
+msgstr "Falha na atualização"
+
+msgid "更新用户"
+msgstr "Atualizar usuário"
+
+msgid "最低大小"
+msgstr "tamanho mínimo"
+
+msgid "最后更新"
+msgstr "última atualização"
+
+msgid "最小要求"
+msgstr "Requisitos mínimos"
+
+msgid "未知主机"
+msgstr "Anfitrião desconhecido"
+
+msgid "未知操作"
+msgstr "Operação desconhecida"
+
+msgid "未知时间"
+msgstr "hora desconhecida"
+
+msgid "未知系统"
+msgstr "sistema desconhecido"
+
+msgid "权限不足"
+msgstr "Permissões insuficientes"
+
+msgid "权限信息"
+msgstr "Informações de permissão"
+
+msgid "查看全部"
+msgstr "Ver tudo"
+
+msgid "查看详情"
+msgstr "verifique os detalhes"
+
+msgid "桌面端口"
+msgstr "porta de desktop"
+
+msgid "正常运行"
+msgstr "operação normal"
+
+msgid "每月流量"
+msgstr "tráfego mensal"
+
+msgid "注册失败"
+msgstr "Falha no registro"
+
+msgid "注册时间"
+msgstr "Hora do registro"
+
+msgid "注意事项"
+msgstr "Coisas a serem observadas"
+
+msgid "流量限制"
+msgstr "limite de tráfego"
+
+msgid "测试邮件"
+msgstr "e-mail de teste"
+
+msgid "消息内容"
+msgstr "Conteúdo da mensagem"
+
+msgid "添加主机"
+msgstr "Adicionar anfitrião"
+
+msgid "添加代理"
+msgstr "Adicionar proxy"
+
+msgid "添加失败"
+msgstr "Falha ao adicionar"
+
+msgid "添加用户"
+msgstr "Adicionar usuário"
+
+msgid "添加硬盘"
+msgstr "Adicionar disco rígido"
+
+msgid "添加网卡"
+msgstr "Adicionar placa de rede"
+
+msgid "添加规则"
+msgstr "Adicionar regras"
+
+msgid "清空显示"
+msgstr "exibição clara"
+
+msgid "爱快地址"
+msgstr "Endereço Aikuai"
+
+msgid "特殊字符"
+msgstr "caracteres especiais"
+
+msgid "用户列表"
+msgstr "Lista de usuários"
+
+msgid "用户权限"
+msgstr "Permissões de usuário"
+
+msgid "用户注册"
+msgstr "Cadastro de usuário"
+
+msgid "用户界面"
+msgstr "interface do usuário"
+
+msgid "用户登出"
+msgstr "Sair do usuário"
+
+msgid "用户登录"
+msgstr "Login do usuário"
+
+msgid "用户管理"
+msgstr "Gerenciamento de usuários"
+
+msgid "电源操作"
+msgstr "Operação de energia"
+
+msgid "电源管理"
+msgstr "Gerenciamento de energia"
+
+msgid "硬盘大小"
+msgstr "Tamanho do disco rígido"
+
+msgid "确认保存"
+msgstr "Confirme para salvar"
+
+msgid "确认删除"
+msgstr "Confirmar exclusão"
+
+msgid "确认卸载"
+msgstr "Confirmar desinstalação"
+
+msgid "确认密码"
+msgstr "Confirme sua senha"
+
+msgid "确认挂载"
+msgstr "Confirmar montagem"
+
+msgid "确认添加"
+msgstr "Confirme para adicionar"
+
+msgid "确认移交"
+msgstr "Confirmar transferência"
+
+msgid "确认还原"
+msgstr "Confirmar restauração"
+
+msgid "确认重装"
+msgstr "Confirme a reinstalação"
+
+msgid "磁盘名称"
+msgstr "Nome do disco"
+
+msgid "磁盘存储"
+msgstr "armazenamento em disco"
+
+msgid "禁用失败"
+msgstr "Falha ao desativar"
+
+msgid "移交失败"
+msgstr "Falha na transferência"
+
+msgid "端口数量"
+msgstr "Número de portas"
+
+msgid "端口映射"
+msgstr "mapeamento de porta"
+
+msgid "端口范围"
+msgstr "intervalo de portas"
+
+msgid "端口转发"
+msgstr "encaminhamento de porta"
+
+msgid "端口配置"
+msgstr "Configuração de porta"
+
+msgid "管理主机"
+msgstr "Anfitrião de gerenciamento"
+
+msgid "管理系统"
+msgstr "sistema de gestão"
+
+msgid "系统信息"
+msgstr "Informações do sistema"
+
+msgid "系统名称"
+msgstr "Nome do sistema"
+
+msgid "系统密码"
+msgstr "Senha do sistema"
+
+msgid "系统日志"
+msgstr "Registro do sistema"
+
+msgid "系统概览"
+msgstr "Visão geral do sistema"
+
+msgid "系统状态"
+msgstr "Status do sistema"
+
+msgid "系统界面"
+msgstr "Interface do sistema"
+
+msgid "系统管理"
+msgstr "Gerenciamento do sistema"
+
+msgid "系统设置"
+msgstr "Configurações do sistema"
+
+msgid "系统配置"
+msgstr "Configuração do sistema"
+
+msgid "系统重装"
+msgstr "Reinstalação do sistema"
+
+msgid "统计数据"
+msgstr "Estatísticas"
+
+msgid "编辑主机"
+msgstr "Editar anfitrião"
 
 msgid "网关地址"
-msgstr "Endereço do Gateway"
+msgstr "Endereço de gateway"
 
-msgid "池"
-msgstr "Pool"
+msgid "网关错误"
+msgstr "Erro de gateway"
 
-msgid "保存"
-msgstr "Salvar"
+msgid "网卡信息"
+msgstr "Informações da placa de rede"
 
-msgid "扫描虚拟机"
-msgstr "Escanear Máquinas Virtuais"
+msgid "网卡名称"
+msgstr "Nome da placa de rede"
 
-msgid "停止"
-msgstr "Parar"
+msgid "网卡管理"
+msgstr "Gerenciamento de placa de rede"
 
-msgid "编辑"
-msgstr "Editar"
+msgid "网卡类型"
+msgstr "Tipo de placa de rede"
 
-msgid "删除"
-msgstr "Excluir"
+msgid "网卡配置"
+msgstr "Configuração da placa de rede"
 
-msgid "下"
-msgstr "sob"
+msgid "网络带宽"
+msgstr "Largura de banda da rede"
 
-msgid "的"
-msgstr ""
+msgid "网络服务"
+msgstr "serviços de rede"
 
-msgid "随机"
-msgstr "Aleatório"
+msgid "网络管理"
+msgstr "gerenciamento de rede"
 
-msgid "地址"
-msgstr "Endereço"
+msgid "网络资源"
+msgstr "Recursos da Internet"
 
-msgid "执行"
-msgstr "Executar"
+msgid "网络连接"
+msgstr "conexão de rede"
 
-msgid "启动"
-msgstr "Iniciar"
+msgid "网络配置"
+msgstr "Configuração de rede"
 
-msgid "确认"
-msgstr "Confirmar"
+msgid "自动分配"
+msgstr "alocação automática"
 
-msgid "留空自动分配"
-msgstr "Deixe em branco para atribuição automática"
+msgid "自动刷新"
+msgstr "Atualização automática"
+
+msgid "自动更新"
+msgstr "Atualizações automáticas"
+
+msgid "自动获取"
+msgstr "Obtenha automaticamente"
+
+msgid "英文字母"
+msgstr "Letras inglesas"
+
+msgid "获取数据"
+msgstr "Obtenha dados"
+
+msgid "计算资源"
+msgstr "Recursos de computação"
+
+msgid "认证方式"
+msgstr "Método de autenticação"
+
+msgid "设置失败"
+msgstr "Falha na configuração"
+
+msgid "访问端口"
+msgstr "porta de acesso"
+
+msgid "请求失败"
+msgstr "Falha na solicitação"
+
+msgid "账户状态"
+msgstr "Status da conta"
+
+msgid "资源概览"
+msgstr "Visão geral dos recursos"
+
+msgid "资源配置"
+msgstr "Alocação de recursos"
+
+msgid "资源配额"
+msgstr "Cota de recursos"
+
+msgid "运行日志"
+msgstr "Executar registro"
+
+msgid "返回登录"
+msgstr "Voltar ao login"
+
+msgid "还原备份"
+msgstr "Restaurar cópia de segurança"
+
+msgid "远程密码"
+msgstr "senha remota"
+
+msgid "连接失败"
+msgstr "Falha na conexão"
+
+msgid "退出登录"
+msgstr "Sair"
+
+msgid "选择主机"
+msgstr "Selecione o anfitrião"
+
+msgid "邮件服务"
+msgstr "Serviço de correio"
+
+msgid "邮件标题"
+msgstr "Título do e-mail"
+
+msgid "邮件正文"
+msgstr "Texto do e-mail"
+
+msgid "邮箱地址"
+msgstr "Endereço de email"
+
+msgid "邮箱验证"
+msgstr "Verificação de e-mail"
+
+msgid "配置名称"
+msgstr "Nome da configuração"
+
+msgid "配额不足"
+msgstr "Cota insuficiente"
+
+msgid "配额充足"
+msgstr "Cota suficiente"
+
+msgid "重置失败"
+msgstr "Falha na redefinição"
+
+msgid "重置密码"
+msgstr "redefinir senha"
+
+msgid "重装失败"
+msgstr "Falha na reinstalação"
+
+msgid "重装系统"
+msgstr "Reinstale o sistema"
+
+msgid "错误信息"
+msgstr "mensagem de erro"
+
+msgid "错误堆栈"
+msgstr "pilha de erros"
+
+msgid "错误处理"
+msgstr "Tratamento de erros"
+
+msgid "镜像文件"
+msgstr "Arquivo de imagem"
+
+msgid "随机生成"
+msgstr "gerado aleatoriamente"
+
+msgid "下划线"
+msgstr "Sublinhado"
+
+msgid "个主机"
+msgstr "anfitriões"
+
+msgid "个字符"
+msgstr "personagens"
+
+msgid "主机名"
+msgstr "nome do host"
+
+msgid "主机数"
+msgstr "Número de hosts"
+
+msgid "从文件"
+msgstr "do arquivo"
+
+msgid "仪表盘"
+msgstr "Painel"
+
+msgid "使用率"
+msgstr "Taxa de uso"
+
+msgid "使用者"
+msgstr "usuário"
+
+msgid "供选择"
+msgstr "para seleção"
+
+msgid "保存中"
+msgstr "Salvando"
+
+msgid "停止中"
+msgstr "Parando"
+
+msgid "关机中"
+msgstr "Desligando"
+
+msgid "初始化"
+msgstr "inicialização"
+
+msgid "利用率"
+msgstr "Utilização"
+
+msgid "剪贴板"
+msgstr "área de transferência"
+
+msgid "加载中"
+msgstr "carregando"
+
+msgid "取决于"
+msgstr "dependendo de"
+
+msgid "启动中"
+msgstr "Começando"
+
+msgid "国际化"
+msgstr "internacionalização"
+
+msgid "备份中"
+msgstr "Fazendo backup"
+
+msgid "复制到"
+msgstr "Copiar para"
+
+msgid "复杂度"
+msgstr "complexidade"
+
+msgid "安装盘"
+msgstr "Disco de instalação"
+
+msgid "对话框"
+msgstr "caixa de diálogo"
+
+msgid "已保存"
+msgstr "salvo"
+
+msgid "已停止"
+msgstr "Parou"
+
+msgid "已关闭"
+msgstr "Fechado"
+
+msgid "已删除"
+msgstr "Excluído"
+
+msgid "已启用"
+msgstr "Habilitado"
+
+msgid "已完成"
+msgstr "Concluído"
+
+msgid "已崩溃"
+msgstr "caiu"
+
+msgid "已开启"
+msgstr "Já ativado"
+
+msgid "已挂载"
+msgstr "Montado"
+
+msgid "已暂停"
+msgstr "Suspenso"
+
+msgid "已禁用"
+msgstr "Desabilitado"
+
+msgid "已验证"
+msgstr "Verificado"
+
+msgid "总代理"
+msgstr "agente geral"
+
+msgid "总配额"
+msgstr "cota total"
+
+msgid "恢复中"
+msgstr "Recuperando"
+
+msgid "所有权"
+msgstr "propriedade"
+
+msgid "所有者"
+msgstr "proprietário"
+
+msgid "拦截器"
+msgstr "Interceptor"
+
+msgid "控制台"
+msgstr "console"
+
+msgid "数据盘"
+msgstr "disco de dados"
+
+msgid "文件名"
+msgstr "nome do arquivo"
+
+msgid "新密码"
+msgstr "Nova Senha"
+
+msgid "无描述"
+msgstr "Sem descrição"
+
+msgid "无限制"
+msgstr "Ilimitado"
+
+msgid "暂停中"
+msgstr "Pausado"
+
+msgid "月流量"
+msgstr "Tráfego mensal"
+
+msgid "有效性"
+msgstr "eficácia"
+
+msgid "服务器"
+msgstr "servidor"
+
+msgid "未分配"
+msgstr "Não alocado"
+
+msgid "未挂载"
+msgstr "Não montado"
+
+msgid "未配置"
+msgstr "Não configurado"
+
+msgid "未验证"
+msgstr "Não verificado"
+
+msgid "条记录"
+msgstr "registros"
+
+msgid "格式化"
+msgstr "formatar"
+
+msgid "模板数"
+msgstr "Número de modelos"
+
+msgid "注册表"
+msgstr "Registro"
+
+msgid "浏览器"
+msgstr "Navegador"
+
+msgid "用户名"
+msgstr "nome de usuário"
+
+msgid "第一个"
+msgstr "primeiro"
+
+msgid "第一台"
+msgstr "O primeiro"
+
+msgid "等待中"
+msgstr "Esperando"
+
+msgid "管理员"
+msgstr "administrador"
+
+msgid "系统盘"
+msgstr "disco do sistema"
+
+msgid "自动化"
+msgstr "automação"
+
+msgid "菜单项"
+msgstr "item de menu"
+
+msgid "虚拟化"
+msgstr "virtualização"
+
+msgid "虚拟机"
+msgstr "máquina virtual"
+
+msgid "请输入"
+msgstr "Por favor insira"
+
+msgid "请选择"
+msgstr "Selecione"
+
+msgid "过滤器"
+msgstr "filtro"
+
+msgid "运行中"
+msgstr "Correndo"
+
+msgid "还原中"
+msgstr "Restaurando"
+
+msgid "进度条"
+msgstr "barra de progresso"
+
+msgid "选择器"
+msgstr "seletor"
+
+msgid "配置中"
+msgstr "Configurando"
+
+msgid "重启中"
+msgstr "Reiniciando"
+
+msgid "重装中"
+msgstr "Reinstalando"
+
+msgid "默认值"
+msgstr "valor padrão"
+
+msgid "一个"
+msgstr "um"
+
+msgid "一封"
+msgstr "uma carta"
+
+msgid "一致"
+msgstr "consistente"
+
+msgid "一键"
+msgstr "Um clique"
+
+msgid "上行"
+msgstr "Para cima"
+
+msgid "下行"
+msgstr "Para baixo"
+
+msgid "不会"
+msgstr "Não vai"
+
+msgid "不再"
+msgstr "não mais"
+
+msgid "不可"
+msgstr "Não"
+
+msgid "不能"
+msgstr "não pode"
+
+msgid "不足"
+msgstr "insuficiente"
+
+msgid "丢失"
+msgstr "perdido"
+
+msgid "两次"
+msgstr "duas vezes"
+
+msgid "中文"
+msgstr "chinês"
+
+msgid "中等"
+msgstr "médio"
+
+msgid "临时"
+msgstr "temporário"
+
+msgid "为空"
+msgstr "está vazio"
+
+msgid "主机"
+msgstr "Hospedar"
+
+msgid "主要"
+msgstr "principal"
+
+msgid "主题"
+msgstr "tema"
+
+msgid "事件"
+msgstr "evento"
+
+msgid "二次"
+msgstr "secundário"
+
+msgid "交互"
+msgstr "interação"
+
+msgid "代理"
+msgstr "atuando"
+
+msgid "代码"
+msgstr "código"
+
+msgid "任务"
+msgstr "Tarefa"
+
+msgid "优先"
+msgstr "prioridade"
+
+msgid "作为"
+msgstr "como"
+
+msgid "使用"
+msgstr "usar"
 
 msgid "例如"
 msgstr "Por exemplo"
 
-msgid "添加"
-msgstr "Adicionar"
+msgid "侧边"
+msgstr "lado"
 
-msgid "端口用途说明"
-msgstr "Descrição do Uso da Porta"
+msgid "保存"
+msgstr "salvar"
+
+msgid "保持"
+msgstr "Manter"
+
+msgid "保留"
+msgstr "reserva"
+
+msgid "信息"
+msgstr "Informação"
+
+msgid "修改"
+msgstr "Rever"
+
+msgid "修正"
+msgstr "Correção"
+
+msgid "假设"
+msgstr "hipótese"
+
+msgid "停止"
+msgstr "parar"
+
+msgid "允许"
+msgstr "permitir"
+
+msgid "元素"
+msgstr "elemento"
+
+msgid "光盘"
+msgstr "CD"
+
+msgid "全部"
+msgstr "todos"
+
+msgid "公共"
+msgstr "público"
+
+msgid "公网"
+msgstr "Rede pública"
+
+msgid "共享"
+msgstr "compartilhado"
+
+msgid "关机"
+msgstr "Desligar"
+
+msgid "关系"
+msgstr "relação"
+
+msgid "关闭"
+msgstr "encerramento"
+
+msgid "其他"
+msgstr "outro"
+
+msgid "兼容"
+msgstr "compatível"
+
+msgid "内存"
+msgstr "Memória"
+
+msgid "内容"
+msgstr "contente"
+
+msgid "内网"
+msgstr "Intranet"
+
+msgid "内部"
+msgstr "interno"
+
+msgid "再次"
+msgstr "de novo"
+
+msgid "出错"
+msgstr "Erro"
+
+msgid "函数"
+msgstr "função"
+
+msgid "分享"
+msgstr "compartilhar"
+
+msgid "分割"
+msgstr "segmentação"
+
+msgid "分离"
+msgstr "separação"
+
+msgid "分配"
+msgstr "distribuir"
+
+msgid "分钟"
+msgstr "minuto"
+
+msgid "分隔"
+msgstr "separar"
+
+msgid "切换"
+msgstr "trocar"
+
+msgid "列表"
+msgstr "lista"
+
+msgid "创建"
+msgstr "criar"
+
+msgid "删除"
+msgstr "excluir"
+
+msgid "判断"
+msgstr "juiz"
+
+msgid "别名"
+msgstr "Alias"
+
+msgid "刷新"
+msgstr "atualizar"
+
+msgid "前缀"
+msgstr "prefixo"
+
+msgid "功耗"
+msgstr "Consumo de energia"
+
+msgid "功能"
+msgstr "Função"
+
+msgid "加载"
+msgstr "carregar"
+
+msgid "动作"
+msgstr "Ação"
+
+msgid "动态"
+msgstr "dinâmico"
+
+msgid "勾选"
+msgstr "Verificar"
+
+msgid "包含"
+msgstr "Incluir"
+
+msgid "匹配"
+msgstr "corresponder"
+
+msgid "区域"
+msgstr "área"
+
+msgid "协议"
+msgstr "protocolo"
+
+msgid "单个"
+msgstr "solteiro"
+
+msgid "单位"
+msgstr "unidade"
+
+msgid "占用"
+msgstr "ocupar"
+
+msgid "卡片"
+msgstr "cartão"
+
+msgid "卸载"
+msgstr "desinstalar"
+
+msgid "历史"
+msgstr "história"
+
+msgid "原始"
+msgstr "original"
+
+msgid "参数"
+msgstr "parâmetro"
+
+msgid "及其"
+msgstr "e"
+
+msgid "反向"
+msgstr "reverter"
+
+msgid "发件"
+msgstr "Enviar"
+
+msgid "发送"
+msgstr "enviar"
+
+msgid "取消"
+msgstr "Cancelar"
+
+msgid "受控"
+msgstr "controlado"
+
+msgid "变为"
+msgstr "tornar-se"
+
+msgid "变化"
+msgstr "mudar"
+
+msgid "变更"
+msgstr "mudar"
+
+msgid "变量"
+msgstr "variável"
+
+msgid "只能"
+msgstr "só pode"
+
+msgid "可以"
+msgstr "Pode"
+
+msgid "可用"
+msgstr "Disponível"
+
+msgid "可能"
+msgstr "possível"
+
+msgid "可逆"
+msgstr "Reversível"
+
+msgid "可选"
+msgstr "Opcional"
+
+msgid "各种"
+msgstr "Vários"
+
+msgid "合并"
+msgstr "mesclar"
+
+msgid "同意"
+msgstr "concordar"
+
+msgid "同时"
+msgstr "ao mesmo tempo"
+
+msgid "名称"
+msgstr "nome"
+
+msgid "后续"
+msgstr "Seguir"
+
+msgid "后缀"
+msgstr "sufixo"
+
+msgid "后该"
+msgstr "Já é hora"
+
+msgid "否则"
+msgstr "de outra forma"
+
+msgid "启动"
+msgstr "comece"
+
+msgid "启用"
+msgstr "habilitar"
+
+msgid "响应"
+msgstr "resposta"
+
+msgid "唯一"
+msgstr "apenas"
+
+msgid "因为"
+msgstr "porque"
+
+msgid "图标"
+msgstr "ícone"
+
+msgid "地址"
+msgstr "endereço"
+
+msgid "域名"
+msgstr "nome de domínio"
+
+msgid "基本"
+msgstr "Básico"
+
+msgid "堆栈"
+msgstr "pilha"
+
+msgid "处理"
+msgstr "tratar"
+
+msgid "备份"
+msgstr "backup"
+
+msgid "备注"
+msgstr "Observação"
+
+msgid "复制"
+msgstr "cópia"
+
+msgid "复合"
+msgstr "complexo"
+
+msgid "外部"
+msgstr "externo"
+
+msgid "多个"
+msgstr "Múltiplo"
+
+msgid "大小"
+msgstr "tamanho"
+
+msgid "失效"
+msgstr "Inválido"
+
+msgid "失败"
+msgstr "falhar"
+
+msgid "如果"
+msgstr "se"
+
+msgid "字母"
+msgstr "carta"
+
+msgid "字符"
+msgstr "personagem"
+
+msgid "字节"
+msgstr "byte"
+
+msgid "存储"
+msgstr "armazenar"
+
+msgid "存在"
+msgstr "existir"
+
+msgid "安全"
+msgstr "Segurança"
+
+msgid "完全"
+msgstr "completamente"
+
+msgid "完成"
+msgstr "Terminar"
+
+msgid "完整"
+msgstr "todo"
+
+msgid "定义"
+msgstr "definição"
+
+msgid "实例"
+msgstr "Exemplo"
+
+msgid "实际"
+msgstr "real"
+
+msgid "容器"
+msgstr "recipiente"
+
+msgid "容量"
+msgstr "capacidade"
+
+msgid "密码"
+msgstr "senha"
+
+msgid "对应"
+msgstr "corresponder"
+
+msgid "对象"
+msgstr "objeto"
+
+msgid "导入"
+msgstr "importar"
+
+msgid "导出"
+msgstr "Exportar"
+
+msgid "导致"
+msgstr "levar a"
+
+msgid "导航"
+msgstr "navegação"
+
+msgid "少于"
+msgstr "menor que"
+
+msgid "属性"
+msgstr "propriedade"
+
+msgid "已用"
+msgstr "Usado"
+
+msgid "布局"
+msgstr "layout"
+
+msgid "带宽"
+msgstr "largura de banda"
+
+msgid "平台"
+msgstr "plataforma"
+
+msgid "应用"
+msgstr "aplicativo"
+
+msgid "应该"
+msgstr "deve"
+
+msgid "引擎"
+msgstr "motor"
+
+msgid "弹窗"
+msgstr "Janela pop-up"
+
+msgid "强关"
+msgstr "passe forte"
+
+msgid "强制"
+msgstr "vigor"
+
+msgid "强度"
+msgstr "força"
+
+msgid "当前"
+msgstr "atual"
+
+msgid "必须"
+msgstr "deve"
+
+msgid "忘记"
+msgstr "esquecer"
+
+msgid "快速"
+msgstr "rápido"
+
+msgid "性能"
+msgstr "desempenho"
+
+msgid "总数"
+msgstr "total"
+
+msgid "恢复"
+msgstr "recuperar"
+
+msgid "您好"
+msgstr "Olá"
+
+msgid "情况"
+msgstr "Doença"
+
+msgid "成为"
+msgstr "tornar-se"
+
+msgid "成功"
+msgstr "sucesso"
+
+msgid "我们"
+msgstr "nós"
+
+msgid "截图"
+msgstr "captura de tela"
+
+msgid "所有"
+msgstr "todos"
+
+msgid "才能"
+msgstr "Talento"
+
+msgid "打开"
+msgstr "Abrir"
+
+msgid "执行"
+msgstr "implementar"
+
+msgid "扩展"
+msgstr "Expandir"
+
+msgid "扫描"
+msgstr "digitalização"
+
+msgid "折叠"
+msgstr "dobrar"
+
+msgid "拥有"
+msgstr "ter"
+
+msgid "挂载"
+msgstr "montar"
+
+msgid "指令"
+msgstr "instrução"
+
+msgid "指定"
+msgstr "Especificar"
+
+msgid "按钮"
+msgstr "botão"
+
+msgid "授权"
+msgstr "Autorizar"
+
+msgid "接口"
+msgstr "interface"
+
+msgid "控制"
+msgstr "controlar"
+
+msgid "描述"
+msgstr "descrever"
+
+msgid "提交"
+msgstr "enviar"
+
+msgid "提取"
+msgstr "extrair"
+
+msgid "提示"
+msgstr "dica"
+
+msgid "搜索"
+msgstr "procurar"
+
+msgid "撤销"
+msgstr "Cancelar"
+
+msgid "操作"
+msgstr "operar"
+
+msgid "支持"
+msgstr "apoiar"
+
+msgid "收件"
+msgstr "Receber"
+
+msgid "收到"
+msgstr "receber"
+
+msgid "收集"
+msgstr "coletar"
+
+msgid "改密"
+msgstr "Alterar a senha"
+
+msgid "数字"
+msgstr "número"
+
+msgid "数据"
+msgstr "dados"
+
+msgid "数组"
+msgstr "variedade"
+
+msgid "数量"
+msgstr "quantidade"
+
+msgid "整个"
+msgstr "inteiro"
+
+msgid "文件"
+msgstr "documento"
+
+msgid "文字"
+msgstr "Palavra"
+
+msgid "文本"
+msgstr "texto"
+
+msgid "新增"
+msgstr "Novo"
+
+msgid "方式"
+msgstr "Caminho"
+
+msgid "无效"
+msgstr "inválido"
+
+msgid "无法"
+msgstr "Impossível"
+
+msgid "日志"
+msgstr "registro"
+
+msgid "时会"
+msgstr "reunião de horário"
+
+msgid "时间"
+msgstr "tempo"
+
+msgid "映射"
+msgstr "mapeamento"
+
+msgid "是否"
+msgstr "se"
+
+msgid "显卡"
+msgstr "placa gráfica"
+
+msgid "显存"
+msgstr "Memória de vídeo"
+
+msgid "显示"
+msgstr "mostrar"
+
+msgid "暂停"
+msgstr "pausa"
+
+msgid "暂无"
+msgstr "Nenhum ainda"
+
+msgid "暂时"
+msgstr "temporário"
+
+msgid "暂未"
+msgstr "Ainda não"
+
+msgid "更新"
+msgstr "renovar"
+
+msgid "最低"
+msgstr "mais baixo"
+
+msgid "最后"
+msgstr "afinal"
+
+msgid "最小"
+msgstr "menor"
+
+msgid "最新"
+msgstr "atualizado"
+
+msgid "最终"
+msgstr "final"
+
+msgid "有效"
+msgstr "eficiente"
+
+msgid "服务"
+msgstr "Servir"
+
+msgid "未知"
+msgstr "desconhecido"
+
+msgid "机器"
+msgstr "máquina"
+
+msgid "权限"
+msgstr "Permissões"
+
+msgid "条件"
+msgstr "doença"
+
+msgid "条数"
+msgstr "Número de itens"
+
+msgid "来自"
+msgstr "de"
+
+msgid "构建"
+msgstr "Construir"
+
+msgid "构造"
+msgstr "estrutura"
+
+msgid "查找"
+msgstr "Encontrar"
+
+msgid "查收"
+msgstr "verificar"
+
+msgid "查看"
+msgstr "Verificar"
+
+msgid "标签"
+msgstr "Rótulo"
+
+msgid "样式"
+msgstr "estilo"
+
+msgid "核心"
+msgstr "essencial"
+
+msgid "根据"
+msgstr "de acordo com"
+
+msgid "格式"
+msgstr "Formatar"
+
+msgid "桌面"
+msgstr "área de trabalho"
+
+msgid "检查"
+msgstr "examinar"
+
+msgid "检测"
+msgstr "Detecção"
+
+msgid "概览"
+msgstr "Visão geral"
+
+msgid "模块"
+msgstr "módulo"
+
+msgid "模式"
+msgstr "modelo"
+
+msgid "模态"
+msgstr "modal"
+
+msgid "模板"
+msgstr "modelo"
+
+msgid "正在"
+msgstr "são"
+
+msgid "正常"
+msgstr "normal"
+
+msgid "正文"
+msgstr "texto"
+
+msgid "正确"
+msgstr "correto"
+
+msgid "每月"
+msgstr "por mês"
+
+msgid "比如"
+msgstr "por exemplo"
+
+msgid "没有"
+msgstr "Não"
+
+msgid "注册"
+msgstr "registrar"
+
+msgid "注意"
+msgstr "Perceber"
+
+msgid "注释"
+msgstr "Comentário"
+
+msgid "流量"
+msgstr "fluxo"
+
+msgid "浅色"
+msgstr "cor clara"
+
+msgid "消息"
+msgstr "Informação"
+
+msgid "深色"
+msgstr "Escuro"
+
+msgid "添加"
+msgstr "adicionar à"
+
+msgid "清空"
+msgstr "Claro"
+
+msgid "清除"
+msgstr "Claro"
+
+msgid "温度"
+msgstr "temperatura"
+
+msgid "渲染"
+msgstr "renderização"
+
+msgid "灰色"
+msgstr "cinza"
+
+msgid "点击"
+msgstr "Clique"
+
+msgid "爱快"
+msgstr "ame rápido"
+
+msgid "版本"
+msgstr "Versão"
+
+msgid "状态"
+msgstr "estado"
+
+msgid "独立"
+msgstr "independente"
+
+msgid "生成"
+msgstr "gerar"
+
+msgid "生效"
+msgstr "Faça efeito"
+
+msgid "用于"
+msgstr "usado para"
+
+msgid "用尽"
+msgstr "esgotado"
+
+msgid "用户"
+msgstr "usuário"
+
+msgid "用途"
+msgstr "usar"
+
+msgid "用量"
+msgstr "Dosagem"
+
+msgid "由后"
+msgstr "por trás"
+
+msgid "电源"
+msgstr "fonte de energia"
+
+msgid "留空"
+msgstr "Deixe em branco"
+
+msgid "登出"
+msgstr "sair"
+
+msgid "登录"
+msgstr "Conecte-se"
+
+msgid "监听"
+msgstr "monitor"
+
+msgid "监控"
+msgstr "monitor"
+
+msgid "目标"
+msgstr "Alvo"
+
+msgid "直接"
+msgstr "direto"
+
+msgid "相关"
+msgstr "Relacionado"
+
+msgid "看到"
+msgstr "Ver"
+
+msgid "硬盘"
+msgstr "disco rígido"
+
+msgid "确保"
+msgstr "certificar-se"
+
+msgid "确定"
+msgstr "Claro"
+
+msgid "确认"
+msgstr "confirmar"
+
+msgid "磁盘"
+msgstr "disco"
+
+msgid "禁用"
+msgstr "Desativar"
+
+msgid "移交"
+msgstr "transferir"
+
+msgid "移除"
+msgstr "Remover"
+
+msgid "程序"
+msgstr "programa"
+
+msgid "稍候"
+msgstr "Espere um momento"
+
+msgid "立即"
+msgstr "imediatamente"
+
+msgid "端口"
+msgstr "porta"
+
+msgid "等待"
+msgstr "espere"
+
+msgid "筛选"
+msgstr "filtro"
+
+msgid "简化"
+msgstr "simplificar"
+
+msgid "管理"
+msgstr "gerenciar"
+
+msgid "类名"
+msgstr "Nome da classe"
+
+msgid "类型"
+msgstr "tipo"
+
+msgid "系统"
+msgstr "sistema"
+
+msgid "红色"
+msgstr "vermelho"
+
+msgid "级别"
+msgstr "nível"
+
+msgid "组件"
+msgstr "componentes"
+
+msgid "结束"
+msgstr "Terminar"
+
+msgid "统计"
+msgstr "estatísticas"
+
+msgid "继续"
+msgstr "continuar"
+
+msgid "绿色"
+msgstr "verde"
+
+msgid "编辑"
+msgstr "editar"
+
+msgid "网关"
+msgstr "porta de entrada"
+
+msgid "网卡"
+msgstr "placa de rede"
+
+msgid "网桥"
+msgstr "ponte"
+
+msgid "网络"
+msgstr "rede"
+
+msgid "网网"
+msgstr "rede"
+
+msgid "翻译"
+msgstr "traduzir"
+
+msgid "耐心"
+msgstr "paciência"
+
+msgid "联系"
+msgstr "conectar"
+
+msgid "自动"
+msgstr "automático"
+
+msgid "至少"
+msgstr "Pelo menos"
+
+msgid "节点"
+msgstr "nó"
+
+msgid "范围"
+msgstr "escopo"
+
+msgid "获取"
+msgstr "pegar"
+
+msgid "菜单"
+msgstr "menu"
+
+msgid "补充"
+msgstr "Reabastecer"
+
+msgid "表单"
+msgstr "forma"
+
+msgid "表示"
+msgstr "expressar"
+
+msgid "要求"
+msgstr "Exigir"
+
+msgid "规则"
+msgstr "regra"
+
+msgid "视图"
+msgstr "visualizar"
+
+msgid "角色"
+msgstr "Papel"
+
+msgid "解析"
+msgstr "analisar"
+
+msgid "触发"
+msgstr "acionar"
+
+msgid "警告"
+msgstr "avisar"
+
+msgid "计算"
+msgstr "calcular"
+
+msgid "认证"
+msgstr "Certificação"
+
+msgid "记录"
+msgstr "Registro"
+
+msgid "设备"
+msgstr "equipamento"
+
+msgid "设置"
+msgstr "configurar"
+
+msgid "访问"
+msgstr "acesso"
+
+msgid "详情"
+msgstr "Detalhes"
+
+msgid "语言"
+msgstr "linguagem"
+
+msgid "说明"
+msgstr "ilustrar"
+
+msgid "请求"
+msgstr "perguntar"
+
+msgid "读取"
+msgstr "ler"
+
+msgid "调用"
+msgstr "chamar"
+
+msgid "调试"
+msgstr "depurar"
+
+msgid "谨慎"
+msgstr "cauteloso"
+
+msgid "账号"
+msgstr "conta"
+
+msgid "账户"
+msgstr "Conta"
+
+msgid "资源"
+msgstr "recurso"
+
+msgid "起始"
+msgstr "começar"
+
+msgid "超时"
+msgstr "tempo esgotado"
+
+msgid "足够"
+msgstr "suficiente"
+
+msgid "跟踪"
+msgstr "acompanhar"
+
+msgid "路径"
+msgstr "caminho"
+
+msgid "路由"
+msgstr "roteamento"
+
+msgid "跳转"
+msgstr "Pular"
+
+msgid "跳过"
+msgstr "pular sobre"
+
+msgid "转换"
+msgstr "Converter"
+
+msgid "转移"
+msgstr "transferir"
+
+msgid "转让"
+msgstr "transferir"
+
+msgid "轮询"
+msgstr "votação"
+
+msgid "输入"
+msgstr "digitar"
+
+msgid "过滤"
+msgstr "filtro"
+
+msgid "运行"
+msgstr "correr"
+
+msgid "返回"
+msgstr "retornar"
+
+msgid "还原"
+msgstr "redução"
+
+msgid "这个"
+msgstr "esse"
+
+msgid "这封"
+msgstr "Esta carta"
+
+msgid "这是"
+msgstr "Isso é"
+
+msgid "这里"
+msgstr "aqui"
+
+msgid "进行"
+msgstr "conduta"
+
+msgid "远程"
+msgstr "remoto"
+
+msgid "连接"
+msgstr "conectar"
+
+msgid "选中"
+msgstr "selecionado"
+
+msgid "选择"
+msgstr "escolher"
+
+msgid "选项"
+msgstr "Opções"
+
+msgid "递归"
+msgstr "recursão"
+
+msgid "逗号"
+msgstr "vírgula"
+
+msgid "通用"
+msgstr "Universal"
+
+msgid "通知"
+msgstr "notificar"
+
+msgid "通过"
+msgstr "passar"
+
+msgid "逻辑"
+msgstr "lógica"
+
+msgid "遍历"
+msgstr "Atravessar"
+
+msgid "避免"
+msgstr "evitar"
+
+msgid "邮件"
+msgstr "correspondência"
+
+msgid "邮箱"
+msgstr "Correspondência"
+
+msgid "部分"
+msgstr "papel"
+
+msgid "配置"
+msgstr "Configuração"
+
+msgid "配额"
+msgstr "contingente"
+
+msgid "重启"
+msgstr "Reiniciar"
+
+msgid "重复"
+msgstr "repita"
+
+msgid "重新"
+msgstr "de novo"
+
+msgid "重置"
+msgstr "reiniciar"
+
+msgid "重装"
+msgstr "Reinstale"
+
+msgid "重要"
+msgstr "importante"
+
+msgid "重试"
+msgstr "Tente novamente"
+
+msgid "错误"
+msgstr "erro"
+
+msgid "键中"
+msgstr "chave"
+
+msgid "镜像"
+msgstr "espelho"
+
+msgid "长度"
+msgstr "comprimento"
+
+msgid "闭包"
+msgstr "encerramento"
+
+msgid "问题"
+msgstr "pergunta"
+
+msgid "限制"
+msgstr "limite"
+
+msgid "随机"
+msgstr "aleatório"
+
+msgid "需要"
+msgstr "precisar"
+
+msgid "静态"
+msgstr "estático"
+
+msgid "非常"
+msgstr "Muito"
+
+msgid "页面"
+msgstr "página"
+
+msgid "顶部"
+msgstr "principal"
+
+msgid "颜色"
+msgstr "cor"
+
+msgid "验证"
+msgstr "verificar"
+
+msgid "高级"
+msgstr "avançado"
+
+msgid "默认"
+msgstr "padrão"
+
+msgid "下"
+msgstr "Abaixo"
+
+msgid "前"
+msgstr "avançar"
+
+msgid "后"
+msgstr "voltar"
+
+msgid "否"
+msgstr "não"
+
+msgid "多"
+msgstr "muitos"
+
+msgid "大"
+msgstr "grande"
+
+msgid "对"
+msgstr "certo"
+
+msgid "新"
+msgstr "novo"
+
+msgid "旧"
+msgstr "velho"
+
+msgid "是"
+msgstr "sim"
+
+msgid "空"
+msgstr "nulo"
+

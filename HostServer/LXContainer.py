@@ -1013,6 +1013,30 @@ class HostServer(BasicServer):
         super().VMPowers(vm_name, power)
         return hs_result
 
+    # 获取虚拟机实际状态（从API）==============================================
+    def VMStatusAPI(self, vm_name: str) -> str:
+        """从LXD API获取容器实际状态"""
+        try:
+            client, result = self.lxd_conn()
+            if not result.success:
+                return ""
+            
+            container = client.containers.get(vm_name)
+            
+            # 映射LXD状态到中文状态
+            state_map = {
+                'Running': '运行中',
+                'Stopped': '已关机',
+                'Frozen': '已暂停'
+            }
+            return state_map.get(container.status, '未知')
+        except NotFound:
+            logger.warning(f"容器 {vm_name} 不存在")
+            return ""
+        except Exception as e:
+            logger.warning(f"从API获取容器 {vm_name} 状态失败: {str(e)}")
+        return ""
+
     # 设置虚拟机密码 ###########################################################
     def VMPasswd(self, vm_name: str, os_pass: str) -> ZMessage:
         # 专用操作 =============================================================

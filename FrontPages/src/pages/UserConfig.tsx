@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Card, Form, Input, Button, message, Tag, Progress, Row, Col } from 'antd'
+import { Card, Form, Input, Button, message, Tag, Progress, Row, Col, Typography } from 'antd'
+
+const { Title } = Typography
 import { 
   UserOutlined, 
   MailOutlined, 
@@ -103,14 +105,34 @@ function UserConfig() {
   }
 
   return (
-    <div>
+    <div style={{ 
+      padding: '32px',
+      minHeight: '100vh'
+    }}>
       {/* 页面标题 */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-          <UserOutlined className="text-blue-600" style={{ fontSize: '36px' }} />
-          个人设置
-        </h1>
-        <p className="text-gray-600 mt-1">管理您的个人信息和账户设置</p>
+      <div style={{ marginBottom: '32px' }}>
+        <Title 
+          level={2} 
+          style={{ 
+            margin: 0,
+            fontSize: '32px',
+            fontWeight: 700,
+            color: 'var(--text-primary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}
+        >
+          <UserOutlined style={{ width: '36px', height: '36px', color: 'var(--accent-primary)' }} />
+          个人账户设置
+        </Title>
+        <div style={{ 
+          marginTop: '8px',
+          fontSize: '14px',
+          color: 'var(--text-secondary)'
+        }}>
+          管理您的个人信息和账户设置
+        </div>
       </div>
 
       <Row gutter={[24, 24]}>
@@ -120,28 +142,28 @@ function UserConfig() {
           <Card 
             title={
               <span className="flex items-center gap-2">
-                <UserOutlined className="text-blue-600" />
-                个人信息
+                <UserOutlined className="text-blue-600 dark:text-blue-400" />
+                <span className="dark:text-gray-100">个人信息</span>
               </span>
             }
-            className="mb-6"
+            className="glass-card mb-6"
           >
             <Row gutter={[16, 16]}>
               <Col xs={24} md={12}>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">用户名</label>
                   <Input value={userProfile.username} disabled />
                 </div>
               </Col>
               <Col xs={24} md={12}>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">邮箱地址</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">邮箱地址</label>
                   <Input value={userProfile.email} disabled />
                 </div>
               </Col>
               <Col xs={24}>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">注册时间</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">注册时间</label>
                   <Input 
                     value={userProfile.created_at ? new Date(userProfile.created_at).toLocaleString('zh-CN') : '未知'} 
                     disabled 
@@ -155,11 +177,11 @@ function UserConfig() {
           <Card 
             title={
               <span className="flex items-center gap-2">
-                <MailOutlined className="text-blue-600" />
-                修改邮箱
+                <MailOutlined className="text-blue-600 dark:text-blue-400" />
+                <span className="dark:text-gray-100">修改邮箱</span>
               </span>
             }
-            className="mb-6"
+            className="glass-card mb-6"
           >
             <Form form={emailForm} layout="vertical" onFinish={handleChangeEmail}>
               <Form.Item label="当前邮箱">
@@ -187,10 +209,11 @@ function UserConfig() {
           <Card 
             title={
               <span className="flex items-center gap-2">
-                <LockOutlined className="text-blue-600" />
-                修改密码
+                <LockOutlined className="text-blue-600 dark:text-blue-400" />
+                <span className="dark:text-gray-100">修改密码</span>
               </span>
             }
+            className="glass-card"
           >
             <Form form={passwordForm} layout="vertical" onFinish={handleChangePassword}>
               <Form.Item
@@ -236,18 +259,18 @@ function UserConfig() {
           <Card 
             title={
               <span className="flex items-center gap-2">
-                <SafetyOutlined className="text-blue-600" />
-                权限信息
+                <SafetyOutlined className="text-blue-600 dark:text-blue-400" />
+                <span className="dark:text-gray-100">权限信息</span>
               </span>
             }
-            className="mb-6"
+            className="glass-card mb-6"
           >
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">虚拟机权限</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">虚拟机权限</label>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 flex items-center gap-2">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
                       {userProfile.can_create_vm ? <CheckCircleOutlined className="text-green-500" /> : <CloseCircleOutlined className="text-red-500" />}
                       创建虚拟机
                     </span>
@@ -256,7 +279,7 @@ function UserConfig() {
                     </Tag>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 flex items-center gap-2">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
                       {userProfile.can_modify_vm ? <CheckCircleOutlined className="text-green-500" /> : <CloseCircleOutlined className="text-red-500" />}
                       编辑虚拟机
                     </span>
@@ -265,7 +288,7 @@ function UserConfig() {
                     </Tag>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 flex items-center gap-2">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
                       {userProfile.can_delete_vm ? <CheckCircleOutlined className="text-green-500" /> : <CloseCircleOutlined className="text-red-500" />}
                       删除虚拟机
                     </span>
@@ -277,22 +300,22 @@ function UserConfig() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">账户状态</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">账户状态</label>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">管理员</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">管理员</span>
                     <Tag color={userProfile.is_admin ? 'purple' : 'default'}>
                       {userProfile.is_admin ? '是' : '否'}
                     </Tag>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">已启用</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">已启用</span>
                     <Tag color={userProfile.is_active ? 'success' : 'error'}>
                       {userProfile.is_active ? '已启用' : '已禁用'}
                     </Tag>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">已验证</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">已验证</span>
                     <Tag color={userProfile.email_verified ? 'success' : 'warning'}>
                       {userProfile.email_verified ? '已验证' : '未验证'}
                     </Tag>
@@ -301,15 +324,15 @@ function UserConfig() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">分配的主机</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">分配的主机</label>
                 {userProfile.assigned_hosts && userProfile.assigned_hosts.length > 0 ? (
                   <div className="space-y-1">
                     {userProfile.assigned_hosts.map((host, index) => (
-                      <div key={index} className="text-sm text-gray-600">• {host}</div>
+                      <div key={index} className="text-sm text-gray-600 dark:text-gray-400">• {host}</div>
                     ))}
                   </div>
                 ) : (
-                  <span className="text-xs text-gray-500">未分配主机</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-500">未分配主机</span>
                 )}
               </div>
             </div>
@@ -319,17 +342,18 @@ function UserConfig() {
           <Card 
             title={
               <span className="flex items-center gap-2">
-                <PieChartOutlined className="text-blue-600" />
-                资源配额
+                <PieChartOutlined className="text-blue-600 dark:text-blue-400" />
+                <span className="dark:text-gray-100">资源配额</span>
               </span>
             }
+            className="glass-card"
           >
             <div className="space-y-4">
               {/* CPU */}
               <div>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-gray-600">CPU核心</span>
-                  <span className="text-gray-800 font-medium">
+                  <span className="text-gray-600 dark:text-gray-400">CPU核心</span>
+                  <span className="text-gray-800 dark:text-gray-200 font-medium">
                     {userProfile.used_cpu}/{userProfile.quota_cpu} 核
                   </span>
                 </div>
@@ -343,9 +367,9 @@ function UserConfig() {
               {/* 内存 */}
               <div>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-gray-600">内存</span>
-                  <span className="text-gray-800 font-medium">
-                    {((userProfile.used_ram || 0) / 1024).toFixed(1)}/{((userProfile.quota_ram || 0) / 1024).toFixed(1)} GB
+                  <span className="text-gray-600 dark:text-gray-400">内存使用率</span>
+                  <span className="text-gray-800 dark:text-gray-200 font-medium">
+                    {calculatePercent(userProfile.used_ram || 0, userProfile.quota_ram || 0)}%
                   </span>
                 </div>
                 <Progress 
@@ -353,14 +377,17 @@ function UserConfig() {
                   strokeColor={getProgressColor(calculatePercent(userProfile.used_ram || 0, userProfile.quota_ram || 0))}
                   showInfo={false}
                 />
+                <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  {((userProfile.used_ram || 0) / 1024).toFixed(1)}/{((userProfile.quota_ram || 0) / 1024).toFixed(1)} GB
+                </div>
               </div>
 
               {/* 磁盘 */}
               <div>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-gray-600">磁盘</span>
-                  <span className="text-gray-800 font-medium">
-                    {((userProfile.used_ssd || 0) / 1024).toFixed(1)}/{((userProfile.quota_ssd || 0) / 1024).toFixed(1)} GB
+                  <span className="text-gray-600 dark:text-gray-400">存储使用率</span>
+                  <span className="text-gray-800 dark:text-gray-200 font-medium">
+                    {calculatePercent(userProfile.used_ssd || 0, userProfile.quota_ssd || 0)}%
                   </span>
                 </div>
                 <Progress 
@@ -368,15 +395,18 @@ function UserConfig() {
                   strokeColor={getProgressColor(calculatePercent(userProfile.used_ssd || 0, userProfile.quota_ssd || 0))}
                   showInfo={false}
                 />
+                <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  {((userProfile.used_ssd || 0) / 1024).toFixed(1)}/{((userProfile.quota_ssd || 0) / 1024).toFixed(1)} GB
+                </div>
               </div>
 
               {/* GPU（如果有） */}
               {userProfile.quota_gpu && userProfile.quota_gpu > 0 && (
                 <div>
                   <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="text-gray-600">GPU显存</span>
-                    <span className="text-gray-800 font-medium">
-                      {((userProfile.used_gpu || 0) / 1024).toFixed(1)}/{(userProfile.quota_gpu / 1024).toFixed(1)} GB
+                    <span className="text-gray-600 dark:text-gray-400">GPU显存使用率</span>
+                    <span className="text-gray-800 dark:text-gray-200 font-medium">
+                      {calculatePercent(userProfile.used_gpu || 0, userProfile.quota_gpu)}%
                     </span>
                   </div>
                   <Progress 
@@ -384,14 +414,17 @@ function UserConfig() {
                     strokeColor={getProgressColor(calculatePercent(userProfile.used_gpu || 0, userProfile.quota_gpu))}
                     showInfo={false}
                   />
+                  <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    {((userProfile.used_gpu || 0) / 1024).toFixed(1)}/{(userProfile.quota_gpu / 1024).toFixed(1)} GB
+                  </div>
                 </div>
               )}
 
               {/* 流量 */}
               <div>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-gray-600">流量</span>
-                  <span className="text-gray-800 font-medium">
+                  <span className="text-gray-600 dark:text-gray-400">流量</span>
+                  <span className="text-gray-800 dark:text-gray-200 font-medium">
                     {((userProfile.used_traffic || 0) / 1024).toFixed(1)}/{((userProfile.quota_traffic || 0) / 1024).toFixed(1)} GB
                   </span>
                 </div>
@@ -405,8 +438,8 @@ function UserConfig() {
               {/* 上行带宽 */}
               <div>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-gray-600">上行带宽</span>
-                  <span className="text-gray-800 font-medium">
+                  <span className="text-gray-600 dark:text-gray-400">上行带宽</span>
+                  <span className="text-gray-800 dark:text-gray-200 font-medium">
                     {userProfile.used_bandwidth_up || 0}/{userProfile.quota_bandwidth_up || 0} Mbps
                   </span>
                 </div>
@@ -420,8 +453,8 @@ function UserConfig() {
               {/* 下行带宽 */}
               <div>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-gray-600">下行带宽</span>
-                  <span className="text-gray-800 font-medium">
+                  <span className="text-gray-600 dark:text-gray-400">下行带宽</span>
+                  <span className="text-gray-800 dark:text-gray-200 font-medium">
                     {userProfile.used_bandwidth_down || 0}/{userProfile.quota_bandwidth_down || 0} Mbps
                   </span>
                 </div>
@@ -435,8 +468,8 @@ function UserConfig() {
               {/* NAT配额 */}
               <div>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-gray-600">NAT配额</span>
-                  <span className="text-gray-800 font-medium">
+                  <span className="text-gray-600 dark:text-gray-400">NAT配额</span>
+                  <span className="text-gray-800 dark:text-gray-200 font-medium">
                     {userProfile.used_nat_ports || 0}/{userProfile.quota_nat_ports || 0} 个
                   </span>
                 </div>
@@ -450,8 +483,8 @@ function UserConfig() {
               {/* WEB配额 */}
               <div>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-gray-600">WEB配额</span>
-                  <span className="text-gray-800 font-medium">
+                  <span className="text-gray-600 dark:text-gray-400">WEB配额</span>
+                  <span className="text-gray-800 dark:text-gray-200 font-medium">
                     {userProfile.used_web_proxy || 0}/{userProfile.quota_web_proxy || 0} 个
                   </span>
                 </div>

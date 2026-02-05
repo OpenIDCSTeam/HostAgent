@@ -707,13 +707,16 @@ class RestManager:
         """获取所有主机列表"""
         hosts_data = {}
         for hs_name, server in self.hs_manage.engine.items():
+            # 获取主机启用状态
+            is_enabled = getattr(server.hs_config, 'is_enabled', True) if server.hs_config else True
             hosts_data[hs_name] = {
                 'name': hs_name,
                 'type': server.hs_config.server_type if server.hs_config else '',
                 'addr': server.hs_config.server_addr if server.hs_config else '',
                 'config': server.hs_config.__save__() if server.hs_config else {},
                 'vm_count': len(server.vm_saving),
-                'status': 'active'  # 可以根据实际情况判断
+                'status': 'active' if is_enabled else 'disabled',  # 根据is_enabled返回状态
+                'is_enabled': is_enabled  # 添加is_enabled字段
             }
         return self.api_response(200, 'success', hosts_data)
 
@@ -890,21 +893,52 @@ class RestManager:
             return self.api_response(200, '主机已删除')
         return self.api_response(404, '主机不存在')
 
-    # 主机电源控制 ########################################################################
+    # ========================================================================
+    # 主机启用控制（启用/禁用）
+    # ========================================================================
     # :param hs_name: 主机名称
-    # :return: 主机电源控制结果的API响应
-    # ####################################################################################
-    def host_power(self, hs_name):
-        """主机电源控制（启用/禁用）"""
-        data = request.get_json() or {}
-        enable = data.get('enable', True)
-
-        result = self.hs_manage.pwr_host(hs_name, enable)
-
-        if result.success:
-            self.hs_manage.all_save()
-            return self.api_response(200, result.message)
-        return self.api_response(400, result.message)
+    # :return: 主机启用控制结果的API响应
+    # ========================================================================
+    def host_enable(self, hs_name):
+        """
+        主机启用控制（启用/禁用）
+        
+        Args:
+            hs_name: 主机名称
+            
+        Returns:
+            API响应，包含操作结果
+        """
+        try:
+            # 获取请求数据 ======================================================
+            data = request.get_json() or {}
+            enable = data.get('enable', True)
+            
+            logger.info(f'[主机启用控制] 主机: {hs_name}, 操作: {"启用" if enable else "禁用"}')
+            
+            # 调用HostManager执行启用/禁用操作 ==================================
+            result = self.hs_manage.pwr_host(hs_name, enable)
+            
+            # 保存配置 ==========================================================
+            if result.success:
+                try:
+                    self.hs_manage.all_save()
+                    logger.info(f'[主机启用控制] 主机 {hs_name} 配置已保存')
+                except Exception as e:
+                    logger.error(f'[主机启用控制] 保存配置失败: {e}')
+                    traceback.print_exc()
+                    return self.api_response(500, f'操作成功但保存配置失败: {str(e)}')
+                
+                return self.api_response(200, result.message)
+            else:
+                logger.warning(f'[主机启用控制] 操作失败: {result.message}')
+                return self.api_response(400, result.message)
+                
+        except Exception as e:
+            # 捕获所有异常 ======================================================
+            logger.error(f'[主机启用控制] 主机启用控制失败: {e}')
+            traceback.print_exc()
+            return self.api_response(500, f'主机启用控制失败: {str(e)}')
 
     # 获取主机状态 ########################################################################
     # :param hs_name: 主机名称
@@ -1190,23 +1224,22 @@ class RestManager:
             # 获取虚拟机的第一个所有者
             first_owner = vm_config.own_all[0] if vm_config.own_all else None
 
-            # 计算资源使用量
-            cpu_needed = int(data.get('cpu_num', 0))
-            ram_needed = int(data.get('mem_num', 0))
-            ssd_needed = int(data.get('hdd_num', 0))
-            gpu_needed = int(data.get('gpu_mem', 0))
-            traffic_needed = int(data.get('flu_num', 0))
-            nat_ports_needed = int(data.get('nat_num', 0))
-            web_proxy_needed = int(data.get('web_num', 0))
-            bandwidth_up_needed = int(data.get('speed_u', 0))
-            bandwidth_down_needed = int(data.get('speed_d', 0))
+            # 计算资源使用量（使用vm_config的实际值，而不是data）
+            cpu_needed = vm_config.cpu_num
+            ram_needed = vm_config.mem_num
+            ssd_needed = vm_config.hdd_num
+            gpu_needed = vm_config.gpu_mem
+            traffic_needed = vm_config.flu_num
+            nat_ports_needed = vm_config.nat_num
+            web_proxy_needed = vm_config.web_num
+            bandwidth_up_needed = vm_config.speed_u
+            bandwidth_down_needed = vm_config.speed_d
 
-            # 计算IP数量
-            nic_all = data.get('nic_all', {})
+            # 计算IP数量（使用vm_config的nic_all）
             nat_ips_count = 0
             pub_ips_count = 0
-            for nic_name, nic_conf in nic_all.items():
-                nic_type = nic_conf.get('nic_type', 'nat')
+            for nic_name, nic_conf in vm_config.nic_all.items():
+                nic_type = getattr(nic_conf, 'nic_type', 'nat')
                 if nic_type == 'nat':
                     nat_ips_count += 1
                 elif nic_type == 'pub':
@@ -1364,22 +1397,22 @@ class RestManager:
 
         # 如果更新成功，更新第一个所有者（排除admin）的资源使用量
         if result and result.success and vm_owners:
-            cpu_change = int(data.get('cpu_num', 0)) - old_resource_usage['cpu']
-            ram_change = int(data.get('mem_num', 0)) - old_resource_usage['ram']
-            ssd_change = int(data.get('hdd_num', 0)) - old_resource_usage['ssd']
-            gpu_change = int(data.get('gpu_mem', 0)) - old_resource_usage['gpu']
-            traffic_change = int(data.get('flu_num', 0)) - old_resource_usage['traffic']
-            nat_ports_change = int(data.get('nat_num', 0)) - old_resource_usage.get('nat_ports', 0)
-            web_proxy_change = int(data.get('web_num', 0)) - old_resource_usage.get('web_proxy', 0)
-            bandwidth_up_change = int(data.get('speed_u', 0)) - old_resource_usage.get('bandwidth_up', 0)
-            bandwidth_down_change = int(data.get('speed_d', 0)) - old_resource_usage.get('bandwidth_down', 0)
+            # 使用vm_config的实际值计算资源变化
+            cpu_change = vm_config.cpu_num - old_resource_usage['cpu']
+            ram_change = vm_config.mem_num - old_resource_usage['ram']
+            ssd_change = vm_config.hdd_num - old_resource_usage['ssd']
+            gpu_change = vm_config.gpu_mem - old_resource_usage['gpu']
+            traffic_change = vm_config.flu_num - old_resource_usage['traffic']
+            nat_ports_change = vm_config.nat_num - old_resource_usage.get('nat_ports', 0)
+            web_proxy_change = vm_config.web_num - old_resource_usage.get('web_proxy', 0)
+            bandwidth_up_change = vm_config.speed_u - old_resource_usage.get('bandwidth_up', 0)
+            bandwidth_down_change = vm_config.speed_d - old_resource_usage.get('bandwidth_down', 0)
 
-            # 计算IP数量变化
-            nic_all = data.get('nic_all', {})
+            # 计算IP数量变化（使用vm_config的nic_all）
             new_nat_ips = 0
             new_pub_ips = 0
-            for nic_name, nic_conf in nic_all.items():
-                nic_type = nic_conf.get('nic_type', 'nat')
+            for nic_name, nic_conf in vm_config.nic_all.items():
+                nic_type = getattr(nic_conf, 'nic_type', 'nat')
                 if nic_type == 'nat':
                     new_nat_ips += 1
                 elif nic_type == 'pub':

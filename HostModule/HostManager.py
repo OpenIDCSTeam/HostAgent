@@ -69,179 +69,430 @@ class HostManage:
             return None
         return self.engine[hs_name]
 
-    # 添加主机 ###################################################################
+    # ========================================================================
+    # 添加主机
+    # ========================================================================
     def add_host(self, hs_name: str, hs_type: str, hs_conf: HSConfig) -> ZMessage:
+        """
+        添加新主机到管理系统
+        
+        Args:
+            hs_name: 主机名称
+            hs_type: 主机类型（如VMWareSetup、LxContainer等）
+            hs_conf: 主机配置对象
+            
+        Returns:
+            ZMessage: 操作结果
+        """
         try:
+            # 检查主机是否已存在 ================================================
             if hs_name in self.engine:
+                logger.warning(f'[添加主机] 主机已存在: {hs_name}')
                 return ZMessage(success=False, message="主机已添加")
+            
+            # 检查主机类型是否支持 ==============================================
             if hs_type not in HEConfig:
+                logger.warning(f'[添加主机] 不支持的主机类型: {hs_type}')
                 return ZMessage(success=False, message="不支持的主机类型")
-            # 设置server_name（关键！）=================
+            
+            # 设置server_name（关键！）=========================================
             hs_conf.server_name = hs_name
-            self.engine[hs_name] = HEConfig[hs_type]["Imported"](hs_conf, db=self.saving)
-            self.engine[hs_name].HSCreate()
-            self.engine[hs_name].HSLoader()
-            # 保存主机配置到数据库
-            self.saving.set_hs_config(hs_name, hs_conf)
+            logger.info(f'[添加主机] 开始添加主机: {hs_name}, 类型: {hs_type}')
+            
+            # 创建主机实例 ======================================================
+            try:
+                self.engine[hs_name] = HEConfig[hs_type]["Imported"](hs_conf, db=self.saving)
+            except Exception as e:
+                logger.error(f'[添加主机] 创建主机实例失败: {e}')
+                traceback.print_exc()
+                return ZMessage(success=False, message=f"创建主机实例失败: {str(e)}")
+            
+            # 初始化主机 ========================================================
+            try:
+                self.engine[hs_name].HSCreate()
+                self.engine[hs_name].HSLoader()
+            except Exception as e:
+                logger.error(f'[添加主机] 初始化主机失败: {e}')
+                traceback.print_exc()
+                # 清理已创建的实例
+                if hs_name in self.engine:
+                    del self.engine[hs_name]
+                return ZMessage(success=False, message=f"初始化主机失败: {str(e)}")
+            
+            # 保存主机配置到数据库 ==============================================
+            try:
+                self.saving.set_hs_config(hs_name, hs_conf)
+                logger.info(f'[添加主机] 主机添加成功: {hs_name}')
+            except Exception as e:
+                logger.error(f'[添加主机] 保存主机配置失败: {e}')
+                traceback.print_exc()
+                # 不影响主要功能，记录错误即可
+            
             return ZMessage(success=True, message="主机添加成功")
+            
         except Exception as e:
-            logger.error(f"添加主机失败: {e}")
+            # 捕获所有异常 ======================================================
+            logger.error(f'[添加主机] 添加主机失败: {e}')
             traceback.print_exc()
             return ZMessage(success=False, message=f"添加主机失败: {str(e)}")
 
-    # 删除主机 ###################################################################
+    # ========================================================================
+    # 删除主机
+    # ========================================================================
     def del_host(self, server):
+        """
+        从管理系统中删除主机
+        
+        Args:
+            server: 主机名称
+            
+        Returns:
+            bool: 删除是否成功
+        """
         try:
-            if server in self.engine:
-                del self.engine[server]
-                # 从数据库删除主机配置
+            # 检查主机是否存在 ==================================================
+            if server not in self.engine:
+                logger.warning(f'[删除主机] 主机不存在: {server}')
+                return False
+            
+            logger.info(f'[删除主机] 开始删除主机: {server}')
+            
+            # 卸载主机 ==========================================================
+            try:
+                if hasattr(self.engine[server], 'HSUnload'):
+                    self.engine[server].HSUnload()
+            except Exception as e:
+                logger.error(f'[删除主机] 卸载主机失败: {e}')
+                traceback.print_exc()
+                # 继续删除流程
+            
+            # 从引擎中删除主机 ==================================================
+            del self.engine[server]
+            
+            # 从数据库删除主机配置 ==============================================
+            try:
                 self.saving.del_hs_config(server)
-                return True
-            return False
+                logger.info(f'[删除主机] 主机删除成功: {server}')
+            except Exception as e:
+                logger.error(f'[删除主机] 删除数据库配置失败: {e}')
+                traceback.print_exc()
+                # 不影响主要功能，记录错误即可
+            
+            return True
+            
         except Exception as e:
-            logger.error(f"删除主机失败: {e}")
+            # 捕获所有异常 ======================================================
+            logger.error(f'[删除主机] 删除主机失败: {e}')
             traceback.print_exc()
             return False
 
-    # 修改主机 ###################################################################
+    # ========================================================================
+    # 修改主机配置
+    # ========================================================================
     def set_host(self, hs_name: str, hs_conf: HSConfig) -> ZMessage:
+        """
+        修改主机配置
+        
+        Args:
+            hs_name: 主机名称
+            hs_conf: 新的主机配置对象
+            
+        Returns:
+            ZMessage: 操作结果
+        """
         try:
+            # 检查主机是否存在 ==================================================
             if hs_name not in self.engine:
+                logger.warning(f'[修改主机] 主机未找到: {hs_name}')
                 return ZMessage(success=False, message="主机未找到")
-
-            # 保存原有的虚拟机配置
+            
+            logger.info(f'[修改主机] 开始修改主机配置: {hs_name}')
+            
+            # 保存原有的虚拟机配置 ==============================================
             old_server = self.engine[hs_name]
             old_vm_saving = old_server.vm_saving
-
-            # 设置server_name（关键！）=================
+            
+            # 设置server_name（关键！）=========================================
             hs_conf.server_name = hs_name
-            # 重新创建主机实例
-            self.engine[hs_name] = HEConfig[hs_conf.server_type]["Imported"](hs_conf, db=self.saving)
-
-            # 恢复虚拟机配置（状态数据已在数据库中）
+            
+            # 重新创建主机实例 ==================================================
+            try:
+                self.engine[hs_name] = HEConfig[hs_conf.server_type]["Imported"](hs_conf, db=self.saving)
+            except Exception as e:
+                logger.error(f'[修改主机] 创建新主机实例失败: {e}')
+                traceback.print_exc()
+                # 恢复原有实例
+                self.engine[hs_name] = old_server
+                return ZMessage(success=False, message=f"创建新主机实例失败: {str(e)}")
+            
+            # 恢复虚拟机配置（状态数据已在数据库中）============================
             self.engine[hs_name].vm_saving = old_vm_saving
-
-            self.engine[hs_name].HSUnload()
-            self.engine[hs_name].HSLoader()
-            # 保存主机配置到数据库
-            self.saving.set_hs_config(hs_name, hs_conf)
+            
+            # 卸载并重新加载主机 ================================================
+            try:
+                self.engine[hs_name].HSUnload()
+                self.engine[hs_name].HSLoader()
+            except Exception as e:
+                logger.error(f'[修改主机] 重新加载主机失败: {e}')
+                traceback.print_exc()
+                # 恢复原有实例
+                self.engine[hs_name] = old_server
+                return ZMessage(success=False, message=f"重新加载主机失败: {str(e)}")
+            
+            # 保存主机配置到数据库 ==============================================
+            try:
+                self.saving.set_hs_config(hs_name, hs_conf)
+                logger.info(f'[修改主机] 主机配置修改成功: {hs_name}')
+            except Exception as e:
+                logger.error(f'[修改主机] 保存主机配置失败: {e}')
+                traceback.print_exc()
+                # 不影响主要功能，记录错误即可
+            
             return ZMessage(success=True, message="主机更新成功")
+            
         except Exception as e:
-            logger.error(f"修改主机失败: {e}")
+            # 捕获所有异常 ======================================================
+            logger.error(f'[修改主机] 修改主机失败: {e}')
             traceback.print_exc()
             return ZMessage(success=False, message=f"修改主机失败: {str(e)}")
 
-    # 修改主机 ###################################################################
+    # ========================================================================
+    # 主机电源控制（启用/禁用）
+    # ========================================================================
     def pwr_host(self, hs_name: str, hs_flag: bool) -> ZMessage:
+        """
+        控制主机的启用/禁用状态
+        
+        Args:
+            hs_name: 主机名称
+            hs_flag: True=启用，False=禁用
+            
+        Returns:
+            ZMessage: 操作结果
+        """
         try:
+            # 检查主机是否存在 ==================================================
             if hs_name not in self.engine:
+                logger.warning(f'[主机电源控制] 主机未找到: {hs_name}')
                 return ZMessage(success=False, message="主机未找到")
-            if hs_flag:
-                self.engine[hs_name].HSLoader()
-            else:
-                self.engine[hs_name].HSUnload()
-            return ZMessage(success=True, message="主机启用状态=" + str(hs_flag))
+            
+            server = self.engine[hs_name]
+            
+            # 更新主机配置的启用状态 ============================================
+            if hasattr(server, 'hs_config') and server.hs_config:
+                server.hs_config.is_enabled = hs_flag
+                logger.info(f'[主机电源控制] 主机 {hs_name} 启用状态已更新为: {hs_flag}')
+            
+            # 执行启用/禁用操作 ================================================
+            try:
+                if hs_flag:
+                    # 启用主机 ====================================================
+                    server.HSLoader()
+                    logger.info(f'[主机电源控制] 主机 {hs_name} 已启用')
+                else:
+                    # 禁用主机 ====================================================
+                    server.HSUnload()
+                    logger.info(f'[主机电源控制] 主机 {hs_name} 已禁用')
+            except Exception as e:
+                logger.error(f'[主机电源控制] 执行启用/禁用操作失败: {e}')
+                traceback.print_exc()
+                return ZMessage(success=False, message=f"操作失败: {str(e)}")
+            
+            # 保存主机配置到数据库 ==============================================
+            try:
+                self.saving.set_hs_config(hs_name, server.hs_config)
+            except Exception as e:
+                logger.error(f'[主机电源控制] 保存主机配置失败: {e}')
+                traceback.print_exc()
+            
+            return ZMessage(success=True, message=f"主机{'启用' if hs_flag else '禁用'}成功")
+            
         except Exception as e:
-            logger.error(f"修改主机状态失败: {e}")
+            # 捕获所有异常 ======================================================
+            logger.error(f'[主机电源控制] 修改主机状态失败: {e}')
             traceback.print_exc()
             return ZMessage(success=False, message=f"修改主机状态失败: {str(e)}")
 
-    # 加载信息 ###################################################################
+    # ========================================================================
+    # 加载信息
+    # ========================================================================
     def all_load(self):
-        """从数据库加载所有信息"""
+        """
+        从数据库加载所有信息
+        包括：全局日志、HTTP代理、主机配置、虚拟机配置等
+        """
         try:
-            # 加载全局日志
-            self.logger = []
-            global_logs = self.saving.get_hs_logger()
-            for log_data in global_logs:
-                self.logger.append(ZMessage(**log_data) if isinstance(log_data, dict) else log_data)
-
-            # 启动Http实例
-            self.proxys = HttpManager()
-            # 不再调用 global_get，因为代理配置现在在虚拟机中
-            self.proxys.config_all()
-            self.proxys.launch_web()
-
-            # 删除全局代理配置的加载，不再使用 web_all
-
-            # 加载所有主机配置
-            host_configs = self.saving.all_hs_config()
-            for host_config in host_configs:
-                hs_name = host_config["hs_name"]
-
-                # 重建HSConfig对象
-                hs_conf_data = dict(host_config)
-                hs_conf_data["extend_data"] = json.loads(host_config["extend_data"]) if host_config[
-                    "extend_data"] else {}
-                # 解析新字段的JSON数据
-                hs_conf_data["system_maps"] = json.loads(host_config["system_maps"]) if host_config.get(
-                    "system_maps") else {}
-                hs_conf_data["images_maps"] = json.loads(host_config["images_maps"]) if host_config.get(
-                    "images_maps") else {}
-                hs_conf_data["public_addr"] = json.loads(host_config["public_addr"]) if host_config.get(
-                    "public_addr") else []
-                hs_conf_data["server_dnss"] = json.loads(host_config["server_dnss"]) if host_config.get(
-                    "server_dnss") else []
-                hs_conf_data["ipaddr_maps"] = json.loads(host_config["ipaddr_maps"]) if host_config.get(
-                    "ipaddr_maps") else {}
-                hs_conf_data["ipaddr_dnss"] = json.loads(host_config["ipaddr_dnss"]) if host_config.get(
-                    "ipaddr_dnss") else ["119.29.29.29", "223.5.5.5"]
-
-                # 移除数据库字段，只保留配置字段
-                for field in ["id", "hs_name", "created_at", "updated_at"]:
-                    hs_conf_data.pop(field, None)
-
-                hs_conf = HSConfig(**hs_conf_data)
-                # 设置server_name（关键！）=================
-                hs_conf.server_name = hs_name
-
-                # 获取主机完整数据
-                host_full_data = self.saving.get_ap_server(hs_name)
-
-                # 转换 vm_saving 字典为 VMConfig 对象
-                vm_saving_converted = {}
-                for vm_uuid, vm_config in host_full_data["vm_saving"].items():
-                    if isinstance(vm_config, dict):
-                        vm_saving_converted[vm_uuid] = VMConfig(**vm_config)
-                    else:
-                        vm_saving_converted[vm_uuid] = vm_config
-                    for web_data in vm_saving_converted[vm_uuid].web_all:
-                        self.proxys.create_web(
-                            (web_data.lan_port, web_data.lan_addr),
-                            web_data.web_addr, is_https=web_data.is_https
-                        )
-
-                # 创建BaseServer实例（状态数据由DataManage立即保存）=================
-                if hs_conf.server_type in HEConfig:
-                    server_class = HEConfig[hs_conf.server_type]["Imported"]
-                    self.engine[hs_name] = server_class(
-                        hs_conf,
-                        db=self.saving,
-                        vm_saving=vm_saving_converted
-                    )
-                    self.engine[hs_name].HSLoader()
+            logger.info('[加载配置] 开始加载系统配置')
+            
+            # 加载全局日志 ======================================================
+            try:
+                self.logger = []
+                global_logs = self.saving.get_hs_logger()
+                for log_data in global_logs:
+                    self.logger.append(ZMessage(**log_data) if isinstance(log_data, dict) else log_data)
+                logger.debug(f'[加载配置] 已加载 {len(self.logger)} 条全局日志')
+            except Exception as e:
+                logger.error(f'[加载配置] 加载全局日志失败: {e}')
+                traceback.print_exc()
+            
+            # 启动HTTP实例 ======================================================
+            try:
+                self.proxys = HttpManager()
+                self.proxys.config_all()
+                self.proxys.launch_web()
+                logger.debug('[加载配置] HTTP代理服务已启动')
+            except Exception as e:
+                logger.error(f'[加载配置] 启动HTTP代理服务失败: {e}')
+                traceback.print_exc()
+            
+            # 加载所有主机配置 ==================================================
+            try:
+                host_configs = self.saving.all_hs_config()
+                logger.debug(f'[加载配置] 找到 {len(host_configs)} 个主机配置')
+                
+                for host_config in host_configs:
+                    try:
+                        hs_name = host_config["hs_name"]
+                        logger.debug(f'[加载配置] 开始加载主机: {hs_name}')
+                        
+                        # 重建 HSConfig 对象 ==========================================
+                        hs_conf_data = dict(host_config)
+                        
+                        # 解析JSON字段 ============================================
+                        hs_conf_data["extend_data"] = json.loads(host_config["extend_data"]) if host_config["extend_data"] else {}
+                        hs_conf_data["system_maps"] = json.loads(host_config["system_maps"]) if host_config.get("system_maps") else {}
+                        hs_conf_data["images_maps"] = json.loads(host_config["images_maps"]) if host_config.get("images_maps") else {}
+                        hs_conf_data["public_addr"] = json.loads(host_config["public_addr"]) if host_config.get("public_addr") else []
+                        hs_conf_data["server_dnss"] = json.loads(host_config["server_dnss"]) if host_config.get("server_dnss") else []
+                        hs_conf_data["ipaddr_maps"] = json.loads(host_config["ipaddr_maps"]) if host_config.get("ipaddr_maps") else {}
+                        hs_conf_data["ipaddr_dnss"] = json.loads(host_config["ipaddr_dnss"]) if host_config.get("ipaddr_dnss") else ["119.29.29.29", "223.5.5.5"]
+                        
+                        # 移除数据库字段，只保留配置字段 ============================
+                        for field in ["id", "hs_name", "created_at", "updated_at"]:
+                            hs_conf_data.pop(field, None)
+                        
+                        hs_conf = HSConfig(**hs_conf_data)
+                        # 设置 server_name（关键！）=================================
+                        hs_conf.server_name = hs_name
+                        
+                        # 获取主机完整数据 ==========================================
+                        host_full_data = self.saving.get_ap_server(hs_name)
+                        
+                        # 转换 vm_saving 字典为 VMConfig 对象 =======================
+                        vm_saving_converted = {}
+                        for vm_uuid, vm_config in host_full_data["vm_saving"].items():
+                            if isinstance(vm_config, dict):
+                                vm_saving_converted[vm_uuid] = VMConfig(**vm_config)
+                            else:
+                                vm_saving_converted[vm_uuid] = vm_config
+                            
+                            # 创建Web代理 ==========================================
+                            for web_data in vm_saving_converted[vm_uuid].web_all:
+                                try:
+                                    self.proxys.create_web(
+                                        (web_data.lan_port, web_data.lan_addr),
+                                        web_data.web_addr, is_https=web_data.is_https
+                                    )
+                                except Exception as e:
+                                    logger.error(f'[加载配置] 创建Web代理失败: {e}')
+                                    traceback.print_exc()
+                        
+                        # 创建 BaseServer 实例 ========================================
+                        if hs_conf.server_type in HEConfig:
+                            server_class = HEConfig[hs_conf.server_type]["Imported"]
+                            self.engine[hs_name] = server_class(
+                                hs_conf,
+                                db=self.saving,
+                                vm_saving=vm_saving_converted
+                            )
+                            
+                            # 加载主机（如果启用）================================
+                            is_enabled = getattr(hs_conf, 'is_enabled', True)
+                            if is_enabled:
+                                try:
+                                    self.engine[hs_name].HSLoader()
+                                    logger.debug(f'[加载配置] 主机 {hs_name} 已加载')
+                                except Exception as e:
+                                    logger.error(f'[加载配置] 加载主机 {hs_name} 失败: {e}')
+                                    traceback.print_exc()
+                            else:
+                                logger.debug(f'[加载配置] 主机 {hs_name} 已禁用，跳过加载')
+                        else:
+                            logger.warning(f'[加载配置] 不支持的主机类型: {hs_conf.server_type}')
+                            
+                    except Exception as e:
+                        logger.error(f'[加载配置] 加载主机 {hs_name} 失败: {e}')
+                        traceback.print_exc()
+                        # 继续加载其他主机
+                        
+                logger.info(f'[加载配置] 系统配置加载完成，共加载 {len(self.engine)} 个主机')
+                
+            except Exception as e:
+                logger.error(f'[加载配置] 加载主机配置失败: {e}')
+                traceback.print_exc()
+                
         except Exception as e:
-            logger.error(f"加载数据时出错: {e}")
+            # 捕获所有异常 ======================================================
+            logger.error(f'[加载配置] 加载数据时出错: {e}')
             traceback.print_exc()
 
-    # 保存信息 ###################################################################
+    # ========================================================================
+    # 保存信息
+    # ========================================================================
     def all_save(self) -> bool:
-        """保存所有信息到数据库"""
+        """
+        保存所有信息到数据库
+        包括：全局日志、主机配置、虚拟机配置等
+        
+        Returns:
+            bool: 保存是否成功
+        """
         try:
+            logger.debug('[保存配置] 开始保存系统配置')
             success = True
-            # 保存全局日志
-            if self.logger:
-                self.saving.set_hs_logger(None, self.logger)
-
-            # 保存每个主机的配置数据（状态数据由DataManage立即保存）=================
+            
+            # 保存全局日志 ======================================================
+            try:
+                if self.logger:
+                    self.saving.set_hs_logger(None, self.logger)
+                    logger.debug(f'[保存配置] 已保存 {len(self.logger)} 条全局日志')
+            except Exception as e:
+                logger.error(f'[保存配置] 保存全局日志失败: {e}')
+                traceback.print_exc()
+                success = False
+            
+            # 保存每个主机的配置数据 ============================================
             for hs_name, server in self.engine.items():
-                success &= server.data_set()
-            # 关闭web服务器
-            if self.proxys is not None:
-                self.proxys.closed_web()
+                try:
+                    result = server.data_set()
+                    if not result:
+                        logger.warning(f'[保存配置] 主机 {hs_name} 配置保存失败')
+                        success = False
+                except Exception as e:
+                    logger.error(f'[保存配置] 保存主机 {hs_name} 配置失败: {e}')
+                    traceback.print_exc()
+                    success = False
+            
+            # 关闭Web服务器 ====================================================
+            try:
+                if self.proxys is not None:
+                    self.proxys.closed_web()
+                    logger.debug('[保存配置] Web服务器已关闭')
+            except Exception as e:
+                logger.error(f'[保存配置] 关闭Web服务器失败: {e}')
+                traceback.print_exc()
+                # 不影响整体保存结果
+            
+            if success:
+                logger.info('[保存配置] 系统配置保存成功')
+            else:
+                logger.warning('[保存配置] 系统配置保存部分失败')
+            
             return success
+            
         except Exception as e:
-            logger.error(f"保存数据时出错: {e}")
+            # 捕获所有异常 ======================================================
+            logger.error(f'[保存配置] 保存数据时出错: {e}')
             traceback.print_exc()
             return False
 
@@ -301,28 +552,61 @@ class HostManage:
         """
         return ZMessage(success=False, message="此函数已废弃，请使用 admin_delete_proxy 或 delete_vm_proxy_config")
 
-    # 定时任务 ###################################################################
+    # ========================================================================
+    # 定时任务
+    # ========================================================================
     def exe_cron(self):
         """
         执行定时任务
-        注意：状态数据已通过 DataManage 立即保存，无需在定时任务中保存 =================
+        注意：状态数据已通过 DataManage 立即保存，无需在定时任务中保存
         """
-        for server in self.engine:
-            logger.debug(f'[Cron] 执行{server}的定时任务')
-            self.engine[server].Crontabs()
-        
-        # 清理已删除虚拟机的状态数据
-        self._cleanup_deleted_vm_status()
-        
-        # 重新计算所有用户的资源配额
-        self._recalculate_user_quotas()
-        
-        logger.debug('[Cron] 执行定时任务完成')
+        try:
+            # 遍历所有主机，执行定时任务 ==========================================
+            for server_name in self.engine:
+                try:
+                    server = self.engine[server_name]
+                    
+                    # 检查主机是否启用 ============================================
+                    if hasattr(server, 'hs_config') and server.hs_config:
+                        is_enabled = getattr(server.hs_config, 'is_enabled', True)
+                        if not is_enabled:
+                            logger.debug(f'[Cron] 跳过禁用的主机: {server_name}')
+                            continue
+                    
+                    # 执行主机的定时任务 ==========================================
+                    logger.debug(f'[Cron] 执行主机 {server_name} 的定时任务')
+                    server.Crontabs()
+                    
+                except Exception as e:
+                    # 单个主机的定时任务失败不影响其他主机 ======================
+                    logger.error(f'[Cron] 主机 {server_name} 定时任务执行失败: {e}')
+                    traceback.print_exc()
+            
+            # 清理已删除虚拟机的状态数据 ==========================================
+            try:
+                self._cleanup_deleted_vm_status()
+            except Exception as e:
+                logger.error(f'[Cron] 清理已删除虚拟机状态数据失败: {e}')
+                traceback.print_exc()
+            
+            # 重新计算所有用户的资源配额 ==========================================
+            try:
+                self._recalculate_user_quotas()
+            except Exception as e:
+                logger.error(f'[Cron] 重新计算用户资源配额失败: {e}')
+                traceback.print_exc()
+            
+            logger.debug('[Cron] 定时任务执行完成')
+            
+        except Exception as e:
+            # 捕获整个定时任务的异常 ============================================
+            logger.error(f'[Cron] 定时任务执行失败: {e}')
+            traceback.print_exc()
     
     def _recalculate_user_quotas(self):
         """
-        遍历所有虚拟机，重新计算用户资源配额
-        只有虚拟机 own_all 列表中的第一个用户才占用配额
+        遍历所有虚拟机和容器，重新计算用户资源配额
+        只有虚拟机/容器 own_all 列表中的第一个用户才占用配额
         """
         try:
             # 获取所有用户
@@ -346,13 +630,13 @@ class HostManage:
                     'bandwidth_down': 0
                 }
             
-            # 遍历所有主机的所有虚拟机
+            # 遍历所有主机的所有虚拟机和容器
             for server_name, server in self.engine.items():
                 if not hasattr(server, 'vm_saving'):
                     continue
                 
                 for vm_uuid, vm_config in server.vm_saving.items():
-                    # 获取虚拟机的第一个所有者
+                    # 获取虚拟机/容器的第一个所有者
                     owners = getattr(vm_config, 'own_all', [])
                     if not owners:
                         continue

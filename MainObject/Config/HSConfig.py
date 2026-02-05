@@ -32,6 +32,7 @@ class HSConfig:
         self.images_maps: dict[str, str] = {}  # 镜像映射: 显示名称->文件名(xxx.iso)
         self.ipaddr_maps: dict[str, dict] = {}
         self.ipaddr_dnss: list = ["119.29.29.29", "223.5.5.5"]
+        self.is_enabled: bool = True  # 主机是否启用（True=启用，False=禁用）
         # 加载传入的参数 =======================
         if config is not None:
             self.__read__(config)
@@ -81,6 +82,7 @@ class HSConfig:
             "public_addr": self.public_addr,
             "extend_data": self.extend_data,
             "server_dnss": self.server_dnss,
+            "is_enabled": self.is_enabled,
         }
 
     # 转换为字符串 ===========================

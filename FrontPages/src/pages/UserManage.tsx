@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Table, Button, Space, Tag, Modal, Form, Input, Checkbox, InputNumber, message, Popconfirm, Divider, Row, Col } from 'antd'
+import { Table, Button, Space, Tag, Modal, Form, Input, Checkbox, InputNumber, message, Popconfirm, Divider, Row, Col, Typography } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons'
+
+const { Title } = Typography
 import api from '@/utils/apis.ts'
 import type { ColumnsType } from 'antd/es/table'
 import type { User } from '@/types'
@@ -31,9 +33,8 @@ function UserManage() {
     try {
       setLoading(true)
       const response = await api.getUsers()
-      if (response.code === 200) {
-        // response.data 是 PaginatedResponse<User> 类型，需要访问 items 属性
-        setUsers(response.data?.items || [])
+      if (response.code === 200 && response.data) {
+        setUsers(response.data)
       }
     } catch (error) {
       message.error('加载用户列表失败')
@@ -158,19 +159,19 @@ function UserManage() {
       title: '用户名',
       dataIndex: 'username',
       key: 'username',
-      width: 120,
+      width: 80,
     },
     {
       title: '邮箱',
       dataIndex: 'email',
       key: 'email',
-      width: 180,
+      width: 160,
     },
     {
       title: '角色',
       dataIndex: 'is_admin',
       key: 'is_admin',
-      width: 100,
+      width: 60,
       render: (is_admin: boolean) => (
         <Tag color={is_admin ? 'purple' : 'default'}>
           {is_admin ? '管理员' : '普通用户'}
@@ -181,7 +182,7 @@ function UserManage() {
       title: '状态',
       dataIndex: 'is_active',
       key: 'is_active',
-      width: 80,
+      width: 60,
       render: (is_active: boolean) => (
         <Tag color={is_active ? 'success' : 'error'}>
           {is_active ? '启用' : '禁用'}
@@ -193,22 +194,22 @@ function UserManage() {
       key: 'basic_quota',
       width: 180,
       render: (_, record) => (
-        <div className="space-y-1 text-xs">
+        <div className="space-y-1 text-xs text-gray-700 dark:text-gray-200">
           <div className="flex justify-between gap-2">
-            <span>CPU:</span>
-            <span className="font-mono">{record.used_cpu || 0}/{record.quota_cpu}</span>
+            <span className="text-gray-600 dark:text-gray-300">CPU:</span>
+            <span className="font-mono text-gray-800 dark:text-gray-100">{record.used_cpu || 0}/{record.quota_cpu}</span>
           </div>
           <div className="flex justify-between gap-2">
-            <span>RAM:</span>
-            <span className="font-mono">{Math.round((record.used_ram || 0) / 1024)}/{Math.round(record.quota_ram / 1024)}GB</span>
+            <span className="text-gray-600 dark:text-gray-300">RAM:</span>
+            <span className="font-mono text-gray-800 dark:text-gray-100">{Math.round((record.used_ram || 0) / 1024)}/{Math.round(record.quota_ram / 1024)}GB</span>
           </div>
           <div className="flex justify-between gap-2">
-            <span>SSD:</span>
-            <span className="font-mono">{Math.round((record.used_ssd || 0) / 1024)}/{Math.round(record.quota_ssd / 1024)}GB</span>
+            <span className="text-gray-600 dark:text-gray-300">SSD:</span>
+            <span className="font-mono text-gray-800 dark:text-gray-100">{Math.round((record.used_ssd || 0) / 1024)}/{Math.round(record.quota_ssd / 1024)}GB</span>
           </div>
           <div className="flex justify-between gap-2">
-            <span>GPU ID:</span>
-            <span className="font-mono">{record.gpu_ids || '0'}</span>
+            <span className="text-gray-600 dark:text-gray-300">GPU ID:</span>
+            <span className="font-mono text-gray-800 dark:text-gray-100">{record.gpu_ids || '0'}</span>
           </div>
         </div>
       ),
@@ -218,10 +219,10 @@ function UserManage() {
       key: 'gpu_quota',
       width: 120,
       render: (_, record) => (
-        <div className="text-xs">
+        <div className="text-xs text-gray-700 dark:text-gray-200">
           <div className="flex justify-between gap-2">
-            <span>GPU显存:</span>
-            <span className="font-mono">{Math.round((record.used_gpu || 0) / 1024)}/{Math.round(record.quota_gpu / 1024)}GB</span>
+            <span className="text-gray-600 dark:text-gray-300">GPU显存:</span>
+            <span className="font-mono text-gray-800 dark:text-gray-100">{Math.round((record.used_gpu || 0) / 1024)}/{Math.round(record.quota_gpu / 1024)}GB</span>
           </div>
         </div>
       ),
@@ -231,18 +232,18 @@ function UserManage() {
       key: 'bandwidth_quota',
       width: 150,
       render: (_, record) => (
-        <div className="space-y-1 text-xs">
+        <div className="space-y-1 text-xs text-gray-700 dark:text-gray-200">
           <div className="flex justify-between gap-2">
-            <span>上行:</span>
-            <span className="font-mono">{record.used_bandwidth_up || 0}/{record.quota_bandwidth_up}M</span>
+            <span className="text-gray-600 dark:text-gray-300">上行:</span>
+            <span className="font-mono text-gray-800 dark:text-gray-100">{record.used_bandwidth_up || 0}/{record.quota_bandwidth_up}M</span>
           </div>
           <div className="flex justify-between gap-2">
-            <span>下行:</span>
-            <span className="font-mono">{record.used_bandwidth_down || 0}/{record.quota_bandwidth_down}M</span>
+            <span className="text-gray-600 dark:text-gray-300">下行:</span>
+            <span className="font-mono text-gray-800 dark:text-gray-100">{record.used_bandwidth_down || 0}/{record.quota_bandwidth_down}M</span>
           </div>
           <div className="flex justify-between gap-2">
-            <span>流量:</span>
-            <span className="font-mono">{Math.round((record.used_traffic || 0) / 1024)}/{Math.round(record.quota_traffic / 1024)}GB</span>
+            <span className="text-gray-600 dark:text-gray-300">流量:</span>
+            <span className="font-mono text-gray-800 dark:text-gray-100">{Math.round((record.used_traffic || 0) / 1024)}/{Math.round(record.quota_traffic / 1024)}GB</span>
           </div>
         </div>
       ),
@@ -252,14 +253,14 @@ function UserManage() {
       key: 'network_quota',
       width: 120,
       render: (_, record) => (
-        <div className="space-y-1 text-xs">
+        <div className="space-y-1 text-xs text-gray-700 dark:text-gray-200">
           <div className="flex justify-between gap-2">
-            <span>NAT:</span>
-            <span className="font-mono">{record.used_nat_ports || 0}/{record.quota_nat_ports}</span>
+            <span className="text-gray-600 dark:text-gray-300">NAT:</span>
+            <span className="font-mono text-gray-800 dark:text-gray-100">{record.used_nat_ports || 0}/{record.quota_nat_ports}</span>
           </div>
           <div className="flex justify-between gap-2">
-            <span>WEB:</span>
-            <span className="font-mono">{record.used_web_proxy || 0}/{record.quota_web_proxy}</span>
+            <span className="text-gray-600 dark:text-gray-300">WEB:</span>
+            <span className="font-mono text-gray-800 dark:text-gray-100">{record.used_web_proxy || 0}/{record.quota_web_proxy}</span>
           </div>
         </div>
       ),
@@ -269,14 +270,14 @@ function UserManage() {
       key: 'ip_quota',
       width: 120,
       render: (_, record) => (
-        <div className="space-y-1 text-xs">
+        <div className="space-y-1 text-xs text-gray-700 dark:text-gray-200">
           <div className="flex justify-between gap-2">
-            <span>内网IP:</span>
-            <span className="font-mono">{record.used_nat_ips || 0}/{record.quota_nat_ips || 0}</span>
+            <span className="text-gray-600 dark:text-gray-300">内网IP:</span>
+            <span className="font-mono text-gray-800 dark:text-gray-100">{record.used_nat_ips || 0}/{record.quota_nat_ips || 0}</span>
           </div>
           <div className="flex justify-between gap-2">
-            <span>公网IP:</span>
-            <span className="font-mono">{record.used_pub_ips || 0}/{record.quota_pub_ips || 0}</span>
+            <span className="text-gray-600 dark:text-gray-300">公网IP:</span>
+            <span className="font-mono text-gray-800 dark:text-gray-100">{record.used_pub_ips || 0}/{record.quota_pub_ips || 0}</span>
           </div>
         </div>
       ),
@@ -313,20 +314,40 @@ function UserManage() {
   ]
 
   return (
-    <div>
+    <div className="p-6">
       {/* 页面标题 */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-          <UserOutlined className="text-gray-600" style={{ fontSize: 36 }} />
-          用户管理
-        </h1>
-        <p className="text-gray-600 mt-1">管理系统用户、权限和资源配额</p>
+      <div style={{ marginBottom: '32px' }}>
+        <Title 
+          level={2} 
+          style={{ 
+            margin: 0,
+            fontSize: '32px',
+            fontWeight: 700,
+            color: 'var(--text-primary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}
+        >
+          <UserOutlined style={{ width: '36px', height: '36px', color: 'var(--accent-primary)' }} />
+          平台用户管理
+        </Title>
+        <div style={{ 
+          marginTop: '8px',
+          fontSize: '14px',
+          color: 'var(--text-secondary)'
+        }}>
+          管理系统用户、权限和资源配额
+        </div>
       </div>
 
       {/* 用户列表 */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-gray-800">用户列表</h2>
+      <div className="glass-card" style={{
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)'
+      }}>
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">用户列表</h2>
           <Button
             type="primary"
             icon={<PlusOutlined />}
