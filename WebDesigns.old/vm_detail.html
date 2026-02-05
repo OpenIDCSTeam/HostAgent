@@ -2991,6 +2991,7 @@
             document.getElementById('editMemNum').value = config.mem_num ?? 0;
             document.getElementById('editHddNum').value = config.hdd_num ?? 0;
             document.getElementById('editGpuNum').value = config.gpu_num || 0;
+            document.getElementById('editGpuId').value = config.gpu_id || '';
             document.getElementById('editGpuMem').value = config.gpu_mem || 0;
             document.getElementById('editSpeedU').value = config.speed_u || 100;
             document.getElementById('editSpeedD').value = config.speed_d || 100;
@@ -3141,6 +3142,7 @@
             mem_num: parseInt(document.getElementById('editMemNum').value) || 0,
             hdd_num: hddNum,
             gpu_num: parseInt(document.getElementById('editGpuNum').value) || 0,
+            gpu_id: document.getElementById('editGpuId').value || '',
             gpu_mem: parseInt(document.getElementById('editGpuMem').value) || 0,
             speed_u: parseInt(document.getElementById('editSpeedU').value) || 100,
             speed_d: parseInt(document.getElementById('editSpeedD').value) || 100,

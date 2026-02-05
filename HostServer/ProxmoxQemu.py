@@ -369,18 +369,26 @@ class HostServer(BasicServer):
 
     # 创建虚拟机 ###############################################################
     def VMCreate(self, vm_conf: VMConfig) -> ZMessage:
+        logger.info(f"[{self.hs_config.server_name}] 开始创建虚拟机: {vm_conf.vm_uuid}")
+        logger.info(f"  - CPU: {vm_conf.cpu_num}核, 内存: {vm_conf.mem_num}MB")
+        logger.info(f"  - 网卡数量: {len(vm_conf.nic_all)}个")
+        logger.info(f"  - 系统镜像: {vm_conf.os_name}")
+        
         # 替换名称 ==================================================
         vm_conf.vm_uuid = vm_conf.vm_uuid.replace('_', '-')
         # 网络检查 ==================================================
         vm_conf, net_result = self.NetCheck(vm_conf)
         if not net_result.success:
+            logger.error(f"[{self.hs_config.server_name}] 网络检查失败: {net_result.message}")
             return net_result
         # 连接Proxmox API ===========================================
         client, result = self.api_conn()
         if not result.success:
+            logger.error(f"[{self.hs_config.server_name}] Proxmox连接失败: {result.message}")
             return result
         # 分配VMID ==================================================
         vm_vmid = self.new_vmid()
+        logger.info(f"[{self.hs_config.server_name}] 分配VMID: {vm_vmid}")
         if not hasattr(vm_conf, 'vm_data'):
             vm_conf.vm_data = {}
         vm_conf.vm_data['vmid'] = vm_vmid
@@ -401,19 +409,47 @@ class HostServer(BasicServer):
             # 配置网卡 ------------------------------------------
             config.update(self.net_conf(vm_conf))
             # 创建虚拟机 --------------------------------------------
+            logger.info(f"[{self.hs_config.server_name}] 正在创建虚拟机配置...")
             client.nodes(self.hs_config.launch_path).qemu.create(**config)
-            logger.info(f"虚拟机 {vm_conf.vm_uuid} 创建成功")
+            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_conf.vm_uuid} (VMID: {vm_vmid}) 创建成功")
+            
+            # 配置GPU直通 -------------------------------------------
+            if vm_conf.gpu_num > 0 and vm_conf.gpu_id:
+                logger.info(f"[{self.hs_config.server_name}] 配置GPU直通: {vm_conf.gpu_id}")
+                try:
+                    vm_conn = client.nodes(self.hs_config.launch_path).qemu(vm_vmid)
+                    # 添加PCI设备直通
+                    # 格式: hostpci0: 01:00.0,pcie=1
+                    gpu_config = {
+                        'hostpci0': f"{vm_conf.gpu_id},pcie=1"
+                    }
+                    vm_conn.config.put(**gpu_config)
+                    logger.info(f"[{self.hs_config.server_name}] GPU直通配置成功")
+                except Exception as gpu_error:
+                    logger.warning(f"[{self.hs_config.server_name}] GPU直通配置失败: {str(gpu_error)}")
+            
             # 配置路由器绑定（iKuai层面）----------------------------
+            logger.info(f"[{self.hs_config.server_name}] 配置路由器IP绑定...")
             ikuai_result = super().IPBinder(vm_conf, True)
             if not ikuai_result.success:
-                logger.warning(f"iKuai路由器绑定失败: {ikuai_result.message}")
+                logger.warning(f"[{self.hs_config.server_name}] iKuai路由器绑定失败: {ikuai_result.message}")
+            else:
+                logger.info(f"[{self.hs_config.server_name}] 路由器IP绑定成功")
+            
             # 安装系统 ----------------------------------------------
+            logger.info(f"[{self.hs_config.server_name}] 开始安装系统镜像...")
             result = self.VMSetups(vm_conf)
             if not result.success:
-                logger.warning(f"系统安装失败: {result.message}")
+                logger.warning(f"[{self.hs_config.server_name}] 系统安装失败: {result.message}")
+            else:
+                logger.info(f"[{self.hs_config.server_name}] 系统安装完成")
+            
+            logger.info(f"[{self.hs_config.server_name}] 启动虚拟机...")
             self.VMPowers(vm_conf.vm_uuid, VMPowers.S_START)
         # 捕获所有异常 ==============================================
         except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 虚拟机创建失败: {str(e)}")
+            logger.error(f"[{self.hs_config.server_name}] 错误详情:", exc_info=True)
             traceback.print_exc()
             hs_result = ZMessage(
                 success=False, action="VMCreate",
@@ -421,6 +457,7 @@ class HostServer(BasicServer):
             self.logs_set(hs_result)
             return hs_result
         # 通用操作 ==================================================
+        logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_conf.vm_uuid} 创建流程完成")
         self.data_set()
         return super().VMCreate(vm_conf)
 
@@ -508,10 +545,12 @@ class HostServer(BasicServer):
 
     # 配置虚拟机 ###############################################################
     def VMUpdate(self, vm_conf: VMConfig, vm_last: VMConfig) -> ZMessage:
+        logger.info(f"[{self.hs_config.server_name}] 开始更新虚拟机配置: {vm_conf.vm_uuid}")
         try:
             # 网络检查 =========================================================
             vm_conf, net_result = self.NetCheck(vm_conf)
             if not net_result.success:
+                logger.error(f"[{self.hs_config.server_name}] 网络检查失败: {net_result.message}")
                 return net_result
             
             # 连接Proxmox API ==================================================
@@ -531,36 +570,76 @@ class HostServer(BasicServer):
             # 停止机器 =========================================================
             status = vm.status.current.get()
             if status['status'] == 'running':
+                logger.info(f"[{self.hs_config.server_name}] 停止虚拟机以进行配置更新...")
                 self.VMPowers(vm_conf.vm_uuid, VMPowers.H_CLOSE)
             
             # 重装系统 =========================================================
             if vm_conf.os_name != vm_last.os_name and vm_last.os_name != "":
+                logger.info(f"[{self.hs_config.server_name}] 检测到系统镜像变更，重新安装系统...")
+                logger.info(f"  - 旧镜像: {vm_last.os_name}")
+                logger.info(f"  - 新镜像: {vm_conf.os_name}")
                 install_result = self.VMSetups(vm_conf)
                 if not install_result.success:
+                    logger.error(f"[{self.hs_config.server_name}] 系统重装失败: {install_result.message}")
                     return install_result
             
             # 更新配置 =========================================================
             config_updates = {}
             if vm_conf.cpu_num != vm_last.cpu_num and vm_conf.cpu_num > 0:
+                logger.info(f"[{self.hs_config.server_name}] CPU配置变更: {vm_last.cpu_num}核 -> {vm_conf.cpu_num}核")
                 config_updates['cores'] = vm_conf.cpu_num
             if vm_conf.mem_num != vm_last.mem_num and vm_conf.mem_num > 0:
+                logger.info(f"[{self.hs_config.server_name}] 内存配置变更: {vm_last.mem_num}MB -> {vm_conf.mem_num}MB")
                 config_updates['memory'] = vm_conf.mem_num
             
             # 配置网卡 =========================================================
             config_updates.update(self.net_conf(vm_conf))
+            
+            # 配置GPU直通 =======================================================
+            if vm_conf.gpu_num > 0 and vm_conf.gpu_id:
+                # 检查GPU配置是否变更
+                gpu_changed = (vm_conf.gpu_id != getattr(vm_last, 'gpu_id', ''))
+                if gpu_changed:
+                    logger.info(f"[{self.hs_config.server_name}] GPU配置变更: {getattr(vm_last, 'gpu_id', '无')} -> {vm_conf.gpu_id}")
+                    try:
+                        # 移除旧的GPU配置
+                        if hasattr(vm_last, 'gpu_id') and vm_last.gpu_id:
+                            vm.config.put(delete='hostpci0')
+                            logger.info(f"[{self.hs_config.server_name}] 已移除旧GPU配置")
+                        
+                        # 添加新的GPU配置
+                        config_updates['hostpci0'] = f"{vm_conf.gpu_id},pcie=1"
+                        logger.info(f"[{self.hs_config.server_name}] 已添加新GPU配置: {vm_conf.gpu_id}")
+                    except Exception as gpu_error:
+                        logger.warning(f"[{self.hs_config.server_name}] GPU配置更新失败: {str(gpu_error)}")
+            elif vm_conf.gpu_num == 0 and hasattr(vm_last, 'gpu_id') and vm_last.gpu_id:
+                # 移除GPU直通
+                logger.info(f"[{self.hs_config.server_name}] 移除GPU直通配置")
+                try:
+                    vm.config.put(delete='hostpci0')
+                    logger.info(f"[{self.hs_config.server_name}] GPU直通已移除")
+                except Exception as gpu_error:
+                    logger.warning(f"[{self.hs_config.server_name}] 移除GPU配置失败: {str(gpu_error)}")
+            
             if config_updates:
+                logger.info(f"[{self.hs_config.server_name}] 应用配置更新...")
                 vm.config.put(**config_updates)
-                logger.info(f"虚拟机 {vm_conf.vm_uuid} 配置已更新")
+                logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_conf.vm_uuid} 配置已更新")
             
             # 更新绑定 =========================================================
+            logger.info(f"[{self.hs_config.server_name}] 更新路由器IP绑定...")
             super().IPBinder(vm_last, False)
             ikuai_result = super().IPBinder(vm_conf, True)
             if not ikuai_result.success:
-                logger.warning(f"iKuai路由器绑定失败: {ikuai_result.message}")
+                logger.warning(f"[{self.hs_config.server_name}] iKuai路由器绑定失败: {ikuai_result.message}")
+            else:
+                logger.info(f"[{self.hs_config.server_name}] 路由器IP绑定更新成功")
             
             # 启动机器 =========================================================
+            logger.info(f"[{self.hs_config.server_name}] 启动虚拟机...")
             start_result = self.VMPowers(vm_conf.vm_uuid, VMPowers.S_START)
             if not start_result.success:
+                logger.error(f"[{self.hs_config.server_name}] 虚拟机启动失败: {start_result.message}")
                 return ZMessage(
                     success=False, action="VMUpdate",
                     message=f"虚拟机启动失败: {start_result.message}")
@@ -568,7 +647,8 @@ class HostServer(BasicServer):
             return super().VMUpdate(vm_conf, vm_last)
             
         except Exception as e:
-            logger.error(f"虚拟机更新失败: {str(e)}")
+            logger.error(f"[{self.hs_config.server_name}] 虚拟机更新失败: {str(e)}")
+            logger.error(f"[{self.hs_config.server_name}] 错误详情:", exc_info=True)
             traceback.print_exc()
             return ZMessage(
                 success=False, action="VMUpdate",
@@ -576,15 +656,18 @@ class HostServer(BasicServer):
 
     # 删除虚拟机 ###############################################################
     def VMDelete(self, vm_name: str, rm_back=True) -> ZMessage:
+        logger.info(f"[{self.hs_config.server_name}] 开始删除虚拟机: {vm_name}")
         try:
             # 连接Proxmox API ==================================================
             client, result = self.api_conn()
             if not result.success:
+                logger.error(f"[{self.hs_config.server_name}] Proxmox连接失败: {result.message}")
                 return result
             
             # 获取虚拟机配置 ===================================================
             vm_conf = self.VMSelect(vm_name)
             if vm_conf is None:
+                logger.error(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 不存在")
                 return ZMessage(
                     success=False, action="VMDelete",
                     message=f"虚拟机 {vm_name} 不存在")
@@ -602,20 +685,24 @@ class HostServer(BasicServer):
             # 停止虚拟机 =======================================================
             status = vm.status.current.get()
             if status['status'] == 'running':
+                logger.info(f"[{self.hs_config.server_name}] 虚拟机正在运行，先停止...")
                 self.VMPowers(vm_name, VMPowers.H_CLOSE)
             
             # 删除路由器绑定（iKuai层面）=======================================
+            logger.info(f"[{self.hs_config.server_name}] 删除路由器IP绑定...")
             super().IPBinder(vm_conf, False)
             
             # 删除虚拟机（会自动删除网卡配置）==================================
+            logger.info(f"[{self.hs_config.server_name}] 正在删除虚拟机 (VMID: {vm_vmid})...")
             vm.delete()
-            logger.info(f"虚拟机 {vm_name} (VMID: {vm_vmid}) 删除成功")
+            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} (VMID: {vm_vmid}) 删除成功")
             
             # 通用操作 =========================================================
             return super().VMDelete(vm_name)
             
         except Exception as e:
-            logger.error(f"删除虚拟机失败: {str(e)}")
+            logger.error(f"[{self.hs_config.server_name}] 删除虚拟机失败: {str(e)}")
+            logger.error(f"[{self.hs_config.server_name}] 错误详情:", exc_info=True)
             traceback.print_exc()
             return ZMessage(
                 success=False, action="VMDelete",
@@ -766,13 +853,18 @@ class HostServer(BasicServer):
 
     # 备份虚拟机 ###############################################################
     def VMBackup(self, vm_name: str, vm_tips: str) -> ZMessage:
+        logger.info(f"[{self.hs_config.server_name}] 开始备份虚拟机: {vm_name}")
+        logger.info(f"  - 备份说明: {vm_tips}")
+        
         # 连接到 Proxmox 服务器 ================================================
         client, result = self.api_conn()
         if not result.success:
+            logger.error(f"[{self.hs_config.server_name}] Proxmox连接失败: {result.message}")
             return result
         # 获取虚拟机配置 =======================================================
         vm_conf = self.VMSelect(vm_name)
         if not vm_conf:
+            logger.error(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 不存在")
             return ZMessage(
                 success=False,
                 action="Backup",
@@ -789,12 +881,15 @@ class HostServer(BasicServer):
             status = vm.status.current.get()
             is_running = status['status'] == 'running'
             if is_running:
+                logger.info(f"[{self.hs_config.server_name}] 虚拟机正在运行，先停止以进行备份...")
                 vm.status.stop.post()
-                logger.info(f"虚拟机 {vm_name} 已停止")
+                logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 已停止")
                 time.sleep(5)  # 等待虚拟机完全停止
             # 构建备份文件名
             bak_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             bak_file = f"{vm_name}_{bak_time}.vma"
+            logger.info(f"[{self.hs_config.server_name}] 备份文件名: {bak_file}")
+            
             # 创建备份
             backup_config = {
                 'vmid': vmid,
@@ -802,10 +897,11 @@ class HostServer(BasicServer):
                 'compress': 'gzip',
                 'storage': 'local',  # 备份存储位置
             }
+            logger.info(f"[{self.hs_config.server_name}] 正在创建备份任务...")
             task_id = client.nodes(
                 self.hs_config.launch_path
             ).vzdump.post(**backup_config)
-            logger.info(f"备份任务已创建，任务ID: {task_id}")
+            logger.info(f"[{self.hs_config.server_name}] 备份任务已创建，任务ID: {task_id}")
             # 等待备份完成 ==================================================
             max_wait_time = 3600  # 最大等待时间（秒），1小时
             check_interval = 5  # 检查间隔（秒）
@@ -816,16 +912,16 @@ class HostServer(BasicServer):
                     self.hs_config.launch_path
                 ).tasks(task_id).status.get()
                 status_value = task_status.get('status', '')
-                logger.info(f"备份{status_value}已等待: {all_time}秒")
+                logger.info(f"[{self.hs_config.server_name}] 备份{status_value}已等待: {all_time}秒")
                 # 任务成功完成 ----------------------------------------------
                 if status_value == 'stopped':
-                    logger.info(f"备份完成，总耗时: {all_time}秒")
+                    logger.info(f"[{self.hs_config.server_name}] 备份完成，总耗时: {all_time}秒")
                     break
                 time.sleep(check_interval)
                 all_time += check_interval
                 # 超时检查 --------------------------------------------------
                 if all_time >= max_wait_time:
-                    logger.error(f"备份任务超时，已等待{max_wait_time}秒")
+                    logger.error(f"[{self.hs_config.server_name}] 备份任务超时，已等待{max_wait_time}秒")
                     raise TimeoutError(f"备份超时，已等待{max_wait_time}秒")
             # 记录备份信息 ==================================================
             vm_conf.backups.append(VMBackup(
@@ -836,9 +932,11 @@ class HostServer(BasicServer):
             ))
             # 重新启动 ======================================================
             if is_running:
+                logger.info(f"[{self.hs_config.server_name}] 重新启动虚拟机...")
                 vm.status.start.post()
-                logger.info(f"虚拟机 {vm_name} 已重新启动")
+                logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 已重新启动")
             # 记录备份结果 ==================================================
+            logger.info(f"[{self.hs_config.server_name}] 虚拟机备份成功: {bak_file}，耗时: {all_time}秒")
             hs_result = ZMessage(
                 success=True, action="VMBackup",
                 message=f"虚拟机备份成功: {bak_file}，耗时: {all_time}秒",
@@ -851,7 +949,8 @@ class HostServer(BasicServer):
             return hs_result
         # 备份失败 ==========================================================
         except Exception as e:
-            logger.error(f"备份虚拟机失败: {str(e)}")
+            logger.error(f"[{self.hs_config.server_name}] 备份虚拟机失败: {str(e)}")
+            logger.error(f"[{self.hs_config.server_name}] 错误详情:", exc_info=True)
             traceback.print_exc()
             return ZMessage(
                 success=False, action="VMBackup",
@@ -1028,9 +1127,13 @@ class HostServer(BasicServer):
 
     # VM镜像挂载 ###############################################################
     def HDDMount(self, vm_name: str, vm_imgs: SDConfig, in_flag=True) -> ZMessage:
+        action_name = "挂载" if in_flag else "卸载"
+        logger.info(f"[{self.hs_config.server_name}] 开始{action_name}硬盘: {vm_imgs.hdd_name} -> 虚拟机 {vm_name}")
+        
         # 获取虚拟机信息 =======================================================
         result = self.get_info(vm_name)
         if not result.success:
+            logger.error(f"[{self.hs_config.server_name}] 获取虚拟机信息失败: {result.message}")
             return result
         vm_conn = result.results[0]
         vm_vmid = result.results[1]
@@ -1117,13 +1220,21 @@ class HostServer(BasicServer):
                 logger.info(f"硬盘{vm_imgs.hdd_name}已从虚拟机 {vm_name} 卸载")
             # 保存配置到数据库 =================================================
             self.data_set()
+            logger.info(f"[{self.hs_config.server_name}] 硬盘配置已保存到数据库")
+            
             # 重启虚拟机 =======================================================
-            self.VMPowers(vm_name, VMPowers.S_START) if vm_flag else None
+            if vm_flag:
+                logger.info(f"[{self.hs_config.server_name}] 重新启动虚拟机...")
+                self.VMPowers(vm_name, VMPowers.S_START)
+            
+            logger.info(f"[{self.hs_config.server_name}] 硬盘{action_name}成功: {vm_imgs.hdd_name}")
             return ZMessage(
                 success=True, action="HDDMount",
                 message=f"硬盘{"挂载" if in_flag else "卸载"}成功")
         # 捕获所有异常 =========================================================
         except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 硬盘{action_name}操作失败: {str(e)}")
+            logger.error(f"[{self.hs_config.server_name}] 错误详情:", exc_info=True)
             traceback.print_exc()
             return ZMessage(
                 success=False, action="HDDMount",
@@ -1132,10 +1243,13 @@ class HostServer(BasicServer):
     # ISO镜像挂载 ##############################################################
     def ISOMount(self, vm_name: str,
                  vm_imgs: IMConfig, in_flag=True) -> ZMessage:
+        action_name = "挂载" if in_flag else "卸载"
+        logger.info(f"[{self.hs_config.server_name}] 开始{action_name}ISO镜像: {vm_imgs.iso_name if in_flag else '所有ISO'} -> 虚拟机 {vm_name}")
         try:
             # 获取虚拟机信息 ===================================================
             result = self.get_info(vm_name)
             if not result.success:
+                logger.error(f"[{self.hs_config.server_name}] 获取虚拟机信息失败: {result.message}")
                 return result
             vm_conn = result.results[0]
             
@@ -1567,4 +1681,77 @@ class HostServer(BasicServer):
 
     # 查找显卡 #################################################################
     def GPUShows(self) -> dict[str, str]:
-        return {}
+        """获取可用的GPU设备列表（用于PCIE直通）
+        
+        Returns:
+            dict: GPU设备字典，格式为 {gpu_id: gpu_name}
+        """
+        try:
+            logger.info(f"[{self.hs_config.server_name}] 开始获取GPU设备列表")
+            
+            # 连接Proxmox API ==================================================
+            client, result = self.api_conn()
+            if not result.success:
+                logger.error(f"[{self.hs_config.server_name}] Proxmox连接失败: {result.message}")
+                return {}
+            
+            # 通过SSH执行命令获取GPU设备列表 ====================================
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            
+            try:
+                ssh.connect(
+                    self.hs_config.server_addr,
+                    username=self.hs_config.server_user,
+                    password=self.hs_config.server_pass
+                )
+                
+                # 使用lspci命令列出所有GPU设备 =================================
+                # 查找VGA和3D控制器设备
+                cmd = "lspci -nn | grep -E 'VGA|3D controller'"
+                stdin, stdout, stderr = ssh.exec_command(cmd)
+                output = stdout.read().decode('utf-8')
+                
+                gpu_dict = {}
+                
+                if output:
+                    lines = output.strip().split('\n')
+                    for line in lines:
+                        # 解析lspci输出
+                        # 格式: 01:00.0 VGA compatible controller [0300]: NVIDIA Corporation ...
+                        parts = line.split(' ', 1)
+                        if len(parts) >= 2:
+                            pci_id = parts[0]  # 例如: 01:00.0
+                            device_info = parts[1]  # 设备信息
+                            
+                            # 提取设备名称
+                            if ':' in device_info:
+                                device_name = device_info.split(':', 1)[1].strip()
+                                # 移除方括号中的设备ID
+                                if '[' in device_name:
+                                    device_name = device_name.split('[')[0].strip()
+                                
+                                gpu_dict[pci_id] = device_name
+                                logger.info(f"[{self.hs_config.server_name}] 发现GPU: {pci_id} - {device_name}")
+                
+                ssh.close()
+                
+                if gpu_dict:
+                    logger.info(f"[{self.hs_config.server_name}] 共找到 {len(gpu_dict)} 个GPU设备")
+                else:
+                    logger.warning(f"[{self.hs_config.server_name}] 未找到可用的GPU设备")
+                
+                return gpu_dict
+                
+            except Exception as ssh_error:
+                logger.error(f"[{self.hs_config.server_name}] SSH连接失败: {str(ssh_error)}")
+                try:
+                    ssh.close()
+                except:
+                    pass
+                return {}
+                
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 获取GPU设备列表失败: {str(e)}")
+            traceback.print_exc()
+            return {}

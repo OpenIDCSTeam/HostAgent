@@ -330,9 +330,11 @@ class HostServer(BasicServer):
     # :param vm_conf: 虚拟机配置对象
     #  :return: (更新后的虚拟机配置, 操作结果消息)
     def NetCheck(self, vm_conf: VMConfig) -> tuple:
+        logger.info(f"[{self.hs_config.server_name}] 开始网络检查: {vm_conf.vm_uuid}")
         # 连接到 Docker 服务器
         client, result = self.api_conn()
         if not result.success:
+            logger.error(f"[{self.hs_config.server_name}] 网络检查失败: Docker连接失败")
             return vm_conf, result
 
         try:
@@ -343,6 +345,7 @@ class HostServer(BasicServer):
             nic_types = {}
             for nic_name, nic_conf in vm_conf.nic_all.items():
                 if nic_conf.nic_type in nic_types:
+                    logger.warning(f"[{self.hs_config.server_name}] 网卡类型冲突: {nic_name} 和 {nic_types[nic_conf.nic_type]} 都是 {nic_conf.nic_type} 类型")
                     return vm_conf, ZMessage(
                         success=False,
                         action="NetCheck",
@@ -368,11 +371,13 @@ class HostServer(BasicServer):
                 if not need_ipv4:
                     # 如果已经有IP，检查是否被其他虚拟机占用
                     if nic_conf.ip4_addr.strip() in other_vms_ips:
+                        logger.error(f"[{self.hs_config.server_name}] IP冲突: {nic_conf.ip4_addr} 已被其他虚拟机使用")
                         return vm_conf, ZMessage(
                             success=False,
                             action="NetCheck",
                             message=f"网卡 {nic_name} 的IP地址 {nic_conf.ip4_addr} 已被其他虚拟机使用"
                         )
+                    logger.debug(f"[{self.hs_config.server_name}] 网卡 {nic_name} 已有IP: {nic_conf.ip4_addr}")
                     continue
 
                 # 获取Docker网络名称
@@ -486,14 +491,12 @@ class HostServer(BasicServer):
 
                         ip_allocated = True
                         logger.info(
-                            f"为网卡 {nic_name} 自动分配IP: {ip_str} "
-                            f"(网络: {network_name}, 范围: {ip_from} - {available_ips[-1]})"
-                        )
+                            f"[{self.hs_config.server_name}] 为网卡 {nic_name} 自动分配IP: {ip_str} "
+                            f"(网络: {network_name}, 范围: {ip_from} - {available_ips[-1]})")
                         break
 
                 except Exception as e:
-                    logger.error(f"处理IP分配时出错: {str(e)}")
-                    traceback.print_exc()
+                    logger.error(f"[{self.hs_config.server_name}] 处理IP分配时出错: {str(e)}", exc_info=True)
                     return vm_conf, ZMessage(
                         success=False,
                         action="NetCheck",
@@ -501,6 +504,7 @@ class HostServer(BasicServer):
 
                 # 如果没有分配到IP，返回失败
                 if not ip_allocated:
+                    logger.error(f"[{self.hs_config.server_name}] 无法为网卡 {nic_name} 分配IP，网络 {network_name} 无可用IP")
                     return vm_conf, ZMessage(
                         success=False,
                         action="NetCheck",
@@ -508,6 +512,7 @@ class HostServer(BasicServer):
                                 f"Docker网络 {network_name} 中的所有IP已被占用或无可用IP"
                     )
 
+            logger.info(f"[{self.hs_config.server_name}] 网络配置检查完成: {vm_conf.vm_uuid}")
             return vm_conf, ZMessage(
                 success=True,
                 action="NetCheck",
@@ -515,8 +520,7 @@ class HostServer(BasicServer):
             )
 
         except Exception as e:
-            logger.error(f"网络检查时出错: {str(e)}")
-            traceback.print_exc()
+            logger.error(f"[{self.hs_config.server_name}] 网络检查时出错: {str(e)}", exc_info=True)
             return vm_conf, ZMessage(
                 success=False,
                 action="NetCheck",
@@ -526,9 +530,11 @@ class HostServer(BasicServer):
 
     # 虚拟机扫描 ###############################################################
     def VMDetect(self) -> ZMessage:
+        logger.info(f"[{self.hs_config.server_name}] 开始扫描Docker容器")
         # 专用操作 =============================================================
         client, result = self.api_conn()
         if not result.success:
+            logger.error(f"[{self.hs_config.server_name}] 容器扫描失败: Docker连接失败")
             return result
         try:
             # 获取所有容器列表（包括停止的）
@@ -556,9 +562,11 @@ class HostServer(BasicServer):
             if added_count > 0:
                 success = self.data_set()
                 if not success:
+                    logger.error(f"[{self.hs_config.server_name}] 保存扫描结果到数据库失败")
                     return ZMessage(
                         success=False, action="VScanner",
                         message="Failed to save scanned containers to database")
+            logger.info(f"[{self.hs_config.server_name}] 容器扫描完成: 扫描{scanned_count}个，新增{added_count}个")
             return ZMessage(
                 success=True,
                 action="VScanner",
@@ -570,6 +578,7 @@ class HostServer(BasicServer):
                 }
             )
         except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 扫描容器时出错: {str(e)}", exc_info=True)
             return ZMessage(
                 success=False, action="VScanner",
                 message=f"扫描容器时出错: {str(e)}")
@@ -644,13 +653,20 @@ class HostServer(BasicServer):
 
     # 创建虚拟机 ###############################################################
     def VMCreate(self, vm_conf: VMConfig) -> ZMessage:
+        logger.info(f"[{self.hs_config.server_name}] 开始创建容器: {vm_conf.vm_uuid}")
+        logger.info(f"  - 镜像: {vm_conf.os_name}")
+        logger.info(f"  - CPU: {vm_conf.cpu_num}核")
+        logger.info(f"  - 内存: {vm_conf.mem_num}MB")
+        logger.info(f"  - 网卡数量: {len(vm_conf.nic_all)}个")
         # 网络检查 =============================================================
         vm_conf, results = self.NetCheck(vm_conf)
         if not results.success:
+            logger.error(f"[{self.hs_config.server_name}] 容器创建失败: 网络检查未通过")
             return results
         # 专用操作 =============================================================
         client, result = self.api_conn()
         if not result.success:
+            logger.error(f"[{self.hs_config.server_name}] 容器创建失败: Docker连接失败")
             return result
         try:
             try:  # 容器是否存在 ==========================================
@@ -677,13 +693,13 @@ class HostServer(BasicServer):
             # 启动容器 =========================================================
             container.start()
             self.VMPasswd(vm_conf.vm_uuid, vm_conf.os_pass)
-            logger.info(f"Container {vm_conf.vm_uuid} created successfully")
+            logger.success(f"[{self.hs_config.server_name}] 容器创建成功: {vm_conf.vm_uuid}")
         # 捕获所有异常 =========================================================
         except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 容器创建失败: {vm_conf.vm_uuid} - {str(e)}", exc_info=True)
             hs_result = ZMessage(
                 success=False, action="VMCreate",
                 message=f"容器创建失败: {str(e)}")
-            traceback.print_exc()
             self.logs_set(hs_result)
             return hs_result
         # 通用操作 =============================================================
@@ -740,13 +756,16 @@ class HostServer(BasicServer):
 
     # 配置虚拟机 ###############################################################
     def VMUpdate(self, vm_conf: VMConfig, vm_last: VMConfig) -> ZMessage:
+        logger.info(f"[{self.hs_config.server_name}] 开始更新容器配置: {vm_conf.vm_uuid}")
         # 通用操作 =============================================================
         vm_conf, net_result = self.NetCheck(vm_conf)
         if not net_result.success:
+            logger.error(f"[{self.hs_config.server_name}] 容器更新失败: 网络检查未通过")
             return net_result
         # 专用操作 =============================================================
         client, result = self.api_conn()
         if not result.success:
+            logger.error(f"[{self.hs_config.server_name}] 容器更新失败: Docker连接失败")
             return result
         try:
             container_name = vm_conf.vm_uuid
@@ -796,26 +815,30 @@ class HostServer(BasicServer):
             # 更新密码
             self.VMPowers(container_name, VMPowers.S_START)
             self.VMPasswd(vm_conf.vm_uuid, vm_conf.os_pass)
+            logger.success(f"[{self.hs_config.server_name}] 容器配置更新成功: {container_name}")
             hs_result = ZMessage(
                 success=True, action="VMUpdate",
                 message=f"容器 {container_name} 配置更新成功")
             self.logs_set(hs_result)
             return hs_result
         except Exception as e:
-            traceback.print_exc()
+            logger.error(f"[{self.hs_config.server_name}] 容器更新失败: {container_name} - {str(e)}", exc_info=True)
             return ZMessage(
                 success=False, action="VMUpdate",
                 message=f"容器更新失败: {str(e)}")
 
     # 删除虚拟机 ###############################################################
     def VMDelete(self, vm_name: str, rm_back=True) -> ZMessage:
+        logger.info(f"[{self.hs_config.server_name}] 开始删除容器: {vm_name} (删除备份: {rm_back})")
         # 专用操作 =============================================================
         client, result = self.api_conn()
         if not result.success:
+            logger.error(f"[{self.hs_config.server_name}] 容器删除失败: Docker连接失败")
             return result
         # 获取虚拟机配置 =======================================================
         vm_conf = self.VMSelect(vm_name)
         if vm_conf is None:
+            logger.warning(f"[{self.hs_config.server_name}] 容器配置不存在: {vm_name}")
             return ZMessage(
                 success=False, action="VMDelete",
                 message=f"容器 {vm_name} 不存在")
@@ -827,13 +850,11 @@ class HostServer(BasicServer):
                 self.VMPowers(vm_name, VMPowers.H_CLOSE)
             # 删除容器（包括卷）
             container.remove(v=True, force=True)
-            logger.info(f"Container {vm_name} deleted successfully")
+            logger.info(f"[{self.hs_config.server_name}] 容器已删除: {vm_name}")
         except NotFound:
-            logger.warning(f"Container {vm_name} not found in Docker")
-            traceback.print_exc()
+            logger.warning(f"[{self.hs_config.server_name}] 容器在Docker中不存在: {vm_name}")
         except Exception as e:
-            logger.error(f"删除容器失败: {str(e)}")
-            traceback.print_exc()
+            logger.error(f"[{self.hs_config.server_name}] 删除容器失败: {vm_name} - {str(e)}", exc_info=True)
             return ZMessage(
                 success=False, action="VMDelete",
                 message=f"删除容器失败: {str(e)}")
@@ -875,19 +896,32 @@ class HostServer(BasicServer):
                     traceback.print_exc()
 
         if deleted_images:
-            logger.info(f"共删除 {len(deleted_images)} 个镜像标签")
+            logger.info(f"[{self.hs_config.server_name}] 共删除 {len(deleted_images)} 个镜像标签")
         # 删除备份 =====================================================
         if rm_back:
+            logger.info(f"[{self.hs_config.server_name}] 删除容器备份和挂载: {vm_name}")
             self.RMBackup(vm_name, "")
             self.RMMounts(vm_name, "")
         # 通用操作 =============================================================
+        logger.success(f"[{self.hs_config.server_name}] 容器删除完成: {vm_name}")
         return super().VMDelete(vm_name)
 
     # 虚拟机电源 ###############################################################
     def VMPowers(self, vm_name: str, power: VMPowers) -> ZMessage:
+        power_map = {
+            VMPowers.S_START: "启动",
+            VMPowers.H_CLOSE: "强制关机",
+            VMPowers.S_CLOSE: "正常关机",
+            VMPowers.S_RESET: "正常重启",
+            VMPowers.H_RESET: "强制重启",
+            VMPowers.A_PAUSE: "暂停",
+            VMPowers.A_WAKED: "恢复"
+        }
+        logger.info(f"[{self.hs_config.server_name}] 容器电源操作: {vm_name} - {power_map.get(power, '未知')}")
         # 专用操作 =============================================================
         client, result = self.api_conn()
         if not result.success:
+            logger.error(f"[{self.hs_config.server_name}] 电源操作失败: Docker连接失败")
             return result
         try:
             container = client.containers.get(vm_name)
@@ -895,9 +929,9 @@ class HostServer(BasicServer):
             if power == VMPowers.S_START:
                 if container.status != "running":
                     container.start()
-                    logger.info(f"Container {vm_name} started")
+                    logger.success(f"[{self.hs_config.server_name}] 容器已启动: {vm_name}")
                 else:
-                    logger.info(f"Container {vm_name} is already running")
+                    logger.info(f"[{self.hs_config.server_name}] 容器已在运行: {vm_name}")
 
             elif power == VMPowers.H_CLOSE or power == VMPowers.S_CLOSE:
                 logger.info(f"Attempting to stop container {vm_name} with current status: {container.status}")
@@ -968,21 +1002,20 @@ class HostServer(BasicServer):
                         success=False, action="VMPowers",
                         message=f"无法恢复容器 {vm_name}，当前状态: {container.status}")
 
+            logger.success(f"[{self.hs_config.server_name}] 电源操作成功: {vm_name} - {power_map.get(power, '未知')}")
             hs_result = ZMessage(success=True, action="VMPowers")
             self.logs_set(hs_result)
 
         except NotFound:
+            logger.error(f"[{self.hs_config.server_name}] 容器不存在: {vm_name}")
             hs_result = ZMessage(
                 success=False, action="VMPowers",
                 message=f"Container {vm_name} does not exist")
             self.logs_set(hs_result)
-            logger.error(f"Container {vm_name} not found during power operation")
-            traceback.print_exc()
             return hs_result
         except Exception as e:
             error_msg = f"电源操作失败: {str(e)}"
-            logger.error(f"Power operation failed for container {vm_name}: {str(e)}")
-            logger.error(traceback.format_exc())
+            logger.error(f"[{self.hs_config.server_name}] 电源操作失败: {vm_name} - {str(e)}", exc_info=True)
 
             # 提供更具体的错误诊断信息
             if "permission" in str(e).lower():
@@ -1034,9 +1067,11 @@ class HostServer(BasicServer):
 
     # 设置虚拟机密码 ###########################################################
     def VMPasswd(self, vm_name: str, os_pass: str) -> ZMessage:
+        logger.info(f"[{self.hs_config.server_name}] 开始设置容器密码: {vm_name}")
         # 专用操作 =============================================================
         client, result = self.api_conn()
         if not result.success:
+            logger.error(f"[{self.hs_config.server_name}] 设置密码失败: Docker连接失败")
             return result
 
         try:
@@ -1059,31 +1094,34 @@ class HostServer(BasicServer):
                     success=False, action="Password",
                     message=f"设置密码失败: {output}")
 
-            logger.info(f"容器 {vm_name} 的root密码已更新")
+            logger.success(f"[{self.hs_config.server_name}] 容器root密码已更新: {vm_name}")
 
             hs_result = ZMessage(success=True, action="Password", message="密码设置成功")
             self.logs_set(hs_result)
             return hs_result
 
         except NotFound:
-            traceback.print_exc()
+            logger.error(f"[{self.hs_config.server_name}] 容器不存在: {vm_name}")
             return ZMessage(
                 success=False, action="Password",
                 message=f"容器 {vm_name} 不存在")
         except Exception as e:
-            traceback.print_exc()
+            logger.error(f"[{self.hs_config.server_name}] 设置密码失败: {vm_name} - {str(e)}", exc_info=True)
             return ZMessage(
                 success=False, action="Password",
                 message=f"设置密码失败: {str(e)}")
 
     # 备份虚拟机 ###############################################################
     def VMBackup(self, vm_name: str, vm_tips: str) -> ZMessage:
+        logger.info(f"[{self.hs_config.server_name}] 开始备份容器: {vm_name} (备注: {vm_tips})")
         # 专用操作 =============================================================
         client, result = self.api_conn()
         if not result.success:
+            logger.error(f"[{self.hs_config.server_name}] 备份失败: Docker连接失败")
             return result
         vm_conf = self.VMSelect(vm_name)
         if not vm_conf:
+            logger.error(f"[{self.hs_config.server_name}] 备份失败: 容器配置不存在 - {vm_name}")
             return ZMessage(
                 success=False,
                 action="Backup",
@@ -1148,6 +1186,7 @@ class HostServer(BasicServer):
                 containers.start()
                 logger.info(f"容器 {vm_name} 已重新启动")
             # 记录备份结果 ===============================================
+            logger.success(f"[{self.hs_config.server_name}] 容器备份成功: {vm_name} -> {bak_file}")
             hs_result = ZMessage(
                 success=True, action="VMBackup",
                 message=f"容器备份成功，文件: {bak_file}",
@@ -1159,23 +1198,24 @@ class HostServer(BasicServer):
             return hs_result
         # 处理异常 =======================================================
         except NotFound:
-            traceback.print_exc()
+            logger.error(f"[{self.hs_config.server_name}] 容器不存在: {vm_name}")
             return ZMessage(
                 success=False, action="VMBackup",
                 message=f"容器 {vm_name} 不存在")
         # 处理其他异常 ===================================================
         except Exception as e:
-            logger.error(f"备份容器失败: {str(e)}")
-            traceback.print_exc()
+            logger.error(f"[{self.hs_config.server_name}] 备份容器失败: {vm_name} - {str(e)}", exc_info=True)
             return ZMessage(
                 success=False, action="VMBackup",
                 message=f"备份失败: {str(e)}")
 
     # 恢复虚拟机 ###############################################################
     def Restores(self, vm_name: str, vm_back: str) -> ZMessage:
+        logger.info(f"[{self.hs_config.server_name}] 开始恢复容器: {vm_name} <- {vm_back}")
         # 连接接口 =============================================================
         client, result = self.api_conn()
         if not result.success:
+            logger.error(f"[{self.hs_config.server_name}] 恢复失败: Docker连接失败")
             return result
         # 获取VM配置 ===========================================================
         vm_conf = self.VMSelect(vm_name)
@@ -1298,6 +1338,7 @@ class HostServer(BasicServer):
             logger.info(f"容器 {vm_name} 恢复成功")
             # 保存配置 ======================================================
             self.vm_saving[vm_name] = vm_conf
+            logger.success(f"[{self.hs_config.server_name}] 容器恢复成功: {vm_name} <- {vm_back}")
             hs_result = ZMessage(
                 success=True, action="Restores",
                 message=f"容器恢复成功: {vm_name}",
@@ -1308,8 +1349,7 @@ class HostServer(BasicServer):
             return hs_result
         # 处理异常 ==========================================================
         except Exception as e:
-            logger.error(f"恢复容器失败: {str(e)}")
-            traceback.print_exc()
+            logger.error(f"[{self.hs_config.server_name}] 恢复容器失败: {vm_name} - {str(e)}", exc_info=True)
             return ZMessage(
                 success=False, action="Restores",
                 message=f"恢复失败: {str(e)}")

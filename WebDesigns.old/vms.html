@@ -447,7 +447,48 @@
             window.banEdit = hostData.ban_edit || [];
             window.serverMessages = hostData.messages || [];
             updateOsOptions();
+            // 加载GPU列表
+            loadGPUList();
         }
+    }
+
+    // 加载GPU设备列表
+    async function loadGPUList() {
+        try {
+            const result = await apiRequest(`/api/client/gpu-list/${hostName}`);
+            if (result && result.code === 200) {
+                const gpuList = result.data || {};
+                updateGPUOptions('gpuId', gpuList);
+                updateGPUOptions('editGpuId', gpuList);
+            }
+        } catch (error) {
+            console.error('加载GPU列表失败:', error);
+        }
+    }
+
+    // 更新GPU下拉选项
+    function updateGPUOptions(selectId, gpuList) {
+        const gpuSelect = document.getElementById(selectId);
+        if (!gpuSelect) return;
+        
+        // 保留"无GPU直通"选项
+        gpuSelect.innerHTML = '<option value="">无GPU直通</option>';
+        
+        // 添加GPU选项
+        for (const [gpuId, gpuName] of Object.entries(gpuList)) {
+            const option = document.createElement('option');
+            option.value = gpuId;
+            option.textContent = `${gpuId} - ${gpuName}`;
+            gpuSelect.appendChild(option);
+        }
+        
+        // 监听GPU选择变化，自动更新gpu_num
+        gpuSelect.addEventListener('change', function() {
+            const gpuNumInput = document.getElementById(selectId.replace('Id', 'Num'));
+            if (gpuNumInput) {
+                gpuNumInput.value = this.value ? '1' : '0';
+            }
+        });
     }
 
     // 根据禁用字段列表禁用表单元素
@@ -1497,6 +1538,7 @@
             mem_num: parseInt(document.getElementById('memNum').value) || 0,
             hdd_num: hddNum,
             gpu_num: parseInt(document.getElementById('gpuNum').value) || 0,
+            gpu_id: document.getElementById('gpuId').value || '',
             gpu_mem: parseInt(document.getElementById('gpuMem').value) || 0,
             speed_u: parseInt(document.getElementById('speedU').value) || 100,
             speed_d: parseInt(document.getElementById('speedD').value) || 100,

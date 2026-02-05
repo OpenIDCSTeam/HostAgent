@@ -828,6 +828,20 @@ class RestManager:
             'tab_lock': tab_lock
         })
 
+    def get_gpu_list(self, hs_name):
+        """获取主机的GPU设备列表（普通用户可访问）"""
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return self.api_response(404, '主机不存在')
+
+        # 调用主机的GPUShows方法获取GPU列表
+        try:
+            gpu_list = server.GPUShows()
+            return self.api_response(200, 'success', gpu_list)
+        except Exception as e:
+            logger.error(f"获取GPU列表失败: {str(e)}")
+            return self.api_response(500, f'获取GPU列表失败: {str(e)}')
+
     # 添加主机 ########################################################################
     # :return: 主机添加结果的API响应
     # ####################################################################################

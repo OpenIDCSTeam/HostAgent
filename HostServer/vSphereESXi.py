@@ -369,16 +369,23 @@ class HostServer(BasicServer):
 
         # 专用操作 =============================================================
         try:
+            logger.info(f"[{self.hs_config.server_name}] 开始创建虚拟机: {vm_conf.vm_uuid}")
+            logger.info(f"  - CPU: {vm_conf.cpu_num}核, 内存: {vm_conf.mem_num}MB, 磁盘: {vm_conf.hdd_num}GB")
+            logger.info(f"  - 网卡数量: {len(vm_conf.nic_all)}, 系统镜像: {vm_conf.os_name}")
+            
             # 连接到ESXi =======================================================
             connect_result = self.esxi_api.connect()
             if not connect_result.success:
+                logger.error(f"[{self.hs_config.server_name}] 连接ESXi失败: {connect_result.message}")
                 return connect_result
 
             # 创建虚拟机 =======================================================
             create_result = self.esxi_api.create_vm(vm_conf, self.hs_config)
             if not create_result.success:
+                logger.error(f"[{self.hs_config.server_name}] 创建虚拟机失败: {create_result.message}")
                 self.esxi_api.disconnect()
                 return create_result
+            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_conf.vm_uuid} 创建成功")
 
             # 安装系统 =========================================================
             if vm_conf.os_name:
@@ -390,23 +397,51 @@ class HostServer(BasicServer):
                     return install_result
 
             # 启动虚拟机 =======================================================
+            logger.info(f"[{self.hs_config.server_name}] 启动虚拟机 {vm_conf.vm_uuid}")
             self.esxi_api.power_on(vm_conf.vm_uuid)
 
             # 断开连接 =========================================================
             self.esxi_api.disconnect()
 
-            logger.info(f"虚拟机 {vm_conf.vm_uuid} 创建成功")
+            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_conf.vm_uuid} 创建完成并已启动")
 
-        except Exception as e:
-            # 异常处理 =========================================================
-            logger.error(f"虚拟机创建失败: {str(e)}")
+        except ConnectionError as e:
+            # 网络连接异常 =====================================================
+            logger.error(f"[{self.hs_config.server_name}] 虚拟机创建失败 - 网络连接错误: {str(e)}")
             import traceback
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
             except:
                 pass
-            # 创建失败时清理
+            hs_result = ZMessage(
+                success=False, action="VMCreate",
+                message=f"网络连接失败: {str(e)}")
+            self.logs_set(hs_result)
+            return hs_result
+        except PermissionError as e:
+            # 权限异常 =========================================================
+            logger.error(f"[{self.hs_config.server_name}] 虚拟机创建失败 - 权限不足: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            try:
+                self.esxi_api.disconnect()
+            except:
+                pass
+            hs_result = ZMessage(
+                success=False, action="VMCreate",
+                message=f"权限不足: {str(e)}")
+            self.logs_set(hs_result)
+            return hs_result
+        except Exception as e:
+            # 其他异常 =========================================================
+            logger.error(f"[{self.hs_config.server_name}] 虚拟机创建失败 - 未预期错误: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            try:
+                self.esxi_api.disconnect()
+            except:
+                pass
             hs_result = ZMessage(
                 success=False, action="VMCreate",
                 message=f"虚拟机创建失败: {str(e)}")
@@ -494,8 +529,20 @@ class HostServer(BasicServer):
 
             # 更新硬盘 =========================================================
             if vm_conf.hdd_num > vm_last.hdd_num:
-                # TODO: 实现磁盘扩容
-                logger.warning("ESXi磁盘扩容功能待实现")
+                logger.info(f"[{self.hs_config.server_name}] 开始扩容虚拟机 {vm_conf.vm_uuid} 磁盘: {vm_last.hdd_num}GB -> {vm_conf.hdd_num}GB")
+                try:
+                    # 调用ESXi API扩容主磁盘
+                    expand_result = self.esxi_api.expand_disk(vm_conf.vm_uuid, vm_conf.hdd_num)
+                    if expand_result.success:
+                        logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_conf.vm_uuid} 磁盘扩容成功")
+                    else:
+                        logger.error(f"[{self.hs_config.server_name}] 虚拟机 {vm_conf.vm_uuid} 磁盘扩容失败: {expand_result.message}")
+                        self.esxi_api.disconnect()
+                        return expand_result
+                except Exception as disk_e:
+                    logger.error(f"[{self.hs_config.server_name}] 磁盘扩容异常: {str(disk_e)}")
+                    import traceback
+                    traceback.print_exc()
 
             # 更新网卡设备 =====================================================
             network_result = self.esxi_api.update_network_adapters(vm_conf.vm_uuid, vm_conf, vm_last, self.hs_config)
@@ -544,9 +591,12 @@ class HostServer(BasicServer):
     def VMDelete(self, vm_name: str, rm_back=True) -> ZMessage:
         # 专用操作 =============================================================
         try:
+            logger.info(f"[{self.hs_config.server_name}] 开始删除虚拟机: {vm_name}")
+            
             # 检查虚拟机是否存在 ===============================================
             vm_conf = self.VMSelect(vm_name)
             if vm_conf is None:
+                logger.warning(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 不存在")
                 return ZMessage(
                     success=False,
                     action="VMDelete",
@@ -555,12 +605,15 @@ class HostServer(BasicServer):
             # 连接到ESXi =======================================================
             connect_result = self.esxi_api.connect()
             if not connect_result.success:
+                logger.error(f"[{self.hs_config.server_name}] 连接ESXi失败: {connect_result.message}")
                 return connect_result
 
             # 删除网络绑定 =====================================================
+            logger.info(f"[{self.hs_config.server_name}] 删除虚拟机 {vm_name} 的网络绑定")
             self.IPBinder(vm_conf, False)
 
             # 删除虚拟机 =======================================================
+            logger.info(f"[{self.hs_config.server_name}] 从ESXi删除虚拟机 {vm_name}")
             delete_result = self.esxi_api.delete_vm(vm_name)
 
             # 断开连接 =========================================================
@@ -571,11 +624,14 @@ class HostServer(BasicServer):
             self.data_set()
             
             if not delete_result.success:
+                logger.error(f"[{self.hs_config.server_name}] 删除虚拟机失败: {delete_result.message}")
                 return delete_result
+            
+            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 删除成功")
 
         except Exception as e:
             # 异常处理 =========================================================
-            logger.error(f"删除虚拟机失败: {str(e)}")
+            logger.error(f"[{self.hs_config.server_name}] 删除虚拟机 {vm_name} 失败: {str(e)}", exc_info=True)
             import traceback
             traceback.print_exc()
             try:
@@ -772,7 +828,11 @@ class HostServer(BasicServer):
                     return ZMessage(
                         success=False, action="HDDMount", message="磁盘不存在")
 
-                # TODO: 实现磁盘卸载
+                # 卸载磁盘
+                logger.info(f"[{self.hs_config.server_name}] 卸载虚拟机 {vm_name} 的磁盘: {vm_imgs.hdd_name}")
+                remove_result = self.esxi_api.remove_disk(vm_name, vm_imgs.hdd_name)
+                if not remove_result.success:
+                    logger.warning(f"[{self.hs_config.server_name}] 磁盘卸载失败: {remove_result.message}")
                 self.vm_saving[vm_name].hdd_all[vm_imgs.hdd_name].hdd_flag = 0
 
             # 启动虚拟机 =======================================================
@@ -837,6 +897,7 @@ class HostServer(BasicServer):
                     iso_dir = "images"
 
                 iso_path = f"[{iso_datastore}] {iso_dir}/{vm_imgs.iso_file}"
+                logger.info(f"[{self.hs_config.server_name}] 挂载ISO到虚拟机 {vm_name}: {iso_path}")
 
                 # 挂载ISO =======================================================
                 attach_result = self.esxi_api.attach_iso(vm_name, iso_path)
@@ -861,9 +922,13 @@ class HostServer(BasicServer):
                     return ZMessage(
                         success=False, action="ISOMount", message="ISO镜像不存在")
 
-                # TODO: 实现ISO卸载（设置为空）
+                # 卸载ISO（设置为空）
+                logger.info(f"[{self.hs_config.server_name}] 卸载虚拟机 {vm_name} 的ISO: {vm_imgs.iso_name}")
+                detach_result = self.esxi_api.detach_iso(vm_name)
+                if not detach_result.success:
+                    logger.warning(f"[{self.hs_config.server_name}] ISO卸载失败: {detach_result.message}")
                 del self.vm_saving[vm_name].iso_all[vm_imgs.iso_name]
-                logger.info(f"ISO卸载成功: {vm_imgs.iso_name}")
+                logger.info(f"[{self.hs_config.server_name}] ISO卸载成功: {vm_imgs.iso_name}")
 
             # 启动虚拟机 =======================================================
             self.esxi_api.power_on(vm_name)
@@ -1055,7 +1120,17 @@ class HostServer(BasicServer):
             self.vm_saving[vm_name].hdd_all.pop(vm_imgs)
             self.data_set()
 
-            # TODO: 从ESXi中删除磁盘文件
+            # 从ESXi中删除磁盘文件
+            logger.info(f"[{self.hs_config.server_name}] 从ESXi删除虚拟机 {vm_name} 的磁盘文件: {vm_imgs}")
+            try:
+                connect_result = self.esxi_api.connect()
+                if connect_result.success:
+                    delete_file_result = self.esxi_api.delete_disk_file(vm_name, vm_imgs)
+                    if not delete_file_result.success:
+                        logger.warning(f"[{self.hs_config.server_name}] 删除磁盘文件失败: {delete_file_result.message}")
+                    self.esxi_api.disconnect()
+            except Exception as del_e:
+                logger.warning(f"[{self.hs_config.server_name}] 删除磁盘文件异常: {str(del_e)}")
 
             return ZMessage(
                 success=True, action="RMMounts",
@@ -1075,11 +1150,79 @@ class HostServer(BasicServer):
 
     # 查找显卡 =================================================================
     def GPUShows(self) -> dict[str, str]:
-        # 专用操作 =============================================================
-        # ESXi的GPU直通需要特殊配置，这里返回空字典
-        # TODO: 实现ESXi GPU查询
-        # 通用操作 =============================================================
-        return {}
+        """获取可用的GPU设备列表（用于PCIE直通）
+        
+        Returns:
+            dict: GPU设备字典，格式为 {gpu_id: gpu_name}
+        """
+        try:
+            logger.info(f"[{self.hs_config.server_name}] 开始获取GPU设备列表")
+            
+            # 连接到ESXi ======================================================
+            connect_result = self.esxi_api.connect()
+            if not connect_result.success:
+                logger.error(f"[{self.hs_config.server_name}] ESXi连接失败: {connect_result.message}")
+                return {}
+            
+            # 获取主机的PCI设备列表 ============================================
+            try:
+                from pyVmomi import vim
+                
+                # 获取主机对象
+                host = self.esxi_api.get_host()
+                if not host:
+                    logger.error(f"[{self.hs_config.server_name}] 无法获取ESXi主机对象")
+                    self.esxi_api.disconnect()
+                    return {}
+                
+                gpu_dict = {}
+                
+                # 获取主机的PCI设备信息
+                if hasattr(host, 'hardware') and hasattr(host.hardware, 'pciDevice'):
+                    for pci_device in host.hardware.pciDevice:
+                        # 查找GPU设备（VGA控制器和3D控制器）
+                        # classId: 0x0300 = VGA控制器, 0x0302 = 3D控制器
+                        if pci_device.classId in [0x0300, 0x0302]:
+                            # 构建PCI ID（格式：domain:bus:slot.function）
+                            pci_id = f"{pci_device.id}"
+                            
+                            # 获取设备名称
+                            device_name = pci_device.deviceName if hasattr(pci_device, 'deviceName') else pci_device.vendorName
+                            
+                            # 检查设备是否可用于直通
+                            passthru_capable = False
+                            if hasattr(host.config, 'pciPassthruInfo'):
+                                for passthru_info in host.config.pciPassthruInfo:
+                                    if passthru_info.id == pci_device.id:
+                                        passthru_capable = passthru_info.passthruEnabled
+                                        break
+                            
+                            status = "可直通" if passthru_capable else "未启用直通"
+                            gpu_dict[pci_id] = f"{device_name} ({status})"
+                            logger.info(f"[{self.hs_config.server_name}] 发现GPU: {pci_id} - {device_name} ({status})")
+                
+                self.esxi_api.disconnect()
+                
+                if gpu_dict:
+                    logger.info(f"[{self.hs_config.server_name}] 共找到 {len(gpu_dict)} 个GPU设备")
+                else:
+                    logger.warning(f"[{self.hs_config.server_name}] 未找到可用的GPU设备")
+                
+                return gpu_dict
+                
+            except Exception as api_error:
+                logger.error(f"[{self.hs_config.server_name}] 获取PCI设备失败: {str(api_error)}")
+                traceback.print_exc()
+                try:
+                    self.esxi_api.disconnect()
+                except:
+                    pass
+                return {}
+                
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 获取GPU设备列表失败: {str(e)}")
+            traceback.print_exc()
+            return {}
 
     # 虚拟机截图 ===============================================================
     def VMScreen(self, vm_name: str = "") -> str:

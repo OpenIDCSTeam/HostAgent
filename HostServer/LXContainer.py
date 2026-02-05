@@ -678,10 +678,17 @@ class HostServer(BasicServer):
 
         try:
             container_name = vm_conf.vm_uuid
+            logger.info(f"[{self.hs_config.server_name}] 开始创建容器: {container_name}")
+            logger.info(f"  - CPU: {vm_conf.cpu_num}核")
+            logger.info(f"  - 内存: {vm_conf.mem_num}MB")
+            logger.info(f"  - 磁盘: {vm_conf.hdd_num}GB")
+            logger.info(f"  - 网卡数量: {len(vm_conf.nic_all)}个")
+            logger.info(f"  - 系统镜像: {vm_conf.os_name}")
 
             # 检查容器是否已存在
             try:
                 client.containers.get(container_name)
+                logger.error(f"[{self.hs_config.server_name}] 容器已存在: {container_name}")
                 return ZMessage(
                     success=False, action="VMCreate",
                     message=f"Container {container_name} already exists")
@@ -699,7 +706,9 @@ class HostServer(BasicServer):
             }
 
             # 创建容器
+            logger.info(f"[{self.hs_config.server_name}] 正在创建容器配置...")
             container = client.containers.create(config, wait=True)
+            logger.info(f"[{self.hs_config.server_name}] 容器配置创建成功")
 
             # 安装系统（从模板）
             install_result = self.VMSetups(vm_conf)
@@ -709,11 +718,15 @@ class HostServer(BasicServer):
                 raise Exception(f"Failed to install system: {install_result.message}")
 
             # 启动容器
+            logger.info(f"[{self.hs_config.server_name}] 正在启动容器...")
             container.start(wait=True)
 
-            logger.info(f"Container {container_name} created successfully")
+            logger.info(f"[{self.hs_config.server_name}] ✓ 容器创建成功: {container_name}")
 
         except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] ✗ 容器创建失败: {container_name}")
+            logger.error(f"  错误详情: {str(e)}")
+            traceback.print_exc()
             hs_result = ZMessage(
                 success=False, action="VMCreate",
                 message=f"容器创建失败: {str(e)}")
@@ -827,6 +840,7 @@ class HostServer(BasicServer):
 
     # 配置虚拟机 ###############################################################
     def VMUpdate(self, vm_conf: VMConfig, vm_last: VMConfig) -> ZMessage:
+        logger.info(f"[{self.hs_config.server_name}] 开始更新容器配置: {vm_conf.vm_uuid}")
         vm_conf, net_result = self.NetCheck(vm_conf)
         if not net_result.success:
             return net_result
@@ -843,34 +857,48 @@ class HostServer(BasicServer):
 
             # 停止容器
             if container.status == "Running":
+                logger.info(f"[{self.hs_config.server_name}] 正在停止容器以更新配置...")
                 self.VMPowers(container_name, VMPowers.H_CLOSE)
 
             # 重装系统（如果系统镜像改变）
             if vm_conf.os_name != vm_last.os_name and vm_last.os_name != "":
+                logger.info(f"[{self.hs_config.server_name}] 检测到系统镜像变更，正在重装系统...")
+                logger.info(f"  旧镜像: {vm_last.os_name}")
+                logger.info(f"  新镜像: {vm_conf.os_name}")
                 install_result = self.VMSetups(vm_conf)
                 if not install_result.success:
                     return install_result
 
             # 更新网络配置
+            logger.info(f"[{self.hs_config.server_name}] 正在更新网络配置...")
             network_result = self.IPUpdate(vm_conf, vm_last)
             if not network_result.success:
+                logger.error(f"[{self.hs_config.server_name}] 网络配置更新失败")
                 return ZMessage(
                     success=False, action="VMUpdate",
                     message=f"网络配置更新失败: {network_result.message}")
 
             # 更新容器配置
+            logger.info(f"[{self.hs_config.server_name}] 正在更新容器资源配置...")
             container.config.update(self.oci_conf(vm_conf))
             container.devices.update(self.dev_conf(vm_conf))
             container.save(wait=True)
 
             # 启动容器
+            logger.info(f"[{self.hs_config.server_name}] 正在启动容器...")
             start_result = self.VMPowers(container_name, VMPowers.S_START)
             if not start_result.success:
+                logger.error(f"[{self.hs_config.server_name}] 容器启动失败")
                 return ZMessage(
                     success=False, action="VMUpdate",
                     message=f"容器启动失败: {start_result.message}")
+            
+            logger.info(f"[{self.hs_config.server_name}] ✓ 容器配置更新成功: {container_name}")
 
         except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] ✗ 容器更新失败: {container_name}")
+            logger.error(f"  错误详情: {str(e)}")
+            traceback.print_exc()
             return ZMessage(
                 success=False, action="VMUpdate",
                 message=f"容器更新失败: {str(e)}")
@@ -881,6 +909,7 @@ class HostServer(BasicServer):
     # 删除虚拟机 ###############################################################
     def VMDelete(self, vm_name: str, rm_back=True) -> ZMessage:
         # 专用操作 =============================================================
+        logger.info(f"[{self.hs_config.server_name}] 开始删除容器: {vm_name}")
         client, result = self.lxd_conn()
         if not result.success:
             return result
@@ -888,6 +917,7 @@ class HostServer(BasicServer):
         try:
             vm_conf = self.VMSelect(vm_name)
             if vm_conf is None:
+                logger.error(f"[{self.hs_config.server_name}] 容器配置不存在: {vm_name}")
                 return ZMessage(
                     success=False, action="VMDelete",
                     message=f"容器 {vm_name} 不存在")
@@ -896,19 +926,25 @@ class HostServer(BasicServer):
 
             # 停止容器
             if container.status == "Running":
+                logger.info(f"[{self.hs_config.server_name}] 正在停止容器...")
                 self.VMPowers(vm_name, VMPowers.H_CLOSE)
 
             # 删除网络配置
+            logger.info(f"[{self.hs_config.server_name}] 正在清理网络配置...")
             self.IPBinder(vm_conf, False)
 
             # 删除容器
+            logger.info(f"[{self.hs_config.server_name}] 正在删除容器...")
             container.delete(wait=True)
 
-            logger.info(f"Container {vm_name} deleted successfully")
+            logger.info(f"[{self.hs_config.server_name}] ✓ 容器删除成功: {vm_name}")
 
         except NotFound:
-            logger.warning(f"Container {vm_name} not found in LXD")
+            logger.warning(f"[{self.hs_config.server_name}] 容器在LXD中不存在: {vm_name}")
         except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] ✗ 删除容器失败: {vm_name}")
+            logger.error(f"  错误详情: {str(e)}")
+            traceback.print_exc()
             return ZMessage(
                 success=False, action="VMDelete",
                 message=f"删除容器失败: {str(e)}")

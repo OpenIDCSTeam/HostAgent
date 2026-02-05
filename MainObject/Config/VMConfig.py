@@ -26,8 +26,9 @@ class VMConfig:
         self.vc_pass = ""  # 分配VNC远程的密码
         # 资源配置 ===========================
         self.cpu_num = 2  # 分配的处理器核心数
-        self.gpu_num = 0  # 分配物理卡(0-没有)
         self.cpu_per = 50  # 分配CPU可用百分比
+        self.gpu_num = 0  # 分配物理卡(0-没有)
+        self.gpu_id = ""  # GPU设备ID（用于PCIE直通）
         self.gpu_mem = 0  # 分配显存值-(#0)
         self.mem_num = 2048  # 分配内存数-(MB)
         self.hdd_num = 8192  # 分配硬盘数-(MB)
@@ -131,6 +132,7 @@ class VMConfig:
             "cpu_num": self.cpu_num,
             "cpu_per": self.cpu_per,
             "gpu_num": self.gpu_num,
+            "gpu_id": self.gpu_id,
             "gpu_mem": self.gpu_mem,
             "mem_num": self.mem_num,
             "hdd_num": self.hdd_num,

@@ -269,6 +269,50 @@ class HyperVAPI:
 
             if result.success:
                 logger.info(f"虚拟机 {vm_name} 创建成功")
+                
+                # 如果配置了GPU，添加GPU PV支持 =====================================
+                if vm_conf.gpu_num > 0:
+                    logger.info(f"虚拟机 {vm_name} 配置了GPU，开始添加GPU PV支持...")
+                    
+                    # 获取可用的GPU设备列表
+                    gpu_devices = self.get_gpu_devices()
+                    if gpu_devices and "gpus" in gpu_devices and len(gpu_devices["gpus"]) > 0:
+                        # 选择第一个可用的GPU（可以根据gpu_num选择特定GPU）
+                        selected_gpu = None
+                        for gpu in gpu_devices["gpus"]:
+                            if gpu.get("Type") == "Partitionable":
+                                available = gpu.get("Available", 0)
+                                if available > 0:
+                                    selected_gpu = gpu
+                                    break
+                        
+                        if selected_gpu:
+                            gpu_name = selected_gpu.get("Name", "")
+                            logger.info(f"选择GPU: {gpu_name}")
+                            
+                            # 添加GPU PV适配器
+                            gpu_percentage = 100 // vm_conf.gpu_num if vm_conf.gpu_num > 0 else 100
+                            add_result = self.add_gpu_pv(vm_name, gpu_name, gpu_percentage)
+                            
+                            if add_result.success:
+                                logger.info(f"虚拟机 {vm_name} GPU PV适配器添加成功")
+                                
+                                # 拷贝GPU驱动到虚拟机
+                                if vm_conf.os_name:  # 只有在有系统盘时才拷贝驱动
+                                    logger.info(f"开始拷贝GPU驱动到虚拟机 {vm_name}...")
+                                    copy_result = self.copy_gpu_drivers(vm_name, gpu_name)
+                                    
+                                    if copy_result.success:
+                                        logger.info(f"虚拟机 {vm_name} GPU驱动拷贝成功")
+                                    else:
+                                        logger.warning(f"虚拟机 {vm_name} GPU驱动拷贝失败: {copy_result.message}")
+                            else:
+                                logger.warning(f"虚拟机 {vm_name} GPU PV适配器添加失败: {add_result.message}")
+                        else:
+                            logger.warning(f"虚拟机 {vm_name} 未找到可用的GPU设备")
+                    else:
+                        logger.warning(f"虚拟机 {vm_name} 系统中没有可用的GPU设备")
+                
                 return ZMessage(success=True, action="CreateVM", message="虚拟机创建成功")
             else:
                 return ZMessage(success=False, action="CreateVM", message=result.message)
@@ -831,6 +875,168 @@ class HyperVAPI:
             logger.error(f"查询GPU设备失败: {str(e)}")
             logger.error(traceback.format_exc())
             return {"gpus": []}
+
+    # 添加GPU PV适配器 ##############################################################
+    # :param vm_name: 虚拟机名称
+    # :param gpu_name: GPU设备名称
+    # :param gpu_percentage: GPU资源分配百分比（默认100）
+    # :return: ZMessage
+    ################################################################################
+    def add_gpu_pv(self, vm_name: str, gpu_name: str, gpu_percentage: int = 100) -> ZMessage:
+        """
+        为虚拟机添加GPU PV（分区虚拟化）适配器
+        
+        Args:
+            vm_name: 虚拟机名称
+            gpu_name: GPU设备名称
+            gpu_percentage: GPU资源分配百分比（默认100）
+            
+        Returns:
+            ZMessage: 操作结果
+        """
+        try:
+            # 调用UpdatePV.ps1脚本添加GPU PV适配器
+            script_path = f"{self._get_script_dir()}\\UpdatePV.ps1"
+            
+            command = f"""
+            # 确保虚拟机已关闭
+            $VM = Get-VM -Name '{vm_name}'
+            if ($VM.State -ne 'Off') {{
+                Stop-VM -Name '{vm_name}' -Force
+                Start-Sleep -Seconds 3
+            }}
+            
+            # 添加GPU分区适配器
+            Add-VMGpuPartitionAdapter -VMName '{vm_name}'
+            
+            # 设置GPU资源分配
+            $devider = [math]::round(100 / {gpu_percentage}, 2)
+            
+            Set-VMGpuPartitionAdapter -VMName '{vm_name}' `
+                -MinPartitionVRAM ([math]::round(1000000000 / $devider)) `
+                -MaxPartitionVRAM ([math]::round(1000000000 / $devider)) `
+                -OptimalPartitionVRAM ([math]::round(1000000000 / $devider))
+            
+            Set-VMGPUPartitionAdapter -VMName '{vm_name}' `
+                -MinPartitionEncode ([math]::round(18446744073709551615 / $devider)) `
+                -MaxPartitionEncode ([math]::round(18446744073709551615 / $devider)) `
+                -OptimalPartitionEncode ([math]::round(18446744073709551615 / $devider))
+            
+            Set-VMGpuPartitionAdapter -VMName '{vm_name}' `
+                -MinPartitionDecode ([math]::round(1000000000 / $devider)) `
+                -MaxPartitionDecode ([math]::round(1000000000 / $devider)) `
+                -OptimalPartitionDecode ([math]::round(1000000000 / $devider))
+            
+            Set-VMGpuPartitionAdapter -VMName '{vm_name}' `
+                -MinPartitionCompute ([math]::round(1000000000 / $devider)) `
+                -MaxPartitionCompute ([math]::round(1000000000 / $devider)) `
+                -OptimalPartitionCompute ([math]::round(1000000000 / $devider))
+            
+            Write-Output "GPU PV适配器添加成功"
+            """
+            
+            result = self._run_powershell(command)
+            
+            if result.success:
+                logger.info(f"虚拟机 {vm_name} GPU PV适配器添加成功")
+                return ZMessage(success=True, action="AddGPUPV", message="GPU PV适配器添加成功")
+            else:
+                logger.error(f"添加GPU PV适配器失败: {result.message}")
+                return ZMessage(success=False, action="AddGPUPV", message=result.message)
+                
+        except Exception as e:
+            logger.error(f"添加GPU PV适配器失败: {str(e)}")
+            logger.error(traceback.format_exc())
+            return ZMessage(success=False, action="AddGPUPV", message=str(e))
+
+    # 拷贝GPU驱动到虚拟机 ###########################################################
+    # :param vm_name: 虚拟机名称
+    # :param gpu_name: GPU设备名称
+    # :return: ZMessage
+    ################################################################################
+    def copy_gpu_drivers(self, vm_name: str, gpu_name: str) -> ZMessage:
+        """
+        拷贝GPU驱动文件到虚拟机
+        
+        Args:
+            vm_name: 虚拟机名称
+            gpu_name: GPU设备名称
+            
+        Returns:
+            ZMessage: 操作结果
+        """
+        try:
+            # 调用UpdateDS.ps1脚本拷贝驱动
+            script_path = f"{self._get_script_dir()}\\UpdateDS.ps1"
+            
+            command = f"""
+            # 确保虚拟机已关闭
+            $VM = Get-VM -Name '{vm_name}'
+            if ($VM.State -ne 'Off') {{
+                Stop-VM -Name '{vm_name}' -Force
+                Start-Sleep -Seconds 3
+            }}
+            
+            # 获取虚拟机的VHD路径
+            $VHD = Get-VHD -VMId $VM.VMId
+            
+            # 挂载VHD
+            $DriveLetter = (Mount-VHD -Path $VHD.Path -PassThru | Get-Disk | Get-Partition | Where-Object {{ $_.Type -eq 'Basic' -or $_.Type -eq 'NTFS' }} | Get-Volume | ForEach-Object DriveLetter)
+            
+            if (-not $DriveLetter) {{
+                throw "无法挂载虚拟硬盘"
+            }}
+            
+            # 拷贝GPU驱动文件
+            $HostDriverPath = "C:\\Windows\\System32\\DriverStore\\FileRepository"
+            $VMDriverPath = "$($DriveLetter):\\Windows\\System32\\HostDriverStore"
+            
+            # 创建目标目录
+            New-Item -ItemType Directory -Path $VMDriverPath -Force | Out-Null
+            
+            # 查找GPU相关驱动
+            $GPUDrivers = Get-ChildItem -Path $HostDriverPath -Recurse -Filter "*.inf" | Where-Object {{ $_.FullName -match "nv_" -or $_.FullName -match "amd" -or $_.FullName -match "igdlh" }}
+            
+            foreach ($driver in $GPUDrivers) {{
+                $driverDir = $driver.Directory.FullName
+                $targetDir = $VMDriverPath + "\\" + $driver.Directory.Name
+                
+                if (-not (Test-Path $targetDir)) {{
+                    Copy-Item -Path $driverDir -Destination $VMDriverPath -Recurse -Force
+                    Write-Output "已拷贝驱动: $($driver.Directory.Name)"
+                }}
+            }}
+            
+            # 卸载VHD
+            Dismount-VHD -Path $VHD.Path
+            
+            Write-Output "GPU驱动拷贝成功"
+            """
+            
+            result = self._run_powershell(command)
+            
+            if result.success:
+                logger.info(f"虚拟机 {vm_name} GPU驱动拷贝成功")
+                return ZMessage(success=True, action="CopyGPUDrivers", message="GPU驱动拷贝成功")
+            else:
+                logger.error(f"拷贝GPU驱动失败: {result.message}")
+                return ZMessage(success=False, action="CopyGPUDrivers", message=result.message)
+                
+        except Exception as e:
+            logger.error(f"拷贝GPU驱动失败: {str(e)}")
+            logger.error(traceback.format_exc())
+            return ZMessage(success=False, action="CopyGPUDrivers", message=str(e))
+
+    # 获取脚本目录 ##################################################################
+    # :return: 脚本目录路径
+    ################################################################################
+    def _get_script_dir(self) -> str:
+        """获取hypervgpus脚本目录路径"""
+        import os
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(current_dir)
+        script_dir = os.path.join(parent_dir, "..", "HostConfig", "hypervgpus")
+        return os.path.abspath(script_dir)
 
     # 检查磁盘信息 #################################################################
     # :param disk_path: 磁盘文件路径

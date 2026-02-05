@@ -291,11 +291,19 @@ class BasicServer:
 
     # 端口映射 ######################################################################
     def PortsMap(self, map_info: PortData, flag=True) -> ZMessage:
-        nc_server = NetsManager(
-            self.hs_config.i_kuai_addr,
-            self.hs_config.i_kuai_user,
-            self.hs_config.i_kuai_pass)
-        nc_server.login()
+        try:
+            logger.info(f"[{self.hs_config.server_name}] 开始端口映射操作: {map_info.wan_port} -> {map_info.lan_addr}:{map_info.lan_port}")
+            nc_server = NetsManager(
+                self.hs_config.i_kuai_addr,
+                self.hs_config.i_kuai_user,
+                self.hs_config.i_kuai_pass)
+            nc_server.login()
+        except ConnectionError as e:
+            logger.error(f"[{self.hs_config.server_name}] 网络连接失败: {e}")
+            return ZMessage(success=False, action="PortsMap", message=f"网络连接失败: {e}")
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 端口映射初始化失败: {e}")
+            return ZMessage(success=False, action="PortsMap", message=str(e))
         # 提取端口列表 ==============================================================
         port_result = nc_server.get_port()
         wan_list = []
@@ -336,22 +344,31 @@ class BasicServer:
         else:
             result = nc_server.del_port(map_info.lan_port, map_info.lan_addr)
         # 返回结果 ==================================================================
+        action_text = "添加" if flag else "删除"
+        status_text = "成功" if result else "失败"
+        logger.info(f"[{self.hs_config.server_name}] 端口映射{action_text}{status_text}: {map_info.wan_port} -> {map_info.lan_addr}:{map_info.lan_port}")
         hs_result = ZMessage(
             success=result, action="ProxyMap",
-            messages=str(map_info.wan_port) + "端口%s操作%s" % (
-                "添加" if flag else "删除", "成功" if result else "失败"))
+            messages=str(map_info.wan_port) + "端口%s操作%s" % (action_text, status_text))
         self.data_set()
+        self.logs_set(hs_result)
         return hs_result
 
     # 反向代理 ######################################################################
     def ProxyMap(self, pm_info: WebProxy, vm_uuid: str,
                  in_apis: HttpManager, in_flag=True) -> ZMessage:
-        # 检查虚拟机是否存在 ========================================================
-        vm_config = self.vm_saving.get(vm_uuid)
-        if not vm_config:
-            return ZMessage(success=False,
-                            action="ProxyMap",
-                            message="虚拟机不存在")
+        try:
+            logger.info(f"[{self.hs_config.server_name}] 开始反向代理操作: {pm_info.web_addr} -> {pm_info.lan_addr}:{pm_info.lan_port}")
+            # 检查虚拟机是否存在 ========================================================
+            vm_config = self.vm_saving.get(vm_uuid)
+            if not vm_config:
+                logger.warning(f"[{self.hs_config.server_name}] 虚拟机不存在: {vm_uuid}")
+                return ZMessage(success=False,
+                                action="ProxyMap",
+                                message="虚拟机不存在")
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 反向代理操作失败: {e}", exc_info=True)
+            return ZMessage(success=False, action="ProxyMap", message=str(e))
         # 获取虚拟机端口 ============================================================
         if self.hs_config.server_addr.split(":")[0] not in \
                 ["localhost", "127.0.0.1", ""]:
@@ -394,14 +411,21 @@ class BasicServer:
     # 网络检查 ######################################################################
     def NetCheck(self, vm_conf: VMConfig) -> tuple:
         try:
+            logger.info(f"[{self.hs_config.server_name}] 开始网络配置检查: {vm_conf.vm_uuid}")
             ip_config = IPConfig(
                 self.hs_config.ipaddr_maps,
                 self.hs_config.ipaddr_dnss
             )
             allocated_ips = self.IPCollect()
-            return ip_config.check_and_allocate(vm_conf, allocated_ips)
+            logger.debug(f"[{self.hs_config.server_name}] 已分配IP列表: {allocated_ips}")
+            result = ip_config.check_and_allocate(vm_conf, allocated_ips)
+            logger.info(f"[{self.hs_config.server_name}] 网络配置检查完成")
+            return result
+        except ValueError as e:
+            logger.error(f"[{self.hs_config.server_name}] 网络配置参数错误: {e}")
+            return vm_conf, ZMessage(success=False, action="NetCheck", message=f"配置参数错误: {e}")
         except Exception as e:
-            logger.error(f"网络检查失败: {e}")
+            logger.error(f"[{self.hs_config.server_name}] 网络检查失败: {e}", exc_info=True)
             return vm_conf, ZMessage(
                 success=False,
                 action="NetCheck",
@@ -855,15 +879,27 @@ class BasicServer:
 
     # 创建虚拟机 ####################################################################
     def VMCreate(self, vm_conf: VMConfig) -> ZMessage:
-        # 只有在所有操作都成功后才保存配置到vm_saving
-        self.vm_saving[vm_conf.vm_uuid] = vm_conf
-        # 保存到数据库 =====================================================
-        self.data_set()
-        # 返回结果 =========================================================
-        hs_result = ZMessage(
-            success=True, action="VMCreate", message="虚拟机创建成功")
-        self.logs_set(hs_result)
-        return hs_result
+        try:
+            logger.info(f"[{self.hs_config.server_name}] 开始创建虚拟机: {vm_conf.vm_uuid}")
+            logger.info(f"  - 虚拟机名称: {vm_conf.vm_name}")
+            logger.info(f"  - CPU核心数: {vm_conf.cpu_num}")
+            logger.info(f"  - 内存大小: {vm_conf.mem_num}MB")
+            logger.info(f"  - 网卡数量: {len(vm_conf.nic_all)}")
+            logger.info(f"  - 系统镜像: {vm_conf.os_name}")
+            
+            # 只有在所有操作都成功后才保存配置到vm_saving
+            self.vm_saving[vm_conf.vm_uuid] = vm_conf
+            # 保存到数据库 =====================================================
+            self.data_set()
+            # 返回结果 =========================================================
+            logger.success(f"[{self.hs_config.server_name}] 虚拟机创建成功: {vm_conf.vm_uuid}")
+            hs_result = ZMessage(
+                success=True, action="VMCreate", message="虚拟机创建成功")
+            self.logs_set(hs_result)
+            return hs_result
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 虚拟机创建失败: {e}", exc_info=True)
+            return ZMessage(success=False, action="VMCreate", message=str(e))
 
     # 配置虚拟机 ####################################################################
     def VMUpdate(self, vm_conf: VMConfig, vm_last: VMConfig) -> ZMessage:
@@ -956,18 +992,29 @@ class BasicServer:
 
     # 删除虚拟机 ####################################################################
     def VMDelete(self, vm_name: str, rm_back=True) -> ZMessage:
-        vm_saving = os.path.join(self.hs_config.system_path, vm_name)
-        # 删除虚拟文件 ==============================================================
-        if os.path.exists(vm_saving):
-            shutil.rmtree(vm_saving)
-        # 删除存储信息 ==============================================================
-        if vm_name in self.vm_saving:
-            del self.vm_saving[vm_name]
-        # 保存到数据库 ==============================================================
-        self.data_set()
-        hs_result = ZMessage(success=True, action="VMDelete")
-        self.logs_set(hs_result)
-        return hs_result
+        try:
+            logger.info(f"[{self.hs_config.server_name}] 开始删除虚拟机: {vm_name}")
+            vm_saving = os.path.join(self.hs_config.system_path, vm_name)
+            # 删除虚拟文件 ==============================================================
+            if os.path.exists(vm_saving):
+                logger.info(f"[{self.hs_config.server_name}] 删除虚拟机文件: {vm_saving}")
+                shutil.rmtree(vm_saving)
+            # 删除存储信息 ==============================================================
+            if vm_name in self.vm_saving:
+                logger.info(f"[{self.hs_config.server_name}] 从配置中移除虚拟机: {vm_name}")
+                del self.vm_saving[vm_name]
+            # 保存到数据库 ==============================================================
+            self.data_set()
+            logger.success(f"[{self.hs_config.server_name}] 虚拟机删除成功: {vm_name}")
+            hs_result = ZMessage(success=True, action="VMDelete", message=f"虚拟机 {vm_name} 已删除")
+            self.logs_set(hs_result)
+            return hs_result
+        except PermissionError as e:
+            logger.error(f"[{self.hs_config.server_name}] 删除虚拟机权限不足: {e}")
+            return ZMessage(success=False, action="VMDelete", message=f"权限不足: {e}")
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 删除虚拟机失败: {e}", exc_info=True)
+            return ZMessage(success=False, action="VMDelete", message=str(e))
 
     # 虚拟机电源 ####################################################################
     def VMPowers(self, vm_name: str, p: VMPowers) -> ZMessage:
@@ -983,6 +1030,7 @@ class BasicServer:
         
         # 保存虚拟机状态
         status_name = power_status_map.get(p, "未知操作")
+        logger.info(f"[{self.hs_config.server_name}] 虚拟机电源操作: {vm_name} - {status_name}")
         self.vm_status_set(vm_name, status_name)
         
         return ZMessage(
@@ -1019,6 +1067,9 @@ class BasicServer:
         org_path = os.path.join(self.hs_config.system_path, vm_name)
         zip_path = os.path.join(self.hs_config.backup_path, bak_name)
         try:
+            logger.info(f"[{self.hs_config.server_name}] 开始备份虚拟机: {vm_name}")
+            logger.info(f"  - 备份文件: {bak_name}")
+            logger.info(f"  - 备份说明: {vm_tips}")
             self.VMPowers(vm_name, VMPowers.H_CLOSE)
 
             # 获取7z可执行文件路径
@@ -1043,8 +1094,14 @@ class BasicServer:
                 )
             )
             self.data_set()
-            return ZMessage(success=True, action="VMBackup")
+            logger.success(f"[{self.hs_config.server_name}] 虚拟机备份成功: {bak_name}")
+            return ZMessage(success=True, action="VMBackup", message=f"备份成功: {bak_name}")
+        except FileNotFoundError as e:
+            logger.error(f"[{self.hs_config.server_name}] 备份文件未找到: {e}")
+            self.VMPowers(vm_name, VMPowers.S_START)
+            return ZMessage(success=False, action="VMBackup", message=f"文件未找到: {e}")
         except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 虚拟机备份失败: {e}", exc_info=True)
             self.VMPowers(vm_name, VMPowers.S_START)
             return ZMessage(success=False, action="VMBackup", message=str(e))
 
@@ -1053,6 +1110,8 @@ class BasicServer:
         org_path = os.path.join(self.hs_config.system_path, vm_name)
         zip_path = os.path.join(self.hs_config.backup_path, vm_back)
         try:
+            logger.info(f"[{self.hs_config.server_name}] 开始恢复虚拟机: {vm_name}")
+            logger.info(f"  - 备份文件: {vm_back}")
             self.VMPowers(vm_name, VMPowers.H_CLOSE)
             shutil.rmtree(org_path)
             os.makedirs(org_path)
@@ -1071,8 +1130,14 @@ class BasicServer:
                 raise Exception(f"7z解压失败: {result.stderr}")
 
             self.VMPowers(vm_name, VMPowers.S_START)
-            return ZMessage(success=True, action="Restores")
+            logger.success(f"[{self.hs_config.server_name}] 虚拟机恢复成功: {vm_name}")
+            return ZMessage(success=True, action="Restores", message=f"恢复成功: {vm_name}")
+        except FileNotFoundError as e:
+            logger.error(f"[{self.hs_config.server_name}] 恢复文件未找到: {e}")
+            self.VMPowers(vm_name, VMPowers.S_START)
+            return ZMessage(success=False, action="Restores", message=f"文件未找到: {e}")
         except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 虚拟机恢复失败: {e}", exc_info=True)
             self.VMPowers(vm_name, VMPowers.S_START)
             return ZMessage(success=False, action="Restores", message=str(e))
 

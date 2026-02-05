@@ -231,13 +231,20 @@ class HostServer(BasicServer):
     # 创建虚拟机 ===============================================================
     def VMCreate(self, vm_conf: VMConfig) -> ZMessage:
         try:
+            logger.info(f"[Workstation] 开始创建虚拟机: {vm_conf.vm_uuid}")
+            logger.info(f"  - CPU: {vm_conf.cpu_num}核, 内存: {vm_conf.mem_num}MB")
+            logger.info(f"  - 硬盘: {vm_conf.hdd_num}GB, 系统: {vm_conf.os_name}")
+            logger.info(f"  - 网卡数量: {len(vm_conf.nic_all)}")
+            
             # 网络检查 =========================================================
             vm_conf, net_result = self.NetCheck(vm_conf)
             if not net_result.success:
+                logger.error(f"[Workstation] 网络检查失败: {net_result.message}")
                 return net_result
             
             # IP绑定 ===========================================================
             self.IPBinder(vm_conf, True)
+            logger.info(f"[Workstation] IP绑定完成")
             
             # 专用操作 =========================================================
             # 创建虚拟机目录 ===================================================
@@ -250,6 +257,7 @@ class HostServer(BasicServer):
             vm_text = self.vmrest_api.create_vmx(vm_conf, self.hs_config)
             with open(f"{vm_file}.vmx", "w") as vm_save_file:
                 vm_save_file.write(vm_text)
+            logger.info(f"[Workstation] VMX配置文件已生成: {vm_file}.vmx")
             
             # 安装系统 =========================================================
             results = self.VMSetups(vm_conf)
@@ -260,16 +268,18 @@ class HostServer(BasicServer):
             register_result = self.vmrest_api.loader_vmx(f"{vm_file}.vmx")
             if not register_result.success:
                 raise Exception(f"注册虚拟机失败: {register_result.message}")
+            logger.info(f"[Workstation] 虚拟机已注册到VMware")
             
             # 启动虚拟机 =======================================================
             self.VMPowers(vm_conf.vm_uuid, VMPowers.S_START)
+            logger.info(f"[Workstation] 虚拟机创建成功: {vm_conf.vm_uuid}")
             
             # 通用操作 =========================================================
             return super().VMCreate(vm_conf)
             
         except Exception as e:
             # 异常处理 - 清理已创建的文件 =====================================
-            logger.error(f"创建虚拟机失败: {str(e)}")
+            logger.error(f"[Workstation] 创建虚拟机失败: {vm_conf.vm_uuid}, 错误: {str(e)}")
             traceback.print_exc()
             
             vm_path = self._get_vm_path(vm_conf.vm_uuid)
@@ -286,12 +296,14 @@ class HostServer(BasicServer):
     # 安装虚拟机 ===============================================================
     def VMSetups(self, vm_conf: VMConfig) -> ZMessage:
         try:
+            logger.info(f"[Workstation] 开始安装系统: {vm_conf.vm_uuid}")
             # 复制镜像文件 =====================================================
             vm_tail = vm_conf.os_name.split(".")[-1]
             im_file = os.path.join(self.hs_config.images_path, vm_conf.os_name)
             vm_file = os.path.join(
                 self._get_vm_path(vm_conf.vm_uuid),
                 f"{vm_conf.vm_uuid}.{vm_tail}")
+            logger.info(f"[Workstation] 复制镜像: {vm_conf.os_name} -> {vm_file}")
             
             # 删除旧文件 =======================================================
             if os.path.exists(vm_file):
@@ -299,22 +311,37 @@ class HostServer(BasicServer):
             
             # 复制镜像 =========================================================
             shutil.copy(im_file, vm_file)
+            logger.info(f"[Workstation] 镜像复制完成")
             
             # 扩展硬盘 =========================================================
-            return self.vmrest_api.extend_hdd(vm_file, vm_conf.hdd_num)
+            logger.info(f"[Workstation] 扩展硬盘到 {vm_conf.hdd_num}GB")
+            result = self.vmrest_api.extend_hdd(vm_file, vm_conf.hdd_num)
+            if result.success:
+                logger.info(f"[Workstation] 系统安装完成: {vm_conf.vm_uuid}")
+            return result
             
+        except FileNotFoundError as e:
+            # 文件不存在异常 ===================================================
+            logger.error(f"[Workstation] 镜像文件不存在: {str(e)}")
+            return ZMessage(success=False, action="VMSetups", message=f"镜像文件不存在: {str(e)}")
+        except PermissionError as e:
+            # 权限异常 =========================================================
+            logger.error(f"[Workstation] 文件权限不足: {str(e)}")
+            return ZMessage(success=False, action="VMSetups", message=f"文件权限不足: {str(e)}")
         except Exception as e:
-            # 异常处理 =========================================================
-            logger.error(f"安装虚拟机失败: {str(e)}")
+            # 其他异常 =========================================================
+            logger.error(f"[Workstation] 安装虚拟机失败: {str(e)}")
             traceback.print_exc()
             return ZMessage(success=False, action="VMSetups", message=str(e))
 
     # 配置虚拟机 ===============================================================
     def VMUpdate(self, vm_conf: VMConfig, vm_last: VMConfig) -> ZMessage:
         try:
+            logger.info(f"[Workstation] 开始更新虚拟机配置: {vm_conf.vm_uuid}")
             # 网络检查 =========================================================
             vm_conf, net_result = self.NetCheck(vm_conf)
             if not net_result.success:
+                logger.error(f"[Workstation] 网络检查失败: {net_result.message}")
                 return net_result
             
             # IP绑定 ===========================================================
@@ -343,12 +370,18 @@ class HostServer(BasicServer):
             
             # 重装系统 =========================================================
             if vm_conf.os_name != vm_last.os_name and vm_last.os_name != "":
+                logger.info(f"[Workstation] 检测到系统变更，重新安装: {vm_last.os_name} -> {vm_conf.os_name}")
                 self.VMSetups(vm_conf)
             
             # 更新硬盘 =========================================================
             if vm_conf.hdd_num > vm_last.hdd_num:
+                logger.info(f"[Workstation] 扩展硬盘: {vm_last.hdd_num}GB -> {vm_conf.hdd_num}GB")
                 disk_file = f"{vm_path}.{vm_conf.os_name.split('.')[-1]}"
-                self.vmrest_api.extend_hdd(disk_file, vm_conf.hdd_num)
+                expand_result = self.vmrest_api.extend_hdd(disk_file, vm_conf.hdd_num)
+                if expand_result.success:
+                    logger.info(f"[Workstation] 硬盘扩展成功")
+                else:
+                    logger.error(f"[Workstation] 硬盘扩展失败: {expand_result.message}")
             
             # 更新网卡 =========================================================
             network_result = self.IPUpdate(vm_conf, vm_last)
@@ -375,27 +408,31 @@ class HostServer(BasicServer):
             # 启动虚拟机 =======================================================
             start_result = self.VMPowers(vm_conf.vm_uuid, VMPowers.S_START)
             if not start_result.success:
+                logger.error(f"[Workstation] 虚拟机启动失败: {start_result.message}")
                 return ZMessage(
                     success=False, action="VMUpdate",
                     message=f"虚拟机 {vm_conf.vm_uuid} "
                             f"启动失败: {start_result.message}")
             
+            logger.info(f"[Workstation] 虚拟机配置更新完成: {vm_conf.vm_uuid}")
             # 通用操作 =========================================================
             return super().VMUpdate(vm_conf, vm_last)
             
         except Exception as e:
             # 异常处理 =========================================================
-            logger.error(f"更新虚拟机失败: {str(e)}")
+            logger.error(f"[Workstation] 更新虚拟机失败: {vm_conf.vm_uuid}, 错误: {str(e)}")
             traceback.print_exc()
             return ZMessage(success=False, action="VMUpdate", message=str(e))
 
     # 删除虚拟机 ===============================================================
     def VMDelete(self, vm_name: str, rm_back=True) -> ZMessage:
         try:
+            logger.info(f"[Workstation] 开始删除虚拟机: {vm_name}")
             # 专用操作 =========================================================
             # 检查虚拟机是否存在 ===============================================
             exists, vm_conf = self._check_vm_exists(vm_name)
             if not exists:
+                logger.warning(f"[Workstation] 虚拟机不存在: {vm_name}")
                 return ZMessage(
                     success=False,
                     action="VMDelete",
@@ -415,6 +452,10 @@ class HostServer(BasicServer):
             
             # 删除虚拟机 =======================================================
             hs_result = self.vmrest_api.delete_vmx(vm_name)
+            if hs_result.success:
+                logger.info(f"[Workstation] 虚拟机删除成功: {vm_name}")
+            else:
+                logger.error(f"[Workstation] 虚拟机删除失败: {vm_name}, 错误: {hs_result.message}")
             
             # 通用操作 =========================================================
             super().VMDelete(vm_name)
@@ -422,13 +463,23 @@ class HostServer(BasicServer):
             
         except Exception as e:
             # 异常处理 =========================================================
-            logger.error(f"删除虚拟机失败: {str(e)}")
+            logger.error(f"[Workstation] 删除虚拟机失败: {vm_name}, 错误: {str(e)}")
             traceback.print_exc()
             return ZMessage(success=False, action="VMDelete", message=str(e))
 
     # 虚拟机电源 ===============================================================
     def VMPowers(self, vm_name: str, power: VMPowers) -> ZMessage:
         try:
+            power_map = {
+                VMPowers.S_START: "启动",
+                VMPowers.S_CLOSE: "关机",
+                VMPowers.H_CLOSE: "强制关机",
+                VMPowers.S_RESET: "重启",
+                VMPowers.H_RESET: "强制重启",
+                VMPowers.S_PAUSE: "暂停"
+            }
+            logger.info(f"[Workstation] 虚拟机电源操作: {vm_name} - {power_map.get(power, str(power))}")
+            
             # 专用操作 =========================================================
             # 重启操作 =========================================================
             if power == VMPowers.H_RESET or power == VMPowers.S_RESET:
@@ -447,7 +498,7 @@ class HostServer(BasicServer):
             
         except Exception as e:
             # 异常处理 =========================================================
-            logger.error(f"虚拟机电源操作失败: {str(e)}")
+            logger.error(f"[Workstation] 虚拟机电源操作失败: {vm_name}, 错误: {str(e)}")
             traceback.print_exc()
             return ZMessage(success=False, action="VMPowers", message=str(e))
 

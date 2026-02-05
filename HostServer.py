@@ -775,6 +775,23 @@ def api_get_os_images(hs_name):
     return rest_manager.get_os_images(hs_name)
 
 
+# 获取主机GPU设备列表（普通用户可访问）############################################
+@app.route('/api/client/gpu-list/<hs_name>', methods=['GET'])
+@require_auth
+def api_get_gpu_list(hs_name):
+    """获取主机的GPU设备列表（普通用户可访问）"""
+    # 获取当前用户信息
+    current_user = UserManager.get_current_user_from_session()
+    if not current_user:
+        return api_response_wrapper(401, '未授权访问')
+    
+    # 检查主机访问权限
+    if not check_host_access(hs_name, current_user):
+        return api_response_wrapper(403, '没有访问该主机的权限')
+    
+    return rest_manager.get_gpu_list(hs_name)
+
+
 # 添加主机 ########################################################################
 @app.route('/api/server/create', methods=['POST'])
 @require_admin

@@ -284,6 +284,29 @@ class vSphereAPI:
             video_spec = self._create_video_card_spec(vm_conf.gpu_mem)
             device_changes.append(video_spec)
             
+            # 添加GPU PCI直通配置 ===============================================
+            if vm_conf.gpu_num > 0 and hasattr(vm_conf, 'gpu_id') and vm_conf.gpu_id:
+                logger.info(f"配置GPU PCI直通: {vm_conf.gpu_id}")
+                try:
+                    # 创建PCI直通设备规格
+                    pci_spec = vim.vm.device.VirtualDeviceSpec()
+                    pci_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
+                    
+                    # 创建PCI直通设备
+                    pci_device = vim.vm.device.VirtualPCIPassthrough()
+                    pci_device.backing = vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo()
+                    pci_device.backing.id = vm_conf.gpu_id
+                    pci_device.backing.deviceId = vm_conf.gpu_id
+                    pci_device.backing.systemId = ""
+                    pci_device.backing.vendorId = -1
+                    pci_device.backing.deviceName = ""
+                    
+                    pci_spec.device = pci_device
+                    device_changes.append(pci_spec)
+                    logger.info(f"GPU PCI直通配置已添加: {vm_conf.gpu_id}")
+                except Exception as gpu_error:
+                    logger.warning(f"GPU PCI直通配置失败: {str(gpu_error)}")
+            
             # 添加硬盘（必须从镜像复制）
             if not vm_conf.os_name:
                 return ZMessage(success=False, action="create_vm",
@@ -853,6 +876,59 @@ class vSphereAPI:
             config_spec = vim.vm.ConfigSpec()
             config_spec.memoryMB = vm_conf.mem_num
             config_spec.numCPUs = vm_conf.cpu_num
+            
+            # 处理GPU PCI直通配置 ==============================================
+            device_changes = []
+            
+            # 查找现有的PCI直通设备
+            existing_pci_devices = []
+            for device in vm.config.hardware.device:
+                if isinstance(device, vim.vm.device.VirtualPCIPassthrough):
+                    existing_pci_devices.append(device)
+            
+            # 如果配置了GPU直通
+            if vm_conf.gpu_num > 0 and hasattr(vm_conf, 'gpu_id') and vm_conf.gpu_id:
+                logger.info(f"更新GPU PCI直通配置: {vm_conf.gpu_id}")
+                
+                # 移除旧的PCI直通设备
+                for old_device in existing_pci_devices:
+                    remove_spec = vim.vm.device.VirtualDeviceSpec()
+                    remove_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.remove
+                    remove_spec.device = old_device
+                    device_changes.append(remove_spec)
+                    logger.info(f"移除旧的PCI直通设备")
+                
+                # 添加新的PCI直通设备
+                try:
+                    pci_spec = vim.vm.device.VirtualDeviceSpec()
+                    pci_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
+                    
+                    pci_device = vim.vm.device.VirtualPCIPassthrough()
+                    pci_device.backing = vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo()
+                    pci_device.backing.id = vm_conf.gpu_id
+                    pci_device.backing.deviceId = vm_conf.gpu_id
+                    pci_device.backing.systemId = ""
+                    pci_device.backing.vendorId = -1
+                    pci_device.backing.deviceName = ""
+                    
+                    pci_spec.device = pci_device
+                    device_changes.append(pci_spec)
+                    logger.info(f"添加新的GPU PCI直通配置: {vm_conf.gpu_id}")
+                except Exception as gpu_error:
+                    logger.warning(f"GPU PCI直通配置失败: {str(gpu_error)}")
+            
+            # 如果不需要GPU直通，移除现有的PCI直通设备
+            elif existing_pci_devices:
+                logger.info(f"移除GPU PCI直通配置")
+                for old_device in existing_pci_devices:
+                    remove_spec = vim.vm.device.VirtualDeviceSpec()
+                    remove_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.remove
+                    remove_spec.device = old_device
+                    device_changes.append(remove_spec)
+            
+            # 如果有设备变更，添加到配置规格
+            if device_changes:
+                config_spec.deviceChange = device_changes
 
             # 应用配置
             task = vm.Reconfigure(config_spec)

@@ -30,8 +30,12 @@
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-600 mb-1">GPU显卡(ID)</label>
-            <input type="number" name="gpu_num" id="{{ id_prefix ~ 'G' if id_prefix else 'g' }}puNum" min="0" value="0"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            <select name="gpu_id" id="{{ id_prefix ~ 'G' if id_prefix else 'g' }}puId"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <option value="">无GPU直通</option>
+                <!-- GPU选项将通过JavaScript动态加载 -->
+            </select>
+            <input type="hidden" name="gpu_num" id="{{ id_prefix ~ 'G' if id_prefix else 'g' }}puNum" value="0">
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-600 mb-1">GPU显存(MB)</label>

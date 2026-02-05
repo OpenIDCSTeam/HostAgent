@@ -320,13 +320,19 @@ class HostServer(BasicServer):
     # 创建虚拟机 ####################################################################
     def VMCreate(self, vm_conf: VMConfig) -> ZMessage:
         """创建虚拟机"""
+        logger.info(f"[{self.hs_config.server_name}] 开始创建虚拟机: {vm_conf.vm_uuid}")
+        logger.info(f"  - CPU: {vm_conf.cpu_num}核, 内存: {vm_conf.mem_num}MB")
+        logger.info(f"  - 网卡数量: {len(vm_conf.nic_all)}, 系统镜像: {vm_conf.os_name}")
+        
         # 网络检查和IP分配 =====================================================
         vm_conf, net_result = self.NetCheck(vm_conf)
         if not net_result.success:
+            logger.error(f"[{self.hs_config.server_name}] 虚拟机 {vm_conf.vm_uuid} 网络检查失败: {net_result.message}")
             return net_result
 
         # 绑定IP地址 ===========================================================
         self.IPBinder(vm_conf, True)
+        logger.debug(f"[{self.hs_config.server_name}] 虚拟机 {vm_conf.vm_uuid} IP地址已绑定")
 
         # 专用操作 =============================================================
         try:
@@ -336,27 +342,34 @@ class HostServer(BasicServer):
                 return connect_result
 
             # 创建虚拟机实例 =======================================================
+            logger.info(f"[{self.hs_config.server_name}] 正在创建虚拟机实例: {vm_conf.vm_uuid}")
             create_result = self.hyperv_api.create_vm(vm_conf, self.hs_config)
             if not create_result.success:
+                logger.error(f"[{self.hs_config.server_name}] 虚拟机实例创建失败: {create_result.message}")
                 self.hyperv_api.disconnect()
                 return create_result
+            logger.info(f"[{self.hs_config.server_name}] 虚拟机实例创建成功: {vm_conf.vm_uuid}")
 
             # 安装操作系统（如果指定了镜像）=========================================
             if vm_conf.os_name:
+                logger.info(f"[{self.hs_config.server_name}] 开始安装系统: {vm_conf.os_name}")
                 install_result = self.VMSetups(vm_conf)
                 if not install_result.success:
                     # 安装失败时清理虚拟机 =========================================
+                    logger.error(f"[{self.hs_config.server_name}] 系统安装失败，清理虚拟机: {vm_conf.vm_uuid}")
                     self.hyperv_api.delete_vm(vm_conf.vm_uuid)
                     self.hyperv_api.disconnect()
                     return install_result
+                logger.info(f"[{self.hs_config.server_name}] 系统安装完成: {vm_conf.os_name}")
 
             # 启动虚拟机 ===========================================================
+            logger.info(f"[{self.hs_config.server_name}] 正在启动虚拟机: {vm_conf.vm_uuid}")
             self.hyperv_api.power_on(vm_conf.vm_uuid)
 
             # 断开Hyper-V连接 =====================================================
             self.hyperv_api.disconnect()
 
-            logger.info(f"虚拟机 {vm_conf.vm_uuid} 创建成功")
+            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_conf.vm_uuid} 创建成功")
 
         except Exception as e:
             # 异常处理 =============================================================
@@ -430,9 +443,15 @@ class HostServer(BasicServer):
     # 更新虚拟机配置 ################################################################
     def VMUpdate(self, vm_conf: VMConfig, vm_last: VMConfig) -> ZMessage:
         """更新虚拟机配置"""
+        logger.info(f"[{self.hs_config.server_name}] 开始更新虚拟机配置: {vm_conf.vm_uuid}")
+        logger.info(f"  - CPU: {vm_last.cpu_num} -> {vm_conf.cpu_num}核")
+        logger.info(f"  - 内存: {vm_last.mem_num} -> {vm_conf.mem_num}MB")
+        logger.info(f"  - 硬盘: {vm_last.hdd_num} -> {vm_conf.hdd_num}GB")
+        
         # 网络检查和IP分配 =====================================================
         vm_conf, net_result = self.NetCheck(vm_conf)
         if not net_result.success:
+            logger.error(f"[{self.hs_config.server_name}] 虚拟机 {vm_conf.vm_uuid} 网络检查失败: {net_result.message}")
             return net_result
 
         # 绑定IP地址 ===========================================================
@@ -456,10 +475,12 @@ class HostServer(BasicServer):
             self.vm_saving[vm_conf.vm_uuid] = vm_conf
 
             # 关闭虚拟机以便修改配置 ===============================================
+            logger.info(f"[{self.hs_config.server_name}] 关闭虚拟机以修改配置: {vm_conf.vm_uuid}")
             self.hyperv_api.power_off(vm_conf.vm_uuid, force=True)
 
             # 检查是否需要重装系统 =================================================
             if vm_conf.os_name != vm_last.os_name and vm_last.os_name != "":
+                logger.info(f"[{self.hs_config.server_name}] 系统镜像变更: {vm_last.os_name} -> {vm_conf.os_name}")
                 install_result = self.VMSetups(vm_conf)
                 if not install_result.success:
                     self.hyperv_api.disconnect()
@@ -467,15 +488,36 @@ class HostServer(BasicServer):
 
             # 更新CPU和内存配置 ====================================================
             if vm_conf.cpu_num != vm_last.cpu_num or vm_conf.mem_num != vm_last.mem_num:
+                logger.info(f"[{self.hs_config.server_name}] 更新CPU/内存配置: CPU={vm_conf.cpu_num}, MEM={vm_conf.mem_num}MB")
                 update_result = self.hyperv_api.update_vm_config(vm_conf.vm_uuid, vm_conf)
                 if not update_result.success:
+                    logger.error(f"[{self.hs_config.server_name}] CPU/内存配置更新失败: {update_result.message}")
                     self.hyperv_api.disconnect()
                     return update_result
+                logger.info(f"[{self.hs_config.server_name}] CPU/内存配置更新成功")
 
             # 检查是否需要扩容硬盘 =================================================
             if vm_conf.hdd_num > vm_last.hdd_num:
-                # TODO: 实现磁盘扩容
-                logger.warning("Hyper-V磁盘扩容功能待实现")
+                logger.info(f"[{self.hs_config.server_name}] 开始扩容系统磁盘: {vm_last.hdd_num}GB -> {vm_conf.hdd_num}GB")
+                try:
+                    # 获取虚拟机主磁盘路径
+                    vm_path = os.path.join(self.hs_config.system_path, vm_conf.vm_uuid)
+                    vm_disk_path = os.path.join(vm_path, "Virtual Hard Disks", f"{vm_conf.vm_uuid}.vhdx")
+                    
+                    if os.path.exists(vm_disk_path):
+                        # 使用PowerShell扩容磁盘
+                        expand_size = (vm_conf.hdd_num - vm_last.hdd_num) * 1024 * 1024 * 1024  # 转换为字节
+                        expand_cmd = f"Resize-VHD -Path '{vm_disk_path}' -SizeBytes {vm_conf.hdd_num * 1024 * 1024 * 1024}"
+                        expand_result = self.hyperv_api._run_powershell(expand_cmd)
+                        
+                        if expand_result.success:
+                            logger.info(f"[{self.hs_config.server_name}] 磁盘扩容成功: {vm_conf.hdd_num}GB")
+                        else:
+                            logger.error(f"[{self.hs_config.server_name}] 磁盘扩容失败: {expand_result.message}")
+                    else:
+                        logger.warning(f"[{self.hs_config.server_name}] 磁盘文件不存在，跳过扩容: {vm_disk_path}")
+                except Exception as disk_err:
+                    logger.error(f"[{self.hs_config.server_name}] 磁盘扩容异常: {str(disk_err)}")
 
             # 更新网络配置 =========================================================
             network_result = self.IPUpdate(vm_conf, vm_last)
@@ -511,11 +553,14 @@ class HostServer(BasicServer):
     # 删除虚拟机 ####################################################################
     def VMDelete(self, vm_name: str, rm_back=True) -> ZMessage:
         """删除虚拟机"""
+        logger.info(f"[{self.hs_config.server_name}] 开始删除虚拟机: {vm_name}")
+        
         # 专用操作 =============================================================
         try:
             # 查询虚拟机配置 =======================================================
             vm_conf = self.VMSelect(vm_name)
             if vm_conf is None:
+                logger.error(f"[{self.hs_config.server_name}] 虚拟机不存在: {vm_name}")
                 return ZMessage(
                     success=False,
                     action="VMDelete",
@@ -527,9 +572,11 @@ class HostServer(BasicServer):
                 return connect_result
 
             # 解除网络IP绑定 =======================================================
+            logger.info(f"[{self.hs_config.server_name}] 解除虚拟机 {vm_name} 的IP绑定")
             self.IPBinder(vm_conf, False)
 
             # 删除虚拟机及其文件 ===================================================
+            logger.info(f"[{self.hs_config.server_name}] 正在删除虚拟机及其文件: {vm_name}")
             delete_result = self.hyperv_api.delete_vm(vm_name, remove_files=True)
 
             # 断开Hyper-V连接 =====================================================
@@ -537,7 +584,10 @@ class HostServer(BasicServer):
 
             # 检查删除结果 =========================================================
             if not delete_result.success:
+                logger.error(f"[{self.hs_config.server_name}] 虚拟机删除失败: {delete_result.message}")
                 return delete_result
+            
+            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 删除成功")
 
         except Exception as e:
             # 异常处理 =============================================================
@@ -869,6 +919,9 @@ class HostServer(BasicServer):
     # 挂载虚拟硬盘 ##################################################################
     def HDDMount(self, vm_name: str, vm_imgs: SDConfig, in_flag=True) -> ZMessage:
         """挂载/卸载虚拟硬盘"""
+        action_text = "挂载" if in_flag else "卸载"
+        logger.info(f"[{self.hs_config.server_name}] 开始{action_text}虚拟硬盘: {vm_name} - {vm_imgs.hdd_name}")
+        
         # 专用操作 =============================================================
         try:
             # 检查虚拟机是否存在 ===================================================
@@ -890,14 +943,17 @@ class HostServer(BasicServer):
             # 执行挂载或卸载操作 ===================================================
             if in_flag:
                 # 挂载磁盘操作 =====================================================
+                logger.info(f"[{self.hs_config.server_name}] 正在添加磁盘: {vm_imgs.hdd_name}, 大小: {vm_imgs.hdd_size}GB")
                 add_result = self.hyperv_api.add_disk(
                     vm_name,
                     vm_imgs.hdd_size,
                     vm_imgs.hdd_name
                 )
                 if not add_result.success:
+                    logger.error(f"[{self.hs_config.server_name}] 磁盘添加失败: {add_result.message}")
                     self.hyperv_api.disconnect()
                     return add_result
+                logger.info(f"[{self.hs_config.server_name}] 磁盘添加成功: {vm_imgs.hdd_name}")
 
                 # 更新磁盘配置 =====================================================
                 vm_imgs.hdd_flag = 1
@@ -952,6 +1008,9 @@ class HostServer(BasicServer):
     # 挂载ISO镜像 ###################################################################
     def ISOMount(self, vm_name: str, vm_imgs: IMConfig, in_flag=True) -> ZMessage:
         """挂载/卸载ISO镜像"""
+        action_text = "挂载" if in_flag else "卸载"
+        logger.info(f"[{self.hs_config.server_name}] 开始{action_text}ISO镜像: {vm_name} - {vm_imgs.iso_name}")
+        
         # 专用操作 ==================================================================
         try:
             # 检查虚拟机是否存在 ====================================================
