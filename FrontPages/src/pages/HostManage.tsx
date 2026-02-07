@@ -956,7 +956,7 @@ function HostManage() {
                     <Button type="primary" onClick={handleAdd}>添加第一个主机</Button>
                 </div>
             ) : (
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(min(500px,100%),1fr))] gap-4">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(800px,1fr))] gap-4">
                     {Object.entries(hosts).map(([name, host]) => (
                         <div key={name}>
                             {renderHostCard(name, host)}

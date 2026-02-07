@@ -1024,8 +1024,8 @@ class BasicServer:
             VMPowers.S_CLOSE: "关机",
             VMPowers.H_CLOSE: "强制关机",
             VMPowers.H_RESET: "强制重启",
-            VMPowers.S_PAUSE: "暂停",
-            VMPowers.S_RESUME: "恢复"
+            VMPowers.A_PAUSE: "暂停",
+            VMPowers.A_WAKED: "恢复"
         }
         
         # 保存虚拟机状态
