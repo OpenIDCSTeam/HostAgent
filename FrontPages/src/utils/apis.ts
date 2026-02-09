@@ -103,11 +103,6 @@ export const getHosts = (): Promise<ApiResponse<Record<string, Host>>> => {
 };
 
 /**
- * 获取主机列表（别名，兼容旧代码）
- */
-export const getServerDetail = getHosts;
-
-/**
  * 获取单个主机详情
  */
 export const getHostDetail = (hsName: string): Promise<ApiResponse<Host>> => {
@@ -115,22 +110,10 @@ export const getHostDetail = (hsName: string): Promise<ApiResponse<Host>> => {
 };
 
 /**
- * 获取单个主机详情（别名，兼容旧代码）
- */
-export const getServerDetailByName = getHostDetail;
-
-/**
  * 添加主机
  */
 export const createHost = (data: Partial<Host> & { server_pass: string }): Promise<ApiResponse> => {
   return http.post('/api/server/create', data);
-};
-
-/**
- * 添加主机（别名，兼容旧代码）
- */
-export const createServer = (name: string, type: string, config: any): Promise<ApiResponse> => {
-  return http.post('/api/server/create', { name, type, config });
 };
 
 /**
@@ -141,23 +124,11 @@ export const updateHost = (hsName: string, data: Partial<Host>): Promise<ApiResp
 };
 
 /**
- * 更新主机配置（别名，兼容旧代码）
- */
-export const updateServer = (hsName: string, config: any): Promise<ApiResponse> => {
-  return http.put(`/api/server/update/${hsName}`, { config });
-};
-
-/**
  * 删除主机
  */
 export const deleteHost = (hsName: string): Promise<ApiResponse> => {
   return http.delete(`/api/server/delete/${hsName}`);
 };
-
-/**
- * 删除主机（别名，兼容旧代码）
- */
-export const deleteServer = deleteHost;
 
 /**
  * 主机电源控制
@@ -167,9 +138,9 @@ export const hostPower = (hsName: string, action: string): Promise<ApiResponse> 
 };
 
 /**
- * 主机电源控制（别名，兼容旧代码）
+ * 启用/禁用主机
  */
-export const toggleServerPower = (hsName: string, enable: boolean): Promise<ApiResponse> => {
+export const setHostEnabled = (hsName: string, enable: boolean): Promise<ApiResponse> => {
   return http.post(`/api/server/powers/${hsName}`, { enable });
 };
 
@@ -181,15 +152,17 @@ export const getHostStatus = (hsName: string): Promise<ApiResponse> => {
 };
 
 /**
- * 获取主机状态（别名，兼容旧代码）
- */
-export const getServerStatus = getHostStatus;
-
-/**
  * 获取主机的操作系统镜像列表
  */
 export const getOSImages = (hsName: string): Promise<ApiResponse<Record<string, any[]>>> => {
   return http.get(`/api/client/os-images/${hsName}`);
+};
+
+/**
+ * 获取主机GPU列表
+ */
+export const getGPUList = (hsName: string): Promise<ApiResponse<Record<string, string>>> => {
+  return http.get(`/api/client/gpu-list/${hsName}`);
 };
 
 // ============================================================================
@@ -295,14 +268,6 @@ export const deleteIPAddress = (hsName: string, vmUuid: string, nicName: string)
 };
 
 /**
- * 获取虚拟机IP配额
- * @deprecated Use getCurrentUser() instead
- */
-export const getVMIPQuota = (): Promise<ApiResponse<any>> => {
-  return http.get('/api/users/current');
-};
-
-/**
  * 获取虚拟机监控数据
  */
 export const getVMMonitorData = (hsName: string, vmUuid: string, range: number): Promise<ApiResponse<any>> => {
@@ -367,6 +332,24 @@ export const addISO = (hsName: string, vmUuid: string, data: { iso_name: string;
  */
 export const deleteISO = (hsName: string, vmUuid: string, isoName: string): Promise<ApiResponse> => {
   return http.delete(`/api/client/iso/unmount/${hsName}/${vmUuid}/${isoName}`);
+};
+
+// ============================================================================
+// USB管理API
+// ============================================================================
+
+/**
+ * 添加USB设备
+ */
+export const addUSB = (hsName: string, vmUuid: string, data: { usb_vid: string; usb_pid: string; usb_remark?: string }): Promise<ApiResponse> => {
+  return http.post(`/api/client/usb/mount/${hsName}/${vmUuid}`, data);
+};
+
+/**
+ * 删除USB设备
+ */
+export const deleteUSB = (hsName: string, vmUuid: string, usbKey: string): Promise<ApiResponse> => {
+  return http.delete(`/api/client/usb/delete/${hsName}/${vmUuid}/${usbKey}`);
 };
 
 // ============================================================================
@@ -639,7 +622,7 @@ export const scanBackups = (hsName: string): Promise<ApiResponse> => {
 };
 
 // ============================================================================
-// 默认导出（兼容旧代码）
+// 默认导出
 // ============================================================================
 
 /**
@@ -666,20 +649,15 @@ export default {
   
   // 主机管理
   getHosts,
-  getServerDetail,
   getHostDetail,
-  getServerDetailByName,
   createHost,
-  createServer,
   updateHost,
-  updateServer,
   deleteHost,
-  deleteServer,
   hostPower,
-  toggleServerPower,
+  setHostEnabled,
   getHostStatus,
-  getServerStatus,
   getOSImages,
+  getGPUList,
   
   // 虚拟机管理
   getVMs,
@@ -696,7 +674,6 @@ export default {
   getVMIPAddresses,
   addIPAddress,
   deleteIPAddress,
-  getVMIPQuota,
   getVMMonitorData,
   getVMScreenshot,
   getVMHDDs,
@@ -705,6 +682,8 @@ export default {
   getVMISOs,
   addISO,
   deleteISO,
+  addUSB,
+  deleteUSB,
   getVMBackups,
   createVMBackup,
   restoreVMBackup,

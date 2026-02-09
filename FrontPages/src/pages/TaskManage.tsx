@@ -41,7 +41,7 @@ function TaskManage() {
    */
   const loadHosts = async () => {
     try {
-      const result = await api.getServerDetail()
+      const result = await api.getHosts()
       if (result && result.code === 200) {
         const hostNames = Object.keys(result.data || {})
         setHosts(hostNames)

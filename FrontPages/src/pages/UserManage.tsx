@@ -48,7 +48,7 @@ function UserManage() {
    */
   const loadHosts = async () => {
     try {
-      const response = await api.getServerDetail()
+      const response = await api.getHosts()
       if (response.code === 200 && response.data) {
         // 将对象转换为数组
         if (typeof response.data === 'object' && !Array.isArray(response.data)) {

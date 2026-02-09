@@ -27,7 +27,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     {/* 主题管理 */}
     <ThemeProvider>
       {/* Ant Design中文配置 */}
-      <ConfigProvider locale={zhCN}>
+      <ConfigProvider 
+        locale={zhCN}
+        getPopupContainer={(node) => node?.parentElement || document.body}
+      >
         <App />
       </ConfigProvider>
     </ThemeProvider>

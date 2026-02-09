@@ -841,7 +841,7 @@
     border: none !important;
     color: var(--text-primary) !important;
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 4px 11px;
     margin: 4px 0;
 }
 
@@ -854,10 +854,11 @@
     background: rgba(255, 255, 255, 0.8) !important;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    /* border: 1px solid rgba(0, 0, 0, 0.08) !important; */
+    border: none !important;
     color: var(--text-primary) !important;
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 4px 11px;
     margin: 4px 0;
 }
 
@@ -887,6 +888,12 @@
 [data-theme="dark"] .ant-input::placeholder {
     color: var(--text-tertiary);
 }
+
+/* 修复 InputNumber 高度问题 - 移除包装器的内边距 */
+.ant-input-number {
+    padding: 0 !important;
+}
+
 
 /* ==================== 表格 ==================== */
 [data-theme="dark"] .ant-table {
@@ -1012,12 +1019,144 @@
     color: var(--text-primary);
 }
 
+/* 修复 Input.Password 等组件的样式 */
+[data-theme="dark"] .ant-input-affix-wrapper {
+    background: rgba(56, 62, 80, 0.8) !important;
+    backdrop-filter: blur(20px);
+    border: none !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .ant-input-affix-wrapper .ant-input {
+    background: transparent !important;
+    backdrop-filter: none;
+}
+
+[data-theme="dark"] .ant-input-affix-wrapper .ant-input-password-icon {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .ant-input-affix-wrapper:hover,
+[data-theme="dark"] .ant-input-affix-wrapper:focus,
+[data-theme="dark"] .ant-input-affix-wrapper-focused {
+    border: 1px solid var(--accent-primary) !important;
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.1);
+}
+
+/* 修复 Modal Header 背景 */
 [data-theme="dark"] .ant-modal-header {
-    /*background: transparent !important;*/
+    background: transparent !important;
     border-bottom: none !important;
     border-radius: 16px 16px 0 0;
     padding: 20px 24px;
     margin-bottom: 16px;
+}
+
+/* 修复 Alert Message 颜色 */
+[data-theme="dark"] .ant-alert-message {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .ant-alert-description {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .ant-alert-warning {
+    background-color: rgba(250, 173, 20, 0.1) !important;
+    border: 1px solid rgba(250, 173, 20, 0.2) !important;
+}
+
+/* 修复 Dashed Button 和 Default Color Button */
+[data-theme="dark"] .ant-btn-dashed,
+[data-theme="dark"] .ant-btn-variant-dashed {
+    background: transparent !important;
+    border-color: var(--border-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .ant-btn-dashed:hover,
+[data-theme="dark"] .ant-btn-variant-dashed:hover {
+    border-color: var(--accent-primary) !important;
+    color: var(--accent-primary) !important;
+}
+
+[data-theme="dark"] .ant-btn-color-default {
+    color: var(--text-primary) !important;
+}
+
+/* 修复 Select 点击问题 - 可能是 Input 遮挡了 */
+.ant-select-selection-search-input {
+    opacity: 0 !important; /* 确保它不可见，但仍然可以接收焦点（如果需要） */
+    /* 或者 pointer-events: none? 不，这样就不能输入搜索了 */
+    /* Ant Design 默认是 opacity: 0 在非搜索状态? */
+}
+/* 尝试修复 Select 下拉触发 */
+.ant-select-selector {
+    cursor: pointer !important;
+}
+/* 确保 Input 不会拦截点击事件，除非它是为了输入 */
+/* 注意：如果完全禁用 pointer-events，搜索功能会失效 */
+/* 所以这里主要是确保 z-index 正确或者布局正确 */
+
+/* 定义 Modal 内部 Section 的样式 */
+.modal-section {
+    margin-bottom: 24px;
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid #f0f0f0;
+    background: #fafafa;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .modal-section {
+    background: rgba(30, 35, 48, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Modal Section Title Icon Backgrounds */
+.section-icon-bg-purple {
+    background-color: #f3e8ff; /* purple-100 */
+    color: #9333ea; /* purple-600 */
+}
+[data-theme="dark"] .section-icon-bg-purple {
+    background-color: rgba(147, 51, 234, 0.2);
+    color: #d8b4fe;
+}
+
+.section-icon-bg-orange {
+    background-color: #ffedd5; /* orange-100 */
+    color: #ea580c; /* orange-600 */
+}
+[data-theme="dark"] .section-icon-bg-orange {
+    background-color: rgba(234, 88, 12, 0.2);
+    color: #fdba74;
+}
+
+.section-icon-bg-red {
+    background-color: #fee2e2; /* red-100 */
+    color: #dc2626; /* red-600 */
+}
+[data-theme="dark"] .section-icon-bg-red {
+    background-color: rgba(220, 38, 38, 0.2);
+    color: #fca5a5;
+}
+
+.section-icon-bg-blue {
+    background-color: #dbeafe; /* blue-100 */
+    color: #2563eb; /* blue-600 */
+}
+[data-theme="dark"] .section-icon-bg-blue {
+    background-color: rgba(37, 99, 235, 0.2);
+    color: #93c5fd;
+}
+
+.section-icon-bg-green {
+    background-color: #dcfce7; /* green-100 */
+    color: #16a34a; /* green-600 */
+}
+[data-theme="dark"] .section-icon-bg-green {
+    background-color: rgba(22, 163, 74, 0.2);
+    color: #86efac;
 }
 
 [data-theme="dark"] .ant-modal-title {
@@ -1074,6 +1213,13 @@
 
 [data-theme="light"] .ant-modal-close:hover {
     color: var(--text-primary);
+}
+
+
+/* Ensure dropdowns are above other elements */
+.ant-dropdown, .ant-select-dropdown, .ant-picker-dropdown {
+    z-index: 20000 !important;
+    pointer-events: auto !important;
 }
 
 /* ==================== 下拉菜单 ==================== */

@@ -180,13 +180,13 @@ function HostManage() {
     const loadHosts = async () => {
         try {
             setLoading(true)
-            const result = await api.getServerDetail()
+            const result = await api.getHosts()
             if (result.code === 200 && result.data) {
                 setHosts(result.data as unknown as Record<string, Host>)
 
                 // 并行加载所有主机状态
                 const statusPromises = Object.keys(result.data).map(name =>
-                    api.getServerStatus(name).catch(() => null)
+                    api.getHostStatus(name).catch(() => null)
                 )
                 const statusResults = await Promise.all(statusPromises)
 
@@ -218,7 +218,7 @@ function HostManage() {
         const refreshHostsAndStatus = async () => {
             try {
                 // 1. 刷新主机列表（包含is_enabled状态）
-                const hostsResult = await api.getServerDetail()
+                const hostsResult = await api.getHosts()
                 if (hostsResult.code === 200 && hostsResult.data) {
                     setHosts(hostsResult.data as unknown as Record<string, Host>)
                     
@@ -226,7 +226,7 @@ function HostManage() {
                     const hostNames = Object.keys(hostsResult.data)
                     if (hostNames.length > 0) {
                         const statusPromises = hostNames.map(name =>
-                            api.getServerStatus(name).catch(() => null)
+                            api.getHostStatus(name).catch(() => null)
                         )
                         const statusResults = await Promise.all(statusPromises)
 
@@ -285,7 +285,7 @@ function HostManage() {
     // 打开编辑主机对话框
     const handleEdit = async (name: string) => {
         try {
-            const result = await api.getServerDetailByName(name)
+            const result = await api.getHostDetail(name)
             if (result.code === 200 && result.data) {
                 const hostData = result.data as unknown as Host
                 setEditMode('edit')
@@ -469,10 +469,15 @@ function HostManage() {
             }
 
             if (editMode === 'add') {
-                await api.createServer(values.name, values.type, config)
+                await api.createHost({
+                    name: values.name,
+                    type: values.type,
+                    config: config,
+                    server_pass: values.server_pass
+                })
                 message.success('主机添加成功')
             } else {
-                await api.updateServer(currentHost, config)
+                await api.updateHost(currentHost, { config })
                 message.success('主机更新成功')
             }
 
@@ -486,7 +491,7 @@ function HostManage() {
     // 删除主机
     const handleDelete = async (name: string) => {
         try {
-            await api.deleteServer(name)
+            await api.deleteHost(name)
             message.success('主机删除成功')
             loadHosts()
         } catch (error) {
@@ -520,7 +525,7 @@ function HostManage() {
                 mask: false,
                 onOk: async () => {
                     try {
-                        await api.toggleServerPower(name, enable)
+                        await api.setHostEnabled(name, enable)
                         message.success('主机已禁用')
                         loadHosts()
                     } catch (error) {
@@ -531,7 +536,7 @@ function HostManage() {
         } else {
             // 启用操作直接执行
             try {
-                await api.toggleServerPower(name, enable)
+                await api.setHostEnabled(name, enable)
                 message.success('主机已启用')
                 loadHosts()
             } catch (error) {
@@ -566,16 +571,6 @@ function HostManage() {
             message.error('扫描失败')
         }
     }
-
-    // 格式化字节大小（已注释，暂未使用）
-    // const formatBytes = (bytes: number, decimals = 2) => {
-    //     if (bytes === 0) return '0 B'
-    //     const k = 1024
-    //     const dm = decimals < 0 ? 0 : decimals
-    //     const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-    //     const i = Math.floor(Math.log(bytes) / Math.log(k))
-    //     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
-    // }
 
     // 获取进度条颜色
     const getProgressColor = (percent: number) => {
@@ -782,45 +777,6 @@ function HostManage() {
                                 <span className="dark:text-gray-200"
                                 >系统盘 {host.config?.system_maps && Object.keys(host.config.system_maps).length > 0 ? Object.keys(host.config.system_maps).length : 0} / 光盘 {host.config?.images_maps && Object.keys(host.config.images_maps).length > 0 ? Object.keys(host.config.images_maps).length : 0} 个</span>
                             </div>
-                            {/*<div className="flex justify-between items-start">*/}
-                            {/*    <span className="text-gray-600 dark:text-gray-400">DNS:</span>*/}
-                            {/*    <div className="text-right max-w-[80%]">*/}
-                            {/*        <span className="dark:text-gray-200"*/}
-                            {/*        >{host.config?.ipaddr_dnss && host.config.ipaddr_dnss.length > 0 ? host.config.ipaddr_dnss.join(',') : '未配置'}</span>*/}
-                            {/*    </div>*/}
-                            {/*</div>*/}
-                            {/*<div>*/}
-                            {/*    {host.config?.ipaddr_maps && Object.keys(host.config.ipaddr_maps).length > 0 ? (*/}
-                            {/*        Object.entries(host.config.ipaddr_maps).slice(0, 1).map(([name, config]: [string, any]) => (*/}
-                            {/*            <div key={name} className="space-y-0.5">*/}
-                            {/*                /!* 第一行：起始IP + 最大分配数量 *!/*/}
-                            {/*                <div className="flex justify-between">*/}
-                            {/*                    <div className="flex items-center space-x-2">*/}
-                            {/*                        <span className="text-gray-500 text-xs">IP</span>*/}
-                            {/*                        <span className="truncate text-xs dark:text-gray-200">{config.from}</span>*/}
-                            {/*                    </div>*/}
-                            {/*                    <div className="flex items-center space-x-2">*/}
-                            {/*                        <span className="text-gray-500 text-xs">分配</span>*/}
-                            {/*                        <span className="text-xs dark:text-gray-200">{config.nums} 个</span>*/}
-                            {/*                    </div>*/}
-                            {/*                </div>*/}
-                            {/*                /!* 第二行：网关 + 掩码 *!/*/}
-                            {/*                <div className="flex justify-between">*/}
-                            {/*                    <div className="flex items-center space-x-2">*/}
-                            {/*                        <span className="text-gray-500 text-xs">IP</span>*/}
-                            {/*                        <span className="truncate text-xs dark:text-gray-200">{config.gate}</span>*/}
-                            {/*                    </div>*/}
-                            {/*                    <div className="flex items-center space-x-2">*/}
-                            {/*                        <span className="text-gray-500 text-xs">/</span>*/}
-                            {/*                        <span className="text-xs dark:text-gray-200">{config.mask}</span>*/}
-                            {/*                    </div>*/}
-                            {/*                </div>*/}
-                            {/*            </div>*/}
-                            {/*        ))*/}
-                            {/*    ) : (*/}
-                            {/*        <div className="ml-2 text-xs text-gray-500 ">未配置</div>*/}
-                            {/*    )}*/}
-                            {/*</div>*/}
 
                         </div>
                     </Col>
@@ -895,17 +851,6 @@ function HostManage() {
                                              style={{width: `${gpuPercent}%`, backgroundColor: getProgressColor(gpuPercent)}}></div>
                                     </div>
                                 </div>
-
-                                {/* 温度/功耗 */}
-                                {/*<div style={{ width: '100%' }}>*/}
-                                {/*    <div className="flex justify-between text-xs mb-1">*/}
-                                {/*        <span className="text-gray-600 truncate">温度/功耗</span>*/}
-                                {/*        <span className="font-bold whitespace-nowrap">{cpuTemp}℃ {cpuPower}W</span>*/}
-                                {/*    </div>*/}
-                                {/*    <div style={{ width: '100%' }}>*/}
-                                {/*        <Progress percent={cpuTempPercent} strokeColor={getProgressColor(cpuTempPercent)} showInfo={false} size="small" style={{ width: '100%' }}/>*/}
-                                {/*    </div>*/}
-                                {/*</div>*/}
                             </div>
                         ) : (
                             <div className="text-center text-gray-400 py-8 text-xs">暂无状态数据</div>
