@@ -406,7 +406,9 @@ function VMDetail() {
         const vmType = vm.config?.virt_type || '';
         if (vmType === 'OCInterface' || vmType === 'LxContainer') return;
 
-        if (currentStatus.ac_status === 'STARTED') {
+        // 直接从vm对象获取最新状态，而不是依赖currentStatus
+        const latestStatus = vm.status && vm.status.length > 0 ? vm.status[vm.status.length - 1] : null;
+        if (latestStatus && latestStatus.ac_status === 'STARTED') {
             // 只在首次加载时显示加载状态
             if (isFirstScreenshotLoad) {
                 setLoadingScreenshot(true);
@@ -1666,10 +1668,10 @@ function VMDetail() {
     };
 
     const ResourceCard = ({title, icon, value, percent, color}: any) => (
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700 h-full flex flex-col justify-between">
+                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded-lg p-3 border border-white/20 dark:border-gray-700/30 h-full flex flex-col justify-between">
             <div className="flex items-center gap-2 mb-[15px]">
                 {icon}
-                <span className="text-base text-gray-500">{title}</span>
+                <span className="text-base text-gray-500 dark:text-gray-400">{title}</span>
             </div>
             <div>
                 <div className="flex justify-between text-sm text-gray-500 mb-1">
@@ -1706,7 +1708,7 @@ function VMDetail() {
             <Col span={16}>
                 <div className="space-y-6">
                     {/* 机器信息区域 */}
-                    <Card title="实例信息" size="small" variant="borderless" className="shadow-sm">
+                    <Card title="实例信息" size="small" variant="borderless" className="shadow-sm glass-card-transparent">
                         <Row gutter={24}>
                             <Col span={16}>
                                 <Descriptions column={2} bordered size="small" styles={{
@@ -1867,7 +1869,7 @@ function VMDetail() {
                     </Card>
 
                     {/* 实例配置区域 */}
-                    <Card title="实例配置" size="small" variant="borderless" className="shadow-sm">
+                    <Card title="实例配置" size="small" variant="borderless" className="shadow-sm glass-card-transparent">
                         <Row gutter={[16, 16]}>
                             <Col span={8}>
                                 <div className="space-y-4">
@@ -1932,7 +1934,7 @@ function VMDetail() {
 
             {/* 右侧面板：历史资源用量 */}
             <Col span={8} style={{padding: '0'}}>
-                <Card title="资源用量" size="small" variant="borderless" className="shadow-sm" style={{padding: '0'}}
+                <Card title="资源用量" size="small" variant="borderless" className="shadow-sm glass-card-transparent" style={{padding: '0'}}
                       extra={
                           <Radio.Group value={timeRange} onChange={e => setTimeRange(e.target.value)} size="small"
                                        optionType="button" buttonStyle="solid">
@@ -1958,58 +1960,58 @@ function VMDetail() {
                     <div className="space-y-4 h-[calc(100%-40px)] flex flex-col" style={{padding: '0'}}>
                         {chartView === 'performance' && (
                             <>
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
                                     <ReactECharts
                                         option={getChartOption('CPU使用率', monitorData.cpu, '#3b82f6', monitorData.labels)}
-                                        style={{height: '100%', width: '100%', minHeight: '268px'}}/>
+                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
                                 </div>
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
                                     <ReactECharts
                                         option={getChartOption('RAM使用率', monitorData.memory, '#f59e0b', monitorData.labels)}
-                                        style={{height: '100%', width: '100%', minHeight: '268px'}}/>
+                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
                                 </div>
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
                                     <ReactECharts
                                         option={getChartOption('GPU使用率', monitorData.gpu, '#8b5cf6', monitorData.labels, 'MB')}
-                                        style={{height: '100%', width: '100%', minHeight: '268px'}}/>
+                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
                                 </div>
                             </>
                         )}
                         {chartView === 'resource' && (
                             <>
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
                                     <ReactECharts
                                         option={getChartOption('硬盘使用率', monitorData.disk, '#10b981', monitorData.labels)}
-                                        style={{height: '100%', width: '100%', minHeight: '268px'}}/>
+                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
                                 </div>
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
                                     <ReactECharts
                                         option={getChartOption('流量使用率', monitorData.traffic, '#ef4444', monitorData.labels, 'GB')}
-                                        style={{height: '100%', width: '100%', minHeight: '268px'}}/>
+                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
                                 </div>
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
                                     <ReactECharts
                                         option={getChartOption('端口使用数', monitorData.nat, '#6366f1', monitorData.labels, '个')}
-                                        style={{height: '100%', width: '100%', minHeight: '268px'}}/>
+                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
                                 </div>
                             </>
                         )}
                         {chartView === 'network' && (
                             <>
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
                                     <ReactECharts
                                         option={getChartOption('上行带宽率', monitorData.netUp, '#06b6d4', monitorData.labels, 'Mbps')}
-                                        style={{height: '100%', width: '100%', minHeight: '268px'}}/>
+                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
                                 </div>
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
                                     <ReactECharts
                                         option={getChartOption('下行带宽率', monitorData.netDown, '#0891b2', monitorData.labels, 'Mbps')}
-                                        style={{height: '100%', width: '100%', minHeight: '268px'}}/>
+                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
                                 </div>
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
                                     <ReactECharts
                                         option={getChartOption('反向代理数', monitorData.proxy, '#ec4899', monitorData.labels, '个')}
-                                        style={{height: '100%', width: '100%', minHeight: '268px'}}/>
+                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
                                 </div>
                             </>
                         )}
@@ -2030,7 +2032,7 @@ function VMDetail() {
                 {vm && vm.config && vm.config.nic_all && Object.keys(vm.config.nic_all).length > 0 ? (
                     <div className="space-y-3">
                         {Object.entries(vm.config.nic_all).map(([nicName, nicConfig]: [string, any]) => (
-                <div key={nicName} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                <div key={nicName} className="rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="font-medium text-gray-700 dark:text-gray-300">{nicName}</span>
                                     <div className="flex items-center gap-2">
@@ -2296,7 +2298,7 @@ function VMDetail() {
                 {vm && vm.config && vm.config.pci_all && Object.keys(vm.config.pci_all).length > 0 ? (
                     <div className="space-y-3">
                         {Object.entries(vm.config.pci_all).map(([gpuKey, gpuConfig]: [string, any]) => (
-                            <div key={gpuKey} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                            <div key={gpuKey} className="bg-gray-50/20 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="font-medium text-gray-700 dark:text-gray-300">{gpuConfig.gpu_hint || gpuKey}</span>
                                     <Button danger size="small" onClick={() => handleDeleteGpu(gpuKey)}>删除</Button>
@@ -2500,8 +2502,8 @@ function VMDetail() {
         : {key: 'start', label: '启动', icon: <PlayCircleOutlined/>}
 
     return (
-        <div className="min-h-screen  dark:bg-gray-900">
-            <div className="dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="h-auto">
+            <div className="">
                 <div className="px-6 py-2 border-b border-gray-100 ">
                     <Breadcrumb separator="/" items={[
                         {title: <HomeOutlined/>},
@@ -2523,7 +2525,7 @@ function VMDetail() {
                                     <Badge status={getStatusColor(displayStatus)}
                                            text={getStatusText(displayStatus)}/>
                                     <span
-                                        className="text-gray-500 dark:text-gray-400 text-sm border-l pl-3 ml-1">
+                                        className="dark:text-gray-400 text-sm border-l pl-3 ml-1">
                                         IPv4 : {vm.ipv4_address || '未分配'} <CopyOutlined className="cursor-pointer"
                                                                                            onClick={() => handleCopyPassword(vm.ipv4_address || '', 'IPv4')}/>
                                         &nbsp;| IPv6 : {vm.ipv6_address || '未分配'} <CopyOutlined
@@ -2531,7 +2533,7 @@ function VMDetail() {
                                         onClick={() => handleCopyPassword(vm.ipv6_address || '', 'IPv6')}/>
                                     </span>
                                 </div>
-                                <div className="flex gap-4 mt-2 text-sm text-gray-500">
+                                <div className="flex gap-4 mt-2 text-sm ">
                                     <span>主机名称: {hostName}</span>
                                     <span>主机类型: {vm.config?.virt_type || 'Hyper-V'}</span>
                                     <span>系统: {getOSDisplayName(config.os_name || '')}</span>

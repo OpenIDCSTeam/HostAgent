@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS hs_config
     limits_nums INTEGER   DEFAULT 0,    -- VMS虚拟数量
     ipaddr_maps TEXT      DEFAULT '{}', -- IP地址的字典
     ipaddr_dnss TEXT      DEFAULT '["119.29.29.29", "223.5.5.5"]', -- DNS服务器列表
+    is_enabled  INTEGER   DEFAULT 1,    -- 主机是否启用 (1=启用, 0=禁用)
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -71,14 +72,17 @@ CREATE TABLE IF NOT EXISTS vm_saving
     UNIQUE (hs_name, vm_uuid)
 );
 
--- 虚拟机状态表 (vm_status)
+-- 虚拟机状态表 (vm_status) - 优化版：一行存储一个状态
 CREATE TABLE IF NOT EXISTS vm_status
 (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    hs_name     TEXT NOT NULL, -- 主机名称
-    vm_uuid     TEXT NOT NULL, -- 虚拟机UUID
-    status_data TEXT NOT NULL, -- JSON格式存储HWStatus列表数据
-    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    hs_name     TEXT NOT NULL,                     -- 主机名称
+    vm_uuid     TEXT NOT NULL,                     -- 虚拟机UUID
+    status_data TEXT NOT NULL,                     -- JSON格式存储单个HWStatus数据
+    ac_status   TEXT,                              -- 虚拟机状态(STARTED/STOPPED等)，用于快速查询
+    on_update   INTEGER,                           -- 状态更新时间戳(秒)，用于时间范围查询
+    flu_usage   REAL DEFAULT 0,                    -- 流量使用量(MB)，用于统计
+    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 记录时间
     FOREIGN KEY (hs_name) REFERENCES hs_config (hs_name) ON DELETE CASCADE
     -- 注意: 不再引用 vm_saving(vm_uuid)，因为 vm_uuid 不是单列唯一键
 );
@@ -176,6 +180,9 @@ CREATE INDEX IF NOT EXISTS idx_vm_saving_name ON vm_saving (hs_name);
 CREATE INDEX IF NOT EXISTS idx_vm_saving_uuid ON vm_saving (vm_uuid);
 CREATE INDEX IF NOT EXISTS idx_vm_status_name ON vm_status (hs_name);
 CREATE INDEX IF NOT EXISTS idx_vm_status_uuid ON vm_status (vm_uuid);
+CREATE INDEX IF NOT EXISTS idx_vm_status_name_uuid ON vm_status (hs_name, vm_uuid);
+CREATE INDEX IF NOT EXISTS idx_vm_status_timestamp ON vm_status (on_update);
+CREATE INDEX IF NOT EXISTS idx_vm_status_recorded ON vm_status (recorded_at);
 CREATE INDEX IF NOT EXISTS idx_vm_tasker_name ON vm_tasker (hs_name);
 CREATE INDEX IF NOT EXISTS idx_hs_logger_name ON hs_logger (hs_name);
 CREATE INDEX IF NOT EXISTS idx_hs_logger_time ON hs_logger (created_at);

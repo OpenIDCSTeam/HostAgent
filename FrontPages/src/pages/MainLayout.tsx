@@ -16,6 +16,7 @@ import {
     TranslationOutlined,
     SunOutlined,
     MoonOutlined,
+    BgColorsOutlined,
 } from '@ant-design/icons'
 import {useUserStore} from '@/utils/data.ts'
 import { changeLanguage, getAvailableLanguages, getCurrentLanguage } from '@/utils/i18n.ts'
@@ -32,7 +33,7 @@ function MainLayout() {
     const navigate = useNavigate()
     const location = useLocation()
     const {user, logout} = useUserStore()
-    const { theme: currentTheme, toggleTheme } = useTheme() // 主题管理
+    const { theme: currentTheme, toggleTheme, transparentMode, toggleTransparentMode } = useTheme() // 主题管理
     const [collapsed, setCollapsed] = useState(false) // 侧边栏折叠状态
     const [notifications, setNotifications] = useState(0) // 通知数量
     const [currentLang, setCurrentLang] = useState('zh-cn')
@@ -72,8 +73,7 @@ function MainLayout() {
     const languageMenuItems: MenuProps['items'] = languages.map(lang => ({
         key: lang.code,
         label: lang.native || lang.name,
-        icon: lang.code === currentLang ? <SwapOutlined /> : null,
-        onClick: () => changeLanguage(lang.code)
+        icon: lang.code === currentLang ? <SwapOutlined /> : undefined,
     }))
 
     // 用户界面菜单项
@@ -210,9 +210,14 @@ function MainLayout() {
                 trigger={null} 
                 collapsible 
                 collapsed={collapsed}
+                width={160}
+                collapsedWidth={60}
                 style={{
                     background: currentTheme === 'dark' ? 'var(--bg-secondary)' : '#001529',
                     borderRight: currentTheme === 'dark' ? '1px solid var(--border-primary)' : 'none',
+                    marginLeft: '16px',
+                    marginTop: '6px',
+                    marginBottom: '16px',
                 }}
             >
                 {/* Logo区域 */}
@@ -223,11 +228,14 @@ function MainLayout() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: collapsed ? 26 : 34,
+                        fontSize: collapsed ? 20 : 24,
                         fontWeight: 'bold',
                         padding: '0 16px',
-                        color: currentTheme === 'dark' ? 'var(--text-primary)' : '#fff',
+                        color: transparentMode 
+                            ? (currentTheme === 'dark' ? 'var(--text-primary)' : '#0050b3')
+                            : (currentTheme === 'dark' ? 'var(--text-primary)' : '#fff'),
                         borderBottom: currentTheme === 'dark' ? '1px solid var(--border-primary)' : 'none',
+                        textShadow: transparentMode && currentTheme === 'light' ? '0 2px 4px rgba(0,0,0,0.15)' : 'none',
                     }}
                 >{collapsed ? 'OI' : 'OpenIDCS'}
                 </div>
@@ -288,8 +296,31 @@ function MainLayout() {
                             }}
                         />
 
+                        {/* 透明模式切换 */}
+                        <Button
+                            type="text"
+                            icon={<BgColorsOutlined style={{fontSize: 18}} />}
+                            onClick={toggleTransparentMode}
+                            title={transparentMode ? '关闭透明模式' : '开启透明模式'}
+                            style={{
+                                color: transparentMode ? 'var(--accent-primary)' : (currentTheme === 'dark' ? 'var(--text-primary)' : undefined),
+                            }}
+                        />
+
                         {/* 语言切换 */}
-                        <Dropdown menu={{items: languageMenuItems}} placement="bottomRight">
+                        <Dropdown 
+                            menu={{
+                                items: languageMenuItems,
+                                onClick: ({key}) => changeLanguage(key)
+                            }} 
+                            placement="bottomRight"
+                            overlayStyle={{
+                                zIndex: 20000,
+                                maxHeight: '400px',
+                                overflow: 'auto'
+                            }}
+                            getPopupContainer={(trigger) => trigger.parentElement || document.body}
+                        >
                             <Button
                                 type="text"
                                 icon={<TranslationOutlined style={{fontSize: 18}} />}
@@ -312,7 +343,16 @@ function MainLayout() {
                         </Badge>
 
                         {/* 用户信息 */}
-                        <Dropdown menu={{items: dropdownMenuItems}} placement="bottomRight">
+                        <Dropdown 
+                            menu={{items: dropdownMenuItems}} 
+                            placement="bottomRight"
+                            overlayStyle={{
+                                zIndex: 20000,
+                                maxHeight: '400px',
+                                overflow: 'auto'
+                            }}
+                            getPopupContainer={(trigger) => trigger.parentElement || document.body}
+                        >
                             <div
                                 style={{
                                     display: 'flex',
@@ -349,7 +389,7 @@ function MainLayout() {
                 <Content
                     className={currentTheme === 'dark' ? 'grid-background' : ''}
                     style={{
-                        margin: '0px 16px',
+                        margin: '0px 16px 16px 16px',
                         padding: 24,
                         minHeight: 280,
                         background: currentTheme === 'dark' ? 'var(--bg-primary)' : colorBgContainer,

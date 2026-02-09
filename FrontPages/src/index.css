@@ -25,7 +25,7 @@
     --bg-primary: #f5f7fa;
     --bg-secondary: #ffffff;
     --bg-tertiary: #e8ecf1;
-    --bg-card: rgba(255, 255, 255, 0.85);
+    --bg-card: rgba(255, 255, 255, 0.5);
     --bg-hover: #f0f3f7;
 
     /* 文本色 */
@@ -70,7 +70,7 @@
     --bg-primary: #1a1f2e;
     --bg-secondary: #242938;
     --bg-tertiary: #2e3442;
-    --bg-card: rgba(46, 52, 66, 0.95);
+    --bg-card: rgba(46, 52, 66, 0.5);
     --bg-hover: rgba(56, 62, 80, 0.95);
 
     /* 文本色 - 对比度15.8:1以上，确保可访问性 */
@@ -163,11 +163,6 @@
 
     [data-theme="dark"] .text-black {
         color: #ffffff !important;
-    }
-
-    /* 确保min-h-screen容器的背景色正确 */
-    [data-theme="dark"] .min-h-screen {
-        background: var(--bg-primary) !important;
     }
 
     [data-theme="dark"] .bg-gray-50 {
@@ -268,17 +263,20 @@
 
 /* 自定义组件样式 */
 @layer components {
-    /* ==================== 玻璃态效果 ==================== */
+    /* ==================== 统一毛玻璃效果 ==================== */
+    /* 基础毛玻璃卡片 - 统一padding: 24px, margin: 16px, border-radius: 16px */
     .glass-card {
-        background: var(--bg-card) !important;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid var(--border-primary) !important;
+
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
+
         border-radius: 16px;
         padding: 24px;
         margin: 16px 0;
         box-shadow: var(--shadow-glass);
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
     }
 
     .glass-card:hover {
@@ -287,16 +285,15 @@
         box-shadow: var(--shadow-glow);
     }
 
-    /* 增强毛玻璃效果 - 用于所有卡片，使用海拔高度 */
+    /* 增强毛玻璃效果 - 统一参数 */
     .glass-effect {
-        background: rgba(36, 41, 56, 0.85) !important;
-        backdrop-filter: blur(40px) saturate(120%);
-        -webkit-backdrop-filter: blur(40px) saturate(120%);
-        border: 1px solid rgba(240, 240, 240, 0.05) !important;
+        background: var(--bg-card) !important;
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
+
         border-radius: 16px;
         padding: 24px;
-        margin: 16px 0;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        box-shadow: var(--shadow-glass);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
@@ -321,17 +318,13 @@
         z-index: 1;
     }
 
-    /* 浅色模式毛玻璃效果 - 使用柔和的灰蓝色 */
+    /* 浅色模式毛玻璃效果 - 统一参数 */
     [data-theme="light"] .glass-effect {
-        background: rgba(255, 255, 255, 0.85) !important;
-        backdrop-filter: blur(40px) saturate(180%);
-        -webkit-backdrop-filter: blur(40px) saturate(180%);
-        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+        background: rgba(255, 255, 255, 0.5) !important;
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
         padding: 24px;
-        margin: 16px 0;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08),
-        0 0 0 1px rgba(255, 255, 255, 0.9) inset,
-        0 2px 8px rgba(0, 0, 0, 0.04);
+        box-shadow: var(--shadow-glass);
     }
 
     /* 浅色模式的背景纹理 */
@@ -342,73 +335,115 @@
 
     .glass-effect:hover {
         transform: translateY(-2px);
-        border-color: rgba(100, 181, 246, 0.2) !important;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+        border-color: var(--border-hover) !important;
+        box-shadow: var(--shadow-glow);
     }
 
     [data-theme="light"] .glass-effect:hover {
         transform: translateY(-2px);
-        border-color: rgba(14, 165, 233, 0.3) !important;
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12),
-        0 0 0 1px rgba(14, 165, 233, 0.2) inset,
-        0 0 24px rgba(14, 165, 233, 0.08),
-        0 4px 12px rgba(0, 0, 0, 0.06);
+        border-color: var(--border-hover) !important;
+        box-shadow: var(--shadow-glow);
     }
 
-    /* 增强毛玻璃效果 - 强透明，海拔高度1 */
-    .glass-strong {
-        background: rgba(30, 35, 48, 0.7) !important;
-        backdrop-filter: blur(30px) saturate(120%);
-        -webkit-backdrop-filter: blur(30px) saturate(120%);
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
-        border-radius: 12px;
-        padding: 20px;
-        margin: 12px 0;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    [data-theme="dark"] .glass-effect:hover {
+        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(139, 92, 246, 0.3);
     }
 
-    [data-theme="dark"] .glass-strong {
-        background: rgba(30, 35, 48, 0.7) !important;
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    }
-
-    [data-theme="light"] .glass-strong {
-        background: rgba(255, 255, 255, 0.7) !important;
-        border: 1px solid rgba(0, 0, 0, 0.08) !important;
-    }
-
-    /* 毛玻璃效果 - 中等透明，海拔高度2 */
-    .glass-medium {
-        background: rgba(255, 255, 255, 0.7) !important;
-        backdrop-filter: blur(20px) saturate(120%);
-        -webkit-backdrop-filter: blur(20px) saturate(120%);
-        border: 1px solid rgba(0, 0, 0, 0.08) !important;
-        border-radius: 12px;
-        padding: 20px;
-        margin: 12px 0;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    }
-
-    [data-theme="dark"] .glass-medium {
-        background: rgba(36, 41, 56, 0.85) !important;
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    }
-
-    /* 毛玻璃效果 - 轻微透明，海拔高度3 */
-    .glass-light {
-        background: rgba(255, 255, 255, 0.9) !important;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(0, 0, 0, 0.06) !important;
-        border-radius: 12px;
-        padding: 16px;
-        margin: 8px 0;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    }
-
-    [data-theme="dark"] .glass-light {
-        background: rgba(46, 52, 66, 0.9) !important;
+    /* DockDetail页面专用透明毛玻璃Card */
+    .glass-card-transparent.ant-card {
+        background: transparent !important;
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .glass-card-transparent.ant-card .ant-card-head {
+        background: transparent !important;
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
+    }
+
+    .glass-card-transparent.ant-card .ant-card-body {
+        background: transparent !important;
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
+    }
+
+    [data-theme="dark"] .glass-card-transparent.ant-card {
+        background: transparent !important;
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    [data-theme="dark"] .glass-card-transparent.ant-card .ant-card-head {
+        background: transparent !important;
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
+    }
+
+    [data-theme="dark"] .glass-card-transparent.ant-card .ant-card-body {
+        background: transparent !important;
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
+    }
+
+    [data-theme="light"] .glass-card-transparent.ant-card {
+        background: transparent !important;
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    }
+
+    [data-theme="light"] .glass-card-transparent.ant-card .ant-card-head {
+        background: transparent !important;
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
+    }
+
+    [data-theme="light"] .glass-card-transparent.ant-card .ant-card-body {
+        background: transparent !important;
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
+    }
+
+    /* 统一毛玻璃变体 - 保持一致的padding和margin */
+    .glass-strong {
+        background: var(--bg-card) !important;
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
+
+        border-radius: 16px;
+        padding: 24px;
+        margin: 16px 0;
+        box-shadow: var(--shadow-md);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .glass-medium {
+        background: var(--bg-card) !important;
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
+
+        border-radius: 16px;
+        padding: 24px;
+        margin: 16px 0;
+        box-shadow: var(--shadow-md);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .glass-light {
+        background: var(--bg-card) !important;
+        backdrop-filter: blur(30px) saturate(150%);
+        -webkit-backdrop-filter: blur(30px) saturate(150%);
+
+        border-radius: 16px;
+        padding: 24px;
+        margin: 16px 0;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* ==================== 渐变效果 ==================== */
@@ -653,57 +688,79 @@
     z-index: 1000 !important;
 }
 
-/* ==================== 卡片 ==================== */
+    /* ==================== 卡片 - 统一毛玻璃效果 ==================== */
 [data-theme="light"] .ant-card {
-    background: rgba(255, 255, 255, 0.85) !important;
-    backdrop-filter: blur(40px) saturate(180%);
-    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    background: rgba(255, 255, 255, 0.0) !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
     border-radius: 16px;
-    padding: 24px;
-    margin: 16px 0;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08),
-    0 0 0 1px rgba(255, 255, 255, 0.9) inset,
-    0 2px 8px rgba(0, 0, 0, 0.04);
-    transition: all 0.3s ease;
-}
-
-[data-theme="dark"] .ant-card {
-    background: rgba(46, 52, 66, 0.95) !important;
-    backdrop-filter: blur(40px) saturate(120%);
-    -webkit-backdrop-filter: blur(40px) saturate(120%);
-    border: none !important;
-    border-radius: 16px;
-    padding: 24px;
-    margin: 16px 0;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    padding: 0;
+    box-shadow: var(--shadow-glass);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+[data-theme="dark"] .ant-card {
+    background: var(--bg-card) !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid var(--border-primary) !important;
+    border-radius: 16px;
+    padding: 0;
+    box-shadow: var(--shadow-glass);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] .ant-card-small {
+    background: var(--bg-card) !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid var(--border-primary) !important;
+    border-radius: 12px;
+    box-shadow: var(--shadow-glass);
+}
+
+[data-theme="light"] .ant-card-small {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 12px;
+    box-shadow: var(--shadow-glass);
+}
+
 [data-theme="dark"] .ant-card-head {
-    /*background: transparent !important;*/
-    border-bottom: none !important;
+    background: transparent !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border-bottom: 1px solid var(--border-primary) !important;
     color: var(--text-primary) !important;
-    padding: 16px 24px;
-    margin-bottom: 16px;
+    padding: 20px 24px;
+    min-height: 64px;
 }
 
 [data-theme="dark"] .ant-card-body {
-    /*background: transparent !important;*/
+    background: transparent !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
     color: var(--text-primary) !important;
     padding: 24px;
 }
 
 [data-theme="light"] .ant-card-head {
-    /*background: transparent !important;*/
+    background: transparent !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
     border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
     color: var(--text-primary) !important;
-    padding: 16px 24px;
-    margin-bottom: 16px;
+    padding: 20px 24px;
+    min-height: 64px;
 }
 
 [data-theme="light"] .ant-card-body {
-    /*background: transparent !important;*/
+    background: transparent !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
     color: var(--text-primary) !important;
     padding: 24px;
 }
@@ -747,43 +804,43 @@
 
 .ant-card:hover {
     transform: translateY(-2px);
+    border-color: var(--border-hover) !important;
+    box-shadow: var(--shadow-glow);
 }
 
 [data-theme="light"] .ant-card:hover {
-    border-color: rgba(14, 165, 233, 0.3) !important;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12),
-    0 0 0 1px rgba(14, 165, 233, 0.2) inset,
-    0 0 24px rgba(14, 165, 233, 0.08),
-    0 4px 12px rgba(0, 0, 0, 0.06);
+    border-color: var(--border-hover) !important;
+    box-shadow: var(--shadow-glow);
 }
 
 [data-theme="dark"] .ant-card:hover {
-    transform: translateY(-2px);
-    background: rgba(56, 62, 80, 0.95) !important;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    border-color: var(--border-hover) !important;
+    box-shadow: var(--shadow-glow);
 }
 
 
-/* ==================== 按钮 ==================== */
+    /* ==================== 按钮 - 统一高度和padding ==================== */
 [data-theme="light"] .ant-btn-primary {
     background: linear-gradient(135deg, #0ea5e9, #10b981);
     border: none;
-    border-radius: 12px;
-    padding: 8px 16px;
-    margin: 4px;
+    border-radius: 8px;
+    height: 36px;
+    padding: 4px 16px;
     font-weight: 600;
-    box-shadow: 0 4px 6px rgba(14, 165, 233, 0.2);
+    box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme="dark"] .ant-btn-primary {
     background: linear-gradient(135deg, #64b5f6, #81c784);
     border: none;
-    border-radius: 12px;
-    padding: 8px 16px;
-    margin: 4px;
+    border-radius: 8px;
+    height: 36px;
+    padding: 4px 16px;
     font-weight: 600;
     color: #121212;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ant-btn-primary:hover {
@@ -801,26 +858,35 @@
 }
 
 [data-theme="dark"] .ant-btn-default {
-    background: var(--bg-card);
-    border: none !important;
+    background: rgba(56, 62, 80, 0.5);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid var(--border-primary) !important;
     color: var(--text-primary);
-    padding: 8px 16px;
-    margin: 4px;
+    height: 36px;
+    padding: 4px 16px;
     border-radius: 8px;
+    box-shadow: var(--shadow-glass);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme="dark"] .ant-btn-default:hover {
     background: var(--bg-hover);
+    border-color: var(--accent-primary) !important;
     color: var(--accent-primary);
 }
 
 [data-theme="light"] .ant-btn-default {
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
     color: var(--text-primary);
-    padding: 8px 16px;
-    margin: 4px;
+    height: 36px;
+    padding: 4px 16px;
     border-radius: 8px;
+    box-shadow: var(--shadow-glass);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme="light"] .ant-btn-default:hover {
@@ -828,39 +894,50 @@
     color: var(--accent-primary);
 }
 
-/* ==================== 输入框 ==================== */
+    /* ==================== 输入框 - 统一高度和padding ==================== */
 [data-theme="dark"] .ant-input,
 [data-theme="dark"] .ant-input-number,
 [data-theme="dark"] .ant-input-number-input,
 [data-theme="dark"] .ant-select-selector,
 [data-theme="dark"] .ant-picker,
+[data-theme="dark"] .ant-input-affix-wrapper,
+[data-theme="dark"] .ant-input-outlined,
+[data-theme="dark"] .ant-input-status-success,
+[data-theme="dark"]  .ant-input-password,
 [data-theme="dark"] .ant-picker-input > input {
-    background: rgba(56, 62, 80, 0.8) !important;
+    background: rgba(56, 62, 80, 0.5) !important;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: none !important;
+
     color: var(--text-primary) !important;
     border-radius: 8px;
-    padding: 4px 11px;
-    margin: 4px 0;
+    height: 36px;
+    padding: 4px 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-[data-theme="light"] .ant-input,
+
+
 [data-theme="light"] .ant-input-number,
 [data-theme="light"] .ant-input-number-input,
 [data-theme="light"] .ant-select-selector,
 [data-theme="light"] .ant-picker,
+[data-theme="light"] .ant-input-outlined,
+[data-theme="light"] .ant-input-status-success,
+[data-theme="light"] .ant-input-password,
 [data-theme="light"] .ant-picker-input > input {
-    background: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.2) !important;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    /* border: 1px solid rgba(0, 0, 0, 0.08) !important; */
-    border: none !important;
     color: var(--text-primary) !important;
     border-radius: 8px;
-    padding: 4px 11px;
-    margin: 4px 0;
+    height: 30px;
+    padding: 4px 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+
+
 
 [data-theme="dark"] .ant-select-selection-item {
     color: var(--text-primary) !important;
@@ -897,7 +974,7 @@
 
 /* ==================== 表格 ==================== */
 [data-theme="dark"] .ant-table {
-    background: rgba(46, 52, 66, 0.95) !important;
+    background: rgba(46, 52, 66, 0.0) !important;
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
     border: none !important;
@@ -919,22 +996,22 @@
 }
 
 [data-theme="dark"] .ant-table-thead > tr > th {
-    background: rgba(56, 62, 80, 0.9) !important;
-    border-bottom: none !important;
+    background: transparent !important;
+    border-bottom: 1px solid var(--border-primary) !important;
     color: #ffffff !important;
     font-weight: 600;
     padding: 16px;
 }
 
 [data-theme="dark"] .ant-table-tbody > tr > td {
-    border-bottom: none !important;
+    border-bottom: 1px solid var(--border-primary) !important;
     color: #e0e0e0 !important;
-    /*background: transparent !important;*/
+    background: transparent !important;
     padding: 16px;
 }
 
 [data-theme="dark"] .ant-table-tbody > tr:hover > td {
-    background: rgba(46, 52, 66, 0.6) !important;
+    background: rgba(56, 62, 80, 0.3) !important;
 }
 
 [data-theme="dark"] .ant-table-tbody > tr.ant-table-row-selected > td {
@@ -942,7 +1019,7 @@
 }
 
 [data-theme="light"] .ant-table {
-    background: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.0) !important;
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
@@ -958,7 +1035,7 @@
 }
 
 [data-theme="light"] .ant-table-thead > tr > th {
-    background: rgba(240, 243, 247, 0.9) !important;
+    background: transparent !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
     color: var(--text-primary) !important;
     font-weight: 600;
@@ -995,7 +1072,7 @@
 
 /* ==================== 模态框 ==================== */
 [data-theme="dark"] .ant-modal-content {
-    background: rgba(46, 52, 66, 0.95) !important;
+    background: rgba(46, 52, 66, 0.6) !important;
     backdrop-filter: blur(40px) saturate(120%);
     -webkit-backdrop-filter: blur(40px) saturate(120%);
     border: none !important;
@@ -1005,7 +1082,7 @@
 }
 
 [data-theme="light"] .ant-modal-content {
-    background: rgba(255, 255, 255, 0.95) !important;
+    background: rgba(255, 255, 255, 0.6) !important;
     backdrop-filter: blur(40px) saturate(180%);
     -webkit-backdrop-filter: blur(40px) saturate(180%);
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
@@ -1021,12 +1098,15 @@
 
 /* 修复 Input.Password 等组件的样式 */
 [data-theme="dark"] .ant-input-affix-wrapper {
-    background: rgba(56, 62, 80, 0.8) !important;
+    background: rgba(56, 62, 80, 0.5) !important;
     backdrop-filter: blur(20px);
     border: none !important;
     color: var(--text-primary) !important;
 }
+input,.ant-input-affix-wrapper，ant-input-outlined，ant-input-status-success，ant-input-password{
 
+    border: none !important;
+}
 [data-theme="dark"] .ant-input-affix-wrapper .ant-input {
     background: transparent !important;
     backdrop-filter: none;
@@ -1045,11 +1125,14 @@
 
 /* 修复 Modal Header 背景 */
 [data-theme="dark"] .ant-modal-header {
-    background: transparent !important;
-    border-bottom: none !important;
+    background: rgba(56, 62, 80, 0.6) !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border-bottom: 1px solid var(--border-primary) !important;
     border-radius: 16px 16px 0 0;
     padding: 20px 24px;
     margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* 修复 Alert Message 颜色 */
@@ -1100,17 +1183,23 @@
 
 /* 定义 Modal 内部 Section 的样式 */
 .modal-section {
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     padding: 24px;
     border-radius: 16px;
-    border: 1px solid #f0f0f0;
-    background: #fafafa;
-    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(250, 250, 250, 0.6);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 [data-theme="dark"] .modal-section {
-    background: rgba(30, 35, 48, 0.5) !important;
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    background: rgba(56, 62, 80, 0.4) !important;
+    border: 1px solid var(--border-primary) !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Modal Section Title Icon Backgrounds */
@@ -1176,11 +1265,14 @@
 }
 
 [data-theme="light"] .ant-modal-header {
-    /*background: transparent !important;*/
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
     border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
     border-radius: 16px 16px 0 0;
     padding: 20px 24px;
     margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 [data-theme="light"] .ant-modal-title {
@@ -1224,7 +1316,7 @@
 
 /* ==================== 下拉菜单 ==================== */
 [data-theme="dark"] .ant-dropdown-menu {
-    background: rgba(46, 52, 66, 0.95) !important;
+    background: rgba(46, 52, 66, 0.6) !important;
     backdrop-filter: blur(40px) saturate(120%);
     -webkit-backdrop-filter: blur(40px) saturate(120%);
     border: none !important;
@@ -1235,7 +1327,7 @@
 }
 
 [data-theme="light"] .ant-dropdown-menu {
-    background: rgba(255, 255, 255, 0.95) !important;
+    background: rgba(255, 255, 255, 0.6) !important;
     backdrop-filter: blur(40px) saturate(180%);
     -webkit-backdrop-filter: blur(40px) saturate(180%);
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
@@ -1271,7 +1363,7 @@
 }
 
 [data-theme="dark"] .ant-select-dropdown {
-    background: rgba(46, 52, 66, 0.95) !important;
+    background: rgba(46, 52, 66, 0.6) !important;
     backdrop-filter: blur(40px) saturate(120%);
     -webkit-backdrop-filter: blur(40px) saturate(120%);
     border: none !important;
@@ -1282,7 +1374,7 @@
 }
 
 [data-theme="light"] .ant-select-dropdown {
-    background: rgba(255, 255, 255, 0.95) !important;
+    background: rgba(255, 255, 255, 0.6) !important;
     backdrop-filter: blur(40px) saturate(180%);
     -webkit-backdrop-filter: blur(40px) saturate(180%);
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
@@ -1359,34 +1451,51 @@
 
 /* ==================== 标签 ==================== */
 [data-theme="dark"] .ant-tag {
-    background: rgba(56, 62, 80, 0.8);
-    backdrop-filter: blur(10px);
-    border: none;
+    background: transparent !important;
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid var(--border-primary);
     color: var(--text-primary);
     border-radius: 6px;
     padding: 4px 12px;
     margin: 4px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] .ant-tag:hover {
+    background: rgba(56, 62, 80, 0.3) !important;
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
 }
 
 [data-theme="light"] .ant-tag {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
+    background: transparent !important;
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
     border: 1px solid rgba(0, 0, 0, 0.08);
     color: var(--text-primary);
     border-radius: 6px;
     padding: 4px 12px;
     margin: 4px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="light"] .ant-tag:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
 }
 
 /* ==================== 通知 ==================== */
 [data-theme="dark"] .ant-notification-notice {
-    background: rgba(46, 52, 66, 0.95);
-    backdrop-filter: blur(30px);
-    border: none;
+    background: rgba(46, 52, 66, 0.6);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid var(--border-primary);
     border-radius: 12px;
     padding: 16px;
     margin: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="dark"] .ant-notification-notice-message {
@@ -1398,13 +1507,14 @@
 }
 
 [data-theme="light"] .ant-notification-notice {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(30px);
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
     border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 12px;
     padding: 16px;
     margin: 8px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="light"] .ant-notification-notice-message {
@@ -1417,9 +1527,11 @@
 
 /* ==================== 抽屉 ==================== */
 [data-theme="dark"] .ant-drawer-content {
-    background: rgba(46, 52, 66, 0.95);
-    backdrop-filter: blur(30px);
-    border-left: none;
+    background: rgba(46, 52, 66, 0.6);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border-left: 1px solid var(--border-primary);
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="dark"] .ant-drawer-header {
@@ -1445,9 +1557,11 @@
 }
 
 [data-theme="light"] .ant-drawer-content {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(30px);
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
     border-left: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="light"] .ant-drawer-header {
@@ -1573,11 +1687,13 @@
 }
 
 [data-theme="dark"] .ant-pagination-item {
-    background: rgba(56, 62, 80, 0.8) !important;
-    backdrop-filter: blur(10px);
-    border: none !important;
+    background: rgba(56, 62, 80, 0.5) !important;
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid var(--border-primary) !important;
     border-radius: 8px;
     margin: 0 4px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="dark"] .ant-pagination-item a {
@@ -1609,10 +1725,12 @@
 [data-theme="dark"] .ant-pagination-prev button,
 [data-theme="dark"] .ant-pagination-next button {
     color: var(--text-primary) !important;
-    background: rgba(56, 62, 80, 0.8) !important;
-    backdrop-filter: blur(10px);
-    border: none !important;
+    background: rgba(56, 62, 80, 0.5) !important;
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid var(--border-primary) !important;
     border-radius: 8px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="dark"] .ant-pagination-prev:hover button,
@@ -1642,11 +1760,13 @@
 }
 
 [data-theme="light"] .ant-pagination-item {
-    background: rgba(255, 255, 255, 0.8) !important;
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
     border-radius: 8px;
     margin: 0 4px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="light"] .ant-pagination-item a {
@@ -1678,10 +1798,12 @@
 [data-theme="light"] .ant-pagination-prev button,
 [data-theme="light"] .ant-pagination-next button {
     color: var(--text-primary) !important;
-    background: rgba(255, 255, 255, 0.8) !important;
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
     border-radius: 8px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="light"] .ant-pagination-prev:hover button,
@@ -1767,7 +1889,6 @@
 [data-theme="dark"] .ant-tabs-tab {
     color: #e5e7eb !important;
     transition: all 0.3s ease;
-    padding: 12px 16px;
     margin: 0 4px;
 }
 
@@ -1790,9 +1911,6 @@
     border-radius: 3px 3px 0 0;
 }
 
-[data-theme="dark"] .ant-tabs-nav::before {
-    border-bottom-color: var(--border-primary);
-}
 
 [data-theme="dark"] .ant-tabs-content {
     color: var(--text-primary);
@@ -1806,7 +1924,6 @@
 [data-theme="light"] .ant-tabs-tab {
     color: var(--text-primary) !important;
     transition: all 0.3s ease;
-    padding: 12px 16px;
     margin: 0 4px;
 }
 
@@ -1829,9 +1946,7 @@
     border-radius: 3px 3px 0 0;
 }
 
-[data-theme="light"] .ant-tabs-nav::before {
-    border-bottom-color: var(--border-primary);
-}
+
 
 [data-theme="light"] .ant-tabs-content {
     color: var(--text-primary);
@@ -1958,7 +2073,7 @@
 
 /* ==================== 补充：日期选择器下拉面板暗黑模式 ==================== */
 [data-theme="dark"] .ant-picker-panel-container {
-    background: rgba(46, 52, 66, 0.95);
+    background: rgba(46, 52, 66, 0.6);
     backdrop-filter: blur(30px);
     border: none;
     border-radius: 12px;
@@ -2019,7 +2134,7 @@
 }
 
 [data-theme="light"] .ant-picker-panel-container {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(30px);
     border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 12px;
@@ -2108,8 +2223,12 @@
 
 /* ==================== 补充：级联选择器暗黑模式 ==================== */
 [data-theme="dark"] .ant-cascader-menu {
-    background: var(--bg-secondary);
-    border-color: var(--border-primary);
+    background: rgba(46, 52, 66, 0.6);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid var(--border-primary);
+    border-radius: 12px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="dark"] .ant-cascader-menu-item {
@@ -2126,8 +2245,12 @@
 }
 
 [data-theme="light"] .ant-cascader-menu {
-    background: var(--bg-secondary);
-    border-color: var(--border-primary);
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="light"] .ant-cascader-menu-item {
@@ -2149,9 +2272,12 @@
 }
 
 [data-theme="dark"] .ant-transfer-list {
-    background: var(--bg-card);
-    border-color: var(--border-primary);
+    background: rgba(46, 52, 66, 0.6);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid var(--border-primary);
     border-radius: 12px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="dark"] .ant-transfer-list-header {
@@ -2178,9 +2304,12 @@
 }
 
 [data-theme="light"] .ant-transfer-list {
-    background: var(--bg-card);
-    border-color: var(--border-primary);
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 12px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="light"] .ant-transfer-list-header {
@@ -2321,7 +2450,6 @@
     background: transparent;
     border: none;
     border-radius: 12px;
-    margin: 16px 0;
 }
 
 [data-theme="dark"] .ant-collapse-item {
@@ -2331,10 +2459,12 @@
 
 [data-theme="dark"] .ant-collapse-header {
     color: var(--text-primary);
-    background: rgba(56, 62, 80, 0.8);
-    backdrop-filter: blur(10px);
+    background: rgba(56, 62, 80, 0.5);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
     padding: 12px 16px;
     border-radius: 8px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="dark"] .ant-collapse-header:hover {
@@ -2342,9 +2472,12 @@
 }
 
 [data-theme="dark"] .ant-collapse-content {
-    background: var(--bg-secondary);
+    background: rgba(56, 62, 80, 0.3);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
     border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
     color: var(--text-primary);
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="dark"] .ant-collapse-arrow {
@@ -2365,10 +2498,12 @@
 
 [data-theme="light"] .ant-collapse-header {
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
     padding: 12px 16px;
     border-radius: 8px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="light"] .ant-collapse-header:hover {
@@ -2376,9 +2511,12 @@
 }
 
 [data-theme="light"] .ant-collapse-content {
-    background: var(--bg-secondary);
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
     border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
     color: var(--text-primary);
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="light"] .ant-collapse-arrow {
@@ -2433,6 +2571,14 @@
 [data-theme="light"] .ant-badge-dot {
     background: var(--error);
     box-shadow: 0 0 0 1px var(--bg-primary);
+}
+
+[data-theme="dark"] .ant-badge.ant-badge-status .ant-badge-status-text {
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .ant-badge.ant-badge-status .ant-badge-status-text {
+    color: var(--text-primary);
 }
 
 /* ==================== 补充：头像暗黑模式 ==================== */
@@ -2525,11 +2671,13 @@
 }
 
 [data-theme="dark"] .ant-upload.ant-upload-drag {
-    background: rgba(56, 62, 80, 0.8);
-    backdrop-filter: blur(20px);
-    border: none;
+    background: rgba(56, 62, 80, 0.5);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid var(--border-primary);
     border-radius: 12px;
     padding: 24px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="dark"] .ant-upload.ant-upload-drag:hover {
@@ -2537,13 +2685,15 @@
 }
 
 [data-theme="dark"] .ant-upload-list-item {
-    background: rgba(56, 62, 80, 0.8);
-    backdrop-filter: blur(10px);
-    border: none;
+    background: rgba(56, 62, 80, 0.5);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid var(--border-primary);
     color: var(--text-primary);
     padding: 8px 12px;
     margin: 4px 0;
     border-radius: 8px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="dark"] .ant-upload-list-item:hover {
@@ -2560,11 +2710,13 @@
 }
 
 [data-theme="light"] .ant-upload.ant-upload-drag {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
     border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 12px;
     padding: 24px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="light"] .ant-upload.ant-upload-drag:hover {
@@ -2572,13 +2724,15 @@
 }
 
 [data-theme="light"] .ant-upload-list-item {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
     border: 1px solid rgba(0, 0, 0, 0.08);
     color: var(--text-primary);
     padding: 8px 12px;
     margin: 4px 0;
     border-radius: 8px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="light"] .ant-upload-list-item:hover {
@@ -2594,18 +2748,38 @@
     background: var(--bg-primary) !important;
 }
 
+/* 透明模式下使用背景图片 */
+[data-transparent="true"][data-theme="dark"] .ant-layout {
+    background: var(--bg-primary) url('https://images.524228.xyz/') center/cover no-repeat !important;
+}
+
 [data-theme="dark"] .ant-layout-header {
     background: var(--bg-card) !important;
-    border-bottom: 1px solid var(--border-primary);
+    z-index: 100;
+    position: relative;
+    overflow: visible !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border-radius: 20px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="dark"] .ant-layout-content {
-    background: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
+    background: var(--bg-card) !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border-radius: 20px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="dark"] .ant-layout-sider {
-    background: var(--bg-secondary) !important;
+    background: var(--bg-card) !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border-radius: 20px;
+    box-shadow: var(--shadow-glass);
+    height: auto !important;
+    min-height: fit-content !important;
 }
 
 [data-theme="dark"] .ant-layout-footer {
@@ -2620,28 +2794,81 @@
     background: var(--bg-primary) !important;
 }
 
+[data-transparent="true"][data-theme="dark"] .ant-layout,
+[data-transparent="true"][data-theme="dark"] .ant-layout-has-sider {
+    background: var(--bg-primary) url('https://images.524228.xyz/') center/cover no-repeat !important;
+}
+
 [data-theme="light"] .ant-layout {
     background: var(--bg-primary) !important;
 }
 
+[data-transparent="true"][data-theme="light"] .ant-layout {
+    background: var(--bg-primary) url('https://images.524228.xyz/') center/cover no-repeat !important;
+}
+
 [data-theme="light"] .ant-layout-header {
-    background: var(--bg-card) !important;
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
     border-bottom: 1px solid var(--border-primary);
+    border-radius: 20px;
+    box-shadow: var(--shadow-glass);
+    z-index: 100;
+    position: relative;
+    overflow: visible !important;
 }
 
 [data-theme="light"] .ant-layout-content {
-    background: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
+    background: var(--bg-card) !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border-radius: 20px;
+    box-shadow: var(--shadow-glass);
 }
 
 [data-theme="light"] .ant-layout-sider {
-    background: var(--bg-secondary) !important;
+    background: var(--bg-card) !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border-radius: 20px;
+    box-shadow: var(--shadow-glass);
+    height: auto !important;
+    min-height: fit-content !important;
 }
 
 [data-theme="light"] .ant-layout-footer {
     background: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     border-top: 1px solid var(--border-primary);
+}
+
+/* ==================== 统一毛玻璃效果 - ant-card-bordered ==================== */
+[data-theme="dark"] .ant-card-bordered {
+    background: transparent !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid var(--border-primary) !important;
+    border-radius: 16px;
+    box-shadow: var(--shadow-glass);
+}
+
+[data-theme="light"] .ant-card-bordered {
+    background: transparent !important;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 16px;
+    box-shadow: var(--shadow-glass);
+}
+
+/* ==================== 统一毛玻璃效果 - ant-col ==================== */
+[data-theme="dark"] .ant-col {
+    background: transparent !important;
+}
+
+[data-theme="light"] .ant-col {
+    background: transparent !important;
 }
 
 /* ==================== 视觉增强：噪点纹理 ==================== */
@@ -2883,6 +3110,60 @@
 }
 
 /* ==================== 响应式优化 ==================== */
+
+/* ==================== 页面标题统一样式 ==================== */
+.page-header {
+    margin-bottom: 32px;
+    padding: 24px;
+    border-radius: 16px;
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid var(--border-primary);
+    box-shadow: var(--shadow-glass);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-header-title {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-header-title .anticon {
+    width: 36px;
+    height: 36px;
+    color: var(--accent-primary);
+}
+
+.page-header-subtitle {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* 透明模式样式优化 */
+[data-transparent="true"] .glass-card,
+[data-transparent="true"] .glass-effect,
+[data-transparent="true"] .page-header,
+[data-transparent="true"] .ant-card {
+    backdrop-filter: blur(40px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+[data-transparent="true"][data-theme="dark"] .glass-card,
+[data-transparent="true"][data-theme="dark"] .glass-effect,
+[data-transparent="true"][data-theme="dark"] .page-header,
+[data-transparent="true"][data-theme="dark"] .ant-card {
+    backdrop-filter: blur(40px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
 /* 移动端优化 */
 @media (max-width: 768px) {
     html {
@@ -2962,4 +3243,8 @@
         background: white;
         color: black;
     }
+}
+
+.modal-section{
+    background: rgba(220, 220,220, 0.2) !important;
 }

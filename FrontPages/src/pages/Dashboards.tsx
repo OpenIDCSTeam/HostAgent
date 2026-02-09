@@ -1079,28 +1079,16 @@ function Dashboards() {
       minHeight: '100vh'
     }}>
       {/* 页面标题 */}
-      <div style={{ marginBottom: '32px' }}>
+      <div className="page-header">
         <Title 
           level={2} 
-          style={{ 
-            margin: 0,
-            fontSize: '32px',
-            fontWeight: 700,
-            color: 'var(--text-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}
+          className="page-header-title"
         >
-          <DesktopOutlined style={{ width: '36px', height: '36px', color: 'var(--accent-primary)' }} />
-          全局系统概览
+          <DesktopOutlined />
+          全局资源概览
         </Title>
-        <div style={{ 
-          marginTop: '8px',
-          fontSize: '14px',
-          color: 'var(--text-secondary)'
-        }}>
-          系统概览与快速操作
+        <div className="page-header-subtitle">
+          查看您的资源使用情况和配额信息
         </div>
       </div>
 

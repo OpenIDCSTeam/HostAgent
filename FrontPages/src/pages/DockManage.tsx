@@ -247,33 +247,40 @@ function DockManage() {
 
     return (
         <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center gap-4">
-                    {hostName && (
-                        <Button 
-                            icon={<ArrowLeftOutlined />} 
-                            onClick={() => navigate(-1)}
-                            className="mr-2"
-                        >
-                            返回
+            <div className="page-header">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 flex-1">
+                        {hostName && (
+                            <Button 
+                                icon={<ArrowLeftOutlined />} 
+                                onClick={() => navigate(-1)}
+                            >
+                                返回
+                            </Button>
+                        )}
+                        <div className="flex-1">
+                            <Title level={2} className="page-header-title">
+                                <RadarChartOutlined />
+                                {hostName ? `虚拟机管理 - ${hostName}` : '所有虚拟机'}
+                            </Title>
+                            <div className="page-header-subtitle">
+                                管理和监控虚拟机实例
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex gap-3">
+                        {hostName && (
+                            <Button icon={<RadarChartOutlined />} onClick={handleScan}>
+                                扫描
+                            </Button>
+                        )}
+                        <Button icon={<ReloadOutlined />} onClick={loadVMs}>
+                            刷新
                         </Button>
-                    )}
-                    <Title level={4} style={{ margin: 0 }}>
-                        {hostName ? `虚拟机管理 - ${hostName}` : '所有虚拟机'}
-                    </Title>
-                    {hostName && (
-                        <Button icon={<RadarChartOutlined />} onClick={handleScan}>
-                            扫描
+                        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+                            创建虚拟机
                         </Button>
-                    )}
-                </div>
-                <div className="flex gap-3">
-                    <Button icon={<ReloadOutlined />} onClick={loadVMs}>
-                        刷新
-                    </Button>
-                    <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-                        创建虚拟机
-                    </Button>
+                    </div>
                 </div>
             </div>
 

@@ -2430,3 +2430,135 @@ msgstr "是"
 msgid "空"
 msgstr "空"
 
+msgid "全局"
+msgstr "全局"
+
+msgid "查看您的资源使用情况和配额信息"
+msgstr "查看您的资源使用情况和配额信息"
+
+msgid "用户空间"
+msgstr "用户空间"
+
+msgid "系统空间"
+msgstr "系统空间"
+
+msgid "实例管理"
+msgstr "实例管理"
+
+msgid "监控"
+msgstr "监控"
+
+msgid "网络端口"
+msgstr "网络端口"
+
+msgid "网络与配额"
+msgstr "网络与配额"
+
+msgid "上传带宽"
+msgstr "上传带宽"
+
+msgid "下载带宽"
+msgstr "下载带宽"
+
+msgid "实例配置"
+msgstr "实例配置"
+
+msgid "设置密码"
+msgstr "设置密码"
+
+msgid "一键远程"
+msgstr "一键远程"
+
+msgid "网卡列表"
+msgstr "网卡列表"
+
+msgid "转发规则"
+msgstr "转发规则"
+
+msgid "设备直通"
+msgstr "设备直通"
+
+msgid "物理"
+msgstr "物理"
+
+msgid "设备名"
+msgstr "设备名"
+
+msgid "存储路径"
+msgstr "存储路径"
+
+msgid "程序启动路径"
+msgstr "程序启动路径"
+
+msgid "爱快配置"
+msgstr "爱快配置"
+
+msgid "限制配置"
+msgstr "限制配置"
+
+msgid "（多个用逗号分隔）"
+msgstr "（多个用逗号分隔）"
+
+msgid "高级配置"
+msgstr "高级配置"
+
+msgid "系统映射"
+msgstr "系统映射"
+
+msgid "配置池"
+msgstr "配置池"
+
+msgid "扩展选项"
+msgstr "扩展选项"
+
+msgid "扩展数据"
+msgstr "扩展数据"
+
+msgid "(JSON格式)"
+msgstr "(JSON格式)"
+
+msgid "和事件记录"
+msgstr "和事件记录"
+
+msgid "请从左侧选择一条"
+msgstr "请从左侧选择一条"
+
+msgid "安全提示"
+msgstr "安全提示"
+
+msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
+msgstr "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
+
+msgid "在请求头中添加："
+msgstr "在请求头中添加："
+
+msgid "受控端"
+msgstr "受控端"
+
+msgid "访问配置"
+msgstr "访问配置"
+
+msgid "新账号"
+msgstr "新账号"
+
+msgid "注册时需要验证邮箱"
+msgstr "注册时需要验证邮箱"
+
+msgid "新用户默认"
+msgstr "新用户默认"
+
+msgid "这是一封来自"
+msgstr "这是一封来自"
+
+msgid "系统的测试邮件"
+msgstr "系统的测试邮件"
+
+msgid "如果您收到这封邮件"
+msgstr "如果您收到这封邮件"
+
+msgid "说明邮件服务配置正常"
+msgstr "说明邮件服务配置正常"
+
+msgid "您的"
+msgstr "您的"
+

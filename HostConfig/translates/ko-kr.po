@@ -2430,3 +2430,132 @@ msgstr "예"
 msgid "空"
 msgstr "null"
 
+msgid "全局"
+msgstr "글로벌"
+
+msgid "查看您的资源使用情况和配额信息"
+msgstr "리소스 사용량 및 할당량 정보 보기"
+
+msgid "用户空间"
+msgstr "사용자 공간"
+
+msgid "系统空间"
+msgstr "시스템 공간"
+
+msgid "实例管理"
+msgstr "인스턴스 관리"
+
+msgid "网络端口"
+msgstr "네트워크 포트"
+
+msgid "网络与配额"
+msgstr "네트워크 및 할당량"
+
+msgid "上传带宽"
+msgstr "업로드 대역폭"
+
+msgid "下载带宽"
+msgstr "다운로드 대역폭"
+
+msgid "实例配置"
+msgstr "인스턴스 구성"
+
+msgid "设置密码"
+msgstr "비밀번호 설정"
+
+msgid "一键远程"
+msgstr "원클릭 원격"
+
+msgid "网卡列表"
+msgstr "네트워크 카드 목록"
+
+msgid "转发规则"
+msgstr "전달 규칙"
+
+msgid "设备直通"
+msgstr "장치 패스스루"
+
+msgid "物理"
+msgstr "물리적"
+
+msgid "设备名"
+msgstr "장치 이름"
+
+msgid "存储路径"
+msgstr "저장 경로"
+
+msgid "程序启动路径"
+msgstr "프로그램 시작 경로"
+
+msgid "爱快配置"
+msgstr "iKuai 구성"
+
+msgid "限制配置"
+msgstr "제한 구성"
+
+msgid "（多个用逗号分隔）"
+msgstr "(여러 개는 쉼표로 구분)"
+
+msgid "高级配置"
+msgstr "고급 구성"
+
+msgid "系统映射"
+msgstr "시스템 매핑"
+
+msgid "配置池"
+msgstr "구성 풀"
+
+msgid "扩展选项"
+msgstr "확장 옵션"
+
+msgid "扩展数据"
+msgstr "확장 데이터"
+
+msgid "(JSON格式)"
+msgstr "(JSON 형식)"
+
+msgid "和事件记录"
+msgstr "및 이벤트 기록"
+
+msgid "请从左侧选择一条"
+msgstr "왼쪽에서 하나를 선택하세요"
+
+msgid "安全提示"
+msgstr "보안 알림"
+
+msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
+msgstr "토큰을 재설정하면 이전 토큰을 사용하는 모든 API 호출이 무효화됩니다. 모든 관련 구성을 업데이트하세요."
+
+msgid "在请求头中添加："
+msgstr "요청 헤더에 추가:"
+
+msgid "受控端"
+msgstr "제어 대상"
+
+msgid "访问配置"
+msgstr "액세스 구성"
+
+msgid "新账号"
+msgstr "새 계정"
+
+msgid "注册时需要验证邮箱"
+msgstr "등록 시 이메일 인증 필요"
+
+msgid "新用户默认"
+msgstr "새 사용자 기본값"
+
+msgid "这是一封来自"
+msgstr "이것은 다음에서 보낸 이메일입니다"
+
+msgid "系统的测试邮件"
+msgstr "시스템 테스트 이메일"
+
+msgid "如果您收到这封邮件"
+msgstr "이 이메일을 받으셨다면"
+
+msgid "说明邮件服务配置正常"
+msgstr "이메일 서비스가 올바르게 구성되었음을 나타냅니다"
+
+msgid "您的"
+msgstr "귀하의"
+

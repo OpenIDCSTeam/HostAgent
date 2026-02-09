@@ -2,6 +2,7 @@
 RestManage - REST API管理模块
 提供主机和虚拟机管理的API接口处理函数
 """
+import enum
 import json
 import random
 import string
@@ -1050,6 +1051,9 @@ class RestManager:
                 return {k: serialize_obj(v) for k, v in obj.items()}
             if isinstance(obj, (list, tuple)):
                 return [serialize_obj(item) for item in obj]
+            # 检查是否为枚举类型
+            if isinstance(obj, enum.Enum):
+                return obj.name
             # 检查是否为函数对象
             if callable(obj):
                 return f"<function: {getattr(obj, '__name__', 'unknown')}>"
@@ -2206,11 +2210,18 @@ class RestManager:
                             found = True
                             # 获取虚拟机密码
                             vm_pass = vm_config.os_pass
+                            vm_flag = str(vm_config.vm_flag)
+                            if vm_flag == VMPowers.S_CLOSE or vm_flag == VMPowers.ON_STOP:
+                                logger.info(f"[虚拟机上报] 虚拟机 {vm_uuid} 已关闭")
+                                vm_config.vm_flag = VMPowers.STOPPED
+                                server.data_set()
                             return self.api_response(200, f'虚拟机 {vm_uuid} 状态已更新', {
                                 'hs_name': hs_name,
                                 'vm_uuid': vm_uuid,
-                                'vm_pass': vm_pass
+                                'vm_pass': vm_pass,
+                                'vm_flag': vm_flag,
                             })
+
                         except Exception as e:
                             logger.error(f"[虚拟机上报] 状态数据处理失败: {e}")
                             return self.api_response(500, f'状态数据处理失败: {str(e)}')

@@ -2430,3 +2430,135 @@ msgstr "是"
 msgid "空"
 msgstr "空"
 
+msgid "全局"
+msgstr "全域"
+
+msgid "查看您的资源使用情况和配额信息"
+msgstr "查看您的資源使用情況和配額資訊"
+
+msgid "用户空间"
+msgstr "使用者空間"
+
+msgid "系统空间"
+msgstr "系統空間"
+
+msgid "实例管理"
+msgstr "實例管理"
+
+msgid "监控"
+msgstr "監控"
+
+msgid "网络端口"
+msgstr "網路埠"
+
+msgid "网络与配额"
+msgstr "網路與配額"
+
+msgid "上传带宽"
+msgstr "上傳頻寬"
+
+msgid "下载带宽"
+msgstr "下載頻寬"
+
+msgid "实例配置"
+msgstr "實例配置"
+
+msgid "设置密码"
+msgstr "設定密碼"
+
+msgid "一键远程"
+msgstr "一鍵遠端"
+
+msgid "网卡列表"
+msgstr "網卡清單"
+
+msgid "转发规则"
+msgstr "轉發規則"
+
+msgid "设备直通"
+msgstr "裝置直通"
+
+msgid "物理"
+msgstr "實體"
+
+msgid "设备名"
+msgstr "裝置名稱"
+
+msgid "存储路径"
+msgstr "儲存路徑"
+
+msgid "程序启动路径"
+msgstr "程式啟動路徑"
+
+msgid "爱快配置"
+msgstr "愛快配置"
+
+msgid "限制配置"
+msgstr "限制配置"
+
+msgid "（多个用逗号分隔）"
+msgstr "（多個用逗號分隔）"
+
+msgid "高级配置"
+msgstr "進階配置"
+
+msgid "系统映射"
+msgstr "系統映射"
+
+msgid "配置池"
+msgstr "配置池"
+
+msgid "扩展选项"
+msgstr "擴充選項"
+
+msgid "扩展数据"
+msgstr "擴充資料"
+
+msgid "(JSON格式)"
+msgstr "(JSON格式)"
+
+msgid "和事件记录"
+msgstr "和事件記錄"
+
+msgid "请从左侧选择一条"
+msgstr "請從左側選擇一條"
+
+msgid "安全提示"
+msgstr "安全提示"
+
+msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
+msgstr "重置Token後，所有使用舊Token的API呼叫都將失效。請確保更新所有相關配置。"
+
+msgid "在请求头中添加："
+msgstr "在請求標頭中新增："
+
+msgid "受控端"
+msgstr "受控端"
+
+msgid "访问配置"
+msgstr "存取配置"
+
+msgid "新账号"
+msgstr "新帳號"
+
+msgid "注册时需要验证邮箱"
+msgstr "註冊時需要驗證信箱"
+
+msgid "新用户默认"
+msgstr "新使用者預設"
+
+msgid "这是一封来自"
+msgstr "這是一封來自"
+
+msgid "系统的测试邮件"
+msgstr "系統的測試郵件"
+
+msgid "如果您收到这封邮件"
+msgstr "如果您收到這封郵件"
+
+msgid "说明邮件服务配置正常"
+msgstr "說明郵件服務配置正常"
+
+msgid "您的"
+msgstr "您的"
+

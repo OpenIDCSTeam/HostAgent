@@ -226,7 +226,6 @@ class VRestAPI:
             # 电源状态映射
             power_map = {
                 VMPowers.S_START: "on",
-                VMPowers.S_CLOSE: "shutdown",
                 VMPowers.H_CLOSE: "off",
                 VMPowers.A_PAUSE: "pause",
                 VMPowers.A_WAKED: "unpause",

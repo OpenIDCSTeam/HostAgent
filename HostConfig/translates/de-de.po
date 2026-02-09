@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenIDCS 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-05 13:39\n"
-"PO-Revision-Date: 2026-02-05 13:39\n"
+"POT-Creation-Date: 2026-02-09 22:24\n"
+"PO-Revision-Date: 2026-02-09 22:24\n"
 "Last-Translator: Auto Generated\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -85,7 +85,7 @@ msgid "个人设置"
 msgstr "persönliche Einstellungen"
 
 msgid "个人资料"
-msgstr "Persönliche Daten"
+msgstr "persönliche Informationen"
 
 msgid "为虚拟机"
 msgstr "für virtuelle Maschine"
@@ -208,7 +208,7 @@ msgid "创建时间"
 msgstr "Schöpfungszeit"
 
 msgid "创建用户"
-msgstr "Benutzer erstellen"
+msgstr "Benutzer anlegen"
 
 msgid "删除主机"
 msgstr "Host löschen"
@@ -484,7 +484,7 @@ msgid "查看详情"
 msgstr "Überprüfen Sie die Details"
 
 msgid "桌面端口"
-msgstr "Desktop-Port"
+msgstr "Desktop-Anschluss"
 
 msgid "正常运行"
 msgstr "normaler Betrieb"
@@ -604,7 +604,7 @@ msgid "磁盘存储"
 msgstr "Festplattenspeicher"
 
 msgid "禁用失败"
-msgstr "Die Deaktivierung ist fehlgeschlagen"
+msgstr "Deaktivieren fehlgeschlagen"
 
 msgid "移交失败"
 msgstr "Übergabe fehlgeschlagen"
@@ -1819,7 +1819,7 @@ msgid "来自"
 msgstr "aus"
 
 msgid "构建"
-msgstr "Bauen"
+msgstr "bauen"
 
 msgid "构造"
 msgstr "Struktur"
@@ -2173,7 +2173,7 @@ msgid "访问"
 msgstr "Zugang"
 
 msgid "详情"
-msgstr "Einzelheiten"
+msgstr "Details"
 
 msgid "语言"
 msgstr "Sprache"
@@ -2429,4 +2429,136 @@ msgstr "Ja"
 
 msgid "空"
 msgstr "null"
+
+msgid "全局"
+msgstr "Gesamtsituation"
+
+msgid "查看您的资源使用情况和配额信息"
+msgstr "Sehen Sie sich Ihre Ressourcennutzungs- und Kontingentinformationen an"
+
+msgid "用户空间"
+msgstr "Benutzerraum"
+
+msgid "系统空间"
+msgstr "Systemraum"
+
+msgid "实例管理"
+msgstr "Instanzverwaltung"
+
+msgid "监控"
+msgstr "Monitor"
+
+msgid "网络端口"
+msgstr "Netzwerk-Port"
+
+msgid "网络与配额"
+msgstr "Vernetzung und Quoten"
+
+msgid "上传带宽"
+msgstr "Bandbreite hochladen"
+
+msgid "下载带宽"
+msgstr "Bandbreite herunterladen"
+
+msgid "实例配置"
+msgstr "Instanzkonfiguration"
+
+msgid "设置密码"
+msgstr "Passwort festlegen"
+
+msgid "一键远程"
+msgstr "Ein-Klick-Fernbedienung"
+
+msgid "网卡列表"
+msgstr "Liste der Netzwerkkarten"
+
+msgid "转发规则"
+msgstr "Weiterleitungsregeln"
+
+msgid "设备直通"
+msgstr "Gerätedurchgang"
+
+msgid "物理"
+msgstr "Physik"
+
+msgid "设备名"
+msgstr "Gerätename"
+
+msgid "存储路径"
+msgstr "Speicherpfad"
+
+msgid "程序启动路径"
+msgstr "Programmstartpfad"
+
+msgid "爱快配置"
+msgstr "Aikuai-Konfiguration"
+
+msgid "限制配置"
+msgstr "Beschränken Sie die Konfiguration"
+
+msgid "（多个用逗号分隔）"
+msgstr "(Mehrfaches durch Kommas trennen)"
+
+msgid "高级配置"
+msgstr "Erweiterte Konfiguration"
+
+msgid "系统映射"
+msgstr "Systemzuordnung"
+
+msgid "配置池"
+msgstr "Pool konfigurieren"
+
+msgid "扩展选项"
+msgstr "Erweiterte Optionen"
+
+msgid "扩展数据"
+msgstr "erweiterte Daten"
+
+msgid "(JSON格式)"
+msgstr "(JSON-Format)"
+
+msgid "和事件记录"
+msgstr "und Ereignisprotokollierung"
+
+msgid "请从左侧选择一条"
+msgstr "Bitte wählen Sie links eine aus"
+
+msgid "安全提示"
+msgstr "Sicherheitstipps"
+
+msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
+msgstr "Nach dem Zurücksetzen des Tokens werden alle API-Aufrufe, die das alte Token verwenden, ungültig. Bitte stellen Sie sicher, dass Sie alle relevanten Konfigurationen aktualisieren."
+
+msgid "在请求头中添加："
+msgstr "Fügen Sie den Anforderungsheader hinzu:"
+
+msgid "受控端"
+msgstr "Kontrolliertes Ende"
+
+msgid "访问配置"
+msgstr "Zugriffskonfiguration"
+
+msgid "新账号"
+msgstr "neues Konto"
+
+msgid "注册时需要验证邮箱"
+msgstr "Bei der Registrierung ist eine E-Mail-Verifizierung erforderlich"
+
+msgid "新用户默认"
+msgstr "Neuer Benutzerstandard"
+
+msgid "这是一封来自"
+msgstr "Dies ist ein Brief von"
+
+msgid "系统的测试邮件"
+msgstr "Systemtest-E-Mail"
+
+msgid "如果您收到这封邮件"
+msgstr "Wenn Sie diese E-Mail erhalten"
+
+msgid "说明邮件服务配置正常"
+msgstr "Zeigt an, dass die Mail-Dienstkonfiguration normal ist"
+
+msgid "您的"
+msgstr "dein"
 

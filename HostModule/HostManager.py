@@ -1,6 +1,7 @@
 import json
 import secrets
 import traceback
+import threading
 
 from loguru import logger
 
@@ -367,6 +368,9 @@ class HostManage:
                         hs_conf_data["ipaddr_maps"] = json.loads(host_config["ipaddr_maps"]) if host_config.get("ipaddr_maps") else {}
                         hs_conf_data["ipaddr_dnss"] = json.loads(host_config["ipaddr_dnss"]) if host_config.get("ipaddr_dnss") else ["119.29.29.29", "223.5.5.5"]
                         
+                        # 加载is_enabled字段 ========================================
+                        hs_conf_data["is_enabled"] = bool(host_config.get("is_enabled", 1))
+                        
                         # 移除数据库字段，只保留配置字段 ============================
                         for field in ["id", "hs_name", "created_at", "updated_at"]:
                             hs_conf_data.pop(field, None)
@@ -380,11 +384,15 @@ class HostManage:
                         
                         # 转换 vm_saving 字典为 VMConfig 对象 =======================
                         vm_saving_converted = {}
+                        vm_count = len(host_full_data.get("vm_saving", {}))
+                        logger.info(f'[加载配置] 主机 {hs_name} 从数据库加载了 {vm_count} 个虚拟机配置')
+                        
                         for vm_uuid, vm_config in host_full_data["vm_saving"].items():
                             if isinstance(vm_config, dict):
                                 vm_saving_converted[vm_uuid] = VMConfig(**vm_config)
                             else:
                                 vm_saving_converted[vm_uuid] = vm_config
+                            logger.debug(f'[加载配置]   - 虚拟机: {vm_uuid}')
                             
                             # 创建Web代理 ==========================================
                             for web_data in vm_saving_converted[vm_uuid].web_all:
@@ -427,6 +435,9 @@ class HostManage:
                         
                 logger.info(f'[加载配置] 系统配置加载完成，共加载 {len(self.engine)} 个主机')
                 
+                # 异步初始化虚拟机 ============================================
+                self._async_init_vms()
+                
             except Exception as e:
                 logger.error(f'[加载配置] 加载主机配置失败: {e}')
                 traceback.print_exc()
@@ -435,6 +446,66 @@ class HostManage:
             # 捕获所有异常 ======================================================
             logger.error(f'[加载配置] 加载数据时出错: {e}')
             traceback.print_exc()
+
+    # ========================================================================
+    # 异步初始化虚拟机
+    # ========================================================================
+    def _async_init_vms(self):
+        """
+        异步初始化所有主机的虚拟机
+        在后台线程中扫描和初始化虚拟机，避免阻塞系统启动
+        """
+        def init_vms_thread():
+            try:
+                logger.info('[异步初始化] 开始异步初始化虚拟机')
+                logger.info(f'[异步初始化] 当前已加载 {len(self.engine)} 个主机')
+                
+                # 遍历所有启用的主机
+                for hs_name, server in self.engine.items():
+                    try:
+                        # 检查主机是否启用
+                        if hasattr(server, 'hs_config') and server.hs_config:
+                            is_enabled = getattr(server.hs_config, 'is_enabled', True)
+                            if not is_enabled:
+                                logger.debug(f'[异步初始化] 跳过禁用的主机: {hs_name}')
+                                continue
+                        
+                        # 记录当前虚拟机数量
+                        current_vm_count = len(server.vm_saving)
+                        logger.info(f'[异步初始化] 主机 {hs_name} 当前有 {current_vm_count} 个虚拟机')
+                        
+                        # 检查主机是否支持虚拟机扫描
+                        if not hasattr(server, 'VMDetect'):
+                            logger.debug(f'[异步初始化] 主机 {hs_name} 不支持虚拟机扫描')
+                            continue
+                        
+                        logger.info(f'[异步初始化] 开始扫描主机 {hs_name} 的虚拟机')
+                        
+                        # 扫描虚拟机
+                        result = server.VMDetect()
+                        
+                        if result.success:
+                            new_vm_count = len(server.vm_saving)
+                            logger.info(f'[异步初始化] 主机 {hs_name} 虚拟机扫描完成: {result.message}')
+                            logger.info(f'[异步初始化] 主机 {hs_name} 现在有 {new_vm_count} 个虚拟机（之前 {current_vm_count} 个）')
+                        else:
+                            logger.warning(f'[异步初始化] 主机 {hs_name} 虚拟机扫描失败: {result.message}')
+                        
+                    except Exception as e:
+                        logger.error(f'[异步初始化] 初始化主机 {hs_name} 的虚拟机失败: {e}')
+                        traceback.print_exc()
+                        # 继续处理其他主机
+                
+                logger.info('[异步初始化] 虚拟机异步初始化完成')
+                
+            except Exception as e:
+                logger.error(f'[异步初始化] 异步初始化虚拟机失败: {e}')
+                traceback.print_exc()
+        
+        # 创建并启动后台线程
+        init_thread = threading.Thread(target=init_vms_thread, daemon=True, name='VMInitThread')
+        init_thread.start()
+        logger.info('[异步初始化] 虚拟机初始化线程已启动（后台运行）')
 
     # ========================================================================
     # 保存信息

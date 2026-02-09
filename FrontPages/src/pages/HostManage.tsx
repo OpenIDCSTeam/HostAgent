@@ -864,12 +864,12 @@ function HostManage() {
     return (
         <div className="p-6">
             {/* 页面标题 */}
-            <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
-                    <CloudServerOutlined className="text-blue-600"/>
+            <div className="page-header">
+                <h1 className="page-header-title">
+                    <CloudServerOutlined />
                     物理主机管理
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">管理所有虚拟化主机</p>
+                <p className="page-header-subtitle">管理所有虚拟化主机</p>
             </div>
 
             {/* 操作栏 */}
@@ -1150,7 +1150,7 @@ function HostManage() {
                                         <h4 className="font-medium mb-3">系统映射配置</h4>
                                         <div className="space-y-2 mb-4">
                                             {systemMaps.map((row, index) => (
-                                                <div key={row.id} className="bg-gray-50 p-3 rounded-lg">
+                                                <div key={row.id} className="p-3 rounded-lg">
                                                     <Row gutter={8}>
                                                         <Col span={8}>
                                                             <Input
@@ -1213,7 +1213,7 @@ function HostManage() {
                                         <h4 className="font-medium mb-3 mt-4">ISO镜像映射配置</h4>
                                         <div className="space-y-2 mb-4">
                                             {imageMaps.map((row, index) => (
-                                                <div key={row.id} className="bg-gray-50 p-3 rounded-lg">
+                                                <div key={row.id} className="p-3 rounded-lg">
                                                     <Row gutter={8}>
                                                         <Col span={11}>
                                                             <Input
@@ -1264,7 +1264,7 @@ function HostManage() {
                                         <h4 className="font-medium mb-3 mt-4">IP地址池配置</h4>
                                         <div className="space-y-2 mb-4">
                                             {ipaddrMaps.map((row, index) => (
-                                                <div key={row.id} className="bg-gray-50 p-3 rounded-lg">
+                                                <div key={row.id} className="p-3 rounded-lg">
                                                     <Row gutter={8} className="mb-2">
                                                         <Col span={6}>
                                                             <Input

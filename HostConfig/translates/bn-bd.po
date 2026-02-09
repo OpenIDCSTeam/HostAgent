@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenIDCS 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-05 13:25\n"
-"PO-Revision-Date: 2026-02-05 13:25\n"
+"POT-Creation-Date: 2026-02-09 22:10\n"
+"PO-Revision-Date: 2026-02-09 22:10\n"
 "Last-Translator: Auto Generated\n"
 "Language-Team: Bengali\n"
 "Language: bn\n"
@@ -202,7 +202,7 @@ msgid "创建失败"
 msgstr "সৃষ্টি ব্যর্থ হয়েছে"
 
 msgid "创建成功"
-msgstr "সফলভাবে তৈরি করা হয়েছে"
+msgstr "সফলভাবে তৈরি করা হয়েছে৷"
 
 msgid "创建时间"
 msgstr "সৃষ্টির সময়"
@@ -223,7 +223,7 @@ msgid "删除实例"
 msgstr "উদাহরণ মুছুন"
 
 msgid "删除成功"
-msgstr "সফলভাবে মুছে ফেলুন"
+msgstr "সফলভাবে মুছুন"
 
 msgid "删除用户"
 msgstr "ব্যবহারকারী মুছুন"
@@ -922,7 +922,7 @@ msgid "已崩溃"
 msgstr "বিধ্বস্ত"
 
 msgid "已开启"
-msgstr "ইতিমধ্যে চালু"
+msgstr "ইতিমধ্যে চালু হয়েছে"
 
 msgid "已挂载"
 msgstr "মাউন্ট করা হয়েছে"
@@ -1108,7 +1108,7 @@ msgid "不足"
 msgstr "অপর্যাপ্ত"
 
 msgid "丢失"
-msgstr "হারিয়ে গেছে"
+msgstr "হারিয়ে"
 
 msgid "两次"
 msgstr "দুইবার"
@@ -1204,7 +1204,7 @@ msgid "全部"
 msgstr "সব"
 
 msgid "公共"
-msgstr "পাবলিক"
+msgstr "সর্বজনীন"
 
 msgid "公网"
 msgstr "পাবলিক নেটওয়ার্ক"
@@ -1819,7 +1819,7 @@ msgid "来自"
 msgstr "থেকে"
 
 msgid "构建"
-msgstr "নির্মাণ করুন"
+msgstr "নির্মাণ"
 
 msgid "构造"
 msgstr "গঠন"
@@ -2053,7 +2053,7 @@ msgid "类名"
 msgstr "ক্লাসের নাম"
 
 msgid "类型"
-msgstr "টাইপ"
+msgstr "প্রকার"
 
 msgid "系统"
 msgstr "সিস্টেম"
@@ -2248,7 +2248,7 @@ msgid "过滤"
 msgstr "ফিল্টার"
 
 msgid "运行"
-msgstr "চালানো"
+msgstr "চালান"
 
 msgid "返回"
 msgstr "ফিরে"
@@ -2429,4 +2429,136 @@ msgstr "হ্যাঁ"
 
 msgid "空"
 msgstr "নাল"
+
+msgid "全局"
+msgstr "সামগ্রিক পরিস্থিতি"
+
+msgid "查看您的资源使用情况和配额信息"
+msgstr "আপনার সম্পদ ব্যবহার এবং কোটা তথ্য দেখুন"
+
+msgid "用户空间"
+msgstr "ব্যবহারকারী স্থান"
+
+msgid "系统空间"
+msgstr "সিস্টেম স্পেস"
+
+msgid "实例管理"
+msgstr "দৃষ্টান্ত ব্যবস্থাপনা"
+
+msgid "监控"
+msgstr "মনিটর"
+
+msgid "网络端口"
+msgstr "নেটওয়ার্ক পোর্ট"
+
+msgid "网络与配额"
+msgstr "নেটওয়ার্কিং এবং কোটা"
+
+msgid "上传带宽"
+msgstr "ব্যান্ডউইথ আপলোড করুন"
+
+msgid "下载带宽"
+msgstr "ব্যান্ডউইথ ডাউনলোড করুন"
+
+msgid "实例配置"
+msgstr "উদাহরণ কনফিগারেশন"
+
+msgid "设置密码"
+msgstr "পাসওয়ার্ড সেট করুন"
+
+msgid "一键远程"
+msgstr "এক ক্লিক রিমোট"
+
+msgid "网卡列表"
+msgstr "নেটওয়ার্ক কার্ড তালিকা"
+
+msgid "转发规则"
+msgstr "ফরোয়ার্ড করার নিয়ম"
+
+msgid "设备直通"
+msgstr "ডিভাইস পাস-থ্রু"
+
+msgid "物理"
+msgstr "পদার্থবিদ্যা"
+
+msgid "设备名"
+msgstr "ডিভাইসের নাম"
+
+msgid "存储路径"
+msgstr "স্টোরেজ পাথ"
+
+msgid "程序启动路径"
+msgstr "প্রোগ্রাম শুরুর পথ"
+
+msgid "爱快配置"
+msgstr "Aikuai কনফিগারেশন"
+
+msgid "限制配置"
+msgstr "সীমিত কনফিগারেশন"
+
+msgid "（多个用逗号分隔）"
+msgstr "(কমা দিয়ে একাধিক আলাদা করুন)"
+
+msgid "高级配置"
+msgstr "উন্নত কনফিগারেশন"
+
+msgid "系统映射"
+msgstr "সিস্টেম ম্যাপিং"
+
+msgid "配置池"
+msgstr "পুল কনফিগার করুন"
+
+msgid "扩展选项"
+msgstr "বর্ধিত বিকল্প"
+
+msgid "扩展数据"
+msgstr "বর্ধিত ডেটা"
+
+msgid "(JSON格式)"
+msgstr "(JSON ফর্ম্যাট)"
+
+msgid "和事件记录"
+msgstr "এবং ইভেন্ট লগিং"
+
+msgid "请从左侧选择一条"
+msgstr "বাম থেকে একটি চয়ন করুন"
+
+msgid "安全提示"
+msgstr "নিরাপত্তা টিপস"
+
+msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
+msgstr "টোকেন রিসেট করার পরে, পুরানো টোকেন ব্যবহার করে সমস্ত API কল অবৈধ হয়ে যাবে। অনুগ্রহ করে সমস্ত প্রাসঙ্গিক কনফিগারেশন আপডেট করতে ভুলবেন না।"
+
+msgid "在请求头中添加："
+msgstr "অনুরোধ শিরোনাম যোগ করুন:"
+
+msgid "受控端"
+msgstr "নিয়ন্ত্রিত শেষ"
+
+msgid "访问配置"
+msgstr "অ্যাক্সেস কনফিগারেশন"
+
+msgid "新账号"
+msgstr "নতুন অ্যাকাউন্ট"
+
+msgid "注册时需要验证邮箱"
+msgstr "নিবন্ধন করার সময় ইমেল যাচাইকরণ প্রয়োজন"
+
+msgid "新用户默认"
+msgstr "নতুন ব্যবহারকারী ডিফল্ট"
+
+msgid "这是一封来自"
+msgstr "এটি থেকে একটি চিঠি"
+
+msgid "系统的测试邮件"
+msgstr "সিস্টেম পরীক্ষার ইমেল"
+
+msgid "如果您收到这封邮件"
+msgstr "আপনি যদি এই ইমেল পান"
+
+msgid "说明邮件服务配置正常"
+msgstr "ইঙ্গিত করে যে মেল পরিষেবা কনফিগারেশন স্বাভাবিক"
+
+msgid "您的"
+msgstr "আপনার"
 

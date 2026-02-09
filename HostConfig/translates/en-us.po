@@ -2430,3 +2430,135 @@ msgstr "yes"
 msgid "空"
 msgstr "null"
 
+msgid "全局"
+msgstr "Global"
+
+msgid "查看您的资源使用情况和配额信息"
+msgstr "View your resource usage and quota information"
+
+msgid "用户空间"
+msgstr "User Space"
+
+msgid "系统空间"
+msgstr "System Space"
+
+msgid "实例管理"
+msgstr "Instance Management"
+
+msgid "监控"
+msgstr "Monitoring"
+
+msgid "网络端口"
+msgstr "Network Ports"
+
+msgid "网络与配额"
+msgstr "Network & Quota"
+
+msgid "上传带宽"
+msgstr "Upload Bandwidth"
+
+msgid "下载带宽"
+msgstr "Download Bandwidth"
+
+msgid "实例配置"
+msgstr "Instance Configuration"
+
+msgid "设置密码"
+msgstr "Set Password"
+
+msgid "一键远程"
+msgstr "One-Click Remote"
+
+msgid "网卡列表"
+msgstr "Network Interface List"
+
+msgid "转发规则"
+msgstr "Forwarding Rules"
+
+msgid "设备直通"
+msgstr "Device Passthrough"
+
+msgid "物理"
+msgstr "Physical"
+
+msgid "设备名"
+msgstr "Device Name"
+
+msgid "存储路径"
+msgstr "Storage Path"
+
+msgid "程序启动路径"
+msgstr "Program Startup Path"
+
+msgid "爱快配置"
+msgstr "iKuai Configuration"
+
+msgid "限制配置"
+msgstr "Limit Configuration"
+
+msgid "（多个用逗号分隔）"
+msgstr "(Separate multiple items with commas)"
+
+msgid "高级配置"
+msgstr "Advanced Configuration"
+
+msgid "系统映射"
+msgstr "System Mapping"
+
+msgid "配置池"
+msgstr "Configuration Pool"
+
+msgid "扩展选项"
+msgstr "Extended Options"
+
+msgid "扩展数据"
+msgstr "Extended Data"
+
+msgid "(JSON格式)"
+msgstr "(JSON format)"
+
+msgid "和事件记录"
+msgstr "and Event Records"
+
+msgid "请从左侧选择一条"
+msgstr "Please select one from the left"
+
+msgid "安全提示"
+msgstr "Security Notice"
+
+msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
+msgstr "After resetting the Token, all API calls using the old Token will become invalid. Please ensure all related configurations are updated."
+
+msgid "在请求头中添加："
+msgstr "Add to request header:"
+
+msgid "受控端"
+msgstr "Controlled End"
+
+msgid "访问配置"
+msgstr "Access Configuration"
+
+msgid "新账号"
+msgstr "New Account"
+
+msgid "注册时需要验证邮箱"
+msgstr "Email verification required during registration"
+
+msgid "新用户默认"
+msgstr "New User Default"
+
+msgid "这是一封来自"
+msgstr "This is an email from"
+
+msgid "系统的测试邮件"
+msgstr "system test email"
+
+msgid "如果您收到这封邮件"
+msgstr "If you receive this email"
+
+msgid "说明邮件服务配置正常"
+msgstr "it means the email service is configured correctly"
+
+msgid "您的"
+msgstr "Your"
+

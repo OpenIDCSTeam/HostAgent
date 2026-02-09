@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Form, Input, Button, Alert } from 'antd'
-import { UserOutlined, LockOutlined, MailOutlined, UserAddOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons'
+import { UserOutlined, LockOutlined, MailOutlined, UserAddOutlined, CheckCircleOutlined, CloseCircleOutlined, BulbOutlined, BulbFilled, BgColorsOutlined } from '@ant-design/icons'
 import api from '@/utils/apis.ts'
+import { useTheme } from '@/contexts/ThemeContext'
 
 /**
  * 注册表单数据接口
@@ -20,6 +21,7 @@ interface RegisterForm {
  */
 function UserPostin() {
   const navigate = useNavigate()
+  const { theme, toggleTheme, transparentMode, toggleTransparentMode } = useTheme()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>('')
   const [success, setSuccess] = useState<string>('')
@@ -59,9 +61,93 @@ function UserPostin() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 min-h-screen flex items-center justify-center py-8">
+    <div
+      className="register-page-container"
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        padding: '32px 0',
+        background: transparentMode 
+          ? `var(--bg-primary) url('https://images.524228.xyz/') center/cover no-repeat`
+          : 'var(--bg-primary)',
+      }}
+    >
+      {/* 主题切换按钮组 - 右上角 */}
+      <div
+        style={{
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
+          display: 'flex',
+          gap: '12px',
+          zIndex: 1000,
+        }}
+      >
+        {/* 透明模式切换按钮 */}
+        <Button
+          onClick={toggleTransparentMode}
+          size="large"
+          icon={<BgColorsOutlined />}
+          style={{
+            background: transparentMode ? 'linear-gradient(to right, #2563eb, #6366f1)' : 'var(--bg-card)',
+            color: transparentMode ? '#ffffff' : 'var(--text-primary)',
+            border: '1px solid var(--border-primary)',
+            borderRadius: '12px',
+            boxShadow: 'var(--shadow-glass)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '48px',
+            height: '48px',
+            padding: 0,
+            transition: 'all 0.3s',
+          }}
+          title={transparentMode ? '关闭透明模式' : '开启透明模式'}
+        />
+        
+        {/* 暗黑模式切换按钮 */}
+        <Button
+          onClick={toggleTheme}
+          size="large"
+          icon={theme === 'dark' ? <BulbFilled /> : <BulbOutlined />}
+          style={{
+            background: theme === 'dark' ? 'linear-gradient(to right, #2563eb, #6366f1)' : 'var(--bg-card)',
+            color: theme === 'dark' ? '#ffffff' : 'var(--text-primary)',
+            border: '1px solid var(--border-primary)',
+            borderRadius: '12px',
+            boxShadow: 'var(--shadow-glass)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '48px',
+            height: '48px',
+            padding: 0,
+            transition: 'all 0.3s',
+          }}
+          title={theme === 'dark' ? '切换到浅色模式' : '切换到暗黑模式'}
+        />
+      </div>
       {/* 注册卡片容器 */}
-      <div className="glass-card p-8 w-full max-w-md">
+      <div
+        className="register-card glass-card"
+        style={{
+          background: 'var(--bg-card)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderRadius: '16px',
+          boxShadow: 'var(--shadow-glass)',
+          padding: '32px',
+          width: '100%',
+          maxWidth: '448px',
+          border: '1px solid var(--border-primary)',
+        }}
+      >
         {/* 头部图标和标题 */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">

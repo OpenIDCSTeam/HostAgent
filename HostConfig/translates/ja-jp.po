@@ -2430,3 +2430,135 @@ msgstr "はい"
 msgid "空"
 msgstr "ヌル"
 
+msgid "全局"
+msgstr "グローバル"
+
+msgid "查看您的资源使用情况和配额信息"
+msgstr "リソースの使用状況と割り当て情報を表示"
+
+msgid "用户空间"
+msgstr "ユーザースペース"
+
+msgid "系统空间"
+msgstr "システムスペース"
+
+msgid "实例管理"
+msgstr "インスタンス管理"
+
+msgid "监控"
+msgstr "監視"
+
+msgid "网络端口"
+msgstr "ネットワークポート"
+
+msgid "网络与配额"
+msgstr "ネットワークと割り当て"
+
+msgid "上传带宽"
+msgstr "アップロード帯域幅"
+
+msgid "下载带宽"
+msgstr "ダウンロード帯域幅"
+
+msgid "实例配置"
+msgstr "インスタンス構成"
+
+msgid "设置密码"
+msgstr "パスワード設定"
+
+msgid "一键远程"
+msgstr "ワンクリックリモート"
+
+msgid "网卡列表"
+msgstr "ネットワークカードリスト"
+
+msgid "转发规则"
+msgstr "転送ルール"
+
+msgid "设备直通"
+msgstr "デバイスパススルー"
+
+msgid "物理"
+msgstr "物理"
+
+msgid "设备名"
+msgstr "デバイス名"
+
+msgid "存储路径"
+msgstr "ストレージパス"
+
+msgid "程序启动路径"
+msgstr "プログラム起動パス"
+
+msgid "爱快配置"
+msgstr "iKuai設定"
+
+msgid "限制配置"
+msgstr "制限設定"
+
+msgid "（多个用逗号分隔）"
+msgstr "（複数の場合はカンマで区切る）"
+
+msgid "高级配置"
+msgstr "詳細設定"
+
+msgid "系统映射"
+msgstr "システムマッピング"
+
+msgid "配置池"
+msgstr "設定プール"
+
+msgid "扩展选项"
+msgstr "拡張オプション"
+
+msgid "扩展数据"
+msgstr "拡張データ"
+
+msgid "(JSON格式)"
+msgstr "(JSON形式)"
+
+msgid "和事件记录"
+msgstr "とイベント記録"
+
+msgid "请从左侧选择一条"
+msgstr "左側から1つ選択してください"
+
+msgid "安全提示"
+msgstr "セキュリティ警告"
+
+msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
+msgstr "トークンをリセットすると、古いトークンを使用するすべてのAPI呼び出しが無効になります。すべての関連設定を更新してください。"
+
+msgid "在请求头中添加："
+msgstr "リクエストヘッダーに追加："
+
+msgid "受控端"
+msgstr "制御対象"
+
+msgid "访问配置"
+msgstr "アクセス設定"
+
+msgid "新账号"
+msgstr "新しいアカウント"
+
+msgid "注册时需要验证邮箱"
+msgstr "登録時にメール認証が必要"
+
+msgid "新用户默认"
+msgstr "新規ユーザーのデフォルト"
+
+msgid "这是一封来自"
+msgstr "これは次からのメールです"
+
+msgid "系统的测试邮件"
+msgstr "システムのテストメール"
+
+msgid "如果您收到这封邮件"
+msgstr "このメールを受信した場合"
+
+msgid "说明邮件服务配置正常"
+msgstr "メールサービスが正常に設定されています"
+
+msgid "您的"
+msgstr "あなたの"
+

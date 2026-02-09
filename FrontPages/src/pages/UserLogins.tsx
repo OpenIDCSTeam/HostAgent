@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Form, Input, Button, Modal, message, Alert } from 'antd'
-import { UserOutlined, LockOutlined, KeyOutlined, LoginOutlined, MailOutlined, InfoCircleOutlined } from '@ant-design/icons'
+import { UserOutlined, LockOutlined, KeyOutlined, LoginOutlined, MailOutlined, InfoCircleOutlined, BulbOutlined, BulbFilled, BgColorsOutlined } from '@ant-design/icons'
 import { useUserStore } from '@/utils/data.ts'
 import api from '@/utils/apis.ts'
+import { useTheme } from '@/contexts/ThemeContext'
 
 /**
  * 登录表单数据接口
@@ -33,6 +34,7 @@ interface ForgotPasswordForm {
 function UserLogins() {
   const navigate = useNavigate()
   const { setUser, setToken } = useUserStore()
+  const { theme, toggleTheme, transparentMode, toggleTransparentMode } = useTheme()
   const [loading, setLoading] = useState(false)
   const [loginType, setLoginType] = useState<'user' | 'token'>('user') // 登录方式：用户登录或Token登录
   const [errorMsg, setErrorMsg] = useState('') // 错误提示信息
@@ -166,9 +168,71 @@ function UserLogins() {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        background: 'var(--bg-primary)',
+        background: transparentMode 
+          ? `var(--bg-primary) url('https://images.524228.xyz/') center/cover no-repeat`
+          : 'var(--bg-primary)',
       }}
     >
+      {/* 主题切换按钮组 - 右上角 */}
+      <div
+        style={{
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
+          display: 'flex',
+          gap: '12px',
+          zIndex: 1000,
+        }}
+      >
+        {/* 透明模式切换按钮 */}
+        <Button
+          onClick={toggleTransparentMode}
+          size="large"
+          icon={<BgColorsOutlined />}
+          style={{
+            background: transparentMode ? 'linear-gradient(to right, #2563eb, #6366f1)' : 'var(--bg-card)',
+            color: transparentMode ? '#ffffff' : 'var(--text-primary)',
+            border: '1px solid var(--border-primary)',
+            borderRadius: '12px',
+            boxShadow: 'var(--shadow-glass)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '48px',
+            height: '48px',
+            padding: 0,
+            transition: 'all 0.3s',
+          }}
+          title={transparentMode ? '关闭透明模式' : '开启透明模式'}
+        />
+        
+        {/* 暗黑模式切换按钮 */}
+        <Button
+          onClick={toggleTheme}
+          size="large"
+          icon={theme === 'dark' ? <BulbFilled /> : <BulbOutlined />}
+          style={{
+            background: theme === 'dark' ? 'linear-gradient(to right, #2563eb, #6366f1)' : 'var(--bg-card)',
+            color: theme === 'dark' ? '#ffffff' : 'var(--text-primary)',
+            border: '1px solid var(--border-primary)',
+            borderRadius: '12px',
+            boxShadow: 'var(--shadow-glass)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '48px',
+            height: '48px',
+            padding: 0,
+            transition: 'all 0.3s',
+          }}
+          title={theme === 'dark' ? '切换到浅色模式' : '切换到暗黑模式'}
+        />
+      </div>
+
       {/* 登录卡片 */}
       <div
         className="login-card glass-card"

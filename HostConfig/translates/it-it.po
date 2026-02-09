@@ -2430,3 +2430,135 @@ msgstr "SÌ"
 msgid "空"
 msgstr "nullo"
 
+msgid "全局"
+msgstr "Globale"
+
+msgid "查看您的资源使用情况和配额信息"
+msgstr "Visualizza l'utilizzo delle risorse e le informazioni sulle quote"
+
+msgid "用户空间"
+msgstr "Spazio utente"
+
+msgid "系统空间"
+msgstr "Spazio di sistema"
+
+msgid "实例管理"
+msgstr "Gestione istanze"
+
+msgid "监控"
+msgstr "Monitoraggio"
+
+msgid "网络端口"
+msgstr "Porte di rete"
+
+msgid "网络与配额"
+msgstr "Rete e quote"
+
+msgid "上传带宽"
+msgstr "Larghezza di banda upload"
+
+msgid "下载带宽"
+msgstr "Larghezza di banda download"
+
+msgid "实例配置"
+msgstr "Configurazione istanza"
+
+msgid "设置密码"
+msgstr "Imposta password"
+
+msgid "一键远程"
+msgstr "Accesso remoto con un clic"
+
+msgid "网卡列表"
+msgstr "Elenco schede di rete"
+
+msgid "转发规则"
+msgstr "Regole di inoltro"
+
+msgid "设备直通"
+msgstr "Passthrough dispositivo"
+
+msgid "物理"
+msgstr "Fisico"
+
+msgid "设备名"
+msgstr "Nome dispositivo"
+
+msgid "存储路径"
+msgstr "Percorso di archiviazione"
+
+msgid "程序启动路径"
+msgstr "Percorso di avvio programma"
+
+msgid "爱快配置"
+msgstr "Configurazione iKuai"
+
+msgid "限制配置"
+msgstr "Configurazione limiti"
+
+msgid "（多个用逗号分隔）"
+msgstr "(Separare più elementi con virgole)"
+
+msgid "高级配置"
+msgstr "Configurazione avanzata"
+
+msgid "系统映射"
+msgstr "Mappatura di sistema"
+
+msgid "配置池"
+msgstr "Pool di configurazione"
+
+msgid "扩展选项"
+msgstr "Opzioni estese"
+
+msgid "扩展数据"
+msgstr "Dati estesi"
+
+msgid "(JSON格式)"
+msgstr "(Formato JSON)"
+
+msgid "和事件记录"
+msgstr "e registri eventi"
+
+msgid "请从左侧选择一条"
+msgstr "Seleziona un elemento dalla sinistra"
+
+msgid "安全提示"
+msgstr "Avviso di sicurezza"
+
+msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
+msgstr "Dopo il reset del Token, tutte le chiamate API che utilizzano il vecchio Token non saranno più valide. Assicurati di aggiornare tutte le configurazioni correlate."
+
+msgid "在请求头中添加："
+msgstr "Aggiungi nell'intestazione della richiesta:"
+
+msgid "受控端"
+msgstr "Endpoint controllato"
+
+msgid "访问配置"
+msgstr "Configurazione accesso"
+
+msgid "新账号"
+msgstr "Nuovo account"
+
+msgid "注册时需要验证邮箱"
+msgstr "Verifica email richiesta durante la registrazione"
+
+msgid "新用户默认"
+msgstr "Predefinito per nuovi utenti"
+
+msgid "这是一封来自"
+msgstr "Questa è un'email da"
+
+msgid "系统的测试邮件"
+msgstr "email di test del sistema"
+
+msgid "如果您收到这封邮件"
+msgstr "Se ricevi questa email"
+
+msgid "说明邮件服务配置正常"
+msgstr "significa che il servizio email è configurato correttamente"
+
+msgid "您的"
+msgstr "Il tuo"
+

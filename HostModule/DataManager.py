@@ -69,8 +69,11 @@ class DataManager:
                 conn.commit()
                 logger.info(f"[HostDatabase] 数据库初始化完成: {self.db_path}")
                 
+                # 执行数据迁移：将旧格式的vm_status转换为新格式
+                self._migrate_vm_status_data(conn)
+                
                 # 创建默认管理员用户（如果不存在）
-                # self._create_default_admin()
+                self._create_default_admin()
                 
             except Exception as e:
                 logger.error(f"数据库初始化错误: {e}")
@@ -82,8 +85,129 @@ class DataManager:
             logger.warning(f"[HostDatabase] 当前工作目录: {os.getcwd()}")
             logger.warning(f"[HostDatabase] 项目根目录: {project_root}")
 
+    def _migrate_vm_status_data(self, conn: sqlite3.Connection):
+        """迁移vm_status数据：将旧格式（JSON数组）转换为新格式（多行记录）"""
+        try:
+            # 先检查并添加缺失的字段
+            cursor = conn.execute("PRAGMA table_info(vm_status)")
+            columns = {row[1] for row in cursor.fetchall()}
+            
+            # 需要的字段列表
+            required_columns = {
+                'ac_status': 'TEXT',
+                'on_update': 'INTEGER',
+                'flu_usage': 'REAL DEFAULT 0'
+            }
+            
+            # 添加缺失的字段
+            for col_name, col_type in required_columns.items():
+                if col_name not in columns:
+                    try:
+                        conn.execute(f"ALTER TABLE vm_status ADD COLUMN {col_name} {col_type}")
+                        logger.info(f"[HostDatabase] 添加字段: vm_status.{col_name}")
+                    except sqlite3.OperationalError as e:
+                        if "duplicate column name" not in str(e).lower():
+                            raise e
+            
+            conn.commit()
+            
+            # 检查是否需要迁移：查询是否有旧格式数据
+            cursor = conn.execute("SELECT id, hs_name, vm_uuid, status_data FROM vm_status LIMIT 1")
+            row = cursor.fetchone()
+            
+            if not row:
+                logger.info("[HostDatabase] vm_status表为空，无需迁移")
+                return
+            
+            # 尝试解析第一条记录，判断是否为旧格式
+            status_data = json.loads(row["status_data"])
+            
+            # 如果status_data是列表，说明是旧格式，需要迁移
+            if isinstance(status_data, list):
+                logger.info("[HostDatabase] 检测到旧格式vm_status数据，开始迁移...")
+                
+                # 读取所有旧数据
+                cursor = conn.execute("SELECT id, hs_name, vm_uuid, status_data, recorded_at FROM vm_status")
+                old_records = cursor.fetchall()
+                
+                # 创建临时表存储新数据
+                conn.execute("""
+                    CREATE TEMPORARY TABLE vm_status_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        hs_name TEXT NOT NULL,
+                        vm_uuid TEXT NOT NULL,
+                        status_data TEXT NOT NULL,
+                        ac_status TEXT,
+                        on_update INTEGER,
+                        flu_usage REAL DEFAULT 0,
+                        recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # 转换并插入新数据
+                insert_sql = """
+                    INSERT INTO vm_status_new (hs_name, vm_uuid, status_data, ac_status, on_update, flu_usage, recorded_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """
+                
+                total_converted = 0
+                for old_row in old_records:
+                    hs_name = old_row["hs_name"]
+                    vm_uuid = old_row["vm_uuid"]
+                    status_list = json.loads(old_row["status_data"])
+                    recorded_at = old_row["recorded_at"]
+                    
+                    # 如果是列表，展开为多行
+                    if isinstance(status_list, list):
+                        for status_dict in status_list:
+                            if isinstance(status_dict, dict):
+                                ac_status = status_dict.get('ac_status', '')
+                                on_update = status_dict.get('on_update', 0)
+                                flu_usage = status_dict.get('flu_usage', 0)
+                                status_data_json = json.dumps(status_dict)
+                                
+                                conn.execute(insert_sql, (
+                                    hs_name, vm_uuid, status_data_json, 
+                                    ac_status, on_update, flu_usage, recorded_at
+                                ))
+                                total_converted += 1
+                    # 如果是字典，直接插入一行
+                    elif isinstance(status_list, dict):
+                        ac_status = status_list.get('ac_status', '')
+                        on_update = status_list.get('on_update', 0)
+                        flu_usage = status_list.get('flu_usage', 0)
+                        status_data_json = json.dumps(status_list)
+                        
+                        conn.execute(insert_sql, (
+                            hs_name, vm_uuid, status_data_json, 
+                            ac_status, on_update, flu_usage, recorded_at
+                        ))
+                        total_converted += 1
+                
+                # 删除旧表，重命名新表
+                conn.execute("DROP TABLE vm_status")
+                conn.execute("ALTER TABLE vm_status_new RENAME TO vm_status")
+                
+                # 重建索引
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_vm_status_name ON vm_status (hs_name)")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_vm_status_uuid ON vm_status (vm_uuid)")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_vm_status_name_uuid ON vm_status (hs_name, vm_uuid)")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_vm_status_timestamp ON vm_status (on_update)")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_vm_status_recorded ON vm_status (recorded_at)")
+                
+                conn.commit()
+                logger.info(f"[HostDatabase] vm_status数据迁移完成，共转换 {total_converted} 条记录")
+            else:
+                logger.info("[HostDatabase] vm_status数据已是新格式，无需迁移")
+                
+        except Exception as e:
+            logger.error(f"[HostDatabase] vm_status数据迁移失败: {e}")
+            import traceback
+            traceback.print_exc()
+            conn.rollback()
+
     def _create_default_admin(self):
-        """创建默认管理员用户（如果不存在）"""
+        """创建默认管理员用户（如果不存在）- 使用bearer作为初始密码"""
         try:
             # 检查是否已有管理员用户
             conn = self.get_db_sqlite()
@@ -91,10 +215,17 @@ class DataManager:
             admin_count = cursor.fetchone()[0]
             
             if admin_count == 0:
+                # 获取bearer字段作为初始密码
+                ap_config = self.get_ap_config()
+                bearer_token = ap_config.get("bearer", "")
+                
+                if not bearer_token:
+                    logger.warning("[HostDatabase] bearer字段为空，使用默认密码")
+                    bearer_token = "admin123"
+                
                 # 创建默认管理员
                 from MainObject.Public.ZMessage import ZMessage
-                default_password = "admin123"  # 默认密码
-                hashed_password = ZMessage.z_hash(default_password)
+                hashed_password = ZMessage.z_hash(bearer_token)
                 
                 user_id = self.create_user(
                     username="admin",
@@ -112,7 +243,7 @@ class DataManager:
                         WHERE id = ?
                     """, (user_id,))
                     conn.commit()
-                    logger.info("[HostDatabase] 已创建默认管理员用户: admin/admin123")
+                    logger.info(f"[HostDatabase] 已创建默认管理员用户: admin，初始密码为bearer字段值")
                 else:
                     logger.error("[HostDatabase] 创建默认管理员用户失败")
             else:
@@ -199,8 +330,8 @@ class DataManager:
              filter_name, images_path, dvdrom_path, system_path, backup_path, extern_path,
              launch_path, network_nat, network_pub, i_kuai_addr, i_kuai_user, 
              i_kuai_pass, ports_start, ports_close, remote_port, system_maps, images_maps,
-             public_addr, extend_data, server_dnss, limits_nums, ipaddr_maps, ipaddr_dnss, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+             public_addr, extend_data, server_dnss, limits_nums, ipaddr_maps, ipaddr_dnss, is_enabled, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             """
             params = (
                 hs_name,
@@ -232,7 +363,8 @@ class DataManager:
                 json.dumps(hs_config.server_dnss) if hs_config.server_dnss else "[]",
                 hs_config.limits_nums,
                 json.dumps(hs_config.ipaddr_maps) if hs_config.ipaddr_maps else "{}",
-                json.dumps(hs_config.ipaddr_dnss) if hs_config.ipaddr_dnss else '["119.29.29.29", "223.5.5.5"]'
+                json.dumps(hs_config.ipaddr_dnss) if hs_config.ipaddr_dnss else '["119.29.29.29", "223.5.5.5"]',
+                1 if getattr(hs_config, 'is_enabled', True) else 0  # 主机启用状态
             )
             conn.execute(sql, params)
             conn.commit()
@@ -416,7 +548,7 @@ class DataManager:
     # ==================== 虚拟状态操作 ====================
     def add_vm_status(self, hs_name: str, vm_uuid: str, status: Any) -> bool:
         """
-        添加单个虚拟机状态（立即保存到数据库）
+        添加单个虚拟机状态（立即保存到数据库）- 优化版：直接插入新行
         :param hs_name: 主机名称
         :param vm_uuid: 虚拟机UUID
         :param status: 状态对象（HWStatus）
@@ -424,70 +556,51 @@ class DataManager:
         """
         conn = self.get_db_sqlite()
         try:
-            # 获取该虚拟机的现有状态
-            cursor = conn.execute(
-                "SELECT status_data FROM vm_status WHERE hs_name = ? AND vm_uuid = ?",
-                (hs_name, vm_uuid)
-            )
-            row = cursor.fetchone()
-            
-            # 解析现有状态列表
-            if row:
-                status_data_raw = json.loads(row["status_data"])
-                # 确保status_list是列表类型
-                if isinstance(status_data_raw, list):
-                    status_list = status_data_raw
-                elif isinstance(status_data_raw, dict):
-                    # 如果是字典，转换为包含单个元素的列表
-                    status_list = [status_data_raw]
-                    logger.warning(f"[DataManage] 虚拟机 {vm_uuid} 的状态数据格式异常（字典），已转换为列表")
-                else:
-                    # 其他情况，初始化为空列表
-                    status_list = []
-                    logger.warning(f"[DataManage] 虚拟机 {vm_uuid} 的状态数据格式未知，已重置为空列表")
-            else:
-                status_list = []
-
             # 转换状态对象为字典
             status_dict = status.__save__() if hasattr(status, '__save__') else status
             
-            # 累加流量消耗：从数据库取出之前的flu_usage，加上当前的
-            if len(status_list) > 0:
-                # 获取最后一条状态记录中的flu_usage
-                last_status = status_list[-1]
-                previous_flu_usage = last_status.get('flu_usage', 0) if isinstance(last_status, dict) else 0
-                current_flu_usage = status_dict.get('flu_usage', 0) if isinstance(status_dict, dict) else 0
-                # 累加流量
-                status_dict['flu_usage'] = previous_flu_usage + current_flu_usage
-                logger.debug(f"[DataManage] 流量累加: 之前={previous_flu_usage}MB, 本次={current_flu_usage}MB, 累计={status_dict['flu_usage']}MB")
-            else:
-                logger.debug(f"[DataManage] 首次上报流量: {status_dict.get('flu_usage', 0)}MB")
+            # 提取关键字段用于索引和查询
+            ac_status = status_dict.get('ac_status', '') if isinstance(status_dict, dict) else ''
+            on_update = status_dict.get('on_update', 0) if isinstance(status_dict, dict) else 0
+            flu_usage = status_dict.get('flu_usage', 0) if isinstance(status_dict, dict) else 0
             
-            # 添加新状态到列表
-            status_list.append(status_dict)
-
-            # 限制状态历史记录数量（保留最近100条）
-            if len(status_list) > 43200:
-                status_list = status_list[-43200:]
-
-            # 序列化状态列表
-            status_data = json.dumps(status_list)
-            
-            # 更新或插入该虚拟机的状态（使用REPLACE语句，会更新recorded_at为当前时间）
+            # 累加流量消耗：查询该虚拟机最后一条记录的流量
+            cursor = conn.execute(
+                "SELECT flu_usage FROM vm_status WHERE hs_name = ? AND vm_uuid = ? ORDER BY id DESC LIMIT 1",
+                (hs_name, vm_uuid)
+            )
+            row = cursor.fetchone()
             if row:
-                # 更新现有记录
-                conn.execute(
-                    "UPDATE vm_status SET status_data = ?, recorded_at = CURRENT_TIMESTAMP WHERE hs_name = ? AND vm_uuid = ?",
-                    (status_data, hs_name, vm_uuid)
-                )
-                logger.debug(f"[DataManage] 更新虚拟机 {vm_uuid} 状态，记录数: {len(status_list)}")
+                previous_flu_usage = row[0] or 0
+                flu_usage = previous_flu_usage + flu_usage
+                logger.debug(f"[DataManage] 流量累加: 之前={previous_flu_usage}MB, 本次={status_dict.get('flu_usage', 0)}MB, 累计={flu_usage}MB")
             else:
-                # 插入新记录
-                conn.execute(
-                    "INSERT INTO vm_status (hs_name, vm_uuid, status_data) VALUES (?, ?, ?)",
-                    (hs_name, vm_uuid, status_data)
+                logger.debug(f"[DataManage] 首次上报流量: {flu_usage}MB")
+            
+            # 更新状态字典中的累计流量
+            if isinstance(status_dict, dict):
+                status_dict['flu_usage'] = flu_usage
+            
+            # 序列化状态数据
+            status_data = json.dumps(status_dict)
+            
+            # 直接插入新行
+            sql = """
+                INSERT INTO vm_status (hs_name, vm_uuid, status_data, ac_status, on_update, flu_usage)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """
+            conn.execute(sql, (hs_name, vm_uuid, status_data, ac_status, on_update, flu_usage))
+            
+            # 限制状态历史记录数量（保留最近43200条）
+            # 使用子查询删除旧记录，性能更好
+            conn.execute("""
+                DELETE FROM vm_status 
+                WHERE hs_name = ? AND vm_uuid = ? AND id NOT IN (
+                    SELECT id FROM vm_status 
+                    WHERE hs_name = ? AND vm_uuid = ? 
+                    ORDER BY id DESC LIMIT 43200
                 )
-                logger.debug(f"[DataManage] 插入虚拟机 {vm_uuid} 状态，记录数: {len(status_list)}")
+            """, (hs_name, vm_uuid, hs_name, vm_uuid))
             
             conn.commit()
             logger.debug(f"[DataManage] 虚拟机 {vm_uuid} 状态保存成功")
@@ -502,7 +615,7 @@ class DataManager:
             conn.close()
 
     def set_vm_status(self, hs_name: str, vm_status: Dict[str, List[Any]]) -> bool:
-        """保存虚拟机状态"""
+        """保存虚拟机状态 - 优化版：批量插入多行记录"""
         conn = self.get_db_sqlite()
         try:
             logger.debug(f"[DataManage] 开始保存虚拟机状态，主机: {hs_name}, 虚拟机数量: {len(vm_status)}")
@@ -511,16 +624,30 @@ class DataManager:
             delete_result = conn.execute("DELETE FROM vm_status WHERE hs_name = ?", (hs_name,))
             logger.debug(f"[DataManage] 已清除旧状态，删除行数: {delete_result.rowcount}")
 
-            # 插入新状态
-            sql = "INSERT INTO vm_status (hs_name, vm_uuid, status_data) VALUES (?, ?, ?)"
+            # 批量插入新状态
+            sql = """
+                INSERT INTO vm_status (hs_name, vm_uuid, status_data, ac_status, on_update, flu_usage)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """
             insert_count = 0
             for vm_uuid, status_list in vm_status.items():
-                status_data = json.dumps(
-                    [status.__save__() if hasattr(status, '__save__') else status for status in status_list])
-                logger.debug(
-                    f"[DataManage] 插入虚拟机 {vm_uuid} 状态，记录数: {len(status_list)}, 数据长度: {len(status_data)}")
-                conn.execute(sql, (hs_name, vm_uuid, status_data))
-                insert_count += 1
+                for status in status_list:
+                    # 转换状态对象为字典
+                    status_dict = status.__save__() if hasattr(status, '__save__') else status
+                    
+                    # 提取关键字段
+                    ac_status = status_dict.get('ac_status', '') if isinstance(status_dict, dict) else ''
+                    on_update = status_dict.get('on_update', 0) if isinstance(status_dict, dict) else 0
+                    flu_usage = status_dict.get('flu_usage', 0) if isinstance(status_dict, dict) else 0
+                    
+                    # 序列化状态数据
+                    status_data = json.dumps(status_dict)
+                    
+                    # 插入单条记录
+                    conn.execute(sql, (hs_name, vm_uuid, status_data, ac_status, on_update, flu_usage))
+                    insert_count += 1
+                
+                logger.debug(f"[DataManage] 插入虚拟机 {vm_uuid} 状态，记录数: {len(status_list)}")
 
             conn.commit()
             logger.debug(f"[DataManage] 虚拟机状态保存成功，共插入 {insert_count} 条记录")
@@ -535,7 +662,7 @@ class DataManager:
             conn.close()
 
     def get_vm_status(self, hs_name: str, start_timestamp: int = None, end_timestamp: int = None) -> Dict[str, List[Any]]:
-        """获取虚拟机状态
+        """获取虚拟机状态 - 优化版：从多行记录读取
         
         Args:
             hs_name: 主机名称
@@ -549,28 +676,50 @@ class DataManager:
         try:
             from datetime import datetime, timedelta
             
-            cursor = conn.execute("SELECT vm_uuid, status_data, recorded_at FROM vm_status WHERE hs_name = ?", (hs_name,))
+            # 构建SQL查询，支持时间范围过滤
+            sql = "SELECT vm_uuid, status_data, ac_status, recorded_at FROM vm_status WHERE hs_name = ?"
+            params = [hs_name]
+            
+            # 添加时间范围过滤
+            if start_timestamp is not None:
+                sql += " AND on_update >= ?"
+                params.append(start_timestamp)
+            if end_timestamp is not None:
+                sql += " AND on_update <= ?"
+                params.append(end_timestamp)
+            
+            # 按ID排序（时间顺序）
+            sql += " ORDER BY id ASC"
+            
+            cursor = conn.execute(sql, params)
             result = {}
+            
+            # 记录每个虚拟机的最后上报时间
+            last_recorded_times = {}
             
             for row in cursor.fetchall():
                 vm_uuid = row["vm_uuid"]
-                status_list = json.loads(row["status_data"])
+                status_dict = json.loads(row["status_data"])
                 recorded_at_str = row["recorded_at"]
                 
-                # 解析recorded_at时间戳
+                # 记录最后上报时间
+                last_recorded_times[vm_uuid] = recorded_at_str
+                
+                # 添加到结果列表
+                if vm_uuid not in result:
+                    result[vm_uuid] = []
+                result[vm_uuid].append(status_dict)
+            
+            # 检查虚拟机是否离线（超过10分钟没有上报）
+            current_time = datetime.now()
+            for vm_uuid, recorded_at_str in last_recorded_times.items():
                 try:
-                    # SQLite的CURRENT_TIMESTAMP返回UTC时间，需要转换为本地时间
-                    from datetime import timezone, timedelta as td
-                    
                     # 解析数据库中的UTC时间
                     recorded_at_utc = datetime.strptime(recorded_at_str, "%Y-%m-%d %H:%M:%S")
                     
                     # 转换为本地时间（UTC+8）
-                    # 假设数据库存储的是UTC时间，加8小时转换为北京时间
+                    from datetime import timezone, timedelta as td
                     recorded_at_local = recorded_at_utc + td(hours=8)
-                    
-                    # 获取当前本地时间
-                    current_time = datetime.now()
                     
                     # 计算时间差
                     time_diff = (current_time - recorded_at_local).total_seconds()
@@ -579,30 +728,11 @@ class DataManager:
                     if time_diff > 600:
                         logger.debug(f"[DataManage] 虚拟机 {vm_uuid} 已离线，最后上报时间(UTC): {recorded_at_str}, 本地时间: {recorded_at_local.strftime('%Y-%m-%d %H:%M:%S')}, 距今: {int(time_diff)}秒")
                         # 将所有状态记录的ac_status设置为STOPPED
-                        for status in status_list:
+                        for status in result.get(vm_uuid, []):
                             if isinstance(status, dict):
                                 status['ac_status'] = 'STOPPED'
                 except Exception as e:
                     logger.warning(f"[DataManage] 解析时间戳失败: {e}, recorded_at={recorded_at_str}")
-                
-                # 按时间戳范围过滤状态数据
-                if start_timestamp is not None or end_timestamp is not None:
-                    filtered_list = []
-                    for status in status_list:
-                        if isinstance(status, dict) and 'on_update' in status:
-                            on_update = status['on_update']
-                            # 检查是否在时间范围内
-                            if start_timestamp is not None and on_update < start_timestamp:
-                                continue
-                            if end_timestamp is not None and on_update > end_timestamp:
-                                continue
-                            filtered_list.append(status)
-                        else:
-                            # 如果没有on_update字段，保留该状态（向后兼容）
-                            filtered_list.append(status)
-                    status_list = filtered_list
-                
-                result[vm_uuid] = status_list
             
             return result
         finally:

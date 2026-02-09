@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenIDCS 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-05 13:08\n"
-"PO-Revision-Date: 2026-02-05 13:08\n"
+"POT-Creation-Date: 2026-02-09 21:49\n"
+"PO-Revision-Date: 2026-02-09 21:49\n"
 "Last-Translator: Auto Generated\n"
 "Language-Team: Arabic\n"
 "Language: ar\n"
@@ -85,7 +85,7 @@ msgid "个人设置"
 msgstr "الإعدادات الشخصية"
 
 msgid "个人资料"
-msgstr "البيانات الشخصية"
+msgstr "معلومات شخصية"
 
 msgid "为虚拟机"
 msgstr "للجهاز الظاهري"
@@ -190,7 +190,7 @@ msgid "内网端口"
 msgstr "منفذ إنترانت"
 
 msgid "内网网桥"
-msgstr "جسر إنترانت"
+msgstr "جسر الإنترانت"
 
 msgid "分配主机"
 msgstr "تعيين المضيف"
@@ -367,7 +367,7 @@ msgid "扫描失败"
 msgstr "فشل المسح"
 
 msgid "找回密码"
-msgstr "استرجاع كلمة المرور"
+msgstr "استرداد كلمة المرور"
 
 msgid "挂载名称"
 msgstr "اسم جبل"
@@ -1042,7 +1042,7 @@ msgid "虚拟机"
 msgstr "الآلة الافتراضية"
 
 msgid "请输入"
-msgstr "من فضلك أدخل"
+msgstr "الرجاء الدخول"
 
 msgid "请选择"
 msgstr "الرجاء التحديد"
@@ -2429,4 +2429,136 @@ msgstr "نعم"
 
 msgid "空"
 msgstr "باطل"
+
+msgid "全局"
+msgstr "الوضع العام"
+
+msgid "查看您的资源使用情况和配额信息"
+msgstr "عرض استخدام الموارد الخاصة بك ومعلومات الحصص"
+
+msgid "用户空间"
+msgstr "مساحة المستخدم"
+
+msgid "系统空间"
+msgstr "مساحة النظام"
+
+msgid "实例管理"
+msgstr "إدارة المثيلات"
+
+msgid "监控"
+msgstr "شاشة"
+
+msgid "网络端口"
+msgstr "منفذ الشبكة"
+
+msgid "网络与配额"
+msgstr "الشبكات والحصص"
+
+msgid "上传带宽"
+msgstr "تحميل عرض النطاق الترددي"
+
+msgid "下载带宽"
+msgstr "تحميل عرض النطاق الترددي"
+
+msgid "实例配置"
+msgstr "تكوين المثيل"
+
+msgid "设置密码"
+msgstr "تعيين كلمة المرور"
+
+msgid "一键远程"
+msgstr "بنقرة واحدة عن بعد"
+
+msgid "网卡列表"
+msgstr "قائمة بطاقات الشبكة"
+
+msgid "转发规则"
+msgstr "قواعد إعادة التوجيه"
+
+msgid "设备直通"
+msgstr "مرور الجهاز"
+
+msgid "物理"
+msgstr "الفيزياء"
+
+msgid "设备名"
+msgstr "اسم الجهاز"
+
+msgid "存储路径"
+msgstr "مسار التخزين"
+
+msgid "程序启动路径"
+msgstr "مسار بدء تشغيل البرنامج"
+
+msgid "爱快配置"
+msgstr "تكوين ايكواي"
+
+msgid "限制配置"
+msgstr "تكوين الحد"
+
+msgid "（多个用逗号分隔）"
+msgstr "(افصل بين المتعددة بفواصل)"
+
+msgid "高级配置"
+msgstr "التكوين المتقدم"
+
+msgid "系统映射"
+msgstr "رسم خرائط النظام"
+
+msgid "配置池"
+msgstr "تكوين تجمع"
+
+msgid "扩展选项"
+msgstr "خيارات موسعة"
+
+msgid "扩展数据"
+msgstr "البيانات الموسعة"
+
+msgid "(JSON格式)"
+msgstr "(تنسيق جيسون)"
+
+msgid "和事件记录"
+msgstr "وتسجيل الأحداث"
+
+msgid "请从左侧选择一条"
+msgstr "الرجاء اختيار واحد من اليسار"
+
+msgid "安全提示"
+msgstr "نصائح السلامة"
+
+msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
+msgstr "بعد إعادة تعيين الرمز المميز، ستصبح جميع استدعاءات واجهة برمجة التطبيقات (API) التي تستخدم الرمز المميز القديم غير صالحة. يرجى التأكد من تحديث كافة التكوينات ذات الصلة."
+
+msgid "在请求头中添加："
+msgstr "أضف في رأس الطلب:"
+
+msgid "受控端"
+msgstr "نهاية تسيطر عليها"
+
+msgid "访问配置"
+msgstr "تكوين الوصول"
+
+msgid "新账号"
+msgstr "حساب جديد"
+
+msgid "注册时需要验证邮箱"
+msgstr "مطلوب التحقق من البريد الإلكتروني عند التسجيل"
+
+msgid "新用户默认"
+msgstr "الافتراضي للمستخدم الجديد"
+
+msgid "这是一封来自"
+msgstr "هذه رسالة من"
+
+msgid "系统的测试邮件"
+msgstr "البريد الإلكتروني لاختبار النظام"
+
+msgid "如果您收到这封邮件"
+msgstr "إذا تلقيت هذا البريد الإلكتروني"
+
+msgid "说明邮件服务配置正常"
+msgstr "يشير إلى أن تكوين خدمة البريد طبيعي"
+
+msgid "您的"
+msgstr "لك"
 
