@@ -55,6 +55,12 @@ import {
 import ReactECharts from 'echarts-for-react'
 import api from '@/utils/apis.ts'
 
+interface VGConfig {
+    gpu_uuid: string
+    gpu_mdev: string
+    gpu_hint: string
+}
+
 /**
  * 虚拟机详情数据接口
  */
@@ -68,7 +74,7 @@ interface DockDetail {
     cpu_num: number
     mem_num: number
     hdd_num: number
-    gpu_num: number
+    pci_all?: Record<string, VGConfig>
     gpu_mem?: number // 显存大小
     speed_up: number
     speed_down: number
@@ -210,6 +216,7 @@ function VMDetail() {
     const [natModalVisible, setNatModalVisible] = useState(false)
     const [ipModalVisible, setIpModalVisible] = useState(false)
     const [proxyModalVisible, setProxyModalVisible] = useState(false)
+    const [gpuModalVisible, setGpuModalVisible] = useState(false)
     const [hddModalVisible, setHddModalVisible] = useState(false)
     const [isoModalVisible, setIsoModalVisible] = useState(false)
     const [backupModalVisible, setBackupModalVisible] = useState(false)
@@ -251,6 +258,7 @@ function VMDetail() {
     const [form] = Form.useForm()
     const [ipForm] = Form.useForm()
     const [proxyForm] = Form.useForm()
+    const [gpuForm] = Form.useForm()
     const [hddForm] = Form.useForm()
     const [isoForm] = Form.useForm()
     const [ownerForm] = Form.useForm()
@@ -259,6 +267,12 @@ function VMDetail() {
     const [editVmForm] = Form.useForm()
 
     const [editNicList, setEditNicList] = useState<any[]>([])
+    
+    // USB State
+    const [usbList, setUsbList] = useState<any[]>([])
+    const [usbModalVisible, setUsbModalVisible] = useState(false)
+    const [usbActionLoading, setUsbActionLoading] = useState(false)
+    const [usbForm] = Form.useForm()
 
     // New Confirmation States
     const [isoMountConfirmChecked, setIsoMountConfirmChecked] = useState(false)
@@ -287,6 +301,7 @@ function VMDetail() {
     // 端口转发和反向代理操作加载状态
     const [natActionLoading, setNatActionLoading] = useState(false)
     const [proxyActionLoading, setProxyActionLoading] = useState(false)
+    const [gpuActionLoading, setGpuActionLoading] = useState(false)
     // 截图状态
     const [vmScreenshot, setVmScreenshot] = useState<string>('')
     const [loadingScreenshot, setLoadingScreenshot] = useState<boolean>(false)
@@ -445,6 +460,16 @@ function VMDetail() {
                     }
                 }
 
+                // Load USB List
+                if (vmData.config && vmData.config.usb_all) {
+                    setUsbList(Object.entries(vmData.config.usb_all).map(([key, value]: [string, any]) => ({
+                        key: key,
+                        ...value
+                    })))
+                } else {
+                    setUsbList([])
+                }
+
                 setVM(vmData)
             }
         } catch (error: any) {
@@ -504,6 +529,37 @@ function VMDetail() {
         } catch (error: any) {
             console.error('加载代理规则失败:', error)
             // 主机不存在时不显示错误消息
+        }
+    }
+
+    const handleAddUSB = async () => {
+        try {
+            const values = await usbForm.validateFields()
+            setUsbActionLoading(true)
+            await api.addUSB(hostName!, uuid!, values)
+            message.success('添加USB设备成功')
+            setUsbModalVisible(false)
+            usbForm.resetFields()
+            loadVMDetail()
+        } catch (error: any) {
+            console.error('添加USB设备失败:', error)
+            message.error(error.message || '添加USB设备失败')
+        } finally {
+            setUsbActionLoading(false)
+        }
+    }
+
+    const handleDeleteUSB = async (usbKey: string) => {
+        try {
+            setUsbActionLoading(true)
+            await api.deleteUSB(hostName!, uuid!, usbKey)
+            message.success('删除USB设备成功')
+            loadVMDetail()
+        } catch (error: any) {
+            console.error('删除USB设备失败:', error)
+            message.error(error.message || '删除USB设备失败')
+        } finally {
+            setUsbActionLoading(false)
         }
     }
 
@@ -1138,6 +1194,69 @@ function VMDetail() {
                 setTempStatus(null)
                 hide()
                 throw error
+            }
+        }, true)
+    }
+
+    const handleAddGpu = async (_values: any) => {
+        setTempStatus('configuring')
+        setGpuActionLoading(true)
+        const hide = message.loading('正在添加显卡...', 0)
+        try {
+            const currentGpuAll = vm?.config?.pci_all || {};
+            // Use uuid as key if available, otherwise generate one
+            const gpuKey = _values.gpu_uuid || `gpu-${Date.now()}`;
+            const newGpuAll = {
+                ...currentGpuAll,
+                [gpuKey]: {
+                    gpu_uuid: _values.gpu_uuid,
+                    gpu_mdev: _values.gpu_mdev,
+                    gpu_hint: _values.gpu_hint
+                }
+            };
+            
+            await api.updateVM(hostName!, uuid!, {
+                pci_all: newGpuAll
+            })
+            
+            hide()
+            message.success('显卡添加成功，请重启虚拟机使其生效')
+            setGpuModalVisible(false);
+            gpuForm.resetFields();
+            loadVMDetail()
+            setTimeout(() => {
+                setTempStatus(null)
+            }, 1500)
+        } catch (error) {
+            setTempStatus(null)
+            hide()
+            message.error('添加失败')
+        } finally {
+            setGpuActionLoading(false)
+        }
+    }
+
+    const handleDeleteGpu = async (gpuKey: string) => {
+        showConfirmAction('删除显卡确认', `确定要删除显卡 "${gpuKey}" 吗？`, async () => {
+            setTempStatus('configuring')
+            const hide = message.loading('正在删除显卡...', 0)
+            try {
+                const currentGpuAll = {...(vm?.config?.pci_all || {})};
+                delete currentGpuAll[gpuKey];
+                
+                await api.updateVM(hostName!, uuid!, {
+                    pci_all: currentGpuAll
+                })
+                
+                hide()
+                loadVMDetail()
+                setTimeout(() => {
+                    setTempStatus(null)
+                }, 1500)
+            } catch (error) {
+                setTempStatus(null)
+                hide()
+                message.error('删除失败')
             }
         }, true)
     }
@@ -2168,6 +2287,74 @@ function VMDetail() {
                 )}
             </Card>
         },
+            {
+            key: 'pci',
+            label: 'PCI设备',
+            children: <Card title="PCI设备直通" extra={<Button type="primary" icon={<PlusOutlined/>}
+                                                            onClick={() => setGpuModalVisible(true)}>添加PCI设备</Button>}
+                            variant="borderless">
+                {vm && vm.config && vm.config.pci_all && Object.keys(vm.config.pci_all).length > 0 ? (
+                    <div className="space-y-3">
+                        {Object.entries(vm.config.pci_all).map(([gpuKey, gpuConfig]: [string, any]) => (
+                            <div key={gpuKey} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="font-medium text-gray-700 dark:text-gray-300">{gpuConfig.gpu_hint || gpuKey}</span>
+                                    <Button danger size="small" onClick={() => handleDeleteGpu(gpuKey)}>删除</Button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-gray-500">UUID:</span>
+                                        <span className="font-mono text-gray-700 dark:text-gray-300">{gpuConfig.gpu_uuid || '-'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-gray-500">MDEV:</span>
+                                        <span className="font-mono text-gray-700 dark:text-gray-300">{gpuConfig.gpu_mdev || '-'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center text-gray-500 py-8">暂无显卡配置</div>
+                )}
+            </Card>
+        },
+        {
+            key: 'usb',
+            label: 'USB设备',
+            children: <Card title="USB设备管理" extra={<Button type="primary" icon={<PlusOutlined/>} onClick={() => setUsbModalVisible(true)}>添加USB设备</Button>} variant="borderless">
+                {usbList && usbList.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {usbList.map((usb, index) => (
+                            <div key={usb.key || `usb-${index}`}
+                                 className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-blue-400 dark:hover:border-blue-500">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="px-2 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/40 rounded">
+                                        USB设备
+                                    </span>
+                                    <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => handleDeleteUSB(usb.key)} loading={usbActionLoading}>删除</Button>
+                                </div>
+                                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-2">
+                                    <div className="flex justify-between mb-1">
+                                        <span className="text-xs text-gray-500">VID</span>
+                                        <code className="text-sm font-mono">{usb.vid_uuid || '-'}</code>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-xs text-gray-500">PID</span>
+                                        <code className="text-sm font-mono">{usb.pid_uuid || '-'}</code>
+                                    </div>
+                                </div>
+                                {usb.usb_hint && (
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{usb.usb_hint}</p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center text-gray-500 py-8">暂无USB直通设备</div>
+                )}
+            </Card>
+        },
         {
             key: 'backup',
             label: '备份管理',
@@ -2586,6 +2773,18 @@ function VMDetail() {
                 </Form>
             </Modal>
 
+            <Modal title="添加显卡" open={gpuModalVisible} onCancel={() => setGpuModalVisible(false)}
+                   onOk={() => gpuForm.submit()} confirmLoading={gpuActionLoading}>
+                <Form form={gpuForm} onFinish={handleAddGpu} layout="vertical">
+                    <Form.Item label="GPU UUID" name="gpu_uuid" rules={[{required: true, message: '请输入GPU UUID'}]}
+                               help="物理GPU的UUID"><Input placeholder="例如: 550e8400-e29b-41d4-a716-446655440000"/></Form.Item>
+                    <Form.Item label="MDEV类型" name="gpu_mdev"
+                               help="vGPU类型标识"><Input placeholder="例如: nvidia-222"/></Form.Item>
+                    <Form.Item label="备注" name="gpu_hint"><Input placeholder="显卡用途说明"/></Form.Item>
+                </Form>
+                <Alert message="注意：添加显卡需要重启虚拟机才能生效。" type="warning" showIcon className="mt-4"/>
+            </Modal>
+
             <Modal title="添加数据盘" open={hddModalVisible} onCancel={() => setHddModalVisible(false)}
                    onOk={() => hddForm.submit()} confirmLoading={hddActionLoading}>
                 <Form form={hddForm} onFinish={handleAddHDD} layout="vertical">
@@ -2788,6 +2987,27 @@ function VMDetail() {
                         htmlFor="transferConfirm"
                         style={{cursor: 'pointer', userSelect: 'none'}}>我同意关闭当前虚拟机执行操作</label></Space>
                 </div>
+            </Modal>
+
+            <Modal title="添加USB设备" open={usbModalVisible} onCancel={() => setUsbModalVisible(false)}
+                   onOk={handleAddUSB} confirmLoading={usbActionLoading}>
+                <Form form={usbForm} layout="vertical">
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item label="Vendor ID (VID)" name="usb_vid" rules={[{required: true, message: '请输入VID'}]}>
+                                <Input placeholder="例如: 0403" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item label="Product ID (PID)" name="usb_pid" rules={[{required: true, message: '请输入PID'}]}>
+                                <Input placeholder="例如: 6001" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Form.Item label="备注" name="usb_remark">
+                        <Input placeholder="备注信息" />
+                    </Form.Item>
+                </Form>
             </Modal>
         </div>
     )

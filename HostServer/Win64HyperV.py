@@ -16,6 +16,7 @@ from VNCConsole.VNCSManager import VNCSManager
 from HostServer.Win64HyperVAPI.HyperVAPI import HyperVAPI
 from MainObject.Config.HSConfig import HSConfig
 from MainObject.Config.IMConfig import IMConfig
+from MainObject.Config.NCConfig import NCConfig
 from MainObject.Config.SDConfig import SDConfig
 from MainObject.Config.VMPowers import VMPowers
 from MainObject.Public.HWStatus import HWStatus
@@ -267,6 +268,43 @@ class HostServer(BasicServer):
                 default_vm_config.vm_uuid = vm_name
                 default_vm_config.cpu_num = vm_info.get("cpu", 1)
                 default_vm_config.mem_num = vm_info.get("memory_mb", 1024)
+
+                # 计算硬盘大小 =====================================================
+                total_hdd_size = 0
+                if 'HardDrives' in vm_info:
+                    for hdd in vm_info['HardDrives']:
+                        total_hdd_size += hdd.get('Size', 0)
+                # 转换为GB (Size是字节)
+                default_vm_config.hdd_num = total_hdd_size // (1024 * 1024 * 1024)
+                if default_vm_config.hdd_num == 0 and total_hdd_size > 0:
+                    default_vm_config.hdd_num = 1 # 至少1GB
+
+                # 配置网络适配器 ===================================================
+                if 'NetworkAdapters' in vm_info:
+                    for nic in vm_info['NetworkAdapters']:
+                        nic_name = nic.get('Name', 'Network Adapter')
+                        mac_addr = nic.get('MacAddress', '')
+                        
+                        # 格式化MAC地址 XX:XX:XX:XX:XX:XX
+                        if mac_addr and len(mac_addr) == 12 and ":" not in mac_addr:
+                            mac_addr = ":".join([mac_addr[i:i+2] for i in range(0, 12, 2)])
+                        
+                        switch_name = nic.get('SwitchName', '')
+                        ip_addresses = nic.get('IPAddresses', [])
+                        
+                        # 确定网卡类型
+                        nic_type = "nat" # 默认
+                        if self.hs_config.network_pub and switch_name == self.hs_config.network_pub:
+                             nic_type = "pub"
+                        elif self.hs_config.network_nat and switch_name == self.hs_config.network_nat:
+                             nic_type = "nat"
+                        
+                        nic_config = NCConfig(
+                            mac_addr=mac_addr,
+                            nic_type=nic_type,
+                            ip4_addr=ip_addresses[0] if ip_addresses else ""
+                        )
+                        default_vm_config.nic_all[nic_name] = nic_config
 
                 # 添加到虚拟机配置字典 =============================================
                 self.vm_saving[vm_name] = default_vm_config
@@ -1241,52 +1279,84 @@ class HostServer(BasicServer):
             if not connect_result.success:
                 logger.error(f"[{self.hs_config.server_name}] 无法连接到Hyper-V获取截图: {connect_result.message}")
                 return ""
-            # 使用PowerShell获取虚拟机截图
-            # 1. 确保虚拟机正在运行
-            vm_status = self.hyperv_api.get_vm_status(vm_name)
-            if not vm_status.success or vm_status.results.get("status") != "Running":
-                self.hyperv_api.disconnect()
-                logger.warning(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 未运行，无法获取截图")
-                return ""
-            # 2. 生成临时文件路径
-            import tempfile
-            import os
-            import glob
-            temp_dir = tempfile.gettempdir()
 
-            # 3. 执行PowerShell命令获取截图
-            powershell_command = f"Save-VMScreenshot -Name '{vm_name}' -Path '{temp_dir}' -FileType PNG"
-            if self.hs_config.server_addr not in ["localhost", "127.0.0.1", ""]:
-                powershell_command += f" -ComputerName '{self.hs_config.server_addr}'"
+            # 使用PowerShell脚本通过WMI获取截图
+            # 这种方式不依赖Save-VMScreenshot命令，使用标准的Hyper-V WMI接口
+            ps_script = f"""
+            $vmName = "{vm_name}"
+            
+            try {{
+                # 1. 检查虚拟机状态
+                $vm = Get-VM -Name $vmName -ErrorAction Stop
+                if ($vm.State -ne 'Running') {{
+                    exit 0
+                }}
+                
+                # 2. 获取WMI对象 (Msvm_ComputerSystem)
+                $vmId = $vm.Id.ToString()
+                $computerSystem = Get-CimInstance -Namespace root\\virtualization\\v2 -ClassName Msvm_ComputerSystem -Filter "Name='$vmId'"
+                
+                if (-not $computerSystem) {{ exit 0 }}
 
-            screenshot_result = self.hyperv_api._run_powershell(powershell_command)
+                # 3. 获取分辨率 (Msvm_VideoHead)
+                $width = 1024
+                $height = 768
+                
+                $videoHead = Get-CimInstance -Namespace root\\virtualization\\v2 -ClassName Msvm_VideoHead -Filter "SystemName='$vmId'" | Select-Object -First 1
+                if ($videoHead) {{
+                    if ($videoHead.CurrentHorizontalResolution -gt 0) {{ $width = $videoHead.CurrentHorizontalResolution }}
+                    if ($videoHead.CurrentVerticalResolution -gt 0) {{ $height = $videoHead.CurrentVerticalResolution }}
+                }}
+
+                # 4. 获取管理服务 (Msvm_VirtualSystemManagementService)
+                $imgSvc = Get-CimInstance -Namespace root\\virtualization\\v2 -ClassName Msvm_VirtualSystemManagementService
+
+                # 5. 调用GetVirtualSystemThumbnailImage方法
+                $params = @{{
+                    TargetSystem = $computerSystem
+                    WidthPixels = $width
+                    HeightPixels = $height
+                }}
+                
+                $result = Invoke-CimMethod -InputObject $imgSvc -MethodName GetVirtualSystemThumbnailImage -Arguments $params
+                
+                if ($result.ReturnValue -eq 0 -and $result.ImageData) {{
+                    # ImageData是byte[]，直接转换为Base64
+                    $base64 = [System.Convert]::ToBase64String($result.ImageData)
+                    Write-Output $base64
+                }} else {{
+                    Write-Error "WMI调用失败，返回值: $($result.ReturnValue)"
+                }}
+
+            }} catch {{
+                Write-Error $_.Exception.Message
+            }}
+            """
+
+            screenshot_result = self.hyperv_api._run_powershell(ps_script)
             self.hyperv_api.disconnect()
+
             if not screenshot_result.success:
-                logger.error(f"[{self.hs_config.server_name}] 获取虚拟机截图失败: {screenshot_result.message}")
+                # 只有在确实出错时才记录警告，如果是虚拟机未运行导致的空输出，则忽略
+                if "VM is not running" not in screenshot_result.message:
+                     logger.warning(f"[{self.hs_config.server_name}] 获取虚拟机 {vm_name} 截图失败: {screenshot_result.message}")
                 return ""
-            # 4. 查找生成的截图文件（Save-VMScreenshot会自动生成带时间戳的文件名）
-            screenshot_pattern = os.path.join(temp_dir, f"{vm_name}_*.png")
-            screenshot_files = glob.glob(screenshot_pattern)
 
-            if not screenshot_files:
-                logger.error(f"[{self.hs_config.server_name}] 未找到截图文件: {screenshot_pattern}")
+            output = screenshot_result.message.strip()
+            
+            # 如果输出为空，可能是虚拟机未运行或截图失败
+            if not output:
                 return ""
-            # 获取最新的截图文件
-            screenshot_path = max(screenshot_files, key=os.path.getctime)
-            # 5. 读取截图文件并转换为base64
-            if os.path.exists(screenshot_path):
-                with open(screenshot_path, "rb") as f:
-                    import base64
-                    screenshot_base64 = base64.b64encode(f.read()).decode('utf-8')
-
-                # 6. 删除临时文件
-                os.remove(screenshot_path)
-
-                logger.info(f"[{self.hs_config.server_name}] 成功获取虚拟机 {vm_name} 截图")
-                return screenshot_base64
-            else:
-                logger.error(f"[{self.hs_config.server_name}] 截图文件不存在: {screenshot_path}")
+            
+            # 简单的Base64验证
+            if len(output) < 100:
+                # 如果返回的是错误信息而不是Base64
+                logger.warning(f"[{self.hs_config.server_name}] 获取到的截图数据似乎无效: {output}")
                 return ""
+
+            logger.info(f"[{self.hs_config.server_name}] 成功获取虚拟机 {vm_name} 截图")
+            return output
+
         except Exception as e:
             logger.error(f"[{self.hs_config.server_name}] 获取虚拟机截图时出错: {str(e)}")
             try:

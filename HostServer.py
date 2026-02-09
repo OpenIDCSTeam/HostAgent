@@ -1208,6 +1208,23 @@ def api_unmount_vm_iso(hs_name, vm_uuid, iso_name):
 
 
 # ============================================================================
+# USB管理API
+# ============================================================================
+@app.route('/api/client/usb/mount/<hs_name>/<vm_uuid>', methods=['POST'])
+@require_auth
+def api_mount_vm_usb(hs_name, vm_uuid):
+    """挂载USB设备到虚拟机"""
+    return rest_manager.mount_vm_usb(hs_name, vm_uuid)
+
+
+@app.route('/api/client/usb/delete/<hs_name>/<vm_uuid>/<usb_key>', methods=['DELETE'])
+@require_auth
+def api_unmount_vm_usb(hs_name, vm_uuid, usb_key):
+    """卸载虚拟机USB设备"""
+    return rest_manager.unmount_vm_usb(hs_name, vm_uuid, usb_key)
+
+
+# ============================================================================
 # 备份管理API
 # ============================================================================
 @app.route('/api/client/backup/detail/<hs_name>/<vm_uuid>', methods=['GET'])

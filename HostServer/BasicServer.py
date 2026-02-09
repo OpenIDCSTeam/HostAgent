@@ -18,6 +18,7 @@ from MainObject.Config.HSConfig import HSConfig
 from MainObject.Config.IMConfig import IMConfig
 from MainObject.Config.PortData import PortData
 from MainObject.Config.SDConfig import SDConfig
+from MainObject.Config.USBInfos import USBInfos
 from MainObject.Config.VMBackup import VMBackup
 from MainObject.Config.VMPowers import VMPowers
 from MainObject.Config.WebProxy import WebProxy
@@ -1219,6 +1220,44 @@ class BasicServer:
             success=True,
             action="ISOMount",
             message=f"ISO镜像{action_text}成功")
+
+    # USB设备挂载 ###################################################################
+    def USBMount(self, vm_name: str, usb_info: USBInfos, usb_key: str, in_flag=True) -> ZMessage:
+        if vm_name not in self.vm_saving:
+            return ZMessage(
+                success=False, action="USBMount", message="虚拟机不存在")
+
+        old_conf = deepcopy(self.vm_saving[vm_name])
+        
+        # 记录操作
+        action_text = "挂载" if in_flag else "卸载"
+        logger.info(f"[{self.hs_config.server_name}] 准备{action_text}USB设备: {vm_name} - {usb_key}")
+
+        if in_flag:  # 挂载USB =================================================
+            # 检查KEY是否已存在
+            if usb_key in self.vm_saving[vm_name].usb_all:
+                return ZMessage(
+                    success=False, action="USBMount", message="USB设备KEY已存在")
+
+            # 添加到字典
+            self.vm_saving[vm_name].usb_all[usb_key] = usb_info
+        else:
+            # 卸载USB ==========================================================
+            if usb_key not in self.vm_saving[vm_name].usb_all:
+                return ZMessage(
+                    success=False, action="USBMount", message="USB设备不存在")
+
+            # 从字典中移除
+            del self.vm_saving[vm_name].usb_all[usb_key]
+
+        # 保存配置 =============================================================
+        self.VMUpdate(self.vm_saving[vm_name], old_conf)
+        self.data_set()
+
+        return ZMessage(
+            success=True,
+            action="USBMount",
+            message=f"USB设备{action_text}成功")
 
     # 磁盘移交检查 ##################################################################
     def HDDCheck(self, vm_name: str, vm_imgs: SDConfig, ex_name: str) -> ZMessage:

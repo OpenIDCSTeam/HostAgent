@@ -133,27 +133,87 @@ class HyperVAPI:
     ################################################################################
     def list_vms(self, filter_prefix: str = "") -> List[Dict[str, Any]]:
         try:
-            command = "Get-VM | Select-Object Name, State, ProcessorCount, MemoryStartup, Path | ConvertTo-Json"
+            command = """
+            $vms = Get-VM
+            $result = @()
+            foreach ($vm in $vms) {
+                $hdd = Get-VMHardDiskDrive -VM $vm
+                $nic = Get-VMNetworkAdapter -VM $vm
+                
+                $hdd_info = @()
+                if ($hdd) {
+                    foreach ($h in $hdd) {
+                         $size = 0
+                         if ($h.Path -and (Test-Path $h.Path)) {
+                             try {
+                                 $vhd = Get-VHD -Path $h.Path -ErrorAction SilentlyContinue
+                                 if ($vhd) { $size = $vhd.Size }
+                             } catch {}
+                         }
+                         $hdd_info += @{
+                             Path = $h.Path
+                             Size = $size
+                         }
+                    }
+                }
+
+                $nic_info = @()
+                if ($nic) {
+                    foreach ($n in $nic) {
+                         $nic_info += @{
+                             Name = $n.Name
+                             MacAddress = $n.MacAddress
+                             SwitchName = $n.SwitchName
+                             IPAddresses = $n.IPAddresses
+                         }
+                    }
+                }
+
+                $result += @{
+                    Name = $vm.Name
+                    State = $vm.State
+                    ProcessorCount = $vm.ProcessorCount
+                    MemoryStartup = $vm.MemoryStartup
+                    Path = $vm.Path
+                    HardDrives = $hdd_info
+                    NetworkAdapters = $nic_info
+                }
+            }
+            $result | ConvertTo-Json -Depth 4
+            """
             result = self._run_powershell(command, parse_json=True)
 
             if not result.success:
                 return []
 
-            vms = result.results if isinstance(result.results, list) else [result.results]
+            # 处理返回结果
+            if result.results is None:
+                return []
+
+            vms = result.results
+            if isinstance(vms, dict):
+                vms = [vms]
+            elif not isinstance(vms, list):
+                # 如果是其他类型（如字符串等），视为无效数据
+                return []
 
             # 过滤
             if filter_prefix:
-                vms = [vm for vm in vms if vm.get('Name', '').startswith(filter_prefix)]
+                vms = [vm for vm in vms if isinstance(vm, dict) and vm.get('Name', '').startswith(filter_prefix)]
 
             # 转换格式
             vm_list = []
             for vm in vms:
+                if not isinstance(vm, dict):
+                    continue
                 vm_list.append({
                     'name': vm.get('Name', ''),
                     'state': vm.get('State', 'Unknown'),
                     'cpu': vm.get('ProcessorCount', 1),
                     'memory_mb': vm.get('MemoryStartup', 0) // (1024 * 1024),
-                    'path': vm.get('Path', '')
+                    'path': vm.get('Path', ''),
+                    'HardDrives': vm.get('HardDrives', []),
+                    'NetworkAdapters': vm.get('NetworkAdapters', [])
                 })
 
             return vm_list
@@ -237,7 +297,7 @@ class HyperVAPI:
             # 删除默认网络适配器（Hyper-V默认会创建一个未连接的网卡）
             command += """
             # 删除默认网络适配器（Hyper-V默认会创建一个）
-            Get-VMNetworkAdapter -VMName '{vm_name}' | Remove-VMNetworkAdapter -Force
+            Get-VMNetworkAdapter -VMName '{vm_name}' | Remove-VMNetworkAdapter
             """
 
             # 为所有网卡创建网络适配器
@@ -715,9 +775,9 @@ class HyperVAPI:
     def remove_network_adapter(self, vm_name: str, adapter_name: str = "") -> ZMessage:
         try:
             if adapter_name:
-                command = f"Get-VMNetworkAdapter -VMName '{vm_name}' -Name '{adapter_name}' | Remove-VMNetworkAdapter -Force"
+                command = f"Get-VMNetworkAdapter -VMName '{vm_name}' -Name '{adapter_name}' | Remove-VMNetworkAdapter"
             else:
-                command = f"Get-VMNetworkAdapter -VMName '{vm_name}' | Remove-VMNetworkAdapter -Force"
+                command = f"Get-VMNetworkAdapter -VMName '{vm_name}' | Remove-VMNetworkAdapter"
 
             result = self._run_powershell(command)
 

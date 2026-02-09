@@ -1148,7 +1148,7 @@ function Dashboards() {
               <Form.Item label="虚拟机UUID" required>
                 <Input.Group compact>
                   <Input 
-                    style={{ width: '30%', textAlign: 'right', color: '#000', cursor: 'default' }} 
+                    style={{ width: '40%', textAlign: 'right', color: '#000', cursor: 'default' }}
                     value={uuidPrefix} 
                     disabled 
                     placeholder="前缀"

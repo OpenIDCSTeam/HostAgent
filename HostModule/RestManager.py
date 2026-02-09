@@ -16,6 +16,8 @@ from MainObject.Server.HSEngine import HEConfig
 from MainObject.Config.VMConfig import VMConfig
 from MainObject.Config.VMPowers import VMPowers
 from MainObject.Config.NCConfig import NCConfig
+from MainObject.Config.VFConfig import VFConfig
+from MainObject.Config.USBInfos import USBInfos
 from MainObject.Config.PortData import PortData
 from MainObject.Config.WebProxy import WebProxy
 from MainObject.Public.HWStatus import HWStatus
@@ -1194,6 +1196,27 @@ class RestManager:
         # 创建虚拟机配置
         vm_config = VMConfig(**data, nic_all=nic_all)
 
+        # 处理GPU直通配置
+        gpu_id = data.get('gpu_id')
+        if gpu_id:
+            vm_config.pci_all[gpu_id] = VFConfig(
+                gpu_uuid=gpu_id,
+                gpu_mdev=data.get('gpu_mdev', ''),
+                gpu_hint=data.get('gpu_remark', '')
+            )
+
+        # 处理USB直通配置
+        usb_vid = data.get('usb_vid')
+        usb_pid = data.get('usb_pid')
+        if usb_vid and usb_pid:
+            import uuid
+            usb_key = str(uuid.uuid4())
+            vm_config.usb_all[usb_key] = USBInfos(
+                vid_uuid=usb_vid,
+                pid_uuid=usb_pid,
+                usb_hint=data.get('usb_remark', '')
+            )
+
         # 如果没有指定虚拟机名称，生成随机名称
         if not vm_config.vm_uuid or vm_config.vm_uuid == '':
             # 获取主机配置的前缀
@@ -1406,6 +1429,27 @@ class RestManager:
             data = self._filter_banned_fields(data, server_type, mode='edit')
 
         vm_config = VMConfig(**data, nic_all=nic_all)
+
+        # 处理GPU直通配置
+        gpu_id = data.get('gpu_id')
+        if gpu_id:
+            vm_config.pci_all[gpu_id] = VFConfig(
+                gpu_uuid=gpu_id,
+                gpu_mdev=data.get('gpu_mdev', ''),
+                gpu_hint=data.get('gpu_remark', '')
+            )
+
+        # 处理USB直通配置
+        usb_vid = data.get('usb_vid')
+        usb_pid = data.get('usb_pid')
+        if usb_vid and usb_pid:
+            import uuid
+            usb_key = str(uuid.uuid4())
+            vm_config.usb_all[usb_key] = USBInfos(
+                vid_uuid=usb_vid,
+                pid_uuid=usb_pid,
+                usb_hint=data.get('usb_remark', '')
+            )
 
         result = server.VMUpdate(vm_config, old_vm_config)
 
@@ -3244,6 +3288,82 @@ class RestManager:
         # 保存配置
         self.hs_manage.all_save()
         return self.api_response(200, 'ISO已卸载')
+
+    # ========================================================================
+    # USB管理API - /api/client/usb/<action>/<hs_name>/<vm_uuid>
+    # ========================================================================
+
+    def mount_vm_usb(self, hs_name, vm_uuid):
+        """挂载USB设备到虚拟机"""
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return self.api_response(404, '主机不存在')
+
+        vm_config = server.vm_saving.get(vm_uuid)
+        if not vm_config:
+            return self.api_response(404, '虚拟机不存在')
+
+        data = request.get_json() or {}
+        usb_vid = data.get('usb_vid', '')
+        usb_pid = data.get('usb_pid', '')
+        usb_remark = data.get('usb_remark', '')
+
+        if not usb_vid or not usb_pid:
+            return self.api_response(400, 'VID和PID不能为空')
+
+        # 生成UUID Key
+        import uuid
+        usb_key = str(uuid.uuid4())
+
+        # 创建USBInfos对象
+        from MainObject.Config.USBInfos import USBInfos
+        usb_info = USBInfos(
+            vid_uuid=usb_vid,
+            pid_uuid=usb_pid,
+            usb_hint=usb_remark
+        )
+
+        # 调用USBMount挂载
+        if not hasattr(server, 'USBMount'):
+             return self.api_response(500, '当前服务器不支持USB挂载')
+
+        result = server.USBMount(vm_uuid, usb_info, usb_key, in_flag=True)
+        if not result.success:
+            return self.api_response(500, f'挂载失败: {result.message}')
+
+        # 保存配置
+        self.hs_manage.all_save()
+        return self.api_response(200, 'USB挂载成功')
+
+    def unmount_vm_usb(self, hs_name, vm_uuid, usb_key):
+        """卸载虚拟机USB设备"""
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return self.api_response(404, '主机不存在')
+
+        vm_config = server.vm_saving.get(vm_uuid)
+        if not vm_config:
+            return self.api_response(404, '虚拟机不存在')
+
+        if not hasattr(vm_config, 'usb_all') or not vm_config.usb_all:
+            return self.api_response(404, 'USB配置不存在')
+
+        if usb_key not in vm_config.usb_all:
+            return self.api_response(404, 'USB设备不存在')
+
+        # 调用USBMount卸载
+        if not hasattr(server, 'USBMount'):
+             return self.api_response(500, '当前服务器不支持USB卸载')
+
+        usb_info = vm_config.usb_all[usb_key]
+        
+        result = server.USBMount(vm_uuid, usb_info, usb_key, in_flag=False)
+        if not result.success:
+            return self.api_response(500, f'卸载失败: {result.message}')
+
+        # 保存配置
+        self.hs_manage.all_save()
+        return self.api_response(200, 'USB已卸载')
 
     # ========================================================================
     # 备份管理API - /api/client/backup/<action>/<hs_name>/<vm_uuid>

@@ -5,6 +5,8 @@ from MainObject.Config.IMConfig import IMConfig
 from MainObject.Config.NCConfig import NCConfig
 from MainObject.Config.PortData import PortData
 from MainObject.Config.SDConfig import SDConfig
+from MainObject.Config.USBInfos import USBInfos
+from MainObject.Config.VFConfig import VFConfig
 from MainObject.Config.VMBackup import VMBackup
 from MainObject.Config.WebProxy import WebProxy
 
@@ -26,22 +28,25 @@ class VMConfig:
         self.vc_pass = ""  # 分配VNC远程的密码
         # 资源配置 ===========================
         self.cpu_num = 2  # 分配的处理器核心数
-        self.cpu_per = 50  # 分配CPU可用百分比
-        self.gpu_num = 0  # 分配物理卡(0-没有)
-        self.gpu_id = ""  # GPU设备ID（用于PCIE直通）
-        self.gpu_mem = 0  # 分配显存值-(#0)
+        self.cpu_per = 0  # 分配处理器可用比例
+        self.gpu_mem = 0  # 分配虚拟显存值(MB)
         self.mem_num = 2048  # 分配内存数-(MB)
         self.hdd_num = 8192  # 分配硬盘数-(MB)
+        self.hdd_iop = 1000  # 分配硬盘可用IOP
         # 网络配置 ===========================
-        self.speed_u = 100  # 上行带宽(Mbps)
-        self.speed_d = 100  # 下行带宽(Mbps)
-        self.nat_num = 100  # 分配端口(默认)
-        self.web_num = 100  # 分配代理(默认)
-        self.flu_num = 102400  # 分配流量(M)
+        self.speed_u = 100  # VM上行带宽(Mbps)
+        self.speed_d = 100  # VM下行带宽(Mbps)
+        self.nat_num = 100  # VM分配端口(默认)
+        self.web_num = 100  # VM分配代理(默认)
+        self.flu_num = 102400  # VM分配流量(M)
+        # 31天后重置，超限10M，上次重置-时间戳
+        self.flu_rst: list[int] = [31, 10, 10]
         # 附加配置 ===========================
         self.nic_all: dict[str, NCConfig] = {}
         self.hdd_all: dict[str, SDConfig] = {}
         self.iso_all: dict[str, IMConfig] = {}
+        self.pci_all: dict[str, VFConfig] = {}
+        self.usb_all: dict[str, USBInfos] = {}
         self.nat_all: list[PortData] = []
         self.web_all: list[WebProxy] = []
         self.backups: list[VMBackup] = []
@@ -57,12 +62,16 @@ class VMConfig:
         # 加载数据 ===========================
         nic_list = self.nic_all
         hdd_list = self.hdd_all
+        gpu_list = self.pci_all
+        usb_list = self.usb_all
         nat_list = self.nat_all
         web_list = self.web_all
         iso_list = self.iso_all
         bak_list = self.backups
         self.nic_all = {}
         self.hdd_all = {}
+        self.pci_all = {}
+        self.usb_all = {}
         self.iso_all = {}
         self.nat_all = []
         self.web_all = []
@@ -83,6 +92,22 @@ class VMConfig:
                     **hdd_data)
             else:
                 self.hdd_all[hdd] = hdd_data
+        # 显卡数据 ===========================
+        for gpu in gpu_list:
+            gpu_data = gpu_list[gpu]
+            if type(gpu_data) is dict:
+                self.pci_all[gpu] = VFConfig(
+                    **gpu_data)
+            else:
+                self.pci_all[gpu] = gpu_data
+        # USB数据 ===========================
+        for usb in usb_list:
+            usb_data = usb_list[usb]
+            if type(usb_data) is dict:
+                self.usb_all[usb] = USBInfos(
+                    **usb_data)
+            else:
+                self.usb_all[usb] = usb_data
         # 镜像数据 ===========================
         for iso in iso_list:
             iso_data = iso_list[iso]
@@ -131,15 +156,15 @@ class VMConfig:
             # 资源配置 =======================
             "cpu_num": self.cpu_num,
             "cpu_per": self.cpu_per,
-            "gpu_num": self.gpu_num,
-            "gpu_id": self.gpu_id,
             "gpu_mem": self.gpu_mem,
             "mem_num": self.mem_num,
             "hdd_num": self.hdd_num,
+            "hdd_iop": self.hdd_iop,
             # 网络配置 =======================
             "speed_u": self.speed_u,
             "speed_d": self.speed_d,
             "flu_num": self.flu_num,
+            "flu_rst": self.flu_rst,
             "nat_num": self.nat_num,
             "web_num": self.web_num,
             # 远程连接 =======================
@@ -162,6 +187,22 @@ class VMConfig:
                     getattr(v, '__save__'))
                 else v for k, v
                 in self.hdd_all.items()},
+            # 显卡配置 =======================
+            "pci_all": {
+                k: v.__save__()
+                if hasattr(v, '__save__')
+                and callable(
+                    getattr(v, '__save__'))
+                else v for k, v
+                in self.pci_all.items()},
+            # USB配置 =======================
+            "usb_all": {
+                k: v.__save__()
+                if hasattr(v, '__save__')
+                and callable(
+                    getattr(v, '__save__'))
+                else v for k, v
+                in self.usb_all.items()},
             # 端口配置 =======================
             "nat_all": [
                 n.__save__()
