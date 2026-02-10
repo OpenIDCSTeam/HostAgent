@@ -398,6 +398,13 @@ export const deleteVMOwner = (hsName: string, vmUuid: string, username: string):
   return http.post(`/api/client/owners/delete/${hsName}/${vmUuid}`, { username });
 };
 
+/**
+ * 更新虚拟机所有者权限
+ */
+export const updateVMOwnerPermission = (hsName: string, vmUuid: string, username: string, permission: number): Promise<ApiResponse> => {
+  return http.put(`/api/client/owners/${hsName}/${vmUuid}/permission`, { username, permission });
+};
+
 // ============================================================================
 // 网络管理API
 // ============================================================================
@@ -700,6 +707,7 @@ export default {
   getVMOwners,
   addVMOwner,
   deleteVMOwner,
+  updateVMOwnerPermission,
   
   // 网络管理
   getNATRules,

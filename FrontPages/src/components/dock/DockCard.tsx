@@ -19,12 +19,15 @@ import {
     PauseCircleOutlined
 } from '@ant-design/icons'
 import { VM_STATUS_MAP } from '@/constants/status'
+import { VM_PERMISSION, hasPermission } from '@/types'
 
 interface DockCardProps {
     uuid: string
     vm: any // Using any for VM type for now to avoid duplicating interfaces
     hostName?: string
     hostDisabled?: boolean // 主机是否被禁用
+    userPermissions?: number // 当前用户对此虚拟机的权限掩码
+    style?: React.CSSProperties
     onEdit: (uuid: string) => void
     onDelete: (uuid: string) => void
     onPower: (uuid: string) => void
@@ -72,6 +75,8 @@ const DockCard: React.FC<DockCardProps> = ({
     vm,
     hostName,
     hostDisabled = false,
+    userPermissions = VM_PERMISSION.FULL_MASK,
+    style,
     onEdit,
     onDelete,
     onPower,
@@ -141,7 +146,8 @@ const DockCard: React.FC<DockCardProps> = ({
         <Card
             hoverable
             className="glass-effect h-full flex flex-col"
-            styles={{ 
+            style={style}
+            styles={{
                 body: { 
                     padding: 0,
                     flex: 1, 
@@ -338,44 +344,44 @@ const DockCard: React.FC<DockCardProps> = ({
                 >
                     查看详情
                 </Button>
-                <Tooltip title={hostDisabled ? '主机已禁用' : 'VNC控制台'}>
+                <Tooltip title={hostDisabled ? '主机已禁用' : !hasPermission(userPermissions, VM_PERMISSION.VNC_EDITS) ? '无VNC权限' : 'VNC控制台'}>
                     <Button 
                         type="text" 
                         size="small"
                         icon={<DesktopOutlined />} 
                         onClick={() => onVnc(uuid)}
-                        disabled={!isRunning || hostDisabled}
+                        disabled={!isRunning || hostDisabled || !hasPermission(userPermissions, VM_PERMISSION.VNC_EDITS)}
                         className="hover:bg-purple-50 dark:hover:bg-purple-900/30"
                     />
                 </Tooltip>
-                <Tooltip title={hostDisabled ? '主机已禁用' : '电源操作'}>
+                <Tooltip title={hostDisabled ? '主机已禁用' : !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS) ? '无电源权限' : '电源操作'}>
                     <Button 
                         type="text" 
                         size="small"
                 icon={<PoweroffOutlined className={isRunning ? 'text-green-500' : ''} />}
                         onClick={() => onPower(uuid)}
-                        disabled={hostDisabled}
+                        disabled={hostDisabled || !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)}
                         className="hover:bg-green-50 dark:hover:bg-green-900/30"
                     />
                 </Tooltip>
-                <Tooltip title={hostDisabled ? '主机已禁用' : '编辑配置'}>
+                <Tooltip title={hostDisabled ? '主机已禁用' : !hasPermission(userPermissions, VM_PERMISSION.VM_MODIFY) ? '无编辑权限' : '编辑配置'}>
                     <Button 
                         type="text" 
                         size="small"
                         icon={<EditOutlined />} 
                         onClick={() => onEdit(uuid)}
-                        disabled={hostDisabled}
+                        disabled={hostDisabled || !hasPermission(userPermissions, VM_PERMISSION.VM_MODIFY)}
                         className="hover:bg-orange-50 dark:hover:bg-orange-900/30"
                     />
                 </Tooltip>
-                <Tooltip title={hostDisabled ? '主机已禁用' : '删除虚拟机'}>
+                <Tooltip title={hostDisabled ? '主机已禁用' : !hasPermission(userPermissions, VM_PERMISSION.VM_DELETE) ? '无删除权限' : '删除虚拟机'}>
                     <Button 
                         type="text" 
                         size="small"
                         danger
                         icon={<DeleteOutlined />} 
                         onClick={() => onDelete(uuid)}
-                        disabled={hostDisabled}
+                        disabled={hostDisabled || !hasPermission(userPermissions, VM_PERMISSION.VM_DELETE)}
                         className="hover:bg-red-50 dark:hover:bg-red-900/30"
                     />
                 </Tooltip>

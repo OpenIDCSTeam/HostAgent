@@ -21,6 +21,7 @@ from MainObject.Config.VFConfig import VFConfig
 from MainObject.Config.USBInfos import USBInfos
 from MainObject.Config.PortData import PortData
 from MainObject.Config.WebProxy import WebProxy
+from MainObject.Config.UserMask import UserMask
 from MainObject.Public.HWStatus import HWStatus
 from HostModule.UserManager import UserManager, check_host_access, check_vm_permission, check_resource_quota
 
@@ -152,11 +153,11 @@ class RestManager:
                 if not vm_config:
                     continue
 
-                # 检查虚拟机的所有者列表
-                owners = getattr(vm_config, 'own_all', [])
+                # 检查虚拟机的所有者字典
+                owners = getattr(vm_config, 'own_all', {})
                 if username in owners:
-                    # 只有主用户（第一个所有者）才占用IP配额
-                    if owners[0] == username:
+                    # 只有主用户（dict第一个key）才占用IP配额
+                    if next(iter(owners), None) == username:
                         # 计算该虚拟机的IP数量
                         nic_all = getattr(vm_config, 'nic_all', {})
                         for nic_name, nic_config in nic_all.items():
@@ -240,13 +241,67 @@ class RestManager:
             return False, self.api_response(404, '虚拟机不存在')
 
         # 检查用户是否是虚拟机的所有者
-        owners = getattr(vm_config, 'own_all', [])
+        owners = getattr(vm_config, 'own_all', {})
         current_username = user_data.get('username', '')
 
         if current_username not in owners:
             return False, self.api_response(403, '没有访问该虚拟机的权限')
 
         return True, None
+
+    def _check_fine_permission(self, hs_name, vm_uuid, user_data, action: str):
+        """
+        检查用户对虚拟机的细分权限
+        :param action: 权限名称，如 'pwr_edits', 'vm_delete' 等
+        :return: (是否有权限, 错误响应或None)
+        """
+        # 管理员或Token登录有所有权限
+        if user_data.get('is_admin') or user_data.get('is_token_login'):
+            return True, None
+
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return False, self.api_response(404, '主机不存在')
+
+        vm_config = server.vm_saving.get(vm_uuid)
+        if not vm_config:
+            return False, self.api_response(404, '虚拟机不存在')
+
+        username = user_data.get('username', '')
+        perm_mask = self._calc_user_vm_permission(vm_config, username, False)
+        check_mask = UserMask(perm_mask)
+        if not check_mask.has_permission(action):
+            return False, self.api_response(403, f'没有执行此操作的权限（{action}）')
+
+        return True, None
+
+    def _require_vm_fine_permission(self, hs_name, vm_uuid, action: str):
+        """
+        从session获取用户信息，校验细分权限的便捷方法
+        适用于没有先调用 _check_host_permission 的API
+        :return: (是否有权限, 错误响应或None)
+        """
+        from flask import session
+        user_id = session.get('user_id')
+        is_admin = session.get('is_admin', False)
+        is_token_login = session.get('is_token_login', False)
+
+        if is_admin or is_token_login:
+            return True, None
+
+        if not user_id:
+            return False, self.api_response(401, '未登录')
+
+        username = session.get('username', '')
+        if not username:
+            return False, self.api_response(401, '无法获取用户名')
+
+        user_data = {
+            'username': username,
+            'is_admin': is_admin,
+            'is_token_login': is_token_login
+        }
+        return self._check_fine_permission(hs_name, vm_uuid, user_data, action)
 
     def _check_vm_delete_permission(self, hs_name, vm_uuid, user_data):
         """检查虚拟机删除权限（普通用户只能删除自己是主用户的虚拟机）"""
@@ -263,14 +318,14 @@ class RestManager:
             return False, self.api_response(404, '虚拟机不存在')
 
         # 检查用户是否是虚拟机的所有者
-        owners = getattr(vm_config, 'own_all', [])
+        owners = getattr(vm_config, 'own_all', {})
         current_username = user_data.get('username', '')
 
         if current_username not in owners:
             return False, self.api_response(403, '没有访问该虚拟机的权限')
 
-        # 检查用户是否是主用户（第一个所有者）
-        first_owner = owners[0] if owners else None
+        # 检查用户是否是主用户（dict第一个key）
+        first_owner = next(iter(owners), None)
         if current_username != first_owner:
             return False, self.api_response(403, '只有主用户可以删除虚拟机')
 
@@ -282,6 +337,49 @@ class RestManager:
         if not has_quota:
             return False, self.api_response(403, error_msg)
         return True, None
+
+    def _calc_user_vm_permission(self, vm_config, username: str, is_privileged: bool = False) -> int:
+        """
+        计算当前用户对虚拟机的最终权限掩码
+        最终权限 = 用户权限(WebUser.user_permission) AND 虚拟机权限(own_all[user])
+        所有者(dict第一个key) / admin / 特权用户 → 全权限
+        :return: 掩码数字
+        """
+        from MainObject.Config.UserMask import UserMask, FULL_MASK
+        # 特权用户或admin永远全权限
+        if is_privileged or username == 'admin':
+            return FULL_MASK
+
+        owners = getattr(vm_config, 'own_all', {})
+        if not owners:
+            return 0
+
+        # 所有者（dict第一个key）永远全权限
+        if next(iter(owners), None) == username:
+            return FULL_MASK
+
+        if username not in owners:
+            return 0
+
+        # 获取虚拟机级别的权限
+        vm_mask = owners[username]
+        if not isinstance(vm_mask, UserMask):
+            vm_mask = UserMask(vm_mask) if isinstance(vm_mask, int) else UserMask.full()
+
+        # 获取用户级别的权限
+        user_data = self.db.get_user_by_username(username) if self.db else None
+        if user_data:
+            user_perm = user_data.get('user_permission', FULL_MASK)
+            if isinstance(user_perm, int):
+                user_mask = UserMask(user_perm)
+            else:
+                user_mask = UserMask.full()
+        else:
+            user_mask = UserMask.full()
+
+        # 交集运算（AND）
+        final_mask = vm_mask.intersect(user_mask)
+        return final_mask._to_mask()
 
     def _validate_vm_resources(self, data, user_data=None, min_disk_gb=10):
         """验证虚拟机资源配置
@@ -885,7 +983,7 @@ class RestManager:
 
         # 调用主机的GPUShows方法获取GPU列表
         try:
-            gpu_list = server.GPUShows()
+            gpu_list = server.PCIShows()
             return self.api_response(200, 'success', gpu_list)
         except Exception as e:
             logger.error(f"获取GPU列表失败: {str(e)}")
@@ -1173,7 +1271,7 @@ class RestManager:
         for vm_uuid, vm_config in server.vm_saving.items():
             # 权限过滤：普通用户只能看到自己拥有的虚拟机
             if not (is_admin or is_token_login):
-                owners = getattr(vm_config, 'own_all', [])
+                owners = getattr(vm_config, 'own_all', {})
                 if current_username not in owners:
                     continue  # 跳过不属于当前用户的虚拟机
             # 从 DataManage 获取状态（直接从数据库读取）=================
@@ -1187,7 +1285,8 @@ class RestManager:
             vms_data[vm_uuid] = {
                 'uuid': vm_uuid,
                 'config': serialize_obj(vm_config),
-                'status': serialize_obj(status)
+                'status': serialize_obj(status),
+                'user_permissions': self._calc_user_vm_permission(vm_config, current_username, is_admin or is_token_login)
             }
 
         return self.api_response(200, 'success', vms_data)
@@ -1214,7 +1313,7 @@ class RestManager:
         current_username = user_data.get('username', '') if user_data else ''
 
         if not (is_admin or is_token_login):
-            owners = getattr(vm_config, 'own_all', [])
+            owners = getattr(vm_config, 'own_all', {})
             if current_username not in owners:
                 return self.api_response(403, '没有访问该虚拟机的权限')
 
@@ -1228,7 +1327,8 @@ class RestManager:
 
         return self.api_response(200, 'success', {
             'uuid': vm_uuid,
-            'config': config_data
+            'config': config_data,
+            'user_permissions': self._calc_user_vm_permission(vm_config, current_username, is_admin or is_token_login)
         })
 
     # 获取虚拟机详情 ########################################################################
@@ -1350,12 +1450,12 @@ class RestManager:
             # 普通用户创建虚拟机，设置所有者为用户名
             username = user_data.get('username', '')
             if username:
-                vm_config.own_all = [username]
+                vm_config.own_all = {username: UserMask.full()}
             else:
-                # 如果没有用户名，保持默认值["admin"]
+                # 如果没有用户名，保持默认值{"admin": UserMask(全权限)}
                 pass
         else:
-            # 管理员或token登录创建虚拟机，保持默认所有者["admin"]
+            # 管理员或token登录创建虚拟机，保持默认所有者{"admin": UserMask(全权限)}
             pass
 
         vm_config.vc_port = random.randint(10000, 59999)
@@ -1368,7 +1468,7 @@ class RestManager:
         # 如果创建成功，更新虚拟机第一个所有者的资源使用量
         if result and result.success:
             # 获取虚拟机的第一个所有者
-            first_owner = vm_config.own_all[0] if vm_config.own_all else None
+            first_owner = next(iter(vm_config.own_all), None) if vm_config.own_all else None
 
             # 计算资源使用量（使用vm_config的实际值，而不是data）
             cpu_needed = vm_config.cpu_num
@@ -1452,6 +1552,11 @@ class RestManager:
         if not has_ownership:
             return error_response
 
+        # 检查细分权限：修改配置
+        has_fine_perm, error_response = self._check_fine_permission(hs_name, vm_uuid, user_data, 'vm_modify')
+        if not has_fine_perm:
+            return error_response
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -1486,7 +1591,7 @@ class RestManager:
                     elif nic_type == 'pub':
                         old_resource_usage['pub_ips'] += 1
                 # 获取虚拟机的所有所有者
-                vm_owners = getattr(old_vm_config, 'own_all', [])
+                vm_owners = getattr(old_vm_config, 'own_all', {})
 
         data = request.get_json() or {}
         data['vm_uuid'] = vm_uuid
@@ -1665,6 +1770,11 @@ class RestManager:
         if not has_delete_perm:
             return error_response
 
+        # 检查细分权限：删除实例
+        has_fine_perm, error_response = self._check_fine_permission(hs_name, vm_uuid, user_data, 'vm_delete')
+        if not has_fine_perm:
+            return error_response
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -1703,7 +1813,7 @@ class RestManager:
                     elif nic_type == 'pub':
                         vm_resource_usage['pub_ips'] += 1
                 # 获取虚拟机的所有所有者
-                vm_owners = getattr(vm_config, 'own_all', [])
+                vm_owners = getattr(vm_config, 'own_all', {})
 
         result = server.VMDelete(vm_uuid)
 
@@ -1773,24 +1883,27 @@ class RestManager:
         if not vm_config:
             return self.api_response(404, '虚拟机不存在')
 
-        owners = getattr(vm_config, 'own_all', [])
+        owners = getattr(vm_config, 'own_all', {})
 
         # 获取每个所有者的详细信息
         owner_details = []
-        for username in owners:
+        for username, mask in owners.items():
+            mask_val = mask._to_mask() if isinstance(mask, UserMask) else (mask if isinstance(mask, int) else 0)
             user = self.db.get_user_by_username(username)
             if user:
                 owner_details.append({
                     'username': username,
                     'email': user.get('email', ''),
-                    'is_admin': user.get('is_admin', False)
+                    'is_admin': user.get('is_admin', False),
+                    'permission': mask_val
                 })
             else:
                 # 用户不存在（可能是admin或已删除的用户）
                 owner_details.append({
                     'username': username,
                     'email': '',
-                    'is_admin': username == 'admin'
+                    'is_admin': username == 'admin',
+                    'permission': mask_val
                 })
 
         return self.api_response(200, 'success', {'owners': owner_details})
@@ -1802,6 +1915,11 @@ class RestManager:
     # ####################################################################################
     def add_vm_owner(self, hs_name, vm_uuid):
         """添加虚拟机所有者"""
+        # 检查细分权限：管理用户
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'vm_grants')
+        if not has_perm:
+            return error_resp
+
         data = request.get_json() or {}
         username = data.get('username', '').strip()
 
@@ -1821,11 +1939,13 @@ class RestManager:
         if not vm_config:
             return self.api_response(404, '虚拟机不存在')
 
-        owners = getattr(vm_config, 'own_all', [])
+        owners = getattr(vm_config, 'own_all', {})
         if username in owners:
             return self.api_response(400, '用户已经是所有者')
 
-        owners.append(username)
+        # 获取请求中的权限掩码（默认全权限）
+        permission = data.get('permission', UserMask.full_mask())
+        owners[username] = UserMask(permission) if isinstance(permission, int) else UserMask.full()
         vm_config.own_all = owners
 
         # 注意：只有第一个所有者才占用配额，添加其他所有者不影响配额
@@ -1840,6 +1960,11 @@ class RestManager:
     # ####################################################################################
     def remove_vm_owner(self, hs_name, vm_uuid):
         """删除虚拟机所有者"""
+        # 检查细分权限：管理用户
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'vm_grants')
+        if not has_perm:
+            return error_resp
+
         data = request.get_json() or {}
         username = data.get('username', '').strip()
 
@@ -1854,19 +1979,20 @@ class RestManager:
         if not vm_config:
             return self.api_response(404, '虚拟机不存在')
 
-        owners = getattr(vm_config, 'own_all', [])
+        owners = getattr(vm_config, 'own_all', {})
         if username not in owners:
             return self.api_response(400, '用户不是所有者')
 
-        # 不允许删除第一个所有者（主所有者）
-        if len(owners) > 0 and owners[0] == username:
+        # 不允许删除主所有者（dict第一个key）
+        first_owner = next(iter(owners), None)
+        if first_owner == username:
             return self.api_response(400, '不能删除主所有者（第一个所有者）')
 
         # 如果只有一个所有者，不允许删除
         if len(owners) <= 1:
             return self.api_response(400, '至少需要保留一个所有者')
 
-        owners.remove(username)
+        del owners[username]
         vm_config.own_all = owners
 
         # 注意：只有第一个所有者才占用配额，删除其他所有者不影响配额
@@ -1875,6 +2001,57 @@ class RestManager:
         self.hs_manage.all_save()
         return self.api_response(200, '删除成功')
 
+    # 更新虚拟机所有者权限 ####################################################################
+    # :param hs_name: 主机名称
+    # :param vm_uuid: 虚拟机UUID
+    # :return: 更新权限结果的API响应
+    # ####################################################################################
+    def update_vm_owner_permission(self, hs_name, vm_uuid):
+        """更新虚拟机所有者的细分权限"""
+        # 检查细分权限：管理用户
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'vm_grants')
+        if not has_perm:
+            return error_resp
+
+        data = request.get_json() or {}
+        username = data.get('username', '').strip()
+        permission = data.get('permission', None)
+
+        if not username:
+            return self.api_response(400, '用户名不能为空')
+
+        if permission is None:
+            return self.api_response(400, '权限掩码不能为空')
+
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return self.api_response(404, '主机不存在')
+
+        vm_config = server.vm_saving.get(vm_uuid)
+        if not vm_config:
+            return self.api_response(404, '虚拟机不存在')
+
+        owners = getattr(vm_config, 'own_all', {})
+        if username not in owners:
+            return self.api_response(400, '用户不是所有者')
+
+        # 不允许修改主所有者的权限（主所有者永远全权限）
+        first_owner = next(iter(owners), None)
+        if first_owner == username:
+            return self.api_response(400, '不能修改主所有者的权限（主所有者永远拥有全部权限）')
+
+        # 更新权限掩码
+        if isinstance(permission, int):
+            owners[username] = UserMask(permission)
+        elif isinstance(permission, dict):
+            owners[username] = UserMask(**permission)
+        else:
+            return self.api_response(400, '权限格式不正确')
+
+        vm_config.own_all = owners
+        self.hs_manage.all_save()
+        return self.api_response(200, '权限更新成功')
+
     # 移交虚拟机所有权 ########################################################################
     # :param hs_name: 主机名称
     # :param vm_uuid: 虚拟机UUID
@@ -1882,6 +2059,11 @@ class RestManager:
     # ####################################################################################
     def transfer_vm_ownership(self, hs_name, vm_uuid):
         """移交虚拟机所有权"""
+        # 检查细分权限：管理用户
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'vm_grants')
+        if not has_perm:
+            return error_resp
+
         data = request.get_json() or {}
         new_owner = data.get('new_owner', '').strip()
         keep_access = data.get('keep_access', False)
@@ -1907,9 +2089,9 @@ class RestManager:
         if not vm_config:
             return self.api_response(404, '虚拟机不存在')
 
-        # 检查当前用户是否是主所有者（第一个所有者）
-        owners = getattr(vm_config, 'own_all', [])
-        if not owners or owners[0] != current_username:
+        # 检查当前用户是否是主所有者（dict第一个key）
+        owners = getattr(vm_config, 'own_all', {})
+        if not owners or next(iter(owners)) != current_username:
             return self.api_response(403, '只有主所有者可以移交虚拟机所有权')
 
         # 检查新用户是否存在
@@ -2070,6 +2252,11 @@ class RestManager:
         if not has_ownership:
             return error_response
 
+        # 检查细分权限：密码编辑
+        has_fine_perm, error_response = self._check_fine_permission(hs_name, vm_uuid, user_data, 'pwd_edits')
+        if not has_fine_perm:
+            return error_response
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -2114,6 +2301,11 @@ class RestManager:
         # 检查虚拟机所有权
         has_ownership, error_response = self._check_vm_ownership(hs_name, vm_uuid, user_data)
         if not has_ownership:
+            return error_response
+
+        # 检查细分权限：电源操作
+        has_fine_perm, error_response = self._check_fine_permission(hs_name, vm_uuid, user_data, 'pwr_edits')
+        if not has_fine_perm:
             return error_response
 
         server = self.hs_manage.get_host(hs_name)
@@ -2474,6 +2666,11 @@ class RestManager:
     # ####################################################################################
     def add_vm_nat_rule(self, hs_name, vm_uuid):
         """添加虚拟机NAT端口转发规则"""
+        # 检查细分权限：网络编辑
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'net_edits')
+        if not has_perm:
+            return error_resp
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -2533,6 +2730,11 @@ class RestManager:
     # ####################################################################################
     def delete_vm_nat_rule(self, hs_name, vm_uuid, rule_index):
         """删除虚拟机NAT端口转发规则"""
+        # 检查细分权限：网络编辑
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'net_edits')
+        if not has_perm:
+            return error_resp
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -2619,6 +2821,11 @@ class RestManager:
     # ####################################################################################
     def add_vm_ip_address(self, hs_name, vm_uuid):
         """添加虚拟机网卡（新增网卡）"""
+        # 检查细分权限：网卡编辑
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'nic_edits')
+        if not has_perm:
+            return error_resp
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -2738,6 +2945,11 @@ class RestManager:
     # ####################################################################################
     def delete_vm_ip_address(self, hs_name, vm_uuid, nic_name):
         """删除虚拟机网卡"""
+        # 检查细分权限：网卡编辑
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'nic_edits')
+        if not has_perm:
+            return error_resp
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -2805,7 +3017,12 @@ class RestManager:
     # :return: 网卡修改结果的API响应
     # ####################################################################################
     def update_vm_ip_address(self, hs_name, vm_uuid, nic_name):
-        """修改虚拟机网卡配置"""
+        """更新虚拟机网卡配置"""
+        # 检查细分权限：网卡编辑
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'nic_edits')
+        if not has_perm:
+            return error_resp
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -2967,6 +3184,11 @@ class RestManager:
     # ####################################################################################
     def add_vm_proxy_config(self, hs_name, vm_uuid):
         """添加虚拟机反向代理配置"""
+        # 检查细分权限：网页编辑
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'web_edits')
+        if not has_perm:
+            return error_resp
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -3006,6 +3228,11 @@ class RestManager:
     # ####################################################################################
     def delete_vm_proxy_config(self, hs_name, vm_uuid, proxy_index):
         """删除虚拟机反向代理配置"""
+        # 检查细分权限：网页编辑
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'web_edits')
+        if not has_perm:
+            return error_resp
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -3312,6 +3539,11 @@ class RestManager:
     # ####################################################################################
     def mount_vm_hdd(self, hs_name, vm_uuid):
         """挂载数据盘到虚拟机"""
+        # 检查细分权限：硬盘编辑
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'hdd_edits')
+        if not has_perm:
+            return error_resp
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -3448,6 +3680,11 @@ class RestManager:
     # ####################################################################################
     def delete_vm_hdd(self, hs_name, vm_uuid):
         """删除虚拟机数据盘"""
+        # 检查细分权限：硬盘编辑
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'hdd_edits')
+        if not has_perm:
+            return error_resp
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -3519,6 +3756,11 @@ class RestManager:
 
     def mount_vm_iso(self, hs_name, vm_uuid):
         """挂载ISO镜像到虚拟机"""
+        # 检查细分权限：光盘编辑
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'iso_edits')
+        if not has_perm:
+            return error_resp
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -3574,6 +3816,11 @@ class RestManager:
     # ####################################################################################
     def unmount_vm_iso(self, hs_name, vm_uuid, iso_name):
         """卸载虚拟机ISO镜像"""
+        # 检查细分权限：光盘编辑
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'iso_edits')
+        if not has_perm:
+            return error_resp
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -3730,6 +3977,11 @@ class RestManager:
     # ####################################################################################
     def create_vm_backup(self, hs_name, vm_uuid):
         """创建虚拟机备份"""
+        # 检查细分权限：备份还原
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'vm_backup')
+        if not has_perm:
+            return error_resp
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -3771,6 +4023,11 @@ class RestManager:
     # ####################################################################################
     def restore_vm_backup(self, hs_name, vm_uuid):
         """还原虚拟机备份"""
+        # 检查细分权限：备份还原
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'vm_backup')
+        if not has_perm:
+            return error_resp
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -3812,6 +4069,11 @@ class RestManager:
     # ####################################################################################
     def delete_vm_backup(self, hs_name, vm_uuid):
         """删除虚拟机备份"""
+        # 检查细分权限：备份还原
+        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'vm_backup')
+        if not has_perm:
+            return error_resp
+
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')

@@ -920,6 +920,13 @@ def api_remove_vm_owner(hs_name, vm_uuid):
     return rest_manager.remove_vm_owner(hs_name, vm_uuid)
 
 
+@app.route('/api/client/owners/<hs_name>/<vm_uuid>/permission', methods=['PUT'])
+@require_auth
+def api_update_vm_owner_permission(hs_name, vm_uuid):
+    """更新虚拟机所有者权限"""
+    return rest_manager.update_vm_owner_permission(hs_name, vm_uuid)
+
+
 @app.route('/api/client/owners/<hs_name>/<vm_uuid>/transfer', methods=['POST'])
 @require_auth
 def api_transfer_vm_ownership(hs_name, vm_uuid):

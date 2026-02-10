@@ -1191,7 +1191,7 @@ class HostServer(BasicServer):
         # return super().RMMounts(vm_name, vm_imgs)
 
     # 查找显卡 =================================================================
-    def GPUShows(self) -> dict[str, str]:
+    def PCIShows(self) -> dict[str, str]:
         """获取可用的GPU设备列表（用于PCIE直通）
         
         Returns:

@@ -570,7 +570,7 @@ class HostServer(BasicServer):
         return super().RMMounts(vm_name, vm_imgs)
 
     # 查找显卡 =================================================================
-    def GPUShows(self) -> dict[str, str]:
+    def PCIShows(self) -> dict[str, str]:
         return {}
 
     # 虚拟机截图 ===============================================================

@@ -54,6 +54,7 @@ import {
 } from '@ant-design/icons'
 import ReactECharts from 'echarts-for-react'
 import api from '@/utils/apis.ts'
+import {VM_PERMISSION, hasPermission, TAB_PERMISSION_MAP, VM_PERMISSION_LABELS, PERMISSION_FIELD_MASK} from '@/types'
 
 interface VGConfig {
     gpu_uuid: string
@@ -182,6 +183,7 @@ interface OwnerInfo {
     role: string
     is_admin?: boolean
     email?: string
+    permission?: number
 }
 
 interface HostConfig {
@@ -212,6 +214,7 @@ function VMDetail() {
     })
     const [hostConfig, setHostConfig] = useState<HostConfig | null>(null)
     const [hostEnabled, setHostEnabled] = useState<boolean>(true) // 主机是否启用
+    const [userPermissions, setUserPermissions] = useState<number>(VM_PERMISSION.FULL_MASK) // 当前用户权限掩码
 
     // 模态框状态
     const [editModalVisible, setEditModalVisible] = useState(false)
@@ -228,6 +231,9 @@ function VMDetail() {
     const [transferHddModalVisible, setTransferHddModalVisible] = useState(false)
     const [transferOwnershipModalVisible, setTransferOwnershipModalVisible] = useState(false)
     const [mountHddModalVisible, setMountHddModalVisible] = useState(false)
+    const [editPermModalVisible, setEditPermModalVisible] = useState(false)
+    const [editPermOwner, setEditPermOwner] = useState('')
+    const [editPermMask, setEditPermMask] = useState<number>(VM_PERMISSION.FULL_MASK)
     const [unmountHddModalVisible, setUnmountHddModalVisible] = useState(false)
 
     const [ipQuota, setIpQuota] = useState<any>(null)
@@ -518,6 +524,11 @@ function VMDetail() {
 
                 setVM(vmData)
                 vmRef.current = vmData
+
+                // 获取用户权限掩码
+                if (detailRes.data && typeof (detailRes.data as any).user_permissions === 'number') {
+                    setUserPermissions((detailRes.data as any).user_permissions)
+                }
             }
         } catch (error: any) {
             console.error('加载虚拟机详情失败:', error)
@@ -1578,6 +1589,22 @@ function VMDetail() {
         }, false)
     }
 
+    // 更新用户虚拟机权限
+    const handleUpdatePermission = async () => {
+        if (!editPermOwner || !hostEnabled) return
+        setOwnerActionLoading(true)
+        try {
+            await api.updateVMOwnerPermission(hostName!, uuid!, editPermOwner, editPermMask)
+            message.success('权限更新成功')
+            setEditPermModalVisible(false)
+            loadOwners()
+        } catch (error: any) {
+            message.error(error?.message || '权限更新失败')
+        } finally {
+            setOwnerActionLoading(false)
+        }
+    }
+
     const handleTransferOwnership = async () => {
         if (!transferOwnerUsername) return
         if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
@@ -1866,7 +1893,7 @@ function VMDetail() {
                     },
                 ]
             },
-            {key: 'delete', label: '删除实例', icon: <DeleteOutlined/>, danger: true, onClick: handleDelete}
+            {key: 'delete', label: '删除实例', icon: <DeleteOutlined/>, danger: true, onClick: handleDelete, disabled: !hasPermission(userPermissions, VM_PERMISSION.VM_DELETE)}
         ]
     };
 
@@ -2682,6 +2709,7 @@ function VMDetail() {
                             const isFirstOwner = index === 0
                             const roleText = isFirstOwner ? '所有者' : '使用者'
                 const roleClass = isFirstOwner ? 'dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' : 'dark:bg-gray-700/40 dark:'
+                            const ownerMask = typeof owner.permission === 'number' ? owner.permission : VM_PERMISSION.FULL_MASK
                             return (
                                 <div key={owner.username || `owner-${index}`}
                                      className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-blue-400 dark:hover:border-blue-500">
@@ -2696,6 +2724,12 @@ function VMDetail() {
                                         <div className="flex items-center gap-1">
                                             {!isFirstOwner && (
                                                 <>
+                                                    <Button size="small" icon={<EditOutlined/>}
+                                                            onClick={() => {
+                                                                setEditPermOwner(owner.username);
+                                                                setEditPermMask(ownerMask);
+                                                                setEditPermModalVisible(true);
+                                                            }}>编辑权限</Button>
                                                     <Button type="primary" size="small" icon={<KeyOutlined/>}
                                                             onClick={() => {
                                                                 setTransferOwnerUsername(owner.username);
@@ -2713,6 +2747,11 @@ function VMDetail() {
                                             <span className={`px-2 py-0.5 text-xs font-medium ${roleClass} rounded`}>
                                                 {roleText}
                                             </span>
+                                            {!isFirstOwner && (
+                                                <span className="text-xs ml-2" style={{color: 'var(--text-secondary)'}}>
+                                                    权限: {ownerMask === VM_PERMISSION.FULL_MASK ? '全部' : `${Object.entries(PERMISSION_FIELD_MASK).filter(([, bit]) => (ownerMask & bit) !== 0).length}/16`}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -2798,17 +2837,17 @@ function VMDetail() {
                             </div>
                         </div>
                         <Space>
-                            <Button type="primary" className="bg-blue-600" onClick={handleOpenVNC} disabled={!hostEnabled || operationLocked}>一键远程</Button>
-                            <Button onClick={() => setPasswordModalVisible(true)} disabled={!hostEnabled || operationLocked}>设置密码</Button>
+                            <Button type="primary" className="bg-blue-600" onClick={handleOpenVNC} disabled={!hostEnabled || operationLocked || !hasPermission(userPermissions, VM_PERMISSION.VNC_EDITS)}>一键远程</Button>
+                            <Button onClick={() => setPasswordModalVisible(true)} disabled={!hostEnabled || operationLocked || !hasPermission(userPermissions, VM_PERMISSION.PWD_EDITS)}>设置密码</Button>
                             <Dropdown menu={powerMenuProps}>
                                 <Button icon={defaultPowerAction.icon}
                                         onClick={() => handlePowerAction(defaultPowerAction.key)}
-                                        disabled={!hostEnabled || operationLocked}>
+                                        disabled={!hostEnabled || operationLocked || !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)}>
                                     {defaultPowerAction.label} <DownOutlined/>
                                 </Button>
                             </Dropdown>
 
-                            <Button onClick={() => setReinstallModalVisible(true)} disabled={!hostEnabled || operationLocked}>重装系统</Button>
+                            <Button onClick={() => setReinstallModalVisible(true)} disabled={!hostEnabled || operationLocked || !hasPermission(userPermissions, VM_PERMISSION.SYS_EDITS)}>重装系统</Button>
                             <Button icon={<ReloadOutlined/>} onClick={() => loadVMDetail(false)}/>
                             <Dropdown menu={actionMenu}><Button icon={<MoreOutlined/>} disabled={!hostEnabled || operationLocked}/></Dropdown>
                         </Space>
@@ -2816,11 +2855,19 @@ function VMDetail() {
                 </div>
                 <div className="px-6">
                     <Tabs activeKey={activeTab} onChange={setActiveTab}
-                          items={tabItems.map(i => ({key: i.key, label: i.label}))} tabBarStyle={{marginBottom: 0}}/>
+                          items={tabItems.filter(i => {
+                              const requiredPerm = TAB_PERMISSION_MAP[i.key];
+                              if (!requiredPerm) return true; // overview等无需权限的Tab始终显示
+                              return hasPermission(userPermissions, requiredPerm);
+                          }).map(i => ({key: i.key, label: i.label}))} tabBarStyle={{marginBottom: 0}}/>
                 </div>
             </div>
             <div className="p-6">
-                {tabItems.find(i => i.key === activeTab)?.children}
+                {tabItems.filter(i => {
+                    const requiredPerm = TAB_PERMISSION_MAP[i.key];
+                    if (!requiredPerm) return true;
+                    return hasPermission(userPermissions, requiredPerm);
+                }).find(i => i.key === activeTab)?.children}
             </div>
 
             <Modal title="编辑虚拟机配置" open={editModalVisible} onCancel={() => setEditModalVisible(false)}
@@ -3243,6 +3290,36 @@ function VMDetail() {
                         <div className="text-xs text-orange-600">新的所有者必须拥有对应主机的访问权限才能完成移交</div>
                     </div>
                 </Space></div>
+            </Modal>
+
+            {/* 编辑用户权限模态框 */}
+            <Modal title={`编辑权限 - ${editPermOwner}`} open={editPermModalVisible}
+                   onCancel={() => setEditPermModalVisible(false)} onOk={handleUpdatePermission}
+                   confirmLoading={ownerActionLoading} okText="保存" width={560}>
+                <div style={{marginBottom: 12}}>
+                    <Space>
+                        <Button size="small" onClick={() => setEditPermMask(VM_PERMISSION.FULL_MASK)}>全选</Button>
+                        <Button size="small" onClick={() => setEditPermMask(0)}>全不选</Button>
+                    </Space>
+                </div>
+                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px'}}>
+                    {Object.entries(PERMISSION_FIELD_MASK).map(([field, bit]) => (
+                        <label key={field} style={{display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: '4px 0'}}>
+                            <input type="checkbox" checked={(editPermMask & bit) !== 0}
+                                   onChange={(e) => {
+                                       if (e.target.checked) {
+                                           setEditPermMask(prev => prev | bit)
+                                       } else {
+                                           setEditPermMask(prev => prev & ~bit)
+                                       }
+                                   }}/>
+                            <span>{VM_PERMISSION_LABELS[field] || field}</span>
+                        </label>
+                    ))}
+                </div>
+                <div style={{marginTop: 12, fontSize: 12, color: '#888'}}>
+                    当前掩码值: {editPermMask} / {VM_PERMISSION.FULL_MASK}
+                </div>
             </Modal>
 
             <Modal title={<div style={{display: 'flex', alignItems: 'center', gap: 8, color: '#1890ff'}}>

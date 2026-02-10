@@ -185,3 +185,82 @@ export interface PaginatedResponse<T> {
   page: number;
   page_size: number;
 }
+
+// 虚拟机细分权限掩码位定义
+export const VM_PERMISSION = {
+  PWR_EDITS: 1,       // 是否允许编辑电源
+  PWD_EDITS: 2,       // 是否允许编辑密码
+  SYS_EDITS: 4,       // 是否允许编辑系统
+  NIC_EDITS: 8,       // 是否允许编辑网卡
+  ISO_EDITS: 16,      // 是否允许编辑光盘
+  HDD_EDITS: 32,      // 是否允许编辑硬盘
+  NET_EDITS: 64,      // 是否允许编辑网络
+  WEB_EDITS: 128,     // 是否允许编辑网页
+  VNC_EDITS: 256,     // 是否允许控制桌面
+  PCI_EDITS: 512,     // 是否允许编辑PCIe
+  USB_EDITS: 1024,    // 是否允许编辑USBs
+  VM_BACKUP: 2048,    // 是否允许备份还原
+  VM_GRANTS: 4096,    // 是否允许管理用户
+  VM_MODIFY: 8192,    // 是否允许修改配置
+  VM_DELETE: 16384,   // 是否允许删除实例
+  FIREWALLS: 32768,   // 是否可编辑防火墙
+  FULL_MASK: 65535,   // 全权限
+} as const;
+
+// 权限名称映射（用于UI展示）
+export const VM_PERMISSION_LABELS: Record<string, string> = {
+  pwr_edits: '编辑电源',
+  pwd_edits: '编辑密码',
+  sys_edits: '编辑系统',
+  nic_edits: '编辑网卡',
+  iso_edits: '编辑光盘',
+  hdd_edits: '编辑硬盘',
+  net_edits: '编辑网络',
+  web_edits: '编辑网页',
+  vnc_edits: '控制桌面',
+  pci_edits: '编辑PCIe',
+  usb_edits: '编辑USBs',
+  vm_backup: '备份还原',
+  vm_grants: '管理用户',
+  vm_modify: '修改配置',
+  vm_delete: '删除实例',
+  firewalls: '编辑防火墙',
+};
+
+// 权限字段到掩码位的映射
+export const PERMISSION_FIELD_MASK: Record<string, number> = {
+  pwr_edits: VM_PERMISSION.PWR_EDITS,
+  pwd_edits: VM_PERMISSION.PWD_EDITS,
+  sys_edits: VM_PERMISSION.SYS_EDITS,
+  nic_edits: VM_PERMISSION.NIC_EDITS,
+  iso_edits: VM_PERMISSION.ISO_EDITS,
+  hdd_edits: VM_PERMISSION.HDD_EDITS,
+  net_edits: VM_PERMISSION.NET_EDITS,
+  web_edits: VM_PERMISSION.WEB_EDITS,
+  vnc_edits: VM_PERMISSION.VNC_EDITS,
+  pci_edits: VM_PERMISSION.PCI_EDITS,
+  usb_edits: VM_PERMISSION.USB_EDITS,
+  vm_backup: VM_PERMISSION.VM_BACKUP,
+  vm_grants: VM_PERMISSION.VM_GRANTS,
+  vm_modify: VM_PERMISSION.VM_MODIFY,
+  vm_delete: VM_PERMISSION.VM_DELETE,
+  firewalls: VM_PERMISSION.FIREWALLS,
+};
+
+// 检查权限掩码是否拥有指定权限
+export function hasPermission(mask: number, permBit: number): boolean {
+  return (mask & permBit) !== 0;
+}
+
+// Tab key 到所需权限的映射
+export const TAB_PERMISSION_MAP: Record<string, number> = {
+  ip: VM_PERMISSION.NIC_EDITS,
+  hdd: VM_PERMISSION.HDD_EDITS,
+  iso: VM_PERMISSION.ISO_EDITS,
+  nat: VM_PERMISSION.NET_EDITS,
+  proxy: VM_PERMISSION.WEB_EDITS,
+  pci: VM_PERMISSION.PCI_EDITS,
+  usb: VM_PERMISSION.USB_EDITS,
+  backup: VM_PERMISSION.VM_BACKUP,
+  owners: VM_PERMISSION.VM_GRANTS,
+};

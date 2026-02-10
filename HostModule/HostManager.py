@@ -682,7 +682,7 @@ class HostManage:
     def _recalculate_user_quotas(self):
         """
         遍历所有虚拟机和容器，重新计算用户资源配额
-        只有虚拟机/容器 own_all 列表中的第一个用户才占用配额
+        只有虚拟机/容器 own_all 字典中的第一个用户才占用配额
         """
         try:
             # 获取所有用户
@@ -713,11 +713,11 @@ class HostManage:
                 
                 for vm_uuid, vm_config in server.vm_saving.items():
                     # 获取虚拟机/容器的第一个所有者
-                    owners = getattr(vm_config, 'own_all', [])
+                    owners = getattr(vm_config, 'own_all', {})
                     if not owners:
                         continue
                     
-                    first_owner = owners[0]
+                    first_owner = next(iter(owners))
                     
                     # 跳过admin用户
                     if first_owner == 'admin':

@@ -1223,7 +1223,7 @@ class HostServer(BasicServer):
                 message=f"删除磁盘失败: {str(e)}")
 
     # 查找显卡 ######################################################################
-    def GPUShows(self) -> dict[str, str]:
+    def PCIShows(self) -> dict[str, str]:
         """
         查询GPU设备列表
         

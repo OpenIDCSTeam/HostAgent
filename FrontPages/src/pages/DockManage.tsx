@@ -348,6 +348,7 @@ function DockManage() {
                                     vm={vm}
                                     hostName={vmHost}
                                     hostDisabled={isHostDisabled}
+                                    userPermissions={vm.user_permissions}
                                     onEdit={(uuid) => handleEdit(uuid, vm._host)}
                                     onDelete={(uuid) => handleDelete(uuid, vm._host)}
                                     onPower={(uuid) => handleOpenPower(uuid, vm._host)}

@@ -1682,7 +1682,7 @@ class HostServer(BasicServer):
             return ""
 
     # 查找显卡 #################################################################
-    def GPUShows(self) -> dict[str, str]:
+    def PCIShows(self) -> dict[str, str]:
         """获取可用的GPU设备列表（用于PCIE直通）
         
         Returns:
