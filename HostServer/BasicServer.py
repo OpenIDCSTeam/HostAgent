@@ -569,9 +569,9 @@ class BasicServer:
 
     # 更新网卡 ######################################################################
     def IPUpdate(self, vm_conf: VMConfig, vm_last: VMConfig) -> ZMessage:
-        if self.hs_config.server_type in BasicServer.ros_type:
+        if self.hs_config.server_type in BasicServer.vnc_type:
             return self.IPUpdate_ROS(vm_conf, vm_last)
-        elif self.hs_config.server_type in BasicServer.man_type:
+        elif self.hs_config.server_type in BasicServer.tty_type:
             return self.IPUpdate_MAN(vm_conf, vm_last)
         return ZMessage(success=False, action="IPCreate")
 
@@ -1639,19 +1639,99 @@ class BasicServer:
 
     # 查找PCI ######################################################################
     def PCIShows(self) -> dict[str, VFConfig]:
+        """获取主机可直通PCI设备列表，返回 {设备ID: VFConfig}"""
         return {}
 
     # 直通PCI ######################################################################
-    def PCISetup(self, in_flag, vm_name, config: VFConfig) -> ZMessage:
-        return ZMessage(success=True, action="PCISetup", message="PCI配置成功")
+    def PCISetup(self, vm_name: str, config: VFConfig, pci_key: str, in_flag=True) -> ZMessage:
+        """PCI设备直通操作（需关机）
+        Args:
+            vm_name: 虚拟机名称
+            config: PCI设备配置
+            pci_key: 设备唯一Key
+            in_flag: True=添加直通, False=移除直通
+        """
+        if vm_name not in self.vm_saving:
+            return ZMessage(success=False, action="PCISetup", message="虚拟机不存在")
+
+        # 检查虚拟机是否已关机（PCI直通必须关机）
+        vm_config = self.vm_saving[vm_name]
+        if vm_config.vm_flag not in [VMPowers.ON_STOP, VMPowers.UNKNOWN]:
+            return ZMessage(success=False, action="PCISetup", message="PCI直通需要先关闭虚拟机")
+
+        old_conf = deepcopy(self.vm_saving[vm_name])
+
+        if in_flag:
+            if pci_key in vm_config.pci_all:
+                return ZMessage(success=False, action="PCISetup", message="PCI设备已存在")
+            vm_config.pci_all[pci_key] = config
+        else:
+            if pci_key not in vm_config.pci_all:
+                return ZMessage(success=False, action="PCISetup", message="PCI设备不存在")
+            del vm_config.pci_all[pci_key]
+
+        # 保存配置
+        self.VMUpdate(vm_config, old_conf)
+        self.data_set()
+
+        action_text = "添加" if in_flag else "移除"
+        return ZMessage(success=True, action="PCISetup", message=f"PCI设备{action_text}成功")
 
     # 查找USB ######################################################################
     def USBShows(self) -> dict[str, USBInfos]:
+        """获取主机可用USB设备列表，返回 {设备ID: USBInfos}"""
         return {}
 
-    # 配置USB ######################################################################
-    def USBSetup(self, in_flag, vm_name, config: USBInfos) -> ZMessage:
-        return ZMessage(success=True, action="USBSetup", message="USB配置成功")
+    # 直通USB ######################################################################
+    def USBSetup(self, vm_name: str, usb_info: USBInfos, usb_key: str, in_flag=True) -> ZMessage:
+        """USB设备直通操作（无需关机）
+        Args:
+            vm_name: 虚拟机名称
+            usb_info: USB设备信息
+            usb_key: 设备唯一Key
+            in_flag: True=添加直通, False=移除直通
+        """
+        # 默认实现：直接调用USBMount写入配置
+        return self.USBMount(vm_name, usb_info, usb_key, in_flag)
+
+    # 启动项列出 ######################################################################
+    def EFIShows(self, vm_name: str) -> list['BootOpts']:
+        """获取虚拟机启动项列表，写入 efi_all 并返回 list[BootOpts]"""
+        if vm_name not in self.vm_saving:
+            return []
+        return self.vm_saving[vm_name].efi_all
+
+    # 启动项设置 ######################################################################
+    def EFISetup(self, vm_name: str, efi_list: list = None) -> ZMessage:
+        """调整虚拟机启动项顺序
+        Args:
+            vm_name: 虚拟机名称
+            efi_list: 新的启动项列表 list[dict]，每项包含 efi_type 和 efi_name
+        """
+        if efi_list is None:
+            efi_list = []
+        if vm_name not in self.vm_saving:
+            return ZMessage(success=False, action="EFISetup", message="虚拟机不存在")
+
+        from MainObject.Config.BootOpts import BootOpts
+        vm_config = self.vm_saving[vm_name]
+        old_conf = deepcopy(vm_config)
+
+        # 构建新的启动项列表
+        new_efi_all = []
+        for item in efi_list:
+            if isinstance(item, dict):
+                new_efi_all.append(BootOpts(**item))
+            elif isinstance(item, BootOpts):
+                new_efi_all.append(item)
+        vm_config.efi_all = new_efi_all
+
+        # 保存配置
+        self.VMUpdate(vm_config, old_conf)
+        self.data_set()
+
+        return ZMessage(success=True, action="EFISetup", message="启动顺序设置成功")
+
 
     # 转移用户 ######################################################################
     def Transfer(self, vm_name: str, new_owner: str,

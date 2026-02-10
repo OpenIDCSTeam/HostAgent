@@ -200,7 +200,7 @@ export const VM_PERMISSION = {
   PCI_EDITS: 512,     // 是否允许编辑PCIe
   USB_EDITS: 1024,    // 是否允许编辑USBs
   VM_BACKUP: 2048,    // 是否允许备份还原
-  VM_GRANTS: 4096,    // 是否允许管理用户
+  EFI_EDITS: 4096,    // 是否允许管理启动顺序
   VM_MODIFY: 8192,    // 是否允许修改配置
   VM_DELETE: 16384,   // 是否允许删除实例
   FIREWALLS: 32768,   // 是否可编辑防火墙
@@ -221,7 +221,7 @@ export const VM_PERMISSION_LABELS: Record<string, string> = {
   pci_edits: '编辑PCIe',
   usb_edits: '编辑USBs',
   vm_backup: '备份还原',
-  vm_grants: '管理用户',
+  efi_edits: '启动顺序',
   vm_modify: '修改配置',
   vm_delete: '删除实例',
   firewalls: '编辑防火墙',
@@ -241,7 +241,7 @@ export const PERMISSION_FIELD_MASK: Record<string, number> = {
   pci_edits: VM_PERMISSION.PCI_EDITS,
   usb_edits: VM_PERMISSION.USB_EDITS,
   vm_backup: VM_PERMISSION.VM_BACKUP,
-  vm_grants: VM_PERMISSION.VM_GRANTS,
+  efi_edits: VM_PERMISSION.EFI_EDITS,
   vm_modify: VM_PERMISSION.VM_MODIFY,
   vm_delete: VM_PERMISSION.VM_DELETE,
   firewalls: VM_PERMISSION.FIREWALLS,
@@ -262,5 +262,14 @@ export const TAB_PERMISSION_MAP: Record<string, number> = {
   pci: VM_PERMISSION.PCI_EDITS,
   usb: VM_PERMISSION.USB_EDITS,
   backup: VM_PERMISSION.VM_BACKUP,
-  owners: VM_PERMISSION.VM_GRANTS,
+  efi: VM_PERMISSION.EFI_EDITS,
 };
+
+// 权限不足时直接隐藏的Tab（平台不支持此功能）
+export const HIDDEN_TABS: Set<string> = new Set(['usb', 'pci', 'efi', 'owners']);
+
+// 权限不足时仅只读的Tab（可查看但禁止操作）
+export const READONLY_TABS: Set<string> = new Set(['ip', 'hdd', 'iso', 'nat', 'proxy', 'backup']);
+
+// owners tab 仅管理员/主所有者可见（不受普通权限控制）
+export const OWNER_ONLY_TABS: Set<string> = new Set(['owners']);

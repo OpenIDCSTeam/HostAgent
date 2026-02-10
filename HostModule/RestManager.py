@@ -303,6 +303,43 @@ class RestManager:
         }
         return self._check_fine_permission(hs_name, vm_uuid, user_data, action)
 
+    def _require_owner_or_admin(self, hs_name, vm_uuid):
+        """
+        检查当前用户是否为管理员或该虚拟机的主所有者
+        用于owners管理相关API（添加/删除用户、编辑权限、移交所有权）
+        :return: (是否有权限, 错误响应或None)
+        """
+        from flask import session
+        user_id = session.get('user_id')
+        is_admin = session.get('is_admin', False)
+        is_token_login = session.get('is_token_login', False)
+
+        if is_admin or is_token_login:
+            return True, None
+
+        if not user_id:
+            return False, self.api_response(401, '未登录')
+
+        username = session.get('username', '')
+        if not username:
+            return False, self.api_response(401, '无法获取用户名')
+
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return False, self.api_response(404, '主机不存在')
+
+        vm_config = server.vm_saving.get(vm_uuid)
+        if not vm_config:
+            return False, self.api_response(404, '虚拟机不存在')
+
+        # 检查是否为主所有者（own_all中的第一个key）
+        owners = getattr(vm_config, 'own_all', {})
+        first_owner = next(iter(owners), None)
+        if first_owner == username:
+            return True, None
+
+        return False, self.api_response(403, '只有管理员或主所有者才能管理用户权限')
+
     def _check_vm_delete_permission(self, hs_name, vm_uuid, user_data):
         """检查虚拟机删除权限（普通用户只能删除自己是主用户的虚拟机）"""
         # 管理员或Token登录有所有权限
@@ -963,6 +1000,15 @@ class RestManager:
         if server.hs_config and hasattr(server.hs_config, 'filter_name'):
             filter_name = server.hs_config.filter_name or ''
 
+        # 获取虚拟机用户态必要的主机字段（最小原则）
+        enable_host = True
+        ipaddr_maps = {}
+        ipaddr_dnss = []
+        if server.hs_config:
+            enable_host = getattr(server.hs_config, 'enable_host', True)
+            ipaddr_maps = getattr(server.hs_config, 'ipaddr_maps', {}) or {}
+            ipaddr_dnss = getattr(server.hs_config, 'ipaddr_dnss', []) or []
+
         return self.api_response(200, 'success', {
             'host_name': hs_name,
             'server_type': server_type,
@@ -972,22 +1018,243 @@ class RestManager:
             'ban_init': ban_init,
             'ban_edit': ban_edit,
             'messages': messages,
-            'tab_lock': tab_lock
+            'tab_lock': tab_lock,
+            'enable_host': enable_host,
+            'ipaddr_maps': ipaddr_maps,
+            'ipaddr_dnss': ipaddr_dnss,
         })
 
     def get_gpu_list(self, hs_name):
-        """获取主机的GPU设备列表（普通用户可访问）"""
+        """获取主机的GPU/PCI设备列表（兼容旧接口，内部调用get_pci_list）"""
+        return self.get_pci_list(hs_name)
+
+    def get_pci_list(self, hs_name):
+        """获取主机可直通PCI设备列表"""
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
 
-        # 调用主机的GPUShows方法获取GPU列表
         try:
-            gpu_list = server.PCIShows()
-            return self.api_response(200, 'success', gpu_list)
+            pci_devices = server.PCIShows()
+            # 将VFConfig对象序列化为字典
+            result = {}
+            for key, vf in pci_devices.items():
+                result[key] = {
+                    'gpu_uuid': vf.gpu_uuid,
+                    'gpu_mdev': vf.gpu_mdev,
+                    'gpu_hint': vf.gpu_hint
+                }
+            return self.api_response(200, 'success', result)
         except Exception as e:
-            logger.error(f"获取GPU列表失败: {str(e)}")
-            return self.api_response(500, f'获取GPU列表失败: {str(e)}')
+            logger.error(f"获取PCI设备列表失败: {str(e)}")
+            return self.api_response(500, f'获取PCI设备列表失败: {str(e)}')
+
+    def setup_pci(self, hs_name, vm_uuid):
+        """PCI设备直通操作（需要关机）"""
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return self.api_response(404, '主机不存在')
+
+        vm_config = server.vm_saving.get(vm_uuid)
+        if not vm_config:
+            return self.api_response(404, '虚拟机不存在')
+
+        data = request.get_json() or {}
+        pci_key = data.get('pci_key', '')
+        gpu_uuid = data.get('gpu_uuid', '')
+        gpu_mdev = data.get('gpu_mdev', '')
+        gpu_hint = data.get('gpu_hint', '')
+        action = data.get('action', 'add')  # add / remove
+
+        if not pci_key:
+            return self.api_response(400, 'PCI设备Key不能为空')
+
+        from MainObject.Config.VFConfig import VFConfig
+        config = VFConfig(
+            gpu_uuid=gpu_uuid,
+            gpu_mdev=gpu_mdev,
+            gpu_hint=gpu_hint
+        )
+
+        in_flag = (action == 'add')
+
+        try:
+            result = server.PCISetup(vm_uuid, config, pci_key, in_flag)
+            if not result.success:
+                return self.api_response(500, result.message)
+
+            self.hs_manage.all_save()
+
+            # 记录操作日志
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            action_text = '添加' if in_flag else '移除'
+            self.hs_manage.saving.add_operation_log(
+                hs_name=hs_name,
+                operation=f"PCI{action_text}",
+                target="虚拟机",
+                details=f"虚拟机: {vm_uuid}, 设备: {gpu_hint}({gpu_uuid})",
+                level="INFO",
+                username=username
+            )
+            return self.api_response(200, result.message)
+        except Exception as e:
+            logger.error(f"PCI直通操作失败: {str(e)}")
+            return self.api_response(500, f'PCI直通操作失败: {str(e)}')
+
+    def get_usb_list(self, hs_name):
+        """获取主机可用USB设备列表"""
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return self.api_response(404, '主机不存在')
+
+        try:
+            usb_devices = server.USBShows()
+            # 将USBInfos对象序列化为字典
+            result = {}
+            for key, usb in usb_devices.items():
+                result[key] = {
+                    'vid_uuid': usb.vid_uuid,
+                    'pid_uuid': usb.pid_uuid,
+                    'usb_hint': usb.usb_hint
+                }
+            return self.api_response(200, 'success', result)
+        except Exception as e:
+            logger.error(f"获取USB设备列表失败: {str(e)}")
+            return self.api_response(500, f'获取USB设备列表失败: {str(e)}')
+
+    def setup_usb(self, hs_name, vm_uuid):
+        """USB设备直通操作（无需关机）"""
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return self.api_response(404, '主机不存在')
+
+        vm_config = server.vm_saving.get(vm_uuid)
+        if not vm_config:
+            return self.api_response(404, '虚拟机不存在')
+
+        data = request.get_json() or {}
+        usb_key = data.get('usb_key', '')
+        vid_uuid = data.get('vid_uuid', '')
+        pid_uuid = data.get('pid_uuid', '')
+        usb_hint = data.get('usb_hint', '')
+        action = data.get('action', 'add')  # add / remove
+
+        if not usb_key and action == 'add':
+            # 自动生成key
+            import uuid
+            usb_key = str(uuid.uuid4())
+
+        if not usb_key:
+            return self.api_response(400, 'USB设备Key不能为空')
+
+        from MainObject.Config.USBInfos import USBInfos
+        usb_info = USBInfos(
+            vid_uuid=vid_uuid,
+            pid_uuid=pid_uuid,
+            usb_hint=usb_hint
+        )
+
+        in_flag = (action == 'add')
+
+        try:
+            result = server.USBSetup(vm_uuid, usb_info, usb_key, in_flag)
+            if not result.success:
+                return self.api_response(500, result.message)
+
+            self.hs_manage.all_save()
+
+            # 记录操作日志
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            action_text = '添加' if in_flag else '移除'
+            self.hs_manage.saving.add_operation_log(
+                hs_name=hs_name,
+                operation=f"USB{action_text}",
+                target="虚拟机",
+                details=f"虚拟机: {vm_uuid}, USB: {usb_hint}({vid_uuid}:{pid_uuid})",
+                level="INFO",
+                username=username
+            )
+            return self.api_response(200, result.message)
+        except Exception as e:
+            logger.error(f"USB直通操作失败: {str(e)}")
+            return self.api_response(500, f'USB直通操作失败: {str(e)}')
+
+    def get_efi_list(self, hs_name, vm_uuid):
+        """获取虚拟机启动项列表"""
+        # 检查efi_edits细粒度权限
+        has_perm, perm_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'efi_edits')
+        if not has_perm:
+            return perm_resp
+
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return self.api_response(404, '主机不存在')
+
+        vm_config = server.vm_saving.get(vm_uuid)
+        if not vm_config:
+            return self.api_response(404, '虚拟机不存在')
+
+        try:
+            efi_list = server.EFIShows(vm_uuid)
+            # 将BootOpts对象序列化为字典列表
+            result = []
+            for efi in efi_list:
+                if hasattr(efi, '__save__'):
+                    result.append(efi.__save__())
+                elif isinstance(efi, dict):
+                    result.append(efi)
+                else:
+                    result.append({'efi_type': getattr(efi, 'efi_type', False), 'efi_name': getattr(efi, 'efi_name', '')})
+            return self.api_response(200, 'success', result)
+        except Exception as e:
+            logger.error(f"获取启动项列表失败: {str(e)}")
+            return self.api_response(500, f'获取启动项列表失败: {str(e)}')
+
+    def setup_efi(self, hs_name, vm_uuid):
+        """调整虚拟机启动项顺序"""
+        # 检查efi_edits细粒度权限
+        has_perm, perm_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'efi_edits')
+        if not has_perm:
+            return perm_resp
+
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return self.api_response(404, '主机不存在')
+
+        vm_config = server.vm_saving.get(vm_uuid)
+        if not vm_config:
+            return self.api_response(404, '虚拟机不存在')
+
+        data = request.get_json() or {}
+        efi_list = data.get('efi_list', [])
+
+        if not isinstance(efi_list, list):
+            return self.api_response(400, '启动项列表格式错误')
+
+        try:
+            result = server.EFISetup(vm_uuid, efi_list)
+            if not result.success:
+                return self.api_response(500, result.message)
+
+            self.hs_manage.all_save()
+
+            # 记录操作日志
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            self.hs_manage.saving.add_operation_log(
+                hs_name=hs_name,
+                operation="EFI设置",
+                target="虚拟机",
+                details=f"虚拟机: {vm_uuid}, 启动项数: {len(efi_list)}",
+                level="INFO",
+                username=username
+            )
+            return self.api_response(200, result.message)
+        except Exception as e:
+            logger.error(f"设置启动项失败: {str(e)}")
+            return self.api_response(500, f'设置启动项失败: {str(e)}')
 
     # 添加主机 ########################################################################
     # :return: 主机添加结果的API响应
@@ -1282,11 +1549,21 @@ class RestManager:
                 # 只取最新的一条状态
                 if status and len(status) > 0:
                     status = [status[-1]]
+            # 根据用户权限屏蔽敏感字段
+            user_perm = self._calc_user_vm_permission(vm_config, current_username, is_admin or is_token_login)
+            config_serialized = serialize_obj(vm_config)
+            if isinstance(config_serialized, dict):
+                from MainObject.Config.UserMask import MaskCode
+                if not (user_perm & MaskCode.PWD_EDITS.value):
+                    config_serialized['os_pass'] = '******'  # 无密码权限，屏蔽系统密码
+                if not (user_perm & MaskCode.VNC_EDITS.value):
+                    config_serialized['vc_pass'] = '******'  # 无VNC权限，屏蔽远程密码
+
             vms_data[vm_uuid] = {
                 'uuid': vm_uuid,
-                'config': serialize_obj(vm_config),
+                'config': config_serialized,
                 'status': serialize_obj(status),
-                'user_permissions': self._calc_user_vm_permission(vm_config, current_username, is_admin or is_token_login)
+                'user_permissions': user_perm
             }
 
         return self.api_response(200, 'success', vms_data)
@@ -1325,10 +1602,21 @@ class RestManager:
         else:
             config_data = vm_config if vm_config else {}
 
+        # 根据用户权限屏蔽敏感字段
+        user_perm = self._calc_user_vm_permission(vm_config, current_username, is_admin or is_token_login)
+        if isinstance(config_data, dict):
+            from MainObject.Config.UserMask import MaskCode
+            if not (user_perm & MaskCode.PWD_EDITS.value):
+                config_data['os_pass'] = '******'  # 无密码权限，屏蔽系统密码
+            if not (user_perm & MaskCode.VNC_EDITS.value):
+                config_data['vc_pass'] = '******'  # 无VNC权限，屏蔽远程密码
+
         return self.api_response(200, 'success', {
             'uuid': vm_uuid,
             'config': config_data,
-            'user_permissions': self._calc_user_vm_permission(vm_config, current_username, is_admin or is_token_login)
+            'user_permissions': user_perm,
+            'is_admin': is_admin or is_token_login,
+            'current_user': current_username
         })
 
     # 获取虚拟机详情 ########################################################################
@@ -1594,6 +1882,7 @@ class RestManager:
                 vm_owners = getattr(old_vm_config, 'own_all', {})
 
         data = request.get_json() or {}
+        original_keys = set(data.keys())  # 保存前端实际发送的字段名集合
         data['vm_uuid'] = vm_uuid
 
         # 检查资源配额（非管理员用户）
@@ -1657,6 +1946,21 @@ class RestManager:
             data = self._filter_banned_fields(data, server_type, mode='edit')
 
         vm_config = VMConfig(**data, nic_all=nic_all)
+
+        # 从旧配置中复制前端未发送的受权限控制字段
+        if old_vm_config and hasattr(old_vm_config, '__dict__'):
+            # 操作系统：前端未发送os_name时（无sys_edits权限），从旧配置复制
+            if 'os_name' not in original_keys:
+                vm_config.os_name = getattr(old_vm_config, 'os_name', '')
+            # 系统密码：前端未发送os_pass时（无pwd_edits权限），从旧配置复制
+            if 'os_pass' not in original_keys:
+                vm_config.os_pass = getattr(old_vm_config, 'os_pass', '')
+            # VNC密码：前端未发送vc_pass时（无vnc_edits权限），从旧配置复制
+            if 'vc_pass' not in original_keys:
+                vm_config.vc_pass = getattr(old_vm_config, 'vc_pass', '')
+            # 网卡配置：编辑模式不再管理网卡，始终从旧配置保留
+            if 'nic_all' not in original_keys:
+                vm_config.nic_all = getattr(old_vm_config, 'nic_all', {})
 
         # 处理GPU直通配置
         gpu_id = data.get('gpu_id')
@@ -1916,7 +2220,7 @@ class RestManager:
     def add_vm_owner(self, hs_name, vm_uuid):
         """添加虚拟机所有者"""
         # 检查细分权限：管理用户
-        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'vm_grants')
+        has_perm, error_resp = self._require_owner_or_admin(hs_name, vm_uuid)
         if not has_perm:
             return error_resp
 
@@ -1950,7 +2254,7 @@ class RestManager:
 
         # 注意：只有第一个所有者才占用配额，添加其他所有者不影响配额
 
-        self.hs_manage.all_save()
+        server.data_set()
         return self.api_response(200, '添加成功')
 
     # 删除虚拟机所有者 ########################################################################
@@ -1961,7 +2265,7 @@ class RestManager:
     def remove_vm_owner(self, hs_name, vm_uuid):
         """删除虚拟机所有者"""
         # 检查细分权限：管理用户
-        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'vm_grants')
+        has_perm, error_resp = self._require_owner_or_admin(hs_name, vm_uuid)
         if not has_perm:
             return error_resp
 
@@ -1998,7 +2302,7 @@ class RestManager:
         # 注意：只有第一个所有者才占用配额，删除其他所有者不影响配额
         # 而且第一个所有者已经被禁止删除了
 
-        self.hs_manage.all_save()
+        server.data_set()
         return self.api_response(200, '删除成功')
 
     # 更新虚拟机所有者权限 ####################################################################
@@ -2009,7 +2313,7 @@ class RestManager:
     def update_vm_owner_permission(self, hs_name, vm_uuid):
         """更新虚拟机所有者的细分权限"""
         # 检查细分权限：管理用户
-        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'vm_grants')
+        has_perm, error_resp = self._require_owner_or_admin(hs_name, vm_uuid)
         if not has_perm:
             return error_resp
 
@@ -2049,7 +2353,7 @@ class RestManager:
             return self.api_response(400, '权限格式不正确')
 
         vm_config.own_all = owners
-        self.hs_manage.all_save()
+        server.data_set()
         return self.api_response(200, '权限更新成功')
 
     # 移交虚拟机所有权 ########################################################################
@@ -2060,7 +2364,7 @@ class RestManager:
     def transfer_vm_ownership(self, hs_name, vm_uuid):
         """移交虚拟机所有权"""
         # 检查细分权限：管理用户
-        has_perm, error_resp = self._require_vm_fine_permission(hs_name, vm_uuid, 'vm_grants')
+        has_perm, error_resp = self._require_owner_or_admin(hs_name, vm_uuid)
         if not has_perm:
             return error_resp
 
@@ -3863,7 +4167,7 @@ class RestManager:
     # ========================================================================
 
     def mount_vm_usb(self, hs_name, vm_uuid):
-        """挂载USB设备到虚拟机"""
+        """挂载USB设备到虚拟机（兼容旧接口，内部转调setup_usb逻辑）"""
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -3892,11 +4196,8 @@ class RestManager:
             usb_hint=usb_remark
         )
 
-        # 调用USBMount挂载
-        if not hasattr(server, 'USBMount'):
-             return self.api_response(500, '当前服务器不支持USB挂载')
-
-        result = server.USBMount(vm_uuid, usb_info, usb_key, in_flag=True)
+        # 调用USBSetup执行直通+写入配置
+        result = server.USBSetup(vm_uuid, usb_info, usb_key, in_flag=True)
         if not result.success:
             return self.api_response(500, f'挂载失败: {result.message}')
 
@@ -3905,7 +4206,7 @@ class RestManager:
         return self.api_response(200, 'USB挂载成功')
 
     def unmount_vm_usb(self, hs_name, vm_uuid, usb_key):
-        """卸载虚拟机USB设备"""
+        """卸载虚拟机USB设备（兼容旧接口，内部转调USBSetup）"""
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
@@ -3920,13 +4221,10 @@ class RestManager:
         if usb_key not in vm_config.usb_all:
             return self.api_response(404, 'USB设备不存在')
 
-        # 调用USBMount卸载
-        if not hasattr(server, 'USBMount'):
-             return self.api_response(500, '当前服务器不支持USB卸载')
-
         usb_info = vm_config.usb_all[usb_key]
-        
-        result = server.USBMount(vm_uuid, usb_info, usb_key, in_flag=False)
+
+        # 调用USBSetup执行移除+更新配置
+        result = server.USBSetup(vm_uuid, usb_info, usb_key, in_flag=False)
         if not result.success:
             return self.api_response(500, f'卸载失败: {result.message}')
 

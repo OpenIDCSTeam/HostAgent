@@ -1190,68 +1190,55 @@ class HostServer(BasicServer):
         # 通用操作 =============================================================
         # return super().RMMounts(vm_name, vm_imgs)
 
-    # 查找显卡 =================================================================
-    def PCIShows(self) -> dict[str, str]:
-        """获取可用的GPU设备列表（用于PCIE直通）
-        
+    # 查找PCI设备 =================================================================
+    def PCIShows(self) -> dict[str, 'VFConfig']:
+        """获取可用的PCI直通设备列表
         Returns:
-            dict: GPU设备字典，格式为 {gpu_id: gpu_name}
+            dict: {pci_id: VFConfig}
         """
+        from MainObject.Config.VFConfig import VFConfig
         try:
-            logger.info(f"[{self.hs_config.server_name}] 开始获取GPU设备列表")
-            
-            # 连接到ESXi ======================================================
+            logger.info(f"[{self.hs_config.server_name}] 开始获取PCI设备列表")
             connect_result = self.esxi_api.connect()
             if not connect_result.success:
                 logger.error(f"[{self.hs_config.server_name}] ESXi连接失败: {connect_result.message}")
                 return {}
-            
-            # 获取主机的PCI设备列表 ============================================
+
             try:
                 from pyVmomi import vim
-                
-                # 获取主机对象
                 host = self.esxi_api.get_host()
                 if not host:
-                    logger.error(f"[{self.hs_config.server_name}] 无法获取ESXi主机对象")
                     self.esxi_api.disconnect()
                     return {}
-                
-                gpu_dict = {}
-                
-                # 获取主机的PCI设备信息
+
+                device_dict = {}
+                passthru_map = {}
+
+                # 构建直通状态映射
+                if hasattr(host.config, 'pciPassthruInfo'):
+                    for info in host.config.pciPassthruInfo:
+                        passthru_map[info.id] = info.passthruEnabled
+
+                # 遍历所有PCI设备
                 if hasattr(host, 'hardware') and hasattr(host.hardware, 'pciDevice'):
                     for pci_device in host.hardware.pciDevice:
-                        # 查找GPU设备（VGA控制器和3D控制器）
-                        # classId: 0x0300 = VGA控制器, 0x0302 = 3D控制器
-                        if pci_device.classId in [0x0300, 0x0302]:
-                            # 构建PCI ID（格式：domain:bus:slot.function）
-                            pci_id = f"{pci_device.id}"
-                            
-                            # 获取设备名称
-                            device_name = pci_device.deviceName if hasattr(pci_device, 'deviceName') else pci_device.vendorName
-                            
-                            # 检查设备是否可用于直通
-                            passthru_capable = False
-                            if hasattr(host.config, 'pciPassthruInfo'):
-                                for passthru_info in host.config.pciPassthruInfo:
-                                    if passthru_info.id == pci_device.id:
-                                        passthru_capable = passthru_info.passthruEnabled
-                                        break
-                            
-                            status = "可直通" if passthru_capable else "未启用直通"
-                            gpu_dict[pci_id] = f"{device_name} ({status})"
-                            logger.info(f"[{self.hs_config.server_name}] 发现GPU: {pci_id} - {device_name} ({status})")
-                
+                        # 仅列出已启用直通的设备
+                        pci_id = pci_device.id
+                        passthru_enabled = passthru_map.get(pci_id, False)
+                        if not passthru_enabled:
+                            continue
+
+                        device_name = getattr(pci_device, 'deviceName', '') or getattr(pci_device, 'vendorName', 'Unknown')
+                        device_dict[pci_id] = VFConfig(
+                            gpu_uuid=pci_id,
+                            gpu_mdev="ESXi_Passthrough",
+                            gpu_hint=device_name
+                        )
+                        logger.info(f"[{self.hs_config.server_name}] 发现可直通设备: {pci_id} - {device_name}")
+
                 self.esxi_api.disconnect()
-                
-                if gpu_dict:
-                    logger.info(f"[{self.hs_config.server_name}] 共找到 {len(gpu_dict)} 个GPU设备")
-                else:
-                    logger.warning(f"[{self.hs_config.server_name}] 未找到可用的GPU设备")
-                
-                return gpu_dict
-                
+                return device_dict
+
             except Exception as api_error:
                 logger.error(f"[{self.hs_config.server_name}] 获取PCI设备失败: {str(api_error)}")
                 traceback.print_exc()
@@ -1260,11 +1247,203 @@ class HostServer(BasicServer):
                 except:
                     pass
                 return {}
-                
+
         except Exception as e:
-            logger.error(f"[{self.hs_config.server_name}] 获取GPU设备列表失败: {str(e)}")
-            traceback.print_exc()
+            logger.error(f"[{self.hs_config.server_name}] 获取PCI设备列表失败: {str(e)}")
             return {}
+
+    # PCI设备直通 ==============================================================
+    def PCISetup(self, vm_name: str, config, pci_key: str, in_flag=True):
+        """ESXi PCI设备直通 - 通过pyVmomi添加/移除VirtualPCIPassthrough"""
+        from MainObject.Public.ZMessage import ZMessage
+        try:
+            if vm_name not in self.vm_saving:
+                return ZMessage(success=False, action="PCISetup", message="虚拟机不存在")
+
+            from MainObject.Config.VMPowers import VMPowers
+            vm_config = self.vm_saving[vm_name]
+            if vm_config.vm_flag not in [VMPowers.ON_STOP, VMPowers.UNKNOWN]:
+                return ZMessage(success=False, action="PCISetup", message="PCI直通需要先关闭虚拟机")
+
+            connect_result = self.esxi_api.connect()
+            if not connect_result.success:
+                return ZMessage(success=False, action="PCISetup", message=f"ESXi连接失败: {connect_result.message}")
+
+            try:
+                from pyVmomi import vim
+                vm = self.esxi_api.get_vm(vm_name)
+                if not vm:
+                    self.esxi_api.disconnect()
+                    return ZMessage(success=False, action="PCISetup", message="虚拟机未在ESXi中找到")
+
+                config_spec = vim.vm.ConfigSpec()
+
+                if in_flag:
+                    # 添加PCI直通设备
+                    pci_id = config.gpu_uuid
+                    backing = vim.vm.device.VirtualPCIPassthrough.DeviceBackingInfo()
+                    backing.id = pci_id
+                    backing.deviceId = ""
+
+                    passthrough = vim.vm.device.VirtualPCIPassthrough()
+                    passthrough.backing = backing
+
+                    device_change = vim.vm.device.VirtualDeviceSpec()
+                    device_change.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
+                    device_change.device = passthrough
+
+                    config_spec.deviceChange = [device_change]
+                else:
+                    # 移除PCI直通设备
+                    pci_id = config.gpu_uuid
+                    for device in vm.config.hardware.device:
+                        if isinstance(device, vim.vm.device.VirtualPCIPassthrough):
+                            if hasattr(device.backing, 'id') and device.backing.id == pci_id:
+                                device_change = vim.vm.device.VirtualDeviceSpec()
+                                device_change.operation = vim.vm.device.VirtualDeviceSpec.Operation.remove
+                                device_change.device = device
+                                config_spec.deviceChange = [device_change]
+                                break
+
+                task = vm.ReconfigVM_Task(config_spec)
+                self.esxi_api._wait_for_task(task)
+                self.esxi_api.disconnect()
+
+            except Exception as api_err:
+                try:
+                    self.esxi_api.disconnect()
+                except:
+                    pass
+                return ZMessage(success=False, action="PCISetup", message=str(api_err))
+
+            # 调用基类写入配置
+            return super().PCISetup(vm_name, config, pci_key, in_flag)
+
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] PCI直通操作失败: {str(e)}")
+            return ZMessage(success=False, action="PCISetup", message=str(e))
+
+    # 查找USB设备 ==============================================================
+    def USBShows(self) -> dict[str, 'USBInfos']:
+        """获取ESXi主机上的USB设备列表"""
+        from MainObject.Config.USBInfos import USBInfos
+        try:
+            connect_result = self.esxi_api.connect()
+            if not connect_result.success:
+                return {}
+
+            try:
+                host = self.esxi_api.get_host()
+                if not host:
+                    self.esxi_api.disconnect()
+                    return {}
+
+                usb_dict = {}
+                # 通过host.hardware.usbDevice获取USB设备
+                if hasattr(host.hardware, 'usbDevice'):
+                    for usb_dev in host.hardware.usbDevice:
+                        vid = format(usb_dev.vendor, '04x')
+                        pid = format(usb_dev.product, '04x')
+                        name = getattr(usb_dev, 'description', '') or f"USB {vid}:{pid}"
+                        key = f"{vid}:{pid}"
+                        usb_dict[key] = USBInfos(
+                            vid_uuid=vid, pid_uuid=pid, usb_hint=name)
+                        logger.info(f"[{self.hs_config.server_name}] 发现USB设备: {key} - {name}")
+
+                self.esxi_api.disconnect()
+                return usb_dict
+
+            except Exception as api_err:
+                logger.error(f"[{self.hs_config.server_name}] 获取USB设备失败: {str(api_err)}")
+                try:
+                    self.esxi_api.disconnect()
+                except:
+                    pass
+                return {}
+
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 获取USB设备列表失败: {str(e)}")
+            return {}
+
+    # USB设备直通 ==============================================================
+    def USBSetup(self, vm_name: str, usb_info, usb_key: str, in_flag=True):
+        """ESXi USB设备直通 - 通过pyVmomi添加/移除VirtualUSB"""
+        from MainObject.Public.ZMessage import ZMessage
+        try:
+            if vm_name not in self.vm_saving:
+                return ZMessage(success=False, action="USBSetup", message="虚拟机不存在")
+
+            connect_result = self.esxi_api.connect()
+            if not connect_result.success:
+                return ZMessage(success=False, action="USBSetup", message=f"ESXi连接失败: {connect_result.message}")
+
+            try:
+                from pyVmomi import vim
+                vm = self.esxi_api.get_vm(vm_name)
+                if not vm:
+                    self.esxi_api.disconnect()
+                    return ZMessage(success=False, action="USBSetup", message="虚拟机未在ESXi中找到")
+
+                config_spec = vim.vm.ConfigSpec()
+
+                if in_flag:
+                    # 添加USB设备
+                    backing = vim.vm.device.VirtualUSB.USBBackingInfo()
+                    backing.vendor = int(usb_info.vid_uuid, 16)
+                    backing.product = int(usb_info.pid_uuid, 16)
+
+                    usb_device = vim.vm.device.VirtualUSB()
+                    usb_device.backing = backing
+                    usb_device.connected = True
+
+                    device_change = vim.vm.device.VirtualDeviceSpec()
+                    device_change.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
+                    device_change.device = usb_device
+                    config_spec.deviceChange = [device_change]
+                else:
+                    # 移除USB设备
+                    vid = int(usb_info.vid_uuid, 16)
+                    pid = int(usb_info.pid_uuid, 16)
+                    for device in vm.config.hardware.device:
+                        if isinstance(device, vim.vm.device.VirtualUSB):
+                            if hasattr(device.backing, 'vendor') and \
+                               device.backing.vendor == vid and device.backing.product == pid:
+                                device_change = vim.vm.device.VirtualDeviceSpec()
+                                device_change.operation = vim.vm.device.VirtualDeviceSpec.Operation.remove
+                                device_change.device = device
+                                config_spec.deviceChange = [device_change]
+                                break
+
+                task = vm.ReconfigVM_Task(config_spec)
+                self.esxi_api._wait_for_task(task)
+                self.esxi_api.disconnect()
+
+            except Exception as api_err:
+                try:
+                    self.esxi_api.disconnect()
+                except:
+                    pass
+                return ZMessage(success=False, action="USBSetup", message=str(api_err))
+
+            # 更新虚拟机配置中的USB设备列表（不触发VMUpdate）
+            vm_conf = self.vm_saving[vm_name]
+            if in_flag:
+                # 添加USB设备到配置
+                if usb_key not in vm_conf.usb_all:
+                    vm_conf.usb_all[usb_key] = usb_info
+                    logger.info(f"[{self.hs_config.server_name}] 添加USB设备到配置: {usb_key}")
+            else:
+                # 从配置中移除USB设备
+                if usb_key in vm_conf.usb_all:
+                    del vm_conf.usb_all[usb_key]
+                    logger.info(f"[{self.hs_config.server_name}] 从配置中移除USB设备: {usb_key}")
+
+            logger.info(f"[{self.hs_config.server_name}] USB设备{'添加' if in_flag else '移除'}成功: {usb_key}")
+            return ZMessage(success=True, action="USBSetup", message="USB设备操作成功")
+
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] USB直通操作失败: {str(e)}")
+            return ZMessage(success=False, action="USBSetup", message=str(e))
 
     # 虚拟机截图 ===============================================================
     def VMScreen(self, vm_name: str = "") -> str:

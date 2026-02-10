@@ -1681,70 +1681,55 @@ class HostServer(BasicServer):
             traceback.print_exc()
             return ""
 
-    # 查找显卡 #################################################################
-    def PCIShows(self) -> dict[str, str]:
-        """获取可用的GPU设备列表（用于PCIE直通）
-        
+    # 查找PCI设备 #################################################################
+    def PCIShows(self) -> dict[str, 'VFConfig']:
+        """获取可用的PCI直通设备列表
+        通过SSH lspci -nn列出所有PCI设备及其IOMMU组
         Returns:
-            dict: GPU设备字典，格式为 {gpu_id: gpu_name}
+            dict: {pci_id: VFConfig}
         """
+        from MainObject.Config.VFConfig import VFConfig
         try:
-            logger.info(f"[{self.hs_config.server_name}] 开始获取GPU设备列表")
-            
-            # 连接Proxmox API ==================================================
+            logger.info(f"[{self.hs_config.server_name}] 开始获取PCI设备列表")
+
             client, result = self.api_conn()
             if not result.success:
-                logger.error(f"[{self.hs_config.server_name}] Proxmox连接失败: {result.message}")
                 return {}
-            
-            # 通过SSH执行命令获取GPU设备列表 ====================================
+
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            
+
             try:
                 ssh.connect(
                     self.hs_config.server_addr,
                     username=self.hs_config.server_user,
                     password=self.hs_config.server_pass
                 )
-                
-                # 使用lspci命令列出所有GPU设备 =================================
-                # 查找VGA和3D控制器设备
-                cmd = "lspci -nn | grep -E 'VGA|3D controller'"
+
+                # 列出所有PCI设备（包含设备ID）
+                cmd = "lspci -nn"
                 stdin, stdout, stderr = ssh.exec_command(cmd)
                 output = stdout.read().decode('utf-8')
-                
-                gpu_dict = {}
-                
+
+                device_dict = {}
                 if output:
-                    lines = output.strip().split('\n')
-                    for line in lines:
-                        # 解析lspci输出
-                        # 格式: 01:00.0 VGA compatible controller [0300]: NVIDIA Corporation ...
+                    for line in output.strip().split('\n'):
                         parts = line.split(' ', 1)
                         if len(parts) >= 2:
-                            pci_id = parts[0]  # 例如: 01:00.0
-                            device_info = parts[1]  # 设备信息
-                            
-                            # 提取设备名称
-                            if ':' in device_info:
-                                device_name = device_info.split(':', 1)[1].strip()
-                                # 移除方括号中的设备ID
-                                if '[' in device_name:
-                                    device_name = device_name.split('[')[0].strip()
-                                
-                                gpu_dict[pci_id] = device_name
-                                logger.info(f"[{self.hs_config.server_name}] 发现GPU: {pci_id} - {device_name}")
-                
+                            pci_id = parts[0]  # 如: 01:00.0
+                            device_info = parts[1]
+                            # 提取设备名称和类型
+                            device_name = device_info.strip()
+                            device_dict[pci_id] = VFConfig(
+                                gpu_uuid=pci_id,
+                                gpu_mdev="PVE_Passthrough",
+                                gpu_hint=device_name
+                            )
+
                 ssh.close()
-                
-                if gpu_dict:
-                    logger.info(f"[{self.hs_config.server_name}] 共找到 {len(gpu_dict)} 个GPU设备")
-                else:
-                    logger.warning(f"[{self.hs_config.server_name}] 未找到可用的GPU设备")
-                
-                return gpu_dict
-                
+                logger.info(f"[{self.hs_config.server_name}] 共找到 {len(device_dict)} 个PCI设备")
+                return device_dict
+
             except Exception as ssh_error:
                 logger.error(f"[{self.hs_config.server_name}] SSH连接失败: {str(ssh_error)}")
                 try:
@@ -1752,8 +1737,201 @@ class HostServer(BasicServer):
                 except:
                     pass
                 return {}
-                
+
         except Exception as e:
-            logger.error(f"[{self.hs_config.server_name}] 获取GPU设备列表失败: {str(e)}")
+            logger.error(f"[{self.hs_config.server_name}] 获取PCI设备列表失败: {str(e)}")
             traceback.print_exc()
             return {}
+
+    # PCI设备直通 ##################################################################
+    def PCISetup(self, vm_name: str, config, pci_key: str, in_flag=True):
+        """PVE PCI直通 - 通过API设置hostpci参数"""
+        from MainObject.Public.ZMessage import ZMessage
+        try:
+            if vm_name not in self.vm_saving:
+                return ZMessage(success=False, action="PCISetup", message="虚拟机不存在")
+
+            from MainObject.Config.VMPowers import VMPowers
+            vm_config = self.vm_saving[vm_name]
+            if vm_config.vm_flag not in [VMPowers.ON_STOP, VMPowers.UNKNOWN]:
+                return ZMessage(success=False, action="PCISetup", message="PCI直通需要先关闭虚拟机")
+
+            client, result = self.api_conn()
+            if not result.success:
+                return ZMessage(success=False, action="PCISetup", message=f"PVE连接失败: {result.message}")
+
+            # 获取虚拟机VMID
+            vmid = self._get_vmid(vm_name)
+            if not vmid:
+                return ZMessage(success=False, action="PCISetup", message="无法获取虚拟机VMID")
+
+            node = self.hs_config.server_addr.split('.')[0] if '.' in self.hs_config.server_addr else self.hs_config.server_addr
+            # 获取实际node名
+            try:
+                nodes = client.nodes.get()
+                if nodes:
+                    node = nodes[0]['node']
+            except:
+                pass
+
+            pci_id = config.gpu_uuid
+
+            if in_flag:
+                # 添加PCI直通 - 找一个空闲的hostpci槽位
+                slot = 0
+                existing_config = client.nodes(node).qemu(vmid).config.get()
+                while f'hostpci{slot}' in existing_config:
+                    slot += 1
+                    if slot > 15:
+                        return ZMessage(success=False, action="PCISetup", message="PCI直通槽位已满")
+
+                client.nodes(node).qemu(vmid).config.put(**{
+                    f'hostpci{slot}': f'{pci_id},pcie=1'
+                })
+            else:
+                # 移除PCI直通 - 找到对应的hostpci槽位并删除
+                existing_config = client.nodes(node).qemu(vmid).config.get()
+                delete_key = None
+                for i in range(16):
+                    key = f'hostpci{i}'
+                    if key in existing_config:
+                        val = existing_config[key]
+                        if pci_id in str(val):
+                            delete_key = key
+                            break
+
+                if delete_key:
+                    client.nodes(node).qemu(vmid).config.put(delete=delete_key)
+
+            # 调用基类写入配置
+            return super().PCISetup(vm_name, config, pci_key, in_flag)
+
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] PCI直通操作失败: {str(e)}")
+            traceback.print_exc()
+            return ZMessage(success=False, action="PCISetup", message=str(e))
+
+    # 查找USB设备 ##################################################################
+    def USBShows(self) -> dict[str, 'USBInfos']:
+        """获取PVE主机上的USB设备列表"""
+        from MainObject.Config.USBInfos import USBInfos
+        try:
+            client, result = self.api_conn()
+            if not result.success:
+                return {}
+
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+            try:
+                ssh.connect(
+                    self.hs_config.server_addr,
+                    username=self.hs_config.server_user,
+                    password=self.hs_config.server_pass
+                )
+
+                cmd = "lsusb"
+                stdin, stdout, stderr = ssh.exec_command(cmd)
+                output = stdout.read().decode('utf-8')
+
+                usb_dict = {}
+                if output:
+                    for line in output.strip().split('\n'):
+                        if 'ID ' in line:
+                            id_part = line.split('ID ')[1]
+                            vid_pid = id_part.split(' ')[0]
+                            name = id_part.split(' ', 1)[1] if ' ' in id_part else vid_pid
+                            if ':' in vid_pid:
+                                vid, pid = vid_pid.split(':')
+                                usb_dict[vid_pid] = USBInfos(
+                                    vid_uuid=vid, pid_uuid=pid, usb_hint=name.strip())
+
+                ssh.close()
+                logger.info(f"[{self.hs_config.server_name}] 发现 {len(usb_dict)} 个USB设备")
+                return usb_dict
+
+            except Exception as ssh_error:
+                logger.error(f"[{self.hs_config.server_name}] SSH获取USB设备失败: {str(ssh_error)}")
+                try:
+                    ssh.close()
+                except:
+                    pass
+                return {}
+
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 获取USB设备列表失败: {str(e)}")
+            return {}
+
+    # USB设备直通 ##################################################################
+    def USBSetup(self, vm_name: str, usb_info, usb_key: str, in_flag=True):
+        """PVE USB直通 - 通过API设置usb参数（支持热插拔）"""
+        from MainObject.Public.ZMessage import ZMessage
+        try:
+            if vm_name not in self.vm_saving:
+                return ZMessage(success=False, action="USBSetup", message="虚拟机不存在")
+
+            client, result = self.api_conn()
+            if not result.success:
+                return ZMessage(success=False, action="USBSetup", message=f"PVE连接失败: {result.message}")
+
+            vmid = self._get_vmid(vm_name)
+            if not vmid:
+                return ZMessage(success=False, action="USBSetup", message="无法获取虚拟机VMID")
+
+            node = self.hs_config.server_addr.split('.')[0]
+            try:
+                nodes = client.nodes.get()
+                if nodes:
+                    node = nodes[0]['node']
+            except:
+                pass
+
+            vid = usb_info.vid_uuid
+            pid = usb_info.pid_uuid
+
+            if in_flag:
+                # 找空闲usb槽位
+                slot = 0
+                existing_config = client.nodes(node).qemu(vmid).config.get()
+                while f'usb{slot}' in existing_config:
+                    slot += 1
+                    if slot > 4:
+                        return ZMessage(success=False, action="USBSetup", message="USB槽位已满")
+
+                client.nodes(node).qemu(vmid).config.put(**{
+                    f'usb{slot}': f'host={vid}:{pid}'
+                })
+            else:
+                # 移除USB - 找到对应槽位
+                existing_config = client.nodes(node).qemu(vmid).config.get()
+                delete_key = None
+                for i in range(5):
+                    key = f'usb{i}'
+                    if key in existing_config:
+                        val = str(existing_config[key])
+                        if f'{vid}:{pid}' in val:
+                            delete_key = key
+                            break
+
+                if delete_key:
+                    client.nodes(node).qemu(vmid).config.put(delete=delete_key)
+
+            # 更新虚拟机配置中的USB设备列表（不触发VMUpdate）
+            vm_conf = self.vm_saving[vm_name]
+            if in_flag:
+                # 添加USB设备到配置
+                if usb_key not in vm_conf.usb_all:
+                    vm_conf.usb_all[usb_key] = usb_info
+                    logger.info(f"[{self.hs_config.server_name}] 添加USB设备到配置: {usb_key}")
+            else:
+                # 从配置中移除USB设备
+                if usb_key in vm_conf.usb_all:
+                    del vm_conf.usb_all[usb_key]
+                    logger.info(f"[{self.hs_config.server_name}] 从配置中移除USB设备: {usb_key}")
+
+            logger.info(f"[{self.hs_config.server_name}] USB设备{'添加' if in_flag else '移除'}成功: {usb_key}")
+            return ZMessage(success=True, action="USBSetup", message="USB设备操作成功")
+
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] USB直通操作失败: {str(e)}")
+            return ZMessage(success=False, action="USBSetup", message=str(e))

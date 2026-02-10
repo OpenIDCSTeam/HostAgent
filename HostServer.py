@@ -800,6 +800,94 @@ def api_get_gpu_list(hs_name):
     return rest_manager.get_gpu_list(hs_name)
 
 
+# 获取主机PCI设备列表 ##############################################################
+@app.route('/api/client/pci-list/<hs_name>', methods=['GET'])
+@require_auth
+def api_get_pci_list(hs_name):
+    """获取主机可直通PCI设备列表"""
+    current_user = UserManager.get_current_user_from_session()
+    if not current_user:
+        return api_response_wrapper(401, '未授权访问')
+    if not check_host_access(hs_name, current_user):
+        return api_response_wrapper(403, '没有访问该主机的权限')
+    return rest_manager.get_pci_list(hs_name)
+
+
+# PCI设备直通操作 ##################################################################
+@app.route('/api/client/pci/setup/<hs_name>/<vm_uuid>', methods=['POST'])
+@require_auth
+def api_setup_pci(hs_name, vm_uuid):
+    """PCI设备直通操作（需要关机）"""
+    current_user = UserManager.get_current_user_from_session()
+    if not current_user:
+        return api_response_wrapper(401, '未授权访问')
+    if not check_host_access(hs_name, current_user):
+        return api_response_wrapper(403, '没有访问该主机的权限')
+    # 检查修改权限
+    has_perm, perm_msg = check_vm_permission('modify', current_user)
+    if not has_perm:
+        return api_response_wrapper(403, perm_msg or '没有PCI直通操作权限')
+    return rest_manager.setup_pci(hs_name, vm_uuid)
+
+
+# 获取主机USB设备列表 ##############################################################
+@app.route('/api/client/usb-list/<hs_name>', methods=['GET'])
+@require_auth
+def api_get_usb_list(hs_name):
+    """获取主机可用USB设备列表"""
+    current_user = UserManager.get_current_user_from_session()
+    if not current_user:
+        return api_response_wrapper(401, '未授权访问')
+    if not check_host_access(hs_name, current_user):
+        return api_response_wrapper(403, '没有访问该主机的权限')
+    return rest_manager.get_usb_list(hs_name)
+
+
+# USB设备直通操作 ##################################################################
+@app.route('/api/client/usb/setup/<hs_name>/<vm_uuid>', methods=['POST'])
+@require_auth
+def api_setup_usb(hs_name, vm_uuid):
+    """USB设备直通操作（无需关机）"""
+    current_user = UserManager.get_current_user_from_session()
+    if not current_user:
+        return api_response_wrapper(401, '未授权访问')
+    if not check_host_access(hs_name, current_user):
+        return api_response_wrapper(403, '没有访问该主机的权限')
+    # 检查修改权限
+    has_perm, perm_msg = check_vm_permission('modify', current_user)
+    if not has_perm:
+        return api_response_wrapper(403, perm_msg or '没有USB直通操作权限')
+    return rest_manager.setup_usb(hs_name, vm_uuid)
+
+
+# 获取虚拟机启动项列表 ##############################################################
+@app.route('/api/client/efi-list/<hs_name>/<vm_uuid>', methods=['GET'])
+@require_auth
+def api_get_efi_list(hs_name, vm_uuid):
+    """获取虚拟机启动项列表"""
+    current_user = UserManager.get_current_user_from_session()
+    if not current_user:
+        return api_response_wrapper(401, '未授权访问')
+    if not check_host_access(hs_name, current_user):
+        return api_response_wrapper(403, '没有访问该主机的权限')
+    # efi_edits细粒度权限在RestManager内部检查
+    return rest_manager.get_efi_list(hs_name, vm_uuid)
+
+
+# 设置虚拟机启动项顺序 ##############################################################
+@app.route('/api/client/efi/setup/<hs_name>/<vm_uuid>', methods=['POST'])
+@require_auth
+def api_setup_efi(hs_name, vm_uuid):
+    """调整虚拟机启动项顺序"""
+    current_user = UserManager.get_current_user_from_session()
+    if not current_user:
+        return api_response_wrapper(401, '未授权访问')
+    if not check_host_access(hs_name, current_user):
+        return api_response_wrapper(403, '没有访问该主机的权限')
+    # efi_edits细粒度权限在RestManager内部检查
+    return rest_manager.setup_efi(hs_name, vm_uuid)
+
+
 # 添加主机 ########################################################################
 @app.route('/api/server/create', methods=['POST'])
 @require_admin

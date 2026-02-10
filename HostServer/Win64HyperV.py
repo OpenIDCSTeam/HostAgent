@@ -1222,56 +1222,343 @@ class HostServer(BasicServer):
                 success=False, action="RMMounts",
                 message=f"删除磁盘失败: {str(e)}")
 
-    # 查找显卡 ######################################################################
-    def PCIShows(self) -> dict[str, str]:
+    # 查找PCI/GPU设备 ##############################################################
+    def PCIShows(self) -> dict[str, 'VFConfig']:
         """
-        查询GPU设备列表
-        
-        Returns:
-            dict[str, str]: GPU设备字典，键为GPU名称，值为GPU状态
+        查询可直通设备列表，区分GPU PV（分区虚拟化）和DDA（离散设备分配）
+        PV设备所有Windows版本都支持，DDA仅Windows Server支持
+        返回 dict[str, VFConfig]，gpu_mdev字段标记类型: "PV" / "DDA"
         """
+        from MainObject.Config.VFConfig import VFConfig
         try:
-            # 连接到Hyper-V服务器 ==============================================
             connect_result = self.hyperv_api.connect()
             if not connect_result.success:
-                logger.error(f"[{self.hs_config.server_name}] 无法连接到Hyper-V查询GPU: {connect_result.message}")
+                logger.error(f"[{self.hs_config.server_name}] 无法连接到Hyper-V查询设备: {connect_result.message}")
                 return {}
 
-            # 查询GPU设备 =======================================================
-            gpu_data = self.hyperv_api.get_gpu_devices()
-            
-            # 断开Hyper-V连接 ===================================================
+            device_dict = {}
+
+            # 1. 查询GPU PV设备（通过CheckGPU.ps1脚本）
+            try:
+                script_dir = self.hyperv_api._get_script_dir()
+                pv_script = f"{script_dir}\\CheckGPU.ps1"
+                pv_result = self.hyperv_api._run_powershell(
+                    f"& '{pv_script}'"
+                )
+                if pv_result.success and pv_result.message.strip():
+                    for line in pv_result.message.strip().split('\n'):
+                        line = line.strip()
+                        if '|||' in line:
+                            parts = line.split('|||', 1)
+                            gpu_name = parts[0].strip()
+                            gpu_uuid = parts[1].strip()
+                            key = f"PV_{gpu_uuid}"
+                            device_dict[key] = VFConfig(
+                                gpu_uuid=gpu_uuid,
+                                gpu_mdev="PV",
+                                gpu_hint=gpu_name
+                            )
+                            logger.info(f"[{self.hs_config.server_name}] 发现PV设备: {gpu_name}")
+            except Exception as pv_err:
+                logger.warning(f"[{self.hs_config.server_name}] 查询PV设备失败: {str(pv_err)}")
+
+            # 2. 检查是否为Windows Server版本（DDA仅Server版本支持）
+            try:
+                is_server_cmd = (
+                    "$edition = (Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion').EditionID; "
+                    "if ($edition -like 'Server*') { Write-Output 'true' } else { Write-Output 'false' }"
+                )
+                server_result = self.hyperv_api._run_powershell(is_server_cmd)
+                is_server = server_result.success and 'true' in server_result.message.strip().lower()
+            except Exception:
+                is_server = False
+
+            # 3. 仅Server版本查询DDA设备（通过CheckDDA.ps1脚本）
+            if is_server:
+                try:
+                    dda_script = f"{script_dir}\\CheckDDA.ps1"
+                    dda_result = self.hyperv_api._run_powershell(
+                        f"& '{dda_script}'"
+                    )
+                    if dda_result.success and dda_result.message.strip():
+                        current_device = None
+                        current_assignable = False
+                        current_location = ""
+                        for line in dda_result.message.strip().split('\n'):
+                            line = line.strip()
+                            if line.startswith('########'):
+                                # 保存上一个设备
+                                if current_device and current_assignable and current_location:
+                                    key = f"DDA_{current_location}"
+                                    device_dict[key] = VFConfig(
+                                        gpu_uuid=current_location,
+                                        gpu_mdev="DDA",
+                                        gpu_hint=current_device
+                                    )
+                                    logger.info(f"[{self.hs_config.server_name}] 发现DDA设备: {current_device}")
+                                current_device = None
+                                current_assignable = False
+                                current_location = ""
+                            elif current_device is None and line and not line.startswith('#'):
+                                current_device = line
+                            elif 'Assignment can work' in line:
+                                current_assignable = True
+                            elif 'Not assignable' in line:
+                                current_assignable = False
+                            elif line.startswith('PCIROOT'):
+                                current_location = line
+
+                        # 处理最后一个设备
+                        if current_device and current_assignable and current_location:
+                            key = f"DDA_{current_location}"
+                            device_dict[key] = VFConfig(
+                                gpu_uuid=current_location,
+                                gpu_mdev="DDA",
+                                gpu_hint=current_device
+                            )
+                except Exception as dda_err:
+                    logger.warning(f"[{self.hs_config.server_name}] 查询DDA设备失败: {str(dda_err)}")
+
             self.hyperv_api.disconnect()
-            
-            # 解析GPU数据并构建返回字典 =========================================
-            gpu_dict = {}
-            if gpu_data and "gpus" in gpu_data:
-                for idx, gpu in enumerate(gpu_data["gpus"]):
-                    gpu_name = gpu.get("Name", f"GPU_{idx}")
-                    gpu_type = gpu.get("Type", "Unknown")
-                    
-                    if gpu_type == "Partitionable":
-                        # GPU分区虚拟化
-                        available = gpu.get("Available", 0)
-                        total = gpu.get("Total", 0)
-                        status = f"可用分区: {available}/{total}"
-                    elif gpu_type == "DDA":
-                        # 离散设备分配
-                        status = gpu.get("Status", "Unknown")
-                    else:
-                        status = "Unknown"
-                    
-                    gpu_dict[gpu_name] = status
-                    logger.info(f"[{self.hs_config.server_name}] 发现GPU: {gpu_name} - {status}")
-            
-            # 返回GPU设备字典 ===================================================
-            return gpu_dict
+            logger.info(f"[{self.hs_config.server_name}] 共找到 {len(device_dict)} 个可直通设备")
+            return device_dict
 
         except Exception as e:
-            # 异常处理 ==========================================================
-            logger.error(f"[{self.hs_config.server_name}] 查询GPU设备失败: {str(e)}")
+            logger.error(f"[{self.hs_config.server_name}] 查询设备失败: {str(e)}")
             logger.error(traceback.format_exc())
             return {}
+
+    # PCI/GPU设备直通 ################################################################
+    def PCISetup(self, vm_name: str, config, pci_key: str, in_flag=True):
+        """PCI设备直通，区分PV和DDA类型执行不同操作"""
+        from MainObject.Public.ZMessage import ZMessage
+        try:
+            if vm_name not in self.vm_saving:
+                return ZMessage(success=False, action="PCISetup", message="虚拟机不存在")
+
+            vm_config = self.vm_saving[vm_name]
+            # 检查关机状态
+            from MainObject.Config.VMPowers import VMPowers
+            if vm_config.vm_flag not in [VMPowers.ON_STOP, VMPowers.UNKNOWN]:
+                return ZMessage(success=False, action="PCISetup", message="PCI直通需要先关闭虚拟机")
+
+            connect_result = self.hyperv_api.connect()
+            if not connect_result.success:
+                return ZMessage(success=False, action="PCISetup", message=f"连接Hyper-V失败: {connect_result.message}")
+
+            device_type = config.gpu_mdev  # "PV" 或 "DDA"
+
+            if in_flag:
+                # 添加直通
+                if device_type == "PV":
+                    # GPU PV - 使用add_gpu_pv
+                    result = self.hyperv_api.add_gpu_pv(vm_name, config.gpu_hint)
+                    if not result.success:
+                        self.hyperv_api.disconnect()
+                        return ZMessage(success=False, action="PCISetup", message=f"PV直通失败: {result.message}")
+                elif device_type == "DDA":
+                    # DDA - 使用Dismount+Assign
+                    dda_cmd = f"""
+                    $locationPath = '{config.gpu_uuid}'
+                    # 禁用设备
+                    $device = Get-PnpDevice | Where-Object {{ (Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName DEVPKEY_Device_LocationPaths).Data -contains $locationPath }}
+                    if ($device) {{
+                        Disable-PnpDevice -InstanceId $device.InstanceId -Confirm:$false -ErrorAction SilentlyContinue
+                        # 卸载设备
+                        $vmHost = Get-VMHost
+                        Dismount-VMHostAssignableDevice -LocationPath $locationPath -Force -ErrorAction Stop
+                        # 分配给虚拟机
+                        Add-VMAssignableDevice -VMName '{vm_name}' -LocationPath $locationPath -ErrorAction Stop
+                        Write-Output 'SUCCESS'
+                    }} else {{
+                        Write-Error '未找到DDA设备'
+                    }}
+                    """
+                    dda_result = self.hyperv_api._run_powershell(dda_cmd)
+                    if not dda_result.success or 'SUCCESS' not in dda_result.message:
+                        self.hyperv_api.disconnect()
+                        return ZMessage(success=False, action="PCISetup", message=f"DDA直通失败: {dda_result.message}")
+                else:
+                    self.hyperv_api.disconnect()
+                    return ZMessage(success=False, action="PCISetup", message=f"未知设备类型: {device_type}")
+            else:
+                # 移除直通
+                if device_type == "PV":
+                    remove_cmd = f"Remove-VMGpuPartitionAdapter -VMName '{vm_name}' -ErrorAction SilentlyContinue"
+                    self.hyperv_api._run_powershell(remove_cmd)
+                elif device_type == "DDA":
+                    remove_cmd = f"""
+                    $locationPath = '{config.gpu_uuid}'
+                    Remove-VMAssignableDevice -VMName '{vm_name}' -LocationPath $locationPath -ErrorAction SilentlyContinue
+                    Mount-VMHostAssignableDevice -LocationPath $locationPath -ErrorAction SilentlyContinue
+                    """
+                    self.hyperv_api._run_powershell(remove_cmd)
+
+            self.hyperv_api.disconnect()
+
+            # 调用基类写入配置
+            return super().PCISetup(vm_name, config, pci_key, in_flag)
+
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] PCI直通操作失败: {str(e)}")
+            logger.error(traceback.format_exc())
+            try:
+                self.hyperv_api.disconnect()
+            except:
+                pass
+            return ZMessage(success=False, action="PCISetup", message=str(e))
+
+    # 启动项列出 ####################################################################
+    def EFIShows(self, vm_name: str) -> list:
+        """
+        查询Hyper-V虚拟机的启动项列表（固件引导顺序）
+        通过Get-VMFirmware读取启动设备，写入efi_all并返回
+        """
+        from MainObject.Config.BootOpts import BootOpts
+        try:
+            if vm_name not in self.vm_saving:
+                return []
+
+            connect_result = self.hyperv_api.connect()
+            if not connect_result.success:
+                logger.error(f"[{self.hs_config.server_name}] 无法连接到Hyper-V查询启动项: {connect_result.message}")
+                return super().EFIShows(vm_name)
+
+            # 通过PowerShell读取固件启动顺序
+            ps_cmd = f"""
+            $firmware = Get-VMFirmware -VMName '{vm_name}' -ErrorAction Stop
+            foreach ($entry in $firmware.BootOrder) {{
+                $type = $entry.BootType.ToString()
+                $device = $entry.Device
+                if ($type -eq 'Drive') {{
+                    $path = ''
+                    if ($device -and $device.Path) {{ $path = $device.Path }}
+                    elseif ($device -and $device.Name) {{ $path = $device.Name }}
+                    # 判断是HDD还是ISO
+                    if ($path -like '*.iso') {{
+                        Write-Output "ISO|||$path"
+                    }} else {{
+                        Write-Output "HDD|||$path"
+                    }}
+                }} elseif ($type -eq 'Network') {{
+                    $name = if ($device -and $device.Name) {{ $device.Name }} else {{ 'NetworkAdapter' }}
+                    Write-Output "NET|||$name"
+                }} else {{
+                    Write-Output "OTH|||$type"
+                }}
+            }}
+            """
+            result = self.hyperv_api._run_powershell(ps_cmd)
+            self.hyperv_api.disconnect()
+
+            efi_list = []
+            if result.success and result.message.strip():
+                for line in result.message.strip().split('\n'):
+                    line = line.strip()
+                    if '|||' in line:
+                        parts = line.split('|||', 1)
+                        efi_type_str = parts[0].strip()
+                        efi_name = parts[1].strip() if len(parts) > 1 else ''
+                        # efi_type: False=HDD, True=ISO（扩展：NET等也归为True）
+                        is_iso = (efi_type_str != 'HDD')
+                        efi_list.append(BootOpts(efi_type=is_iso, efi_name=efi_name))
+
+            # 写入vm_config.efi_all
+            vm_config = self.vm_saving[vm_name]
+            vm_config.efi_all = efi_list
+            self.data_set()
+
+            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 共有 {len(efi_list)} 个启动项")
+            return efi_list
+
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 查询启动项失败: {str(e)}")
+            logger.error(traceback.format_exc())
+            try:
+                self.hyperv_api.disconnect()
+            except:
+                pass
+            return super().EFIShows(vm_name)
+
+    # 启动项设置 ####################################################################
+    def EFISetup(self, vm_name: str, efi_list: list = None) -> 'ZMessage':
+        """
+        调整Hyper-V虚拟机启动项顺序
+        通过Set-VMFirmware -BootOrder重新排列启动设备
+        """
+        from MainObject.Public.ZMessage import ZMessage
+        from MainObject.Config.BootOpts import BootOpts
+        try:
+            if efi_list is None:
+                efi_list = []
+            if vm_name not in self.vm_saving:
+                return ZMessage(success=False, action="EFISetup", message="虚拟机不存在")
+
+            connect_result = self.hyperv_api.connect()
+            if not connect_result.success:
+                return ZMessage(success=False, action="EFISetup", message=f"连接Hyper-V失败: {connect_result.message}")
+
+            # 构建PowerShell脚本：按照用户指定顺序重新排列启动项
+            # 先获取当前所有启动设备，再按新顺序排列
+            order_lines = []
+            for i, item in enumerate(efi_list):
+                efi_name = item.get('efi_name', '') if isinstance(item, dict) else getattr(item, 'efi_name', '')
+                efi_type = item.get('efi_type', False) if isinstance(item, dict) else getattr(item, 'efi_type', False)
+                order_lines.append(f"'{efi_name}'")
+
+            names_array = ','.join(order_lines)
+            ps_cmd = f"""
+            $firmware = Get-VMFirmware -VMName '{vm_name}' -ErrorAction Stop
+            $bootOrder = $firmware.BootOrder
+            $orderedNames = @({names_array})
+            $newOrder = @()
+            # 按指定名称顺序排列
+            foreach ($name in $orderedNames) {{
+                foreach ($entry in $bootOrder) {{
+                    $devPath = ''
+                    if ($entry.Device -and $entry.Device.Path) {{ $devPath = $entry.Device.Path }}
+                    elseif ($entry.Device -and $entry.Device.Name) {{ $devPath = $entry.Device.Name }}
+                    if ($devPath -eq $name) {{
+                        $newOrder += $entry
+                        break
+                    }}
+                }}
+            }}
+            # 将未在指定列表中的启动项追加到末尾
+            foreach ($entry in $bootOrder) {{
+                $devPath = ''
+                if ($entry.Device -and $entry.Device.Path) {{ $devPath = $entry.Device.Path }}
+                elseif ($entry.Device -and $entry.Device.Name) {{ $devPath = $entry.Device.Name }}
+                $found = $false
+                foreach ($name in $orderedNames) {{
+                    if ($devPath -eq $name) {{ $found = $true; break }}
+                }}
+                if (-not $found) {{ $newOrder += $entry }}
+            }}
+            if ($newOrder.Count -gt 0) {{
+                Set-VMFirmware -VMName '{vm_name}' -BootOrder $newOrder -ErrorAction Stop
+                Write-Output 'SUCCESS'
+            }} else {{
+                Write-Output 'EMPTY'
+            }}
+            """
+            result = self.hyperv_api._run_powershell(ps_cmd)
+            self.hyperv_api.disconnect()
+
+            if not result.success:
+                return ZMessage(success=False, action="EFISetup", message=f"设置启动顺序失败: {result.message}")
+
+            # 调用基类保存配置到efi_all
+            return super().EFISetup(vm_name, efi_list)
+
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 设置启动顺序失败: {str(e)}")
+            logger.error(traceback.format_exc())
+            try:
+                self.hyperv_api.disconnect()
+            except:
+                pass
+            return ZMessage(success=False, action="EFISetup", message=str(e))
 
     # 虚拟机截图 ####################################################################
     def VMScreen(self, vm_name: str = "") -> str:

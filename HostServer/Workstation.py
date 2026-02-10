@@ -569,9 +569,150 @@ class HostServer(BasicServer):
     def RMMounts(self, vm_name: str, vm_imgs: str) -> ZMessage:
         return super().RMMounts(vm_name, vm_imgs)
 
-    # 查找显卡 =================================================================
-    def PCIShows(self) -> dict[str, str]:
+    # 查找PCI设备 =============================================================
+    def PCIShows(self) -> dict[str, 'VFConfig']:
+        """VMware Workstation不支持PCI直通，返回空"""
         return {}
+
+    # 查找USB设备 =============================================================
+    def USBShows(self) -> dict[str, 'USBInfos']:
+        """获取宿主机可用USB设备列表"""
+        from MainObject.Config.USBInfos import USBInfos
+        try:
+            import platform
+            usb_dict = {}
+
+            if platform.system() == "Windows":
+                # Windows: 使用PowerShell获取USB设备
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
+
+                ps_cmd = (
+                    'Get-PnpDevice -Class USB -PresentOnly | '
+                    'Where-Object { $_.InstanceId -like "USB\\VID_*" } | '
+                    'ForEach-Object { '
+                    '$id = $_.InstanceId; '
+                    '$name = $_.FriendlyName; '
+                    'if ($id -match "VID_([0-9A-Fa-f]{4})&PID_([0-9A-Fa-f]{4})") { '
+                    'Write-Output "$($Matches[1])|$($Matches[2])|$name" } }'
+                )
+                result = subprocess.run(
+                    ["powershell", "-NoProfile", "-Command", ps_cmd],
+                    capture_output=True, text=True, timeout=15,
+                    startupinfo=startupinfo,
+                    creationflags=subprocess.CREATE_NO_WINDOW
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    for line in result.stdout.strip().split('\n'):
+                        parts = line.strip().split('|', 2)
+                        if len(parts) >= 3:
+                            vid, pid, name = parts[0], parts[1], parts[2]
+                            key = f"{vid}:{pid}"
+                            usb_dict[key] = USBInfos(
+                                vid_uuid=vid, pid_uuid=pid, usb_hint=name)
+            else:
+                # Linux/macOS: 使用lsusb
+                result = subprocess.run(
+                    ["lsusb"], capture_output=True, text=True, timeout=10)
+                if result.returncode == 0 and result.stdout.strip():
+                    for line in result.stdout.strip().split('\n'):
+                        # 格式: Bus 001 Device 002: ID 1234:5678 Device Name
+                        if 'ID ' in line:
+                            id_part = line.split('ID ')[1]
+                            vid_pid = id_part.split(' ')[0]
+                            name = id_part.split(' ', 1)[1] if ' ' in id_part else vid_pid
+                            vid, pid = vid_pid.split(':')
+                            usb_dict[vid_pid] = USBInfos(
+                                vid_uuid=vid, pid_uuid=pid, usb_hint=name.strip())
+
+            logger.info(f"[Workstation] 发现 {len(usb_dict)} 个USB设备")
+            return usb_dict
+
+        except Exception as e:
+            logger.error(f"[Workstation] 获取USB设备列表失败: {str(e)}")
+            return {}
+
+    # USB设备直通 =============================================================
+    def USBSetup(self, vm_name: str, usb_info, usb_key: str, in_flag=True):
+        """USB设备直通 - 使用vmrun命令进行热插拔，无需关机"""
+        from MainObject.Public.ZMessage import ZMessage
+        try:
+            # 检查虚拟机是否存在
+            if vm_name not in self.vm_saving:
+                return ZMessage(success=False, action="USBSetup",
+                              message=f"虚拟机 {vm_name} 不存在")
+
+            # 获取VMX文件路径
+            vmx_file = self._get_vmx_file(vm_name)
+            if not os.path.exists(vmx_file):
+                return ZMessage(success=False, action="USBSetup",
+                              message=f"虚拟机配置文件不存在: {vmx_file}")
+
+            # 更新虚拟机配置中的USB设备列表（不触发VMUpdate）
+            vm_conf = self.vm_saving[vm_name]
+            if in_flag:
+                # 添加USB设备到配置
+                if usb_key not in vm_conf.usb_all:
+                    vm_conf.usb_all[usb_key] = usb_info
+                    logger.info(f"[Workstation] 添加USB设备到配置: {usb_key}")
+            else:
+                # 从配置中移除USB设备
+                if usb_key in vm_conf.usb_all:
+                    del vm_conf.usb_all[usb_key]
+                    logger.info(f"[Workstation] 从配置中移除USB设备: {usb_key}")
+
+            # 构建USB设备名称 (格式: vid:pid)
+            usb_device_name = f"{usb_info.vid_uuid}:{usb_info.pid_uuid}"
+            
+            # 使用vmrun命令进行USB设备热插拔
+            if in_flag:
+                # 连接USB设备
+                command = "connectNamedDevice"
+                args = [usb_device_name]
+                logger.info(f"[Workstation] 连接USB设备: {usb_device_name} ({usb_info.usb_hint})")
+            else:
+                # 断开USB设备
+                command = "disconnectNamedDevice"
+                args = [usb_device_name]
+                logger.info(f"[Workstation] 断开USB设备: {usb_device_name} ({usb_info.usb_hint})")
+
+            # 执行vmrun命令
+            vmrun_result = self.vmrest_api.execute_vmrun(
+                command=command,
+                vm_path=vmx_file,
+                args=args
+            )
+
+            if not vmrun_result.success:
+                error_msg = vmrun_result.message
+                if vmrun_result.results:
+                    stderr = vmrun_result.results.get('stderr', '')
+                    if stderr:
+                        error_msg += f": {stderr}"
+                logger.error(f"[Workstation] USB设备操作失败: {error_msg}")
+                return ZMessage(success=False, action="USBSetup", message=error_msg)
+
+            action_text = "连接" if in_flag else "断开"
+            logger.info(f"[Workstation] USB设备{action_text}成功: {usb_device_name}")
+            return ZMessage(success=True, action="USBSetup",
+                          message=f"USB设备{action_text}成功")
+                          
+        except Exception as e:
+            logger.error(f"[Workstation] USB直通操作失败: {str(e)}")
+            traceback.print_exc()
+            return ZMessage(success=False, action="USBSetup", message=str(e))
+
+    # 启动项列出 ===============================================================
+    def EFIShows(self, vm_name: str) -> list:
+        """VMware Workstation不支持EFI启动项管理，返回基类默认值"""
+        return super().EFIShows(vm_name)
+
+    # 启动项设置 ===============================================================
+    def EFISetup(self, vm_name: str, efi_list: list = None):
+        """VMware Workstation不支持EFI启动项管理"""
+        from MainObject.Public.ZMessage import ZMessage
+        return ZMessage(success=False, action="EFISetup", message="Workstation不支持EFI启动项管理")
 
     # 虚拟机截图 ===============================================================
     def VMScreen(self, vm_name: str = "") -> str:

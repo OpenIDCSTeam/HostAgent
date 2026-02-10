@@ -17,8 +17,8 @@ HEConfig = {
         "CPU_Arch": ["x86_64"],
         "Optional": {},
         "Messages": [
-            "1、不支持直通分配GPU设备，但可分配虚拟显存",
-            "2、暂不支持获取虚拟机GPU使用率和显存使用率"
+            "1、不支持PCI设备直通，但可分配虚拟显存",
+            "2、支持USB设备直通"
         ],
         "Ban_Init": [
             "gpu_num"
@@ -40,7 +40,8 @@ HEConfig = {
         "Optional": {},
         "Messages": [
             "1、不支持分配GPU设备，不支持设置显存的大小",
-            "2、不支持挂载ISO镜像、不支持挂载额外的硬盘"
+            "2、不支持挂载ISO镜像、不支持挂载额外的硬盘",
+            "3、不支持PCI和USB设备直通"
         ],
         "Ban_Init": [
             "gpu_num", "gpu_mem",
@@ -51,7 +52,7 @@ HEConfig = {
             "speed_u", "speed_d",
         ],
         "Tab_Lock": [
-            "hdd", "iso"
+            "hdd", "iso", "pci", "usb"
         ]
     },
     "OCInterface": {
@@ -64,7 +65,8 @@ HEConfig = {
         "Optional": {},
         "Messages": [
             "1、不支持分配GPU设备，不支持设置显存的大小",
-            "2、不支持挂载ISO镜像、不支持挂载额外的硬盘"
+            "2、不支持挂载ISO镜像、不支持挂载额外的硬盘",
+            "3、不支持PCI和USB设备直通"
         ],
         "Ban_Init": [
             "gpu_num", "gpu_mem",
@@ -75,7 +77,7 @@ HEConfig = {
             "speed_u", "speed_d",
         ],
         "Tab_Lock": [
-            "hdd", "iso"
+            "hdd", "iso", "pci", "usb"
         ]
     },
     "vSphereESXi": {
@@ -100,11 +102,14 @@ HEConfig = {
         "Platform": ["Windows"],
         "CPU_Arch": ["x86_64"],
         "Messages": [
-            "1、无法单独限制上下行带宽，取二者最低值分配"
+            "1、无法单独限制上下行带宽，取二者最低值分配",
+            "2、不支持USB直通，支持GPU PV和DDA设备直通"
         ],
         "Ban_Init": [],
         "Ban_Edit": [],
-        "Tab_Lock": []
+        "Tab_Lock": [
+            "usb"
+        ]
     },
     "PromoxSetup": {
         "Imported": ProxmoxQemu.HostServer,

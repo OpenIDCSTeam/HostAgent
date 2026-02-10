@@ -14,7 +14,7 @@ class MaskCode(enum.Enum):
     PCI_EDITS = 512
     USB_EDITS = 1024
     VM_BACKUP = 2048
-    VM_GRANTS = 4096
+    EFI_EDITS = 4096
     VM_MODIFY = 8192
     VM_DELETE = 16384
     FIREWALLS = 32768
@@ -34,13 +34,13 @@ _FIELD_TO_MASK = {
     "pci_edits": MaskCode.PCI_EDITS,
     "usb_edits": MaskCode.USB_EDITS,
     "vm_backup": MaskCode.VM_BACKUP,
-    "vm_grants": MaskCode.VM_GRANTS,
+    "efi_edits": MaskCode.EFI_EDITS,
     "vm_modify": MaskCode.VM_MODIFY,
     "vm_delete": MaskCode.VM_DELETE,
     "firewalls": MaskCode.FIREWALLS,
 }
 
-# 全权限掩码值 (所有位均为1)
+# 全权限掩码值 (所有16个权限位均为1)
 FULL_MASK = 65535
 
 
@@ -57,8 +57,8 @@ class UserMask:
         self.vnc_edits: bool = False  # 是否允许控制桌面
         self.pci_edits: bool = False  # 是否允许编辑PCIe
         self.usb_edits: bool = False  # 是否允许编辑USBs
+        self.efi_edits: bool = False  # 是否允许管理启动顺序
         self.vm_backup: bool = False  # 是否允许备份还原
-        self.vm_grants: bool = False  # 是否允许管理用户
         self.vm_modify: bool = False  # 是否允许修改配置
         self.vm_delete: bool = False  # 是否允许删除实例
         self.firewalls: bool = False  # 是否可编辑防火墙
@@ -80,7 +80,7 @@ class UserMask:
             "pci_edits": self.pci_edits,
             "usb_edits": self.usb_edits,
             "vm_backup": self.vm_backup,
-            "vm_grants": self.vm_grants,
+            "efi_edits": self.efi_edits,
             "vm_modify": self.vm_modify,
             "vm_delete": self.vm_delete,
             "firewalls": self.firewalls,

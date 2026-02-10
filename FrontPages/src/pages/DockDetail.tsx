@@ -54,7 +54,7 @@ import {
 } from '@ant-design/icons'
 import ReactECharts from 'echarts-for-react'
 import api from '@/utils/apis.ts'
-import {VM_PERMISSION, hasPermission, TAB_PERMISSION_MAP, VM_PERMISSION_LABELS, PERMISSION_FIELD_MASK} from '@/types'
+import {VM_PERMISSION, hasPermission, TAB_PERMISSION_MAP, VM_PERMISSION_LABELS, PERMISSION_FIELD_MASK, HIDDEN_TABS, READONLY_TABS, OWNER_ONLY_TABS} from '@/types'
 
 interface VGConfig {
     gpu_uuid: string
@@ -191,6 +191,9 @@ interface HostConfig {
     images_maps?: Record<string, string>
     tab_lock?: string[]
     server_type?: string
+    enable_host?: boolean
+    ipaddr_maps?: Record<string, any>
+    ipaddr_dnss?: string[]
 }
 
 function VMDetail() {
@@ -285,6 +288,26 @@ function VMDetail() {
     const [usbModalVisible, setUsbModalVisible] = useState(false)
     const [usbActionLoading, setUsbActionLoading] = useState(false)
     const [usbForm] = Form.useForm()
+
+    // PCI/USB 设备列表State（直通选择用）
+    const [pciDeviceList, setPciDeviceList] = useState<Record<string, any>>({})
+    const [usbDeviceList, setUsbDeviceList] = useState<Record<string, any>>({})
+    const [pciListLoading, setPciListLoading] = useState(false)
+    const [usbListLoading, setUsbListLoading] = useState(false)
+    const [selectedPciKey, setSelectedPciKey] = useState<string>('')
+    const [selectedUsbKey, setSelectedUsbKey] = useState<string>('')
+    const [pciShutdownConfirmVisible, setPciShutdownConfirmVisible] = useState(false)
+    const [pendingPciAction, setPendingPciAction] = useState<(() => Promise<void>) | null>(null)
+
+    // EFI State
+    const [efiList, setEfiList] = useState<{efi_type: boolean; efi_name: string}[]>([])
+    const [efiEditing, setEfiEditing] = useState(false)
+    const [efiEditList, setEfiEditList] = useState<{efi_type: boolean; efi_name: string}[]>([])
+    const [efiLoading, setEfiLoading] = useState(false)
+    const [efiActionLoading, setEfiActionLoading] = useState(false)
+
+    // 当前用户是否为主所有者或管理员（用于控制owners tab可见性）
+    const [isOwnerOrAdmin, setIsOwnerOrAdmin] = useState(false)
 
     // New Confirmation States
     const [isoMountConfirmChecked, setIsoMountConfirmChecked] = useState(false)
@@ -405,17 +428,13 @@ function VMDetail() {
     const loadHostInfo = async () => {
         if (!hostName) return
         try {
-            // 加载主机配置
+            // 加载主机配置（含enable_host等用户态必要字段）
             const result = await api.getOSImages(hostName)
             if (result.code === 200) {
                 const config = result.data as unknown as HostConfig
                 setHostConfig(config)
-            }
-            
-            // 加载主机详情检查启用状态
-            const hostDetail = await api.getHostDetail(hostName)
-            if (hostDetail.code === 200 && hostDetail.data) {
-                const enabled = hostDetail.data.enable_host !== false
+                // 从同一接口获取主机启用状态
+                const enabled = config.enable_host !== false
                 setHostEnabled(enabled)
             }
         } catch (error: any) {
@@ -529,6 +548,14 @@ function VMDetail() {
                 if (detailRes.data && typeof (detailRes.data as any).user_permissions === 'number') {
                     setUserPermissions((detailRes.data as any).user_permissions)
                 }
+
+                // 判断当前用户是否为主所有者或管理员（用于控制owners tab可见性）
+                const isAdmin = (detailRes.data as any)?.is_admin === true
+                const ownerList = vmData.config?.own_all || {}
+                const currentUsername = (detailRes.data as any)?.current_user || ''
+                const ownerNames = Object.keys(ownerList)
+                const isFirst = ownerNames.length > 0 && ownerNames[0] === currentUsername
+                setIsOwnerOrAdmin(isAdmin || isFirst)
             }
         } catch (error: any) {
             console.error('加载虚拟机详情失败:', error)
@@ -590,15 +617,88 @@ function VMDetail() {
         }
     }
 
+    // 加载EFI启动项列表
+    const loadEFIList = async () => {
+        if (!hostName || !uuid) return
+        setEfiLoading(true)
+        try {
+            const response = await api.getEFIList(hostName, uuid)
+            if (response.data && Array.isArray(response.data)) {
+                setEfiList(response.data)
+            } else {
+                setEfiList([])
+            }
+        } catch (error: any) {
+            console.error('加载启动项列表失败:', error)
+        } finally {
+            setEfiLoading(false)
+        }
+    }
+
+    // 保存EFI启动项顺序
+    const handleSaveEFI = async () => {
+        if (!hostName || !uuid) return
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
+        setEfiActionLoading(true)
+        try {
+            const response = await api.setupEFI(hostName, uuid, efiEditList)
+            if (response.code === 200) {
+                message.success('启动顺序保存成功')
+                setEfiEditing(false)
+                await loadEFIList()
+            } else {
+                message.error(response.msg || '保存启动顺序失败')
+            }
+        } catch (error: any) {
+            message.error(error?.message || '保存启动顺序失败')
+        } finally {
+            setEfiActionLoading(false)
+        }
+    }
+
+    // EFI启动项上移
+    const handleEfiMoveUp = (index: number) => {
+        if (index <= 0) return
+        const newList = [...efiEditList]
+        const temp = newList[index - 1]
+        newList[index - 1] = newList[index]
+        newList[index] = temp
+        setEfiEditList(newList)
+    }
+
+    // EFI启动项下移
+    const handleEfiMoveDown = (index: number) => {
+        if (index >= efiEditList.length - 1) return
+        const newList = [...efiEditList]
+        const temp = newList[index + 1]
+        newList[index + 1] = newList[index]
+        newList[index] = temp
+        setEfiEditList(newList)
+    }
+
     const handleAddUSB = async () => {
         if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         try {
-            const values = await usbForm.validateFields()
+            if (!selectedUsbKey) {
+                message.error('请选择一个USB设备')
+                return
+            }
+            const device = usbDeviceList[selectedUsbKey]
+            if (!device) {
+                message.error('所选USB设备无效')
+                return
+            }
             setUsbActionLoading(true)
-            await api.addUSB(hostName!, uuid!, values)
-            message.success('添加USB设备成功')
+            await api.setupUSB(hostName!, uuid!, {
+                usb_key: selectedUsbKey,
+                vid_uuid: device.vid_uuid,
+                pid_uuid: device.pid_uuid,
+                usb_hint: device.usb_hint,
+                action: 'add'
+            })
+            message.success('USB设备直通成功')
             setUsbModalVisible(false)
-            usbForm.resetFields()
+            setSelectedUsbKey('')
             loadVMDetail()
         } catch (error: any) {
             console.error('添加USB设备失败:', error)
@@ -610,16 +710,43 @@ function VMDetail() {
 
     const handleDeleteUSB = async (usbKey: string) => {
         if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
+        const usbConfig = vm?.config?.usb_all?.[usbKey]
         try {
             setUsbActionLoading(true)
-            await api.deleteUSB(hostName!, uuid!, usbKey)
-            message.success('删除USB设备成功')
+            await api.setupUSB(hostName!, uuid!, {
+                usb_key: usbKey,
+                vid_uuid: usbConfig?.vid_uuid || '',
+                pid_uuid: usbConfig?.pid_uuid || '',
+                usb_hint: usbConfig?.usb_hint || '',
+                action: 'remove'
+            })
+            message.success('USB设备已移除')
             loadVMDetail()
         } catch (error: any) {
             console.error('删除USB设备失败:', error)
             message.error(error.message || '删除USB设备失败')
         } finally {
             setUsbActionLoading(false)
+        }
+    }
+
+    // 打开USB设备添加Modal时加载可用设备列表
+    const handleOpenUsbModal = async () => {
+        setUsbModalVisible(true)
+        setUsbListLoading(true)
+        setSelectedUsbKey('')
+        try {
+            const res = await api.getUSBList(hostName!)
+            if (res.code === 200 && res.data) {
+                setUsbDeviceList(res.data)
+            } else {
+                setUsbDeviceList({})
+            }
+        } catch (e) {
+            setUsbDeviceList({})
+            message.error('获取USB设备列表失败')
+        } finally {
+            setUsbListLoading(false)
         }
     }
 
@@ -1339,38 +1466,50 @@ function VMDetail() {
 
     const handleAddGpu = async (_values: any) => {
         if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
+        // PCI直通需要关机检查
+        const isRunning = vm?.config?.vm_flag === 'ON_START' || currentStatus?.ac_status === 'RUNNING'
+        if (isRunning) {
+            // 弹出关机确认
+            setPendingPciAction(() => async () => {
+                await executePciAdd(_values)
+            })
+            setPciShutdownConfirmVisible(true)
+            return
+        }
+        await executePciAdd(_values)
+    }
+
+    const executePciAdd = async (_values: any) => {
         setTempStatus('configuring')
         setGpuActionLoading(true)
-        const hide = message.loading('正在添加显卡...', 0)
+        const hide = message.loading('正在添加PCI直通设备...', 0)
         try {
-            const currentGpuAll = vm?.config?.pci_all || {};
-            // Use uuid as key if available, otherwise generate one
-            const gpuKey = _values.gpu_uuid || `gpu-${Date.now()}`;
-            const newGpuAll = {
-                ...currentGpuAll,
-                [gpuKey]: {
-                    gpu_uuid: _values.gpu_uuid,
-                    gpu_mdev: _values.gpu_mdev,
-                    gpu_hint: _values.gpu_hint
-                }
-            };
-            
-            await api.updateVM(hostName!, uuid!, {
-                pci_all: newGpuAll
-            })
-            
-            hide()
-            message.success('显卡添加成功，请重启虚拟机使其生效')
-            setGpuModalVisible(false);
-            gpuForm.resetFields();
-            loadVMDetail()
-            setTimeout(() => {
+            const pciKey = _values.pci_key || selectedPciKey
+            const device = pciDeviceList[pciKey]
+            if (!device) {
+                hide()
+                message.error('请选择一个PCI设备')
+                setGpuActionLoading(false)
                 setTempStatus(null)
-            }, 1500)
-        } catch (error) {
+                return
+            }
+            await api.setupPCI(hostName!, uuid!, {
+                pci_key: pciKey,
+                gpu_uuid: device.gpu_uuid,
+                gpu_mdev: device.gpu_mdev,
+                gpu_hint: device.gpu_hint,
+                action: 'add'
+            })
+            hide()
+            message.success('PCI设备直通成功')
+            setGpuModalVisible(false)
+            setSelectedPciKey('')
+            loadVMDetail()
+            setTimeout(() => { setTempStatus(null) }, 1500)
+        } catch (error: any) {
             setTempStatus(null)
             hide()
-            message.error('添加失败')
+            message.error(error?.message || 'PCI直通添加失败')
         } finally {
             setGpuActionLoading(false)
         }
@@ -1378,28 +1517,80 @@ function VMDetail() {
 
     const handleDeleteGpu = async (gpuKey: string) => {
         if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
-        showConfirmAction('删除显卡确认', `确定要删除显卡 "${gpuKey}" 吗？`, async () => {
-            setTempStatus('configuring')
-            const hide = message.loading('正在删除显卡...', 0)
-            try {
-                const currentGpuAll = {...(vm?.config?.pci_all || {})};
-                delete currentGpuAll[gpuKey];
-                
-                await api.updateVM(hostName!, uuid!, {
-                    pci_all: currentGpuAll
-                })
-                
-                hide()
-                loadVMDetail()
-                setTimeout(() => {
-                    setTempStatus(null)
-                }, 1500)
-            } catch (error) {
-                setTempStatus(null)
-                hide()
-                message.error('删除失败')
-            }
+        const gpuConfig = vm?.config?.pci_all?.[gpuKey]
+        const isRunning = vm?.config?.vm_flag === 'ON_START' || currentStatus?.ac_status === 'RUNNING'
+        if (isRunning) {
+            setPendingPciAction(() => async () => {
+                await executePciRemove(gpuKey, gpuConfig)
+            })
+            setPciShutdownConfirmVisible(true)
+            return
+        }
+        showConfirmAction('删除PCI设备确认', `确定要移除PCI直通设备 "${gpuConfig?.gpu_hint || gpuKey}" 吗？`, async () => {
+            await executePciRemove(gpuKey, gpuConfig)
         }, true)
+    }
+
+    const executePciRemove = async (gpuKey: string, gpuConfig: any) => {
+        setTempStatus('configuring')
+        const hide = message.loading('正在移除PCI直通设备...', 0)
+        try {
+            await api.setupPCI(hostName!, uuid!, {
+                pci_key: gpuKey,
+                gpu_uuid: gpuConfig?.gpu_uuid || '',
+                gpu_mdev: gpuConfig?.gpu_mdev || '',
+                gpu_hint: gpuConfig?.gpu_hint || '',
+                action: 'remove'
+            })
+            hide()
+            message.success('PCI设备已移除')
+            loadVMDetail()
+            setTimeout(() => { setTempStatus(null) }, 1500)
+        } catch (error: any) {
+            setTempStatus(null)
+            hide()
+            message.error(error?.message || '移除失败')
+        }
+    }
+
+    // 打开PCI设备添加Modal时加载可用设备列表
+    const handleOpenPciModal = async () => {
+        setGpuModalVisible(true)
+        setPciListLoading(true)
+        setSelectedPciKey('')
+        try {
+            const res = await api.getPCIList(hostName!)
+            if (res.code === 200 && res.data) {
+                setPciDeviceList(res.data)
+            } else {
+                setPciDeviceList({})
+            }
+        } catch (e) {
+            setPciDeviceList({})
+            message.error('获取PCI设备列表失败')
+        } finally {
+            setPciListLoading(false)
+        }
+    }
+
+    // PCI关机确认后执行
+    const handlePciShutdownConfirm = async () => {
+        setPciShutdownConfirmVisible(false)
+        // 先关机
+        try {
+            const hide = message.loading('正在关闭虚拟机...', 0)
+            await api.vmPower(hostName!, uuid!, 'shutdown')
+            hide()
+            message.success('虚拟机已关闭，正在执行PCI直通操作...')
+            // 等待一小段时间让状态更新
+            await new Promise(resolve => setTimeout(resolve, 3000))
+            if (pendingPciAction) {
+                await pendingPciAction()
+            }
+        } catch (e: any) {
+            message.error(e?.message || '关闭虚拟机失败，请手动关机后重试')
+        }
+        setPendingPciAction(null)
     }
 
     const handleOpenTransferHDD = (hdd: HDDInfo) => {
@@ -1864,32 +2055,33 @@ function VMDetail() {
                         key: 'start',
                         label: '启动系统',
                         onClick: () => handlePowerAction('start'),
-                        disabled: currentStatus.ac_status === 'STARTED'
+                        disabled: currentStatus.ac_status === 'STARTED' || !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)
                     },
                     {
                         key: 'stop',
                         label: '关闭系统',
                         onClick: () => handlePowerAction('stop'),
-                        disabled: currentStatus.ac_status !== 'STARTED'
+                        disabled: currentStatus.ac_status !== 'STARTED' || !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)
                     },
                     {
                         key: 'pause',
                         label: '暂停运行',
                         onClick: () => handlePowerAction('pause'),
-                        disabled: currentStatus.ac_status !== 'STARTED'
+                        disabled: currentStatus.ac_status !== 'STARTED' || !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)
                     },
                     {
                         key: 'resume',
                         label: '恢复运行',
                         onClick: () => handlePowerAction('resume'),
-                        disabled: currentStatus.ac_status !== 'SUSPEND'
+                        disabled: currentStatus.ac_status !== 'SUSPEND' || !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)
                     },
-                    {key: 'force_stop', label: '强制关机', onClick: () => handlePowerAction('hard_stop'), danger: true},
+                    {key: 'force_stop', label: '强制关机', onClick: () => handlePowerAction('hard_stop'), danger: true, disabled: !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)},
                     {
                         key: 'force_reset',
                         label: '强制重启',
                         onClick: () => handlePowerAction('hard_reset'),
-                        danger: true
+                        danger: true,
+                        disabled: !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)
                     },
                 ]
             },
@@ -1947,28 +2139,36 @@ function VMDetail() {
                                 }}>
                                     <Descriptions.Item label="实例名称">{config.vm_uuid}</Descriptions.Item>
                                     <Descriptions.Item label="系统密码">
-                                        <Space size="small">
-                                            <span
-                                                className="font-mono">{showPassword ? config.os_pass : '••••••••'}</span>
-                                            <EyeOutlined className="cursor-pointer"
-                                                         onClick={() => setShowPassword(!showPassword)}/>
-                                            <CopyOutlined className="cursor-pointer"
-                                                          onClick={() => handleCopyPassword(config.os_pass || '', '系统')}/>
-                                        </Space>
+                                        {hasPermission(userPermissions, VM_PERMISSION.PWD_EDITS) ? (
+                                            <Space size="small">
+                                                <span
+                                                    className="font-mono">{showPassword ? config.os_pass : '••••••••'}</span>
+                                                <EyeOutlined className="cursor-pointer"
+                                                             onClick={() => setShowPassword(!showPassword)}/>
+                                                <CopyOutlined className="cursor-pointer"
+                                                              onClick={() => handleCopyPassword(config.os_pass || '', '系统')}/>
+                                            </Space>
+                                        ) : (
+                                            <span className="text-gray-400">无权限查看</span>
+                                        )}
                                     </Descriptions.Item>
 
                                     <Descriptions.Item label="实例状态"><Badge
                                         status={getStatusColor(displayStatus)}
                                         text={getStatusText(displayStatus)}/></Descriptions.Item>
                                     <Descriptions.Item label="远程密码">
-                                        <Space size="small">
-                                            <span
-                                                className="font-mono">{showVncPassword ? config.vc_pass : '••••••••'}</span>
-                                            <EyeOutlined className="cursor-pointer"
-                                                         onClick={() => setShowVncPassword(!showVncPassword)}/>
-                                            <CopyOutlined className="cursor-pointer"
-                                                          onClick={() => handleCopyPassword(config.vc_pass || '', 'VNC')}/>
-                                        </Space>
+                                        {hasPermission(userPermissions, VM_PERMISSION.VNC_EDITS) ? (
+                                            <Space size="small">
+                                                <span
+                                                    className="font-mono">{showVncPassword ? config.vc_pass : '••••••••'}</span>
+                                                <EyeOutlined className="cursor-pointer"
+                                                             onClick={() => setShowVncPassword(!showVncPassword)}/>
+                                                <CopyOutlined className="cursor-pointer"
+                                                              onClick={() => handleCopyPassword(config.vc_pass || '', 'VNC')}/>
+                                            </Space>
+                                        ) : (
+                                            <span className="text-gray-400">无权限查看</span>
+                                        )}
                                     </Descriptions.Item>
 
                                     <Descriptions.Item label="主机名称">{hostName}</Descriptions.Item>
@@ -2068,55 +2268,64 @@ function VMDetail() {
                                 <div className="grid grid-cols-4 gap-2">
                                     <Tooltip title="启动"><Button size="small" icon={<PlayCircleOutlined/>}
                                                                   onClick={() => handlePowerAction('start')}
-                                                                  disabled={currentStatus.ac_status === 'STARTED'}
+                                                                  disabled={currentStatus.ac_status === 'STARTED' || !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)}
                                                                   block><span
                                         className="hidden md:inline">启动</span></Button></Tooltip>
                                     <Tooltip title="关机"><Button size="small" icon={<PoweroffOutlined/>}
                                                                   onClick={() => handlePowerAction('stop')}
-                                                                  disabled={currentStatus.ac_status !== 'STARTED'}
+                                                                  disabled={currentStatus.ac_status !== 'STARTED' || !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)}
                                                                   block><span
                                         className="hidden md:inline">关机</span></Button></Tooltip>
                                     <Tooltip title="重启"><Button size="small" icon={<ReloadOutlined/>}
                                                                   onClick={() => handlePowerAction('reset')}
+                                                                  disabled={!hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)}
                                                                   block><span
                                         className="hidden md:inline">重启</span></Button></Tooltip>
                                     <Tooltip title="暂停"><Button size="small" icon={<PauseCircleOutlined/>}
                                                                   onClick={() => handlePowerAction('pause')}
-                                                                  disabled={currentStatus.ac_status !== 'STARTED'}
+                                                                  disabled={currentStatus.ac_status !== 'STARTED' || !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)}
                                                                   block><span
                                         className="hidden md:inline">暂停</span></Button></Tooltip>
 
                                     <Tooltip title="恢复"><Button size="small" icon={<PlayCircleOutlined/>}
                                                                   onClick={() => handlePowerAction('resume')}
-                                                                  disabled={currentStatus.ac_status !== 'SUSPEND'}
+                                                                  disabled={currentStatus.ac_status !== 'SUSPEND' || !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)}
                                                                   block><span
                                         className="hidden md:inline">恢复</span></Button></Tooltip>
                                     <Tooltip title="强制关机"><Button size="small" danger icon={<PoweroffOutlined/>}
                                                                       onClick={() => handlePowerAction('hard_stop')}
+                                                                      disabled={!hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)}
                                                                       block><span
                                         className="hidden md:inline">强关</span></Button></Tooltip>
                                     <Tooltip title="强制重启"><Button size="small" danger icon={<ReloadOutlined/>}
                                                                       onClick={() => handlePowerAction('hard_reset')}
+                                                                      disabled={!hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)}
                                                                       block><span
                                         className="hidden md:inline">重置</span></Button></Tooltip>
                                     <Tooltip title="编辑配置"><Button size="small" icon={<EditOutlined/>}
                                                                       onClick={() => setEditModalVisible(true)}
+                                                                      disabled={!hasPermission(userPermissions, VM_PERMISSION.VM_MODIFY)}
                                                                       block><span
                                         className="hidden md:inline">编辑</span></Button></Tooltip>
 
                                     <Tooltip title="重装系统"><Button size="small" danger icon={<CloudSyncOutlined/>}
                                                                       onClick={() => setReinstallModalVisible(true)}
+                                                                      disabled={!hasPermission(userPermissions, VM_PERMISSION.SYS_EDITS)}
                                                                       block><span
                                         className="hidden md:inline">重装</span></Button></Tooltip>
                                     <Tooltip title="删除"><Button size="small" danger icon={<DeleteOutlined/>}
-                                                                  onClick={handleDelete} block><span
+                                                                  onClick={handleDelete}
+                                                                  disabled={!hasPermission(userPermissions, VM_PERMISSION.VM_DELETE)}
+                                                                  block><span
                                         className="hidden md:inline">删除</span></Button></Tooltip>
                                     <Tooltip title="VNC控制台"><Button size="small" type="primary"
                                                                        icon={<DesktopOutlined/>} onClick={handleOpenVNC}
+                                                                       disabled={!hasPermission(userPermissions, VM_PERMISSION.VNC_EDITS)}
                                                                        block><span
                                         className="hidden md:inline">VNC</span></Button></Tooltip>
                                     <Tooltip title="修改密码"><Button size="small" icon={<KeyOutlined/>}
                                                                       onClick={() => setPasswordModalVisible(true)}
+                                                                      disabled={!hasPermission(userPermissions, VM_PERMISSION.PWD_EDITS)}
                                                                       block><span
                                         className="hidden md:inline">改密</span></Button></Tooltip>
                                 </div>
@@ -2301,6 +2510,7 @@ function VMDetail() {
             key: 'ip',
             label: '网卡管理',
             children: <Card title="网卡列表" extra={<Button type="primary" icon={<PlusOutlined/>}
+                                                            disabled={!hasPermission(userPermissions, VM_PERMISSION.NIC_EDITS)}
                                                             onClick={() => setIpModalVisible(true)}>添加网卡</Button>}
                             variant="borderless">
                 {vm && vm.config && vm.config.nic_all && Object.keys(vm.config.nic_all).length > 0 ? (
@@ -2314,6 +2524,7 @@ function VMDetail() {
                                             {nicConfig.nic_type === 'pub' ? '公网' : '内网'}
                                         </Tag>
                                         <Button danger size="small"
+                                                disabled={!hasPermission(userPermissions, VM_PERMISSION.NIC_EDITS)}
                                                 onClick={() => handleDeleteIPAddress(nicName)}>删除</Button>
                                     </div>
                                 </div>
@@ -2345,6 +2556,7 @@ function VMDetail() {
             key: 'hdd',
             label: '数据磁盘',
             children: <Card title="数据盘管理" extra={<Button type="primary" icon={<PlusOutlined/>}
+                                                              disabled={!hasPermission(userPermissions, VM_PERMISSION.HDD_EDITS)}
                                                               onClick={() => setHddModalVisible(true)}>挂载数据盘</Button>}
                             variant="borderless">
                 {hdds && hdds.length > 0 ? (
@@ -2370,24 +2582,27 @@ function VMDetail() {
                                         <Space>
                                             {isMounted ? (
                                                 <>
-                                                    <Button size="small" onClick={() => {
+                                                    <Button size="small" disabled={!hasPermission(userPermissions, VM_PERMISSION.HDD_EDITS)} onClick={() => {
                                                         setCurrentUnmountHdd(hdd);
                                                         setUnmountHddConfirmChecked(false);
                                                         setUnmountHddModalVisible(true)
                                                     }}>卸载</Button>
                                                     <Button danger size="small"
+                                                            disabled={!hasPermission(userPermissions, VM_PERMISSION.HDD_EDITS)}
                                                             onClick={() => handleDeleteHDD(hddName)}>删除</Button>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Button type="primary" size="small" onClick={() => {
+                                                    <Button type="primary" size="small" disabled={!hasPermission(userPermissions, VM_PERMISSION.HDD_EDITS)} onClick={() => {
                                                         setCurrentMountHdd(hdd);
                                                         setMountHddConfirmChecked(false);
                                                         setMountHddModalVisible(true)
                                                     }}>挂载</Button>
                                                     <Button size="small"
+                                                            disabled={!hasPermission(userPermissions, VM_PERMISSION.HDD_EDITS)}
                                                             onClick={() => handleOpenTransferHDD(hdd)}>移交</Button>
                                                     <Button danger size="small"
+                                                            disabled={!hasPermission(userPermissions, VM_PERMISSION.HDD_EDITS)}
                                                             onClick={() => handleDeleteHDD(hddName)}>删除</Button>
                                                 </>
                                             )}
@@ -2415,6 +2630,7 @@ function VMDetail() {
             key: 'iso',
             label: '光盘镜像',
             children: <Card title="ISO镜像管理" extra={<Button type="primary" icon={<PlusOutlined/>}
+                                                               disabled={!hasPermission(userPermissions, VM_PERMISSION.ISO_EDITS)}
                                                                onClick={() => setIsoModalVisible(true)}>挂载ISO</Button>}
                             variant="borderless">
                 {isos && isos.length > 0 ? (
@@ -2428,6 +2644,7 @@ function VMDetail() {
                                         ISO
                                     </span>
                                     <Button danger size="small" icon={<span className="iconify" data-icon="mdi:eject"/>}
+                                            disabled={!hasPermission(userPermissions, VM_PERMISSION.ISO_EDITS)}
                                             onClick={() => {
                                                 setCurrentUnmountIso(iso.iso_name!);
                                                 setUnmountIsoConfirmChecked(false);
@@ -2464,7 +2681,7 @@ function VMDetail() {
             key: 'nat',
             label: '端口映射',
             children: <Card title="NAT端口转发规则"
-                            extra={<Button type="primary" icon={<PlusOutlined/>} onClick={() => {
+                            extra={<Button type="primary" icon={<PlusOutlined/>} disabled={!hasPermission(userPermissions, VM_PERMISSION.NET_EDITS)} onClick={() => {
                                 setNatModalVisible(true);
                                 form.setFieldsValue({lan_addr: availableIPs[0]})
                             }}>添加规则</Button>} variant="borderless">
@@ -2479,6 +2696,7 @@ function VMDetail() {
                                     </span>
                                     <Button danger size="small"
                                             icon={<DeleteOutlined/>}
+                                            disabled={!hasPermission(userPermissions, VM_PERMISSION.NET_EDITS)}
                                             onClick={() => handleDeleteNAT(index)}>删除</Button>
                                 </div>
                                 <div className="space-y-2">
@@ -2521,7 +2739,7 @@ function VMDetail() {
         {
             key: 'proxy',
             label: '反向代理',
-            children: <Card title="反向代理配置" extra={<Button type="primary" icon={<PlusOutlined/>} onClick={() => {
+            children: <Card title="反向代理配置" extra={<Button type="primary" icon={<PlusOutlined/>} disabled={!hasPermission(userPermissions, VM_PERMISSION.WEB_EDITS)} onClick={() => {
                 setProxyModalVisible(true);
                 proxyForm.setFieldsValue({backend_ip: availableIPs[0]})
             }}>添加代理</Button>} variant="borderless">
@@ -2540,6 +2758,7 @@ function VMDetail() {
                                     </span>
                                     <Button danger size="small"
                                             icon={<DeleteOutlined/>}
+                                            disabled={!hasPermission(userPermissions, VM_PERMISSION.WEB_EDITS)}
                                             onClick={() => handleDeleteProxy(index)}>删除</Button>
                                 </div>
                                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-2">
@@ -2563,11 +2782,11 @@ function VMDetail() {
                 )}
             </Card>
         },
-            {
+        {
             key: 'pci',
             label: 'PCI设备',
             children: <Card title="PCI设备直通" extra={<Button type="primary" icon={<PlusOutlined/>}
-                                                            onClick={() => setGpuModalVisible(true)}>添加PCI设备</Button>}
+                                                            onClick={handleOpenPciModal}>添加PCI设备</Button>}
                             variant="borderless">
                 {vm && vm.config && vm.config.pci_all && Object.keys(vm.config.pci_all).length > 0 ? (
                     <div className="space-y-3">
@@ -2575,15 +2794,18 @@ function VMDetail() {
                             <div key={gpuKey} className="bg-gray-50/20 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="font-medium">{gpuConfig.gpu_hint || gpuKey}</span>
-                                    <Button danger size="small" onClick={() => handleDeleteGpu(gpuKey)}>删除</Button>
+                                    <Space>
+                                        <Tag color={gpuConfig.gpu_mdev === 'PV' ? 'blue' : gpuConfig.gpu_mdev === 'DDA' ? 'orange' : 'green'}>{gpuConfig.gpu_mdev || '直通'}</Tag>
+                                        <Button danger size="small" onClick={() => handleDeleteGpu(gpuKey)}>删除</Button>
+                                    </Space>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                                     <div className="flex items-center gap-2">
-                                        <span className="">UUID:</span>
+                                        <span className="">设备ID:</span>
                                         <span className="font-mono">{gpuConfig.gpu_uuid || '-'}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="">MDEV:</span>
+                                        <span className="">类型:</span>
                                         <span className="font-mono">{gpuConfig.gpu_mdev || '-'}</span>
                                     </div>
                                 </div>
@@ -2591,14 +2813,14 @@ function VMDetail() {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center  py-8">暂无显卡配置</div>
+                    <div className="text-center  py-8">暂无PCI直通设备</div>
                 )}
             </Card>
         },
         {
             key: 'usb',
             label: 'USB设备',
-            children: <Card title="USB设备管理" extra={<Button type="primary" icon={<PlusOutlined/>} onClick={() => setUsbModalVisible(true)}>添加USB设备</Button>} variant="borderless">
+            children: <Card title="USB设备管理" extra={<Button type="primary" icon={<PlusOutlined/>} onClick={handleOpenUsbModal}>添加USB设备</Button>} variant="borderless">
                 {usbList && usbList.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {usbList.map((usb, index) => (
@@ -2635,6 +2857,7 @@ function VMDetail() {
             key: 'backup',
             label: '备份管理',
             children: <Card title="备份管理" extra={<Button type="primary" icon={<PlusOutlined/>}
+                                                            disabled={!hasPermission(userPermissions, VM_PERMISSION.VM_BACKUP)}
                                                             onClick={() => setBackupModalVisible(true)}>创建备份</Button>}
                             variant="borderless">
                 {backups && backups.length > 0 ? (
@@ -2653,6 +2876,7 @@ function VMDetail() {
                                         <Space>
                                             <Button size="small"
                                                     icon={<span className="iconify" data-icon="mdi:restore"/>}
+                                                    disabled={!hasPermission(userPermissions, VM_PERMISSION.VM_BACKUP)}
                                                     onClick={() => {
                                                         setCurrentRestoreBackup(backup.backup_name!);
                                                         setRestoreConfirmChecked1(false);
@@ -2661,6 +2885,7 @@ function VMDetail() {
                                                     }}>恢复</Button>
                                             <Button danger size="small"
                                                     icon={<span className="iconify" data-icon="mdi:delete"/>}
+                                                    disabled={!hasPermission(userPermissions, VM_PERMISSION.VM_BACKUP)}
                                                     onClick={() => handleDeleteBackup(backup.backup_name!)}>删除</Button>
                                         </Space>
                                     </div>
@@ -2690,14 +2915,74 @@ function VMDetail() {
             </Card>
         },
         {
+            key: 'efi',
+            label: '启动顺序',
+            children: <Card title="启动顺序管理" extra={
+                <Space>
+                    {!efiEditing ? (
+                        <>
+                            <Button icon={<ReloadOutlined/>} onClick={loadEFIList} loading={efiLoading}>刷新</Button>
+                            <Button type="primary" icon={<EditOutlined/>}
+                                    disabled={!hasPermission(userPermissions, VM_PERMISSION.EFI_EDITS) || efiList.length === 0}
+                                    onClick={() => { setEfiEditList([...efiList]); setEfiEditing(true) }}>编辑顺序</Button>
+                        </>
+                    ) : (
+                        <>
+                            <Button onClick={() => setEfiEditing(false)}>取消</Button>
+                            <Button type="primary" loading={efiActionLoading}
+                                    onClick={handleSaveEFI}>保存</Button>
+                        </>
+                    )}
+                </Space>
+            } variant="borderless">
+                {efiLoading ? (
+                    <div className="text-center py-8"><Spin tip="加载启动项..."/></div>
+                ) : (efiEditing ? efiEditList : efiList).length > 0 ? (
+                    <div className="space-y-2">
+                        {(efiEditing ? efiEditList : efiList).map((item, index) => (
+                            <div key={`efi-${index}`}
+                                 className="glass-card flex items-center justify-between px-4 py-3 hover:shadow-md transition-all duration-200">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-lg font-bold text-blue-500 w-8 text-center">#{index + 1}</span>
+                                    <span className="iconify text-xl" data-icon={item.efi_type ? 'mdi:disc' : 'mdi:harddisk'} style={{color: item.efi_type ? '#f59e0b' : '#3b82f6'}}></span>
+                                    <div>
+                                        <div className="font-medium">{item.efi_name || (item.efi_type ? 'CD/DVD' : '硬盘')}</div>
+                                        <div className="text-xs" style={{color: 'var(--text-secondary)'}}>
+                                            {item.efi_type ? '光盘/网络启动' : '硬盘启动'}
+                                        </div>
+                                    </div>
+                                </div>
+                                {efiEditing && (
+                                    <Space>
+                                        <Button size="small" icon={<span className="iconify" data-icon="mdi:arrow-up"/>}
+                                                disabled={index === 0}
+                                                onClick={() => handleEfiMoveUp(index)}>上移</Button>
+                                        <Button size="small" icon={<span className="iconify" data-icon="mdi:arrow-down"/>}
+                                                disabled={index === efiEditList.length - 1}
+                                                onClick={() => handleEfiMoveDown(index)}>下移</Button>
+                                    </Space>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-8" style={{color: 'var(--text-secondary)'}}>
+                        暂无启动项数据，请点击刷新获取
+                    </div>
+                )}
+            </Card>
+        },
+        {
             key: 'owners',
             label: '用户权限',
             children: <Card title="用户管理" extra={
                 <Space>
                     <Button type="primary" icon={<UsergroupAddOutlined/>}
+                            disabled={!isOwnerOrAdmin}
                             onClick={() => setOwnerModalVisible(true)}>添加用户</Button>
                     {owners && owners.length > 0 && (
                         <Button icon={<KeyOutlined/>}
+                                disabled={!isOwnerOrAdmin}
                                 onClick={() => setTransferOwnershipModalVisible(true)}>移交所有权</Button>
                     )}
                 </Space>
@@ -2722,7 +3007,7 @@ function VMDetail() {
                                                 <span className="text-xs  ml-1">(主所有者)</span>}
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            {!isFirstOwner && (
+                                            {!isFirstOwner && isOwnerOrAdmin && (
                                                 <>
                                                     <Button size="small" icon={<EditOutlined/>}
                                                             onClick={() => {
@@ -2767,17 +3052,17 @@ function VMDetail() {
 
     const powerMenuProps: MenuProps = {
         items: [
-            {key: 'start', label: '启动', icon: <PlayCircleOutlined/>, disabled: currentStatus.ac_status === 'STARTED'},
+            {key: 'start', label: '启动', icon: <PlayCircleOutlined/>, disabled: currentStatus.ac_status === 'STARTED' || !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)},
             {
                 key: 'stop',
                 label: '关机',
                 icon: <PoweroffOutlined/>,
-                disabled: currentStatus.ac_status !== 'STARTED',
+                disabled: currentStatus.ac_status !== 'STARTED' || !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS),
                 danger: true
             },
-            {key: 'reset', label: '重启', icon: <ReloadOutlined/>, disabled: currentStatus.ac_status !== 'STARTED'},
-            {key: 'hard_stop', label: '强制关机', icon: <PoweroffOutlined/>, danger: true},
-            {key: 'hard_reset', label: '强制重启', icon: <ReloadOutlined/>, danger: true},
+            {key: 'reset', label: '重启', icon: <ReloadOutlined/>, disabled: currentStatus.ac_status !== 'STARTED' || !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)},
+            {key: 'hard_stop', label: '强制关机', icon: <PoweroffOutlined/>, danger: true, disabled: !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)},
+            {key: 'hard_reset', label: '强制重启', icon: <ReloadOutlined/>, danger: true, disabled: !hasPermission(userPermissions, VM_PERMISSION.PWR_EDITS)},
         ],
         onClick: (e) => handlePowerAction(e.key)
     }
@@ -2857,16 +3142,24 @@ function VMDetail() {
                     <Tabs activeKey={activeTab} onChange={setActiveTab}
                           items={tabItems.filter(i => {
                               const requiredPerm = TAB_PERMISSION_MAP[i.key];
+                              // owners tab 仅管理员/主所有者可见
+                              if (OWNER_ONLY_TABS.has(i.key)) return isOwnerOrAdmin;
                               if (!requiredPerm) return true; // overview等无需权限的Tab始终显示
-                              return hasPermission(userPermissions, requiredPerm);
+                              // HIDDEN_TABS：权限不足时直接隐藏（平台不支持此功能）
+                              if (HIDDEN_TABS.has(i.key)) return hasPermission(userPermissions, requiredPerm);
+                              // READONLY_TABS：权限不足时仍显示（可查看但不可操作）
+                              return true;
                           }).map(i => ({key: i.key, label: i.label}))} tabBarStyle={{marginBottom: 0}}/>
                 </div>
             </div>
             <div className="p-6">
                 {tabItems.filter(i => {
                     const requiredPerm = TAB_PERMISSION_MAP[i.key];
+                    // owners tab 仅管理员/主所有者可见
+                    if (OWNER_ONLY_TABS.has(i.key)) return isOwnerOrAdmin;
                     if (!requiredPerm) return true;
-                    return hasPermission(userPermissions, requiredPerm);
+                    if (HIDDEN_TABS.has(i.key)) return hasPermission(userPermissions, requiredPerm);
+                    return true;
                 }).find(i => i.key === activeTab)?.children}
             </div>
 
@@ -3096,16 +3389,44 @@ function VMDetail() {
                 </Form>
             </Modal>
 
-            <Modal title="添加显卡" open={gpuModalVisible} onCancel={() => setGpuModalVisible(false)}
-                   onOk={() => gpuForm.submit()} confirmLoading={gpuActionLoading}>
-                <Form form={gpuForm} onFinish={handleAddGpu} layout="vertical">
-                    <Form.Item label="GPU UUID" name="gpu_uuid" rules={[{required: true, message: '请输入GPU UUID'}]}
-                               help="物理GPU的UUID"><Input placeholder="例如: 550e8400-e29b-41d4-a716-446655440000"/></Form.Item>
-                    <Form.Item label="MDEV类型" name="gpu_mdev"
-                               help="vGPU类型标识"><Input placeholder="例如: nvidia-222"/></Form.Item>
-                    <Form.Item label="备注" name="gpu_hint"><Input placeholder="显卡用途说明"/></Form.Item>
-                </Form>
-                <Alert message="注意：添加显卡需要重启虚拟机才能生效。" type="warning" showIcon className="mt-4"/>
+            <Modal title="添加PCI直通设备" open={gpuModalVisible} onCancel={() => { setGpuModalVisible(false); setSelectedPciKey(''); }}
+                   onOk={() => handleAddGpu({ pci_key: selectedPciKey })} confirmLoading={gpuActionLoading}
+                   okButtonProps={{ disabled: !selectedPciKey }}>
+                {pciListLoading ? (
+                    <div className="text-center py-8"><Spin tip="正在获取可用PCI设备列表..."/></div>
+                ) : Object.keys(pciDeviceList).length > 0 ? (
+                    <>
+                        <div className="mb-3">请选择要直通的PCI设备：</div>
+                        <Select
+                            style={{ width: '100%' }}
+                            placeholder="选择PCI设备"
+                            value={selectedPciKey || undefined}
+                            onChange={(val) => setSelectedPciKey(val)}
+                            optionLabelProp="label"
+                        >
+                            {Object.entries(pciDeviceList).map(([key, dev]: [string, any]) => (
+                                <Select.Option key={key} value={key} label={dev.gpu_hint}>
+                                    <div className="flex justify-between items-center">
+                                        <span>{dev.gpu_hint}</span>
+                                        <Tag color={dev.gpu_mdev === 'PV' ? 'blue' : dev.gpu_mdev === 'DDA' ? 'orange' : 'green'} className="ml-2">{dev.gpu_mdev}</Tag>
+                                    </div>
+                                    <div className="text-xs text-gray-400">{dev.gpu_uuid}</div>
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </>
+                ) : (
+                    <div className="text-center py-8 text-gray-400">当前主机无可用PCI直通设备</div>
+                )}
+                <Alert message="注意：PCI直通操作需要虚拟机处于关机状态。" type="warning" showIcon className="mt-4"/>
+            </Modal>
+
+            {/* PCI关机确认对话框 */}
+            <Modal title="需要关闭虚拟机" open={pciShutdownConfirmVisible}
+                   onCancel={() => { setPciShutdownConfirmVisible(false); setPendingPciAction(null); }}
+                   onOk={handlePciShutdownConfirm}
+                   okText="确认关机并继续" okType="danger">
+                <Alert message="PCI直通操作需要先关闭虚拟机，确认后将自动关闭虚拟机并执行操作。" type="warning" showIcon />
             </Modal>
 
             <Modal title="添加数据盘" open={hddModalVisible} onCancel={() => setHddModalVisible(false)}
@@ -3342,25 +3663,32 @@ function VMDetail() {
                 </div>
             </Modal>
 
-            <Modal title="添加USB设备" open={usbModalVisible} onCancel={() => setUsbModalVisible(false)}
-                   onOk={handleAddUSB} confirmLoading={usbActionLoading}>
-                <Form form={usbForm} layout="vertical">
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item label="Vendor ID (VID)" name="usb_vid" rules={[{required: true, message: '请输入VID'}]}>
-                                <Input placeholder="例如: 0403" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item label="Product ID (PID)" name="usb_pid" rules={[{required: true, message: '请输入PID'}]}>
-                                <Input placeholder="例如: 6001" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                    <Form.Item label="备注" name="usb_remark">
-                        <Input placeholder="备注信息" />
-                    </Form.Item>
-                </Form>
+            <Modal title="添加USB设备" open={usbModalVisible} onCancel={() => { setUsbModalVisible(false); setSelectedUsbKey(''); }}
+                   onOk={handleAddUSB} confirmLoading={usbActionLoading}
+                   okButtonProps={{ disabled: !selectedUsbKey }}>
+                {usbListLoading ? (
+                    <div className="text-center py-8"><Spin tip="正在获取可用USB设备列表..."/></div>
+                ) : Object.keys(usbDeviceList).length > 0 ? (
+                    <>
+                        <div className="mb-3">请选择要直通的USB设备：</div>
+                        <Select
+                            style={{ width: '100%' }}
+                            placeholder="选择USB设备"
+                            value={selectedUsbKey || undefined}
+                            onChange={(val) => setSelectedUsbKey(val)}
+                            optionLabelProp="label"
+                        >
+                            {Object.entries(usbDeviceList).map(([key, dev]: [string, any]) => (
+                                <Select.Option key={key} value={key} label={dev.usb_hint}>
+                                    <div>{dev.usb_hint}</div>
+                                    <div className="text-xs text-gray-400">VID: {dev.vid_uuid} | PID: {dev.pid_uuid}</div>
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </>
+                ) : (
+                    <div className="text-center py-8 text-gray-400">当前主机无可用USB设备</div>
+                )}
             </Modal>
         </div>
     )

@@ -1,6 +1,7 @@
 import json
 import random
 
+from MainObject.Config.BootOpts import BootOpts
 from MainObject.Config.IMConfig import IMConfig
 from MainObject.Config.NCConfig import NCConfig
 from MainObject.Config.PortData import PortData
@@ -50,6 +51,7 @@ class VMConfig:
         self.iso_all: dict[str, IMConfig] = {}
         self.pci_all: dict[str, VFConfig] = {}
         self.usb_all: dict[str, USBInfos] = {}
+        self.efi_all: list[BootOpts] = []
         self.nat_all: list[PortData] = []
         self.web_all: list[WebProxy] = []
         self.backups: list[VMBackup] = []
@@ -67,7 +69,7 @@ class VMConfig:
                 pci_edits=True,  # 是否允许编辑PCIe
                 usb_edits=True,  # 是否允许编辑USBs
                 vm_backup=True,  # 是否允许备份还原
-                vm_grants=True,  # 是否允许管理用户
+                efi_edits=True,  # 是否允许管理启动顺序
                 vm_modify=True,  # 是否允许修改配置
                 vm_delete=True,  # 是否允许删除实例
                 firewalls=True,  # 是否可编辑防火墙
@@ -91,6 +93,7 @@ class VMConfig:
         web_list = self.web_all
         iso_list = self.iso_all
         bak_list = self.backups
+        efi_list = self.efi_all
         self.nic_all = {}
         self.hdd_all = {}
         self.pci_all = {}
@@ -99,6 +102,7 @@ class VMConfig:
         self.nat_all = []
         self.web_all = []
         self.backups = []
+        self.efi_all = []
         # 网卡数据 ===========================
         for nic in nic_list:
             nic_data = nic_list[nic]
@@ -163,6 +167,12 @@ class VMConfig:
                 self.backups.append(bak_obj)
             else:
                 self.backups.append(bak)
+        # 启动项数据 ===========================
+        for efi in efi_list:
+            if type(efi) is dict:
+                self.efi_all.append(BootOpts(**efi))
+            elif isinstance(efi, BootOpts):
+                self.efi_all.append(efi)
         if type(self.vm_flag) is str:
             self.vm_flag = VMPowers.from_json(self.vm_flag)
         # 所有者数据 ===========================
@@ -282,6 +292,14 @@ class VMConfig:
                     getattr(b, '__save__'))
                 else b for b
                 in self.backups],
+            # 启动项配置 =======================
+            "efi_all": [
+                e.__save__()
+                if hasattr(e, '__save__')
+                   and callable(
+                    getattr(e, '__save__'))
+                else e for e
+                in self.efi_all],
             # 所有者配置 =======================
             "own_all": {
                 k: v._to_mask()

@@ -25,6 +25,7 @@ import {
     ReloadOutlined
 } from '@ant-design/icons'
 import api from '@/utils/apis.ts'
+import { VM_PERMISSION, hasPermission } from '@/types'
 
 const { Text } = Typography
 
@@ -71,6 +72,7 @@ interface DockCreateModalProps {
     isAdmin: boolean
     userQuota: UserQuota | null
     availableHosts: Record<string, any>
+    userPermissions?: number
 }
 
 interface NicItem {
@@ -87,7 +89,8 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
     vmUuid,
     isAdmin,
     userQuota,
-    availableHosts
+    availableHosts,
+    userPermissions
 }) => {
     const [form] = Form.useForm()
     const isEditMode = !!vmUuid
@@ -100,9 +103,17 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
     const [hostConfig, setHostConfig] = useState<HostConfig | null>(null)
     const [hostImages, setHostImages] = useState<Record<string, [string, number]>>({})
     const [gpuList, setGpuList] = useState<Record<string, string>>({})
+    const [pciDeviceList, setPciDeviceList] = useState<Record<string, any>>({})
+    const [usbDeviceList, setUsbDeviceList] = useState<Record<string, any>>({})
     const [selectedOsMinDisk, setSelectedOsMinDisk] = useState(0)
     const [saveConfirmVisible, setSaveConfirmVisible] = useState(false)
     const [pendingValues, setPendingValues] = useState<any>(null)
+    const [vmPerms, setVmPerms] = useState<number>(userPermissions ?? VM_PERMISSION.FULL_MASK)
+
+    // 编辑模式下的权限控制（管理员拥有全部权限）
+    const canEditSys = isAdmin || hasPermission(vmPerms, VM_PERMISSION.SYS_EDITS)
+    const canEditPwd = isAdmin || hasPermission(vmPerms, VM_PERMISSION.PWD_EDITS)
+    const canEditVnc = isAdmin || hasPermission(vmPerms, VM_PERMISSION.VNC_EDITS)
 
     // 生成随机字符串
     const generateRandomString = (length: number) => {
@@ -205,10 +216,28 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
             } else {
                 setGpuList({})
             }
+
+            // Load PCI Device List
+            const pciResult = await api.getPCIList(host)
+            if (pciResult.code === 200 && pciResult.data) {
+                setPciDeviceList(pciResult.data)
+            } else {
+                setPciDeviceList({})
+            }
+
+            // Load USB Device List
+            const usbResult = await api.getUSBList(host)
+            if (usbResult.code === 200 && usbResult.data) {
+                setUsbDeviceList(usbResult.data)
+            } else {
+                setUsbDeviceList({})
+            }
         } catch (error) {
             console.error('加载主机配置失败:', error)
             setHostImages({})
             setGpuList({})
+            setPciDeviceList({})
+            setUsbDeviceList({})
         }
     }
 
@@ -245,6 +274,14 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
             if (result.code === 200) {
                 const vm = result.data
                 const config = vm.config || {}
+
+                // 从API返回值更新用户权限
+                const apiPerms = typeof vm.user_permissions === 'number' ? vm.user_permissions : VM_PERMISSION.FULL_MASK
+                setVmPerms(apiPerms)
+                // 用局部变量判断权限（避免React state异步更新时序问题）
+                const localCanEditSys = isAdmin || hasPermission(apiPerms, VM_PERMISSION.SYS_EDITS)
+                const localCanEditPwd = isAdmin || hasPermission(apiPerms, VM_PERMISSION.PWD_EDITS)
+                const localCanEditVnc = isAdmin || hasPermission(apiPerms, VM_PERMISSION.VNC_EDITS)
                 
                 const gpuId = config.gpu_id || ''
                 let gpuMdev = ''
@@ -272,9 +309,9 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                 form.setFieldsValue({
                     host_name: targetHost,
                     vm_uuid_suffix: vmUuid,
-                    os_name: config.os_name,
-                    os_pass: config.os_pass,
-                    vc_pass: config.vc_pass,
+                    os_name: localCanEditSys ? config.os_name : '',
+                    os_pass: localCanEditPwd ? config.os_pass : '',
+                    vc_pass: localCanEditVnc ? config.vc_pass : '',
                     vc_port: config.vc_port,
                     cpu_num: config.cpu_num,
                     cpu_per: config.cpu_per ?? 100,
@@ -389,20 +426,19 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
             const fullUuid = isEditMode ? vmUuid! : (prefix + values.vm_uuid_suffix)
 
             const nicAll: Record<string, any> = {}
-            nicList.forEach(nic => {
-                const nicName = values[`nic_name_${nic.key}`] || nic.name
-                nicAll[nicName] = {
-                    nic_type: values[`nic_type_${nic.key}`] || 'nat',
-                    ip4_addr: values[`nic_ip_${nic.key}`] || '',
-                    ip6_addr: values[`nic_ip6_${nic.key}`] || ''
-                }
-            })
+            if (!isEditMode) {
+                nicList.forEach(nic => {
+                    const nicName = values[`nic_name_${nic.key}`] || nic.name
+                    nicAll[nicName] = {
+                        nic_type: values[`nic_type_${nic.key}`] || 'nat',
+                        ip4_addr: values[`nic_ip_${nic.key}`] || '',
+                        ip6_addr: values[`nic_ip6_${nic.key}`] || ''
+                    }
+                })
+            }
 
-            const vmData = {
+            const vmData: Record<string, any> = {
                 vm_uuid: fullUuid,
-                os_name: values.os_name,
-                os_pass: values.os_pass,
-                vc_pass: values.vc_pass,
                 vc_port: values.vc_port,
                 cpu_num: values.cpu_num,
                 cpu_per: values.cpu_per,
@@ -427,7 +463,20 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                     values.flu_rst_time || Math.floor(Date.now() / 1000)
                 ],
                 web_num: values.web_num,
-                nic_all: nicAll,
+            }
+
+            // 创建模式发送所有字段，编辑模式根据权限选择性发送
+            if (!isEditMode) {
+                vmData.os_name = values.os_name
+                vmData.os_pass = values.os_pass
+                vmData.vc_pass = values.vc_pass
+                vmData.nic_all = nicAll
+            } else {
+                // 编辑模式：有权限则发送用户修改值，无权限不发送（后端从旧配置复制）
+                if (canEditSys) vmData.os_name = values.os_name
+                if (canEditPwd) vmData.os_pass = values.os_pass
+                if (canEditVnc) vmData.vc_pass = values.vc_pass
+                // 编辑模式不发送nic_all，网卡管理已移除
             }
 
             if (isEditMode) {
@@ -494,6 +543,8 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
             setSelectedHost('')
             setHostImages({})
             setGpuList({})
+            setPciDeviceList({})
+            setUsbDeviceList({})
         }
 
         form.setFieldsValue({
@@ -620,9 +671,10 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                                 </Form.Item>
                             </Col>
                             <Col span={12}>
-                                <Form.Item name="os_name" label="操作系统" rules={[{ required: true }]}>
+                                <Form.Item name="os_name" label="操作系统" rules={[{ required: !isEditMode || canEditSys }]}>
                                     <Select 
-                                        placeholder="选择系统镜像"
+                                        placeholder={isEditMode && !canEditSys ? '无权限修改' : '选择系统镜像'}
+                                        disabled={isEditMode && !canEditSys}
                                         getPopupContainer={triggerNode => triggerNode.parentNode}
                                         onChange={(val) => {
                                             if (hostImages) {
@@ -648,13 +700,17 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                                 <Form.Item label="系统密码">
                                     <Space.Compact style={{ width: '100%' }}>
                                         <Form.Item name="os_pass" noStyle>
-                                            <Input.Password placeholder="系统登录密码" />
+                                            <Input.Password 
+                                                placeholder={isEditMode && !canEditPwd ? '无权限查看/修改' : '系统登录密码'}
+                                                disabled={isEditMode && !canEditPwd}
+                                            />
                                         </Form.Item>
                                         <Button 
                                             htmlType="button"
                                             icon={<ReloadOutlined />} 
                                             onClick={() => form.setFieldValue('os_pass', generateRandomString(8))}
                                             title="随机生成密码"
+                                            disabled={isEditMode && !canEditPwd}
                                         />
                                     </Space.Compact>
                                 </Form.Item>
@@ -663,13 +719,17 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                                 <Form.Item label="VNC密码">
                                     <Space.Compact style={{ width: '100%' }}>
                                         <Form.Item name="vc_pass" noStyle>
-                                            <Input.Password placeholder="VNC连接密码" />
+                                            <Input.Password 
+                                                placeholder={isEditMode && !canEditVnc ? '无权限查看/修改' : 'VNC连接密码'}
+                                                disabled={isEditMode && !canEditVnc}
+                                            />
                                         </Form.Item>
                                         <Button 
                                             htmlType="button"
                                             icon={<ReloadOutlined />} 
                                             onClick={() => form.setFieldValue('vc_pass', generateRandomString(8))}
                                             title="随机生成密码"
+                                            disabled={isEditMode && !canEditVnc}
                                         />
                                     </Space.Compact>
                                 </Form.Item>
@@ -750,9 +810,22 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                         <Row gutter={24}>
                             <Col span={12}>
                                 <Form.Item label="PCI直通" name="gpu_id">
-                                    <Select allowClear placeholder="选择PCI设备">
+                                    <Select allowClear placeholder="选择PCI设备" onChange={(val) => {
+                                        if (val && pciDeviceList[val]) {
+                                            const dev = pciDeviceList[val]
+                                            form.setFieldsValue({
+                                                gpu_mdev: dev.gpu_mdev || '',
+                                                gpu_remark: dev.gpu_hint || ''
+                                            })
+                                        } else {
+                                            form.setFieldsValue({ gpu_mdev: '', gpu_remark: '' })
+                                        }
+                                    }}>
                                         <Select.Option value="">无PCI直通</Select.Option>
-                                        {Object.entries(gpuList).map(([id, name]) => (
+                                        {Object.entries(pciDeviceList).map(([key, dev]: [string, any]) => (
+                                            <Select.Option key={key} value={key}>{key} - {dev.gpu_hint || dev.gpu_uuid || ''}</Select.Option>
+                                        ))}
+                                        {Object.keys(pciDeviceList).length === 0 && Object.entries(gpuList).map(([id, name]) => (
                                             <Select.Option key={id} value={id}>{id} - {name}</Select.Option>
                                         ))}
                                     </Select>
@@ -782,6 +855,27 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                         </div>
                         <Row gutter={24}>
                             <Col span={12}>
+                                <Form.Item label="USB设备" name="usb_device_key">
+                                    <Select allowClear placeholder="选择USB设备" onChange={(val) => {
+                                        if (val && usbDeviceList[val]) {
+                                            const dev = usbDeviceList[val]
+                                            form.setFieldsValue({
+                                                usb_vid: dev.vid_uuid || '',
+                                                usb_pid: dev.pid_uuid || '',
+                                                usb_remark: dev.usb_hint || ''
+                                            })
+                                        } else {
+                                            form.setFieldsValue({ usb_vid: '', usb_pid: '', usb_remark: '' })
+                                        }
+                                    }}>
+                                        <Select.Option value="">无USB直通</Select.Option>
+                                        {Object.entries(usbDeviceList).map(([key, dev]: [string, any]) => (
+                                            <Select.Option key={key} value={key}>{dev.usb_hint || `${dev.vid_uuid}:${dev.pid_uuid}`}</Select.Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
                                 <Form.Item label="VID / PID">
                                     <Space.Compact style={{ width: '100%' }}>
                                         <Form.Item name="usb_vid" noStyle>
@@ -793,6 +887,8 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                                     </Space.Compact>
                                 </Form.Item>
                             </Col>
+                        </Row>
+                        <Row gutter={24}>
                             <Col span={12}>
                                 <Form.Item label="备注" name="usb_remark">
                                     <Input placeholder="USB备注信息" />
@@ -860,6 +956,8 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                         </Row>
                     </div>
 
+                    {/* 编辑模式下隐藏网卡配置 */}
+                    {!isEditMode && (
                     <div className="modal-section">
                         <div style={sectionTitleStyle}>
                             <div className="w-8 h-8 rounded-lg section-icon-bg-blue flex items-center justify-center">
@@ -893,6 +991,7 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                             添加网卡
                         </Button>
                     </div>
+                    )}
                 </Form>
             </Modal>
 

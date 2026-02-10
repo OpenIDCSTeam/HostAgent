@@ -159,10 +159,42 @@ export const getOSImages = (hsName: string): Promise<ApiResponse<Record<string, 
 };
 
 /**
- * 获取主机GPU列表
+ * 获取主机GPU列表（兼容旧接口）
  */
-export const getGPUList = (hsName: string): Promise<ApiResponse<Record<string, string>>> => {
+export const getGPUList = (hsName: string): Promise<ApiResponse<Record<string, any>>> => {
   return http.get(`/api/client/gpu-list/${hsName}`);
+};
+
+/**
+ * 获取主机可直通PCI设备列表
+ */
+export const getPCIList = (hsName: string): Promise<ApiResponse<Record<string, { gpu_uuid: string; gpu_mdev: string; gpu_hint: string }>>> => {
+  return http.get(`/api/client/pci-list/${hsName}`);
+};
+
+/**
+ * PCI设备直通操作（需要关机）
+ */
+export const setupPCI = (hsName: string, vmUuid: string, data: {
+  pci_key: string; gpu_uuid: string; gpu_mdev: string; gpu_hint: string; action: 'add' | 'remove';
+}): Promise<ApiResponse> => {
+  return http.post(`/api/client/pci/setup/${hsName}/${vmUuid}`, data);
+};
+
+/**
+ * 获取主机可用USB设备列表
+ */
+export const getUSBList = (hsName: string): Promise<ApiResponse<Record<string, { vid_uuid: string; pid_uuid: string; usb_hint: string }>>> => {
+  return http.get(`/api/client/usb-list/${hsName}`);
+};
+
+/**
+ * USB设备直通操作（无需关机）
+ */
+export const setupUSB = (hsName: string, vmUuid: string, data: {
+  usb_key: string; vid_uuid: string; pid_uuid: string; usb_hint: string; action: 'add' | 'remove';
+}): Promise<ApiResponse> => {
+  return http.post(`/api/client/usb/setup/${hsName}/${vmUuid}`, data);
 };
 
 // ============================================================================
@@ -353,6 +385,24 @@ export const deleteUSB = (hsName: string, vmUuid: string, usbKey: string): Promi
 };
 
 // ============================================================================
+// EFI启动项管理API
+// ============================================================================
+
+/**
+ * 获取虚拟机启动项列表
+ */
+export const getEFIList = (hsName: string, vmUuid: string): Promise<ApiResponse<{ efi_type: boolean; efi_name: string }[]>> => {
+  return http.get(`/api/client/efi-list/${hsName}/${vmUuid}`);
+};
+
+/**
+ * 设置虚拟机启动项顺序
+ */
+export const setupEFI = (hsName: string, vmUuid: string, efiList: { efi_type: boolean; efi_name: string }[]): Promise<ApiResponse> => {
+  return http.post(`/api/client/efi/setup/${hsName}/${vmUuid}`, { efi_list: efiList });
+};
+
+// ============================================================================
 // 硬盘管理API
 // ============================================================================
 
@@ -395,7 +445,7 @@ export const addVMOwner = (hsName: string, vmUuid: string, data: { username: str
  * 删除虚拟机分享用户
  */
 export const deleteVMOwner = (hsName: string, vmUuid: string, username: string): Promise<ApiResponse> => {
-  return http.post(`/api/client/owners/delete/${hsName}/${vmUuid}`, { username });
+  return http.delete(`/api/client/owners/${hsName}/${vmUuid}`, { data: { username } });
 };
 
 /**
@@ -674,6 +724,10 @@ export default {
   getHostStatus,
   getOSImages,
   getGPUList,
+  getPCIList,
+  setupPCI,
+  getUSBList,
+  setupUSB,
   
   // 虚拟机管理
   getVMs,
@@ -708,6 +762,10 @@ export default {
   addVMOwner,
   deleteVMOwner,
   updateVMOwnerPermission,
+  
+  // EFI启动项管理
+  getEFIList,
+  setupEFI,
   
   // 网络管理
   getNATRules,
