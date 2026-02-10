@@ -1,40 +1,49 @@
 <style>
-    /* 简洁专业设计风格 */
+    /* 现代化专业设计风格 - 参考新前端Dashboard设计 */
     
     .modern-table {
-        border: 1px solid #e1e5e9;
-        border-radius: 6px;
+        border: 1px solid #e8e9eb;
+        border-radius: 8px;
         overflow: hidden;
         background: #fff;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        transition: box-shadow 0.3s ease;
+    }
+    
+    .modern-table:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     
     .modern-table thead {
-        background: #f8f9fa;
-        color: #495057;
+        background: linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%);
+        color: #262626;
+        border-bottom: 2px solid #e8e9eb;
     }
     
     .modern-table thead th {
         border: none;
-        padding: 10px 12px;
+        padding: 14px 16px;
         font-weight: 600;
-        font-size: 0.8rem;
-        border-bottom: 2px solid #e9ecef;
+        font-size: 0.85rem;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
     }
     
     .modern-table thead th i {
-        margin-right: 6px;
-        color: #6c757d;
+        margin-right: 8px;
+        color: #597ef7;
+        font-size: 0.95em;
     }
     
     .modern-table tbody tr {
         border: none;
-        transition: background-color 0.2s ease;
-        border-bottom: 1px solid #e9ecef;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        border-bottom: 1px solid #f0f0f0;
     }
     
     .modern-table tbody tr:hover {
-        background-color: #f8f9fa;
+        background: linear-gradient(90deg, #f0f5ff 0%, #e6f7ff 100%);
+        transform: translateX(2px);
     }
     
     .modern-table tbody tr:last-child {
@@ -43,167 +52,266 @@
     
     .modern-table tbody td {
         border: none;
-        padding: 10px 12px;
+        padding: 14px 16px;
         vertical-align: middle;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
+        color: #595959;
     }
     
-    /* 端口样式简化 */
+    /* 端口样式 - 现代化渐变设计 */
     .port-display {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+        padding: 4px 0;
     }
     
     .port-number {
-        background: #e3f2fd;
-        color: #1976d2;
-        border: 1px solid #bbdefb;
-        padding: 4px 10px;
-        border-radius: 4px;
-        font-family: 'Consolas', 'Monaco', monospace;
+        background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+        color: #096dd9;
+        border: 1px solid #91d5ff;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', monospace;
         font-weight: 600;
-        font-size: 0.8rem;
-        min-width: 60px;
+        font-size: 0.85rem;
+        min-width: 70px;
         text-align: center;
+        box-shadow: 0 2px 4px rgba(24, 144, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .port-number:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(24, 144, 255, 0.2);
     }
     
     .internal-port {
-        background: #e8f5e8;
-        color: #388e3c;
-        border: 1px solid #c8e6c9;
-        padding: 4px 10px;
-        border-radius: 4px;
-        font-family: 'Consolas', 'Monaco', monospace;
+        background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
+        color: #389e0d;
+        border: 1px solid #b7eb8f;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
         font-weight: 600;
-        font-size: 0.8rem;
-        min-width: 60px;
+        font-size: 0.85rem;
+        min-width: 70px;
         text-align: center;
+        box-shadow: 0 2px 4px rgba(82, 196, 26, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .internal-port:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(82, 196, 26, 0.2);
     }
     
     .port-arrow {
-        color: #6c757d;
-        font-size: 0.9rem;
+        color: #8c8c8c;
+        font-size: 1.1rem;
         font-weight: bold;
+        animation: pulse-arrow 2s ease-in-out infinite;
     }
     
-    /* 协议标签简化 */
+    @keyframes pulse-arrow {
+        0%, 100% { opacity: 0.6; transform: translateX(0); }
+        50% { opacity: 1; transform: translateX(2px); }
+    }
+    
+    /* 协议标签 - 现代化设计 */
     .protocol-badge {
-        padding: 4px 12px;
-        border-radius: 4px;
+        padding: 6px 16px;
+        border-radius: 6px;
         font-weight: 600;
-        font-size: 0.75rem;
+        font-size: 0.8rem;
         text-transform: uppercase;
-        display: inline-block;
-        min-width: 50px;
-        text-align: center;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 70px;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .protocol-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
     }
     
     .protocol-tcp {
-        background: #e8f5e8;
-        color: #388e3c;
-        border: 1px solid #c8e6c9;
+        background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
+        color: #389e0d;
+        border: 1px solid #b7eb8f;
     }
     
     .protocol-udp {
-        background: #f3e5f5;
-        color: #7b1fa2;
-        border: 1px solid #ce93d8;
+        background: linear-gradient(135deg, #fff7e6 0%, #ffd591 100%);
+        color: #d46b08;
+        border: 1px solid #ffd591;
     }
     
     .protocol-both {
-        background: #e3f2fd;
-        color: #1976d2;
-        border: 1px solid #90caf9;
+        background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+        color: #096dd9;
+        border: 1px solid #91d5ff;
     }
     
-    /* 状态标签简化 */
+    .protocol-other {
+        background: linear-gradient(135deg, #f9f0ff 0%, #efdbff 100%);
+        color: #722ed1;
+        border: 1px solid #d3adf7;
+    }
+    
+    /* 状态标签 - 现代化设计 */
     .status-badge {
-        padding: 4px 12px;
-        border-radius: 4px;
+        padding: 6px 16px;
+        border-radius: 6px;
         font-weight: 500;
-        font-size: 0.8rem;
-        display: inline-block;
-        min-width: 60px;
-        text-align: center;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 80px;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .status-badge:hover {
+        transform: scale(1.05);
     }
     
     .status-active {
-        background: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
+        background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
+        color: #389e0d;
+        border: 1px solid #b7eb8f;
     }
     
     .status-inactive {
-        background: #fff3cd;
-        color: #856404;
-        border: 1px solid #ffeaa7;
+        background: linear-gradient(135deg, #fff7e6 0%, #ffd591 100%);
+        color: #d46b08;
+        border: 1px solid #ffd591;
     }
     
-    /* 按钮简化 */
+    /* 按钮样式 - 现代化设计 */
     .action-btn {
-        background: #ffffff;
-        color: #dc3545;
-        border: 1px solid #dc3545;
-        padding: 5px 10px;
-        border-radius: 4px;
+        background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+        color: #ff4d4f;
+        border: 1px solid #ffccc7;
+        padding: 6px 14px;
+        border-radius: 6px;
         font-weight: 500;
-        font-size: 0.75rem;
-        transition: all 0.2s ease;
+        font-size: 0.8rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 4px rgba(255, 77, 79, 0.1);
     }
     
     .action-btn:hover {
-        background: #dc3545;
+        background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
         color: #ffffff;
+        border-color: #ff4d4f;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
+    }
+    
+    .action-btn:active {
+        transform: translateY(0);
     }
     
     .btn-create {
-        background: #007bff;
-        border: 1px solid #007bff;
+        background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+        border: 1px solid #096dd9;
         color: white;
-        padding: 5px 10px;
-        border-radius: 4px;
+        padding: 8px 18px;
+        border-radius: 6px;
         font-weight: 500;
-        font-size: 0.75rem;
-        transition: all 0.2s ease;
+        font-size: 0.85rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 6px rgba(24, 144, 255, 0.25);
     }
     
     .btn-create:hover {
-        background: #0056b3;
-        border-color: #0056b3;
+        background: linear-gradient(135deg, #096dd9 0%, #0050b3 100%);
+        border-color: #0050b3;
         color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+    }
+    
+    .btn-create:disabled {
+        background: #d9d9d9;
+        border-color: #d9d9d9;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
     }
     
     .description-text {
-        background: #f8f9fa;
-        color: #6c757d;
-        padding: 6px 10px;
-        border-radius: 4px;
+        background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+        color: #595959;
+        padding: 8px 14px;
+        border-radius: 6px;
         font-style: italic;
-        font-size: 0.85rem;
-        border-left: 3px solid #007bff;
-        max-width: 150px;
+        font-size: 0.9rem;
+        border-left: 4px solid #597ef7;
+        max-width: 180px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .description-text:hover {
+        background: linear-gradient(135deg, #f0f5ff 0%, #e6f7ff 100%);
+        max-width: 200px;
+        border-left-color: #1890ff;
     }
     
     .badge-modern {
-        background: #6c757d;
+        background: linear-gradient(135deg, #8c8c8c 0%, #595959 100%);
         color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
+        padding: 6px 12px;
+        border-radius: 6px;
         font-weight: 500;
-        font-size: 0.8rem;
+        font-size: 0.85rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
     }
     
     .badge-success-modern {
-        background: #28a745;
+        background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
         color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
+        padding: 6px 12px;
+        border-radius: 6px;
         font-weight: 500;
-        font-size: 0.8rem;
+        font-size: 0.85rem;
+        box-shadow: 0 2px 4px rgba(82, 196, 26, 0.25);
+    }
+    
+    /* 空状态样式优化 */
+    .empty-state-content {
+        padding: 40px 20px;
+    }
+    
+    .empty-state-content i {
+        font-size: 5rem;
+        color: #d9d9d9;
+        margin-bottom: 20px;
+        opacity: 0.6;
+    }
+    
+    .empty-state-content h4 {
+        color: #8c8c8c;
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        font-weight: 500;
+    }
+    
+    .empty-state-content p {
+        color: #bfbfbf;
+        font-size: 1rem;
+        margin-bottom: 30px;
     }
     
     /* 响应式设计 */
@@ -251,27 +359,27 @@
     
     <div class="container-fluid" id="natManager">
         <div class="card shadow mb-4">
-            <div class="card-header py-3">
+            <div class="card-header py-4" style="background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); border-bottom: 1px solid #e8e9eb;">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-network-wired mr-2"></i>NAT 端口转发管理
+                        <h6 class="m-0 font-weight-bold" style="color: #262626; font-size: 1.1rem; letter-spacing: 0.3px;">
+                            <i class="fas fa-network-wired mr-2" style="color: #597ef7; font-size: 1.2rem;"></i>NAT 端口转发管理
                         </h6>
-                        <small class="text-muted">配置容器端口转发规则，实现外网到内网的端口映射访问</small>
-                        <div class="mt-2">
-                            <span class="badge badge-secondary ml-2">
-                                已使用: <span id="current-count">{$current_count}</span>/{$nat_limit} 条
+                        <small class="text-muted" style="font-size: 0.85rem; margin-top: 4px; display: block;">配置容器端口转发规则，实现外网到内网的端口映射访问</small>
+                        <div class="mt-3 d-flex gap-2">
+                            <span class="badge-modern shadow-sm">
+                                <i class="fas fa-server mr-1"></i>已使用: <span id="current-count" style="font-weight: 600;">{$current_count}</span>/{$nat_limit}
                             </span>
-                            <span class="badge badge-success ml-1">
-                                可用: <span id="remaining-count">{$remaining_count}</span> 条
+                            <span class="badge-success-modern shadow-sm">
+                                <i class="fas fa-plus-circle mr-1"></i>可用: <span id="remaining-count" style="font-weight: 600;">{$remaining_count}</span>
                             </span>
                         </div>
                     </div>
-                    <div class="d-flex">
-                        <button class="btn btn-create btn-sm mr-2" data-toggle="modal" data-target="#addModallxdserveracl" id="add-nat-btn">
+                    <div class="d-flex gap-2">
+                        <button class="btn-create shadow-sm" data-toggle="modal" data-target="#addModallxdserveracl" id="add-nat-btn">
                             <i class="fas fa-plus mr-1"></i>创建转发
                         </button>
-                        <button class="btn btn-secondary btn-sm" onclick="refreshNATPage()">
+                        <button class="btn btn-sm" onclick="refreshNATPage()" style="background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%); border: 1px solid #d9d9d9; color: #595959; border-radius: 6px; padding: 8px 16px; font-weight: 500; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); transition: all 0.3s ease;">
                             <i class="fas fa-sync-alt mr-1"></i>刷新
                         </button>
                     </div>
@@ -326,92 +434,103 @@
             </div>
         </div>
     
-        <div class="modal fade" id="addModallxdserveracl" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-plus-circle text-primary mr-2"></i>创建 NAT 转发规则
+        <div class="modal fade" id="addModallxdserveracl" tabindex="-1" role="dialog" style="display: none;">
+            <div class="modal-dialog" role="document" style="max-width: 550px;">
+                <div class="modal-content" style="border-radius: 12px; border: 1px solid #e8e9eb; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); border-bottom: 1px solid #e8e9eb; padding: 20px 24px; border-radius: 12px 12px 0 0;">
+                        <h5 class="modal-title" style="color: #262626; font-size: 1.15rem; font-weight: 600; letter-spacing: 0.3px;">
+                            <i class="fas fa-plus-circle mr-2" style="color: #597ef7;"></i>创建 NAT 转发规则
                         </h5>
-                        <button type="button" class="close" data-dismiss="modal" onclick="closeAddModal()">
-                            <span>&times;</span>
+                        <button type="button" class="close" data-dismiss="modal" onclick="closeAddModal()" style="color: #8c8c8c; transition: color 0.3s ease;">
+                            <span style="font-size: 1.5rem;">&times;</span>
                         </button>
                     </div>
-                    <div class="modal-body">
-                        <div class="alert alert-success mb-3">
-                            <i class="fas fa-info-circle mr-1"></i><strong>功能说明:</strong> 配置端口转发规则，通过外网端口访问容器内部服务
+                    <div class="modal-body" style="padding: 24px;">
+                        <div class="alert" style="background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%); color: #096dd9; border: 1px solid #91d5ff; border-radius: 8px; padding: 14px 16px; font-size: 0.9rem;">
+                            <i class="fas fa-info-circle mr-2" style="font-size: 1.1rem;"></i><strong>功能说明:</strong> 配置端口转发规则，通过外网端口访问容器内部服务
                         </div>
                         
-                        <form id="addNatForm">
-                            <div class="form-group">
-                                <label for="sportinput">
-                                    <i class="fas fa-server mr-1"></i>内网起始端口
+                        <form id="addNatForm" style="margin-top: 20px;">
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <label for="sportinput" style="color: #595959; font-weight: 500; font-size: 0.9rem; margin-bottom: 8px;">
+                                    <i class="fas fa-server mr-1" style="color: #597ef7;"></i>内网起始端口
                                 </label>
                                 <input required name="sport" type="number" class="form-control" min="1" max="65535"
-                                       id="sportinput" placeholder="请输入内部起始端口(1-65535)">
+                                       id="sportinput" placeholder="请输入内部起始端口(1-65535)"
+                                       style="border-radius: 6px; border: 1px solid #d9d9d9; padding: 10px 14px; font-size: 0.95rem; transition: all 0.3s ease;">
                                 <div class="invalid-feedback" id="internalPort-feedbacklxdserveracl"></div>
-                                <small class="form-text text-muted">容器内部服务监听的起始端口</small>
+                                <small class="form-text" style="color: #8c8c8c; font-size: 0.85rem;">容器内部服务监听的起始端口</small>
                             </div>
     
-                            <div class="form-group">
-                                <label for="dportinput">
-                                    <i class="fas fa-globe mr-1"></i>外网起始端口
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <label for="dportinput" style="color: #595959; font-weight: 500; font-size: 0.9rem; margin-bottom: 8px;">
+                                    <i class="fas fa-globe mr-1" style="color: #52c41a;"></i>外网起始端口
                                 </label>
                                 <div class="input-group">
                                     <input name="dport" type="number" class="form-control" min="10000" max="65535"
-                                           id="dportinput" placeholder="留空自动分配 (10000-65535)">
+                                           id="dportinput" placeholder="留空自动分配 (10000-65535)"
+                                           style="border-radius: 6px 0 0 6px; border: 1px solid #d9d9d9; border-right: none; padding: 10px 14px; font-size: 0.95rem; transition: all 0.3s ease;">
                                     <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="button" id="check-dport-btn">
+                                        <button class="btn btn-outline-secondary" type="button" id="check-dport-btn"
+                                                style="background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%); border: 1px solid #d9d9d9; border-radius: 0 6px 6px 0; padding: 10px 16px; color: #595959; font-weight: 500; transition: all 0.3s ease;">
                                             <i class="fas fa-search mr-1"></i>检测
                                         </button>
                                     </div>
                                 </div>
                                 <div class="invalid-feedback" id="externalPort-feedback"></div>
-                                <small class="form-text text-muted">可自定义外网端口范围 10000-65535，不填写则由系统随机分配。</small>
-                                <div class="mt-1 small" id="externalPort-status" style="display:none;"></div>
+                                <small class="form-text" style="color: #8c8c8c; font-size: 0.85rem;">
+                                    可自定义外网端口范围 10000-65535，不填写则由系统随机分配。
+                                </small>
+                                <div class="mt-2 small" id="externalPort-status" style="display:none;"></div>
                             </div>
                             
-                            <div class="form-group">
-                                <label for="port_count">
-                                    <i class="fas fa-sort-numeric-up mr-1"></i>端口数量
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <label for="port_count" style="color: #595959; font-weight: 500; font-size: 0.9rem; margin-bottom: 8px;">
+                                    <i class="fas fa-sort-numeric-up mr-1" style="color: #faad14;"></i>端口数量
                                 </label>
                                 <input name="port_count" type="number" class="form-control" min="1" max="50" value="1"
-                                       id="port_count" placeholder="默认1个端口">
-                                <small class="form-text text-muted">
+                                       id="port_count" placeholder="默认1个端口"
+                                       style="border-radius: 6px; border: 1px solid #d9d9d9; padding: 10px 14px; font-size: 0.95rem; transition: all 0.3s ease;">
+                                <small class="form-text" style="color: #8c8c8c; font-size: 0.85rem;">
                                     填写1或留空表示单端口；填写大于1的数字表示端口段（例如：10表示映射10个连续端口）
                                 </small>
                             </div>
     
-                            <div class="form-group">
-                                <label for="protocolSelect">
-                                    <i class="fas fa-network-wired mr-1"></i>协议类型
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <label for="protocolSelect" style="color: #595959; font-weight: 500; font-size: 0.9rem; margin-bottom: 8px;">
+                                    <i class="fas fa-network-wired mr-1" style="color: #722ed1;"></i>协议类型
                                 </label>
                                 {if $udp_enabled}
-                                <input type="text" class="form-control" value="TCP/UDP" disabled>
+                                <input type="text" class="form-control" value="TCP/UDP" disabled
+                                       style="border-radius: 6px; border: 1px solid #d9d9d9; padding: 10px 14px; background: #fafafa; font-weight: 500;">
                                 <input name="dtype" type="hidden" value="both">
-                                <small class="form-text text-muted">TCP适用于HTTP/HTTPS/SSH等，UDP适用于DNS/游戏等服务</small>
+                                <small class="form-text" style="color: #8c8c8c; font-size: 0.85rem;">TCP适用于HTTP/HTTPS/SSH等，UDP适用于DNS/游戏等服务</small>
                                 {else}
-                                <input type="text" class="form-control" value="TCP" disabled>
+                                <input type="text" class="form-control" value="TCP" disabled
+                                       style="border-radius: 6px; border: 1px solid #d9d9d9; padding: 10px 14px; background: #fafafa; font-weight: 500;">
                                 <input name="dtype" type="hidden" value="tcp">
-                                <small class="form-text text-muted">适用于HTTP/HTTPS/SSH等常见服务</small>
+                                <small class="form-text" style="color: #8c8c8c; font-size: 0.85rem;">适用于HTTP/HTTPS/SSH等常见服务</small>
                                 {/if}
                             </div>
                             
-                            <div class="form-group">
-                                <label for="description">
-                                    <i class="fas fa-comment mr-1"></i>备注信息 (可选)
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="description" style="color: #595959; font-weight: 500; font-size: 0.9rem; margin-bottom: 8px;">
+                                    <i class="fas fa-comment mr-1" style="color: #eb2f96;"></i>备注信息 (可选)
                                 </label>
                                 <input name="description" type="text" class="form-control" id="description" 
-                                       placeholder="请输入该转发规则的备注信息">
-                                <small class="form-text text-muted">为该NAT转发规则添加备注，方便管理和识别</small>
+                                       placeholder="请输入该转发规则的备注信息"
+                                       style="border-radius: 6px; border: 1px solid #d9d9d9; padding: 10px 14px; font-size: 0.95rem; transition: all 0.3s ease;">
+                                <small class="form-text" style="color: #8c8c8c; font-size: 0.85rem;">为该NAT转发规则添加备注，方便管理和识别</small>
                             </div>
                         </form>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm mr-2" data-dismiss="modal" onclick="closeAddModal()">
+                    <div class="modal-footer" style="background: #fafafa; border-top: 1px solid #e8e9eb; padding: 16px 24px; border-radius: 0 0 12px 12px;">
+                        <button type="button" class="btn btn-sm mr-2" data-dismiss="modal" onclick="closeAddModal()"
+                                style="background: #ffffff; border: 1px solid #d9d9d9; color: #595959; border-radius: 6px; padding: 8px 20px; font-weight: 500; font-size: 0.9rem; transition: all 0.3s ease;">
                             <i class="fas fa-times mr-1"></i>取消
                         </button>
-                        <button type="button" class="btn btn-primary btn-sm confirm-btnlxdserveracl">
+                        <button type="button" class="btn btn-sm confirm-btnlxdserveracl"
+                                style="background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%); border: 1px solid #096dd9; color: white; border-radius: 6px; padding: 8px 20px; font-weight: 500; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(24, 144, 255, 0.25); transition: all 0.3s ease;">
                             <i class="fas fa-check mr-1"></i>确认创建
                         </button>
                     </div>

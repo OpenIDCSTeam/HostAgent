@@ -1,16 +1,75 @@
 <style>
-/* 简洁专业设计风格 */
+/* 现代化设计风格 - 参考Ant Design风格 */
+
+:root {
+    --primary-color: #1890ff;
+    --success-color: #52c41a;
+    --info-color: #13c2c2;
+    --warning-color: #faad14;
+    --danger-color: #ff4d4f;
+    --text-primary: #262626;
+    --text-secondary: #8c8c8c;
+    --border-color: #f0f0f0;
+    --card-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+    --card-shadow-hover: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.container-fluid {
+    padding: 16px;
+}
+
+/* 现代化卡片设计 */
+.card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.card:hover {
+    box-shadow: var(--card-shadow-hover);
+}
+
+.card-header {
+    background: linear-gradient(to right, #fafafa, #f5f5f5);
+    border-bottom: 1px solid var(--border-color);
+    padding: 16px 20px;
+}
 
 .resource-card {
-    border: 1px solid #e1e5e9;
-    border-radius: 6px;
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.2s ease;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.resource-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--info-color));
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .resource-card:hover {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow-hover);
+}
+
+.resource-card:hover::before {
+    opacity: 1;
 }
 
 .resource-header {
@@ -187,81 +246,113 @@ if (typeof Chart !== 'undefined') {
 </script>
 
 <div class="container-fluid">
-<div class="card shadow mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center py-3">
-        <div>
-            <h6 class="m-0 font-weight-bold text-primary">
-                <i class="fas fa-tachometer-alt mr-2"></i>容器状态监控
-            </h6>
-            <small class="text-muted">实时显示容器资源使用情况</small>
-            <span class="badge badge-info mt-1">
-                最后更新: <span id="last-update">刚刚</span>
-            </span>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="refreshInfoPage()">
-            <i class="fas fa-sync-alt mr-1"></i>刷新
-        </button>
-    </div>
-    <div class="card-body">
-        <div class="resource-grid">
-            <div class="card resource-card resource-grid-item">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="resource-header">
-                            <i class="fas fa-microchip"></i>CPU使用率
-                        </div>
-                        <div class="resource-value text-primary" id="cpu-info">
-                            加载中...
-                        </div>
-                    </div>
-                    <i class="fas fa-microchip resource-icon"></i>
+<!-- 统计概览卡片 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="m-0 font-weight-bold">
+                        <i class="fas fa-chart-pie mr-2" style="color: var(--primary-color)"></i>容器实时监控
+                    </h5>
+                    <small class="text-muted">实时显示容器资源使用情况和性能指标</small>
                 </div>
-                <canvas id="cpuChart"></canvas>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge badge-pill" style="background: var(--info-color); color: white;">
+                        <i class="fas fa-clock mr-1"></i>
+                        最后更新: <span id="last-update">--:--:--</span>
+                    </span>
+                    <button class="btn btn-primary btn-sm shadow-sm" onclick="refreshInfoPage()">
+                        <i class="fas fa-sync-alt mr-1"></i>刷新
+                    </button>
+                </div>
             </div>
-            
-            <div class="card resource-card resource-grid-item">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="resource-header">
-                            <i class="fas fa-memory"></i>内存使用
+            <div class="card-body p-4">
+                <div class="resource-grid">
+                    <!-- CPU卡片 -->
+                    <div class="card resource-card resource-grid-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="resource-header">
+                                    <i class="fas fa-microchip"></i>CPU使用率
+                                </div>
+                                <div class="resource-value text-primary" id="cpu-info">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar progress-primary" id="cpu-progress" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <i class="fas fa-microchip resource-icon"></i>
                         </div>
-                        <div class="resource-value text-success" id="memory-info">
-                            加载中...
-                        </div>
-                    </div>
-                    <i class="fas fa-memory resource-icon"></i>
-                </div>
-                <canvas id="memoryChart"></canvas>
-            </div>
-            
-            <div class="card resource-card resource-grid-item">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="resource-header">
-                            <i class="fas fa-hdd"></i>硬盘使用
-                        </div>
-                        <div class="resource-value text-info" id="disk-info">
-                            加载中...
+                        <div style="height: 80px; margin-top: 12px;">
+                            <canvas id="cpuChart"></canvas>
                         </div>
                     </div>
-                    <i class="fas fa-hdd resource-icon"></i>
-                </div>
-                <canvas id="diskChart"></canvas>
-            </div>
-            
-            <div class="card resource-card resource-grid-item">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="resource-header">
-                            <i class="fas fa-exchange-alt"></i>流量使用
+                    
+                    <!-- 内存卡片 -->
+                    <div class="card resource-card resource-grid-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="resource-header">
+                                    <i class="fas fa-memory"></i>内存使用
+                                </div>
+                                <div class="resource-value text-success" id="memory-info">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar progress-success" id="memory-progress" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <i class="fas fa-memory resource-icon"></i>
                         </div>
-                        <div class="resource-value text-warning" id="traffic-info">
-                            加载中...
+                        <div style="height: 80px; margin-top: 12px;">
+                            <canvas id="memoryChart"></canvas>
                         </div>
                     </div>
-                    <i class="fas fa-exchange-alt resource-icon"></i>
+                    
+                    <!-- 硬盘卡片 -->
+                    <div class="card resource-card resource-grid-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="resource-header">
+                                    <i class="fas fa-hdd"></i>硬盘使用
+                                </div>
+                                <div class="resource-value text-info" id="disk-info">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar progress-info" id="disk-progress" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <i class="fas fa-hdd resource-icon"></i>
+                        </div>
+                        <div style="height: 80px; margin-top: 12px;">
+                            <canvas id="diskChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- 流量卡片 -->
+                    <div class="card resource-card resource-grid-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="resource-header">
+                                    <i class="fas fa-exchange-alt"></i>流量使用
+                                </div>
+                                <div class="resource-value text-warning" id="traffic-info">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar progress-warning" id="traffic-progress" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <i class="fas fa-exchange-alt resource-icon"></i>
+                        </div>
+                        <div style="height: 80px; margin-top: 12px;">
+                            <canvas id="trafficChart"></canvas>
+                        </div>
+                    </div>
                 </div>
-                <canvas id="trafficChart"></canvas>
             </div>
         </div>
     </div>
@@ -308,66 +399,127 @@ function infoDebug(message, data) {
 
 // 初始化 Chart.js 图表
 function initCharts() {
-    const chartConfig = {
+    const maxDataPoints = 30;
+    const labels = Array(maxDataPoints).fill('');
+
+    const baseConfig = {
         type: 'line',
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { display: false },
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    grid: { color: '#f0f0f0' },
-                    ticks: { 
-                        color: '#999', 
-                        font: { size: 9 },
-                        callback: function(value) {
-                            return value + '%';
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    enabled: true,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleFont: { size: 12 },
+                    bodyFont: { size: 11 },
+                    padding: 8,
+                    cornerRadius: 4,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y + '%';
                         }
                     }
                 }
             },
+            scales: {
+                x: { 
+                    display: false,
+                    grid: { display: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: { 
+                        color: 'rgba(0, 0, 0, 0.05)',
+                        drawBorder: false
+                    },
+                    ticks: { 
+                        color: '#999', 
+                        font: { size: 10 },
+                        stepSize: 25,
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    },
+                    border: { display: false }
+                }
+            },
             elements: {
-                line: { tension: 0.4, borderWidth: 2 },
-                point: { radius: 0, hitRadius: 10, hoverRadius: 3 }
+                line: { 
+                    tension: 0.4, 
+                    borderWidth: 2,
+                    borderJoinStyle: 'round'
+                },
+                point: { 
+                    radius: 0, 
+                    hitRadius: 10, 
+                    hoverRadius: 4,
+                    hoverBorderWidth: 2
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
             }
         }
     };
 
-    const maxDataPoints = 20;
-    const labels = Array(maxDataPoints).fill('');
-
     cpuChart = new Chart(document.getElementById('cpuChart'), {
-        ...chartConfig,
+        ...baseConfig,
         data: {
             labels: labels,
-            datasets: [{ data: Array(maxDataPoints).fill(0), borderColor: '#007bff', backgroundColor: 'rgba(0, 123, 255, 0.1)', fill: true }]
+            datasets: [{ 
+                data: Array(maxDataPoints).fill(0), 
+                borderColor: '#1890ff', 
+                backgroundColor: 'rgba(24, 144, 255, 0.1)', 
+                fill: true,
+                fillTension: 0.4
+            }]
         }
     });
 
     memoryChart = new Chart(document.getElementById('memoryChart'), {
-        ...chartConfig,
+        ...baseConfig,
         data: {
             labels: labels,
-            datasets: [{ data: Array(maxDataPoints).fill(0), borderColor: '#28a745', backgroundColor: 'rgba(40, 167, 69, 0.1)', fill: true }]
+            datasets: [{ 
+                data: Array(maxDataPoints).fill(0), 
+                borderColor: '#52c41a', 
+                backgroundColor: 'rgba(82, 196, 26, 0.1)', 
+                fill: true,
+                fillTension: 0.4
+            }]
         }
     });
 
     diskChart = new Chart(document.getElementById('diskChart'), {
-        ...chartConfig,
+        ...baseConfig,
         data: {
             labels: labels,
-            datasets: [{ data: Array(maxDataPoints).fill(0), borderColor: '#17a2b8', backgroundColor: 'rgba(23, 162, 184, 0.1)', fill: true }]
+            datasets: [{ 
+                data: Array(maxDataPoints).fill(0), 
+                borderColor: '#13c2c2', 
+                backgroundColor: 'rgba(19, 194, 194, 0.1)', 
+                fill: true,
+                fillTension: 0.4
+            }]
         }
     });
 
     trafficChart = new Chart(document.getElementById('trafficChart'), {
-        ...chartConfig,
+        ...baseConfig,
         data: {
             labels: labels,
-            datasets: [{ data: Array(maxDataPoints).fill(0), borderColor: '#ffc107', backgroundColor: 'rgba(255, 193, 7, 0.1)', fill: true }]
+            datasets: [{ 
+                data: Array(maxDataPoints).fill(0), 
+                borderColor: '#faad14', 
+                backgroundColor: 'rgba(250, 173, 20, 0.1)', 
+                fill: true,
+                fillTension: 0.4
+            }]
         }
     });
 }
@@ -378,6 +530,20 @@ function updateChart(chart, value) {
     data.shift();
     data.push(value);
     chart.update('none');
+}
+
+// 更新进度条
+function updateProgress(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.style.width = value + '%';
+        // 根据使用率改变颜色
+        if (value >= 90) {
+            element.style.backgroundColor = 'var(--danger-color)';
+        } else if (value >= 70) {
+            element.style.backgroundColor = 'var(--warning-color)';
+        }
+    }
 }
 
 function refreshInfoPage() {
@@ -451,26 +617,24 @@ function loadAllInfoData(containerId) {
 
 function updateAllInfo(data) {
     // OpenIDCS API响应格式适配
-    const cpuUsage = data.cpu_usage || 0;
+    const cpuUsage = parseFloat(data.cpu_usage) || 0;
     const cpuCores = data.config?.cpus || 1;
-    const cpuUsageFormatted = parseFloat(cpuUsage).toFixed(1);
-    $('#cpu-info').text(`${cpuUsageFormatted}% / ${cpuCores}核`);
-    updateChart(cpuChart, parseFloat(cpuUsage));
+    const cpuUsageFormatted = cpuUsage.toFixed(1);
+    $('#cpu-info').html(`<span class="font-weight-bold">${cpuUsageFormatted}%</span><span class="text-muted" style="font-size: 0.8rem"> / ${cpuCores}核</span>`);
+    updateChart(cpuChart, cpuUsage);
+    updateProgress('cpu-progress', cpuUsage);
 
     const memoryUsage = data.memory_usage || 'N/A';
     const memoryTotal = data.config?.memory || 'N/A';
     const memoryPercent = parseFloat(data.memory_percent) || 0;
-    $('#memory-info').text(`${memoryUsage} / ${memoryTotal}`);
+    $('#memory-info').html(`<span class="font-weight-bold">${memoryUsage}</span><span class="text-muted" style="font-size: 0.8rem"> / ${memoryTotal}</span>`);
     updateChart(memoryChart, memoryPercent);
+    updateProgress('memory-progress', memoryPercent);
 
     function formatDiskSize(value) {
-        if (typeof value === 'string') {
-            return value;
-        }
-        
+        if (typeof value === 'string') return value;
         const num = parseFloat(value);
         if (isNaN(num)) return 'N/A';
-        
         return num + ' MB';
     }
 
@@ -484,8 +648,9 @@ function updateAllInfo(data) {
     }
     
     const diskPercent = parseFloat(data.disk_percent) || 0;
-    $('#disk-info').text(`${diskUsage} / ${diskTotal}`);
+    $('#disk-info').html(`<span class="font-weight-bold">${diskUsage}</span><span class="text-muted" style="font-size: 0.8rem"> / ${diskTotal}</span>`);
     updateChart(diskChart, diskPercent);
+    updateProgress('disk-progress', diskPercent);
 
     const trafficUsage = data.traffic_usage || 'N/A';
     const trafficUsageRaw = data.traffic_usage_raw || 0;
@@ -496,11 +661,13 @@ function updateAllInfo(data) {
         const trafficUsageGB = (trafficUsageRaw / (1024 * 1024 * 1024)).toFixed(2);
         const trafficPercent = Math.min((parseFloat(trafficUsageGB) / trafficLimitGB) * 100, 100).toFixed(1);
         
-        $('#traffic-info').text(`${trafficUsageGB} GB / ${trafficLimitGB} GB`);
+        $('#traffic-info').html(`<span class="font-weight-bold">${trafficUsageGB} GB</span><span class="text-muted" style="font-size: 0.8rem"> / ${trafficLimitGB} GB</span>`);
         updateChart(trafficChart, parseFloat(trafficPercent));
+        updateProgress('traffic-progress', parseFloat(trafficPercent));
     } else {
-        $('#traffic-info').text(`累计: ${trafficUsage}`);
+        $('#traffic-info').html(`<span class="font-weight-bold">累计</span><span class="text-muted" style="font-size: 0.8rem">: ${trafficUsage}</span>`);
         updateChart(trafficChart, 0);
+        updateProgress('traffic-progress', 0);
     }
 
     if (data.last_update) {

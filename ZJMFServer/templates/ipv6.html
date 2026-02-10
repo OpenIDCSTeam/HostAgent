@@ -1,53 +1,83 @@
 <style>
-/* 简洁专业设计风格 */
+/* 现代化设计风格 - 统一配色和动画 */
+:root {
+    --primary-color: #722ed1;
+    --success-color: #52c41a;
+    --warning-color: #faad14;
+    --danger-color: #ff4d4f;
+    --info-color: #13c2c2;
+    --text-primary: #262626;
+    --text-secondary: #8c8c8c;
+    --bg-color: #f5f5f5;
+    --card-bg: #ffffff;
+    --border-color: #e8e8e8;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 .ipv6-card {
-    border: 1px solid #e1e5e9;
-    border-radius: 8px;
-    background: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--card-bg);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.ipv6-card:hover {
+    box-shadow: var(--shadow-md);
 }
 
 .ipv6-card-header {
-    background: #4a5568;
-    border-radius: 8px 8px 0 0;
+    background: linear-gradient(135deg, var(--primary-color), #9254de);
+    border-radius: 12px 12px 0 0;
     color: white;
     border: none;
+    padding: 18px 20px;
+}
+
+.ipv6-card-header h6 {
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .modern-table {
-    border: 1px solid #e1e5e9;
-    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
     overflow: hidden;
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: var(--card-bg);
+    box-shadow: var(--shadow-sm);
 }
 
 .modern-table thead {
-    background: #f8f9fa;
-    color: #495057;
+    background: linear-gradient(135deg, #fafafa, #f5f5f5);
+    color: var(--text-primary);
 }
 
 .modern-table thead th {
     border: none;
-    padding: 10px 12px;
+    padding: 16px 15px;
     font-weight: 600;
-    font-size: 0.8rem;
-    border-bottom: 2px solid #e9ecef;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--primary-color);
 }
 
 .modern-table thead th i {
-    margin-right: 6px;
-    color: #6c757d;
+    margin-right: 8px;
+    color: var(--primary-color);
 }
 
 .modern-table tbody tr {
     border: none;
-    transition: background-color 0.2s ease;
-    border-bottom: 1px solid #e9ecef;
+    transition: all 0.25s ease;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .modern-table tbody tr:hover {
-    background-color: #f8f9fa;
+    background: linear-gradient(135deg, #f9f0ff, #efdbff);
+    transform: translateX(4px);
 }
 
 .modern-table tbody tr:last-child {
@@ -56,201 +86,276 @@
 
 .modern-table tbody td {
     border: none;
-    padding: 10px 12px;
+    padding: 14px 15px;
     vertical-align: middle;
-    font-size: 0.85rem;
+    font-size: 0.875rem;
+    color: var(--text-primary);
 }
 
 .ipv6-address {
-    background: #e3f2fd;
-    color: #1976d2;
-    border: 1px solid #bbdefb;
-    padding: 5px 10px;
-    border-radius: 4px;
+    background: linear-gradient(135deg, #f9f0ff, #d3adf7);
+    color: var(--primary-color);
+    border: 1px solid #b37feb;
+    padding: 8px 14px;
+    border-radius: 6px;
     font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
     font-weight: 600;
     cursor: pointer;
     font-size: 0.8rem;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-block;
-    min-width: 240px;
+    min-width: 280px;
     text-align: center;
+    box-shadow: 0 2px 4px rgba(114, 46, 209, 0.1);
 }
 
 .ipv6-address:hover {
-    background: #bbdefb;
-    color: #0d47a1;
+    background: linear-gradient(135deg, #d3adf7, #b37feb);
+    color: #391085;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(114, 46, 209, 0.2);
+}
+
+.ipv6-address:active {
+    transform: translateY(0);
 }
 
 .status-badge {
-    padding: 4px 12px;
-    border-radius: 4px;
-    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 600;
     font-size: 0.8rem;
-    display: inline-block;
-    min-width: 60px;
-    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    min-width: 70px;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.status-badge i {
+    margin-right: 4px;
 }
 
 .status-active {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+    background: linear-gradient(135deg, #f6ffed, #d9f7be);
+    color: var(--success-color);
+    border: 1px solid #b7eb8f;
+    box-shadow: 0 2px 4px rgba(82, 196, 26, 0.1);
 }
 
 .status-inactive {
-    background: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeaa7;
+    background: linear-gradient(135deg, #fffbe6, #fff1b8);
+    color: var(--warning-color);
+    border: 1px solid #ffe58f;
+    box-shadow: 0 2px 4px rgba(250, 173, 20, 0.1);
 }
 
 .action-btn {
-    background: #ffffff;
-    color: #dc3545;
-    border: 1px solid #dc3545;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-weight: 500;
-    font-size: 0.75rem;
-    transition: all 0.2s ease;
+    background: var(--card-bg);
+    color: var(--danger-color);
+    border: 1px solid var(--danger-color);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .action-btn:hover {
-    background: #dc3545;
-    color: #ffffff;
+    background: linear-gradient(135deg, var(--danger-color), #ff7875);
+    color: var(--card-bg);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 77, 79, 0.2);
+}
+
+.action-btn:active {
+    transform: translateY(0);
 }
 
 .btn-create {
-    background: #007bff;
-    border: 1px solid #007bff;
+    background: linear-gradient(135deg, var(--primary-color), #9254de);
+    border: 1px solid var(--primary-color);
     color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-weight: 500;
-    font-size: 0.75rem;
-    transition: all 0.2s ease;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 4px rgba(114, 46, 209, 0.2);
 }
 
 .btn-create:hover {
-    background: #0056b3;
-    border-color: #0056b3;
+    background: linear-gradient(135deg, #531dab, var(--primary-color));
+    border-color: #531dab;
     color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(114, 46, 209, 0.3);
+}
+
+.btn-create:active {
+    transform: translateY(0);
 }
 
 .description-text {
-    background: #f8f9fa;
-    color: #6c757d;
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-style: italic;
+    background: linear-gradient(135deg, #fafafa, #f5f5f5);
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    border-radius: 6px;
     font-size: 0.85rem;
-    border-left: 3px solid #007bff;
-    max-width: 150px;
+    border-left: 3px solid var(--primary-color);
+    max-width: 160px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.description-text:hover {
+    background: #f9f0ff;
+    border-left-color: #9254de;
+    color: var(--text-primary);
 }
 
 .badge-modern {
-    background: #6c757d;
+    background: linear-gradient(135deg, #8c8c8c, #595959);
     color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
     font-size: 0.8rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .badge-success-modern {
-    background: #28a745;
+    background: linear-gradient(135deg, var(--success-color), #73d13d);
     color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
     font-size: 0.8rem;
+    box-shadow: 0 2px 4px rgba(82, 196, 26, 0.2);
 }
 
+/* 空状态样式优化 */
+.empty-state-content {
+    padding: 40px 20px;
+}
+
+.empty-state-content i {
+    color: #bfbfbf;
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* 响应式设计 */
 @media (max-width: 768px) {
     .modern-table thead th,
     .modern-table tbody td {
-        padding: 8px 6px;
+        padding: 10px 8px;
         font-size: 0.75rem;
     }
     
     .ipv6-address {
         font-size: 0.7rem;
-        padding: 4px 8px;
+        padding: 6px 10px;
         min-width: 180px;
     }
     
-    .action-btn {
-        font-size: 0.7rem;
-        padding: 4px 6px;
+    .action-btn, .btn-create {
+        font-size: 0.75rem;
+        padding: 6px 12px;
     }
     
     .status-badge {
-        font-size: 0.65rem;
-        padding: 2px 6px;
+        font-size: 0.7rem;
+        padding: 4px 10px;
     }
+}
+
+/* 加载动画优化 */
+.loading-row {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 </style>
 </style>
 
 <div class="container-fluid" id="ipv6Manager">
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <div class="d-flex justify-content-between align-items-center">
+    <!-- 主卡片 -->
+    <div class="card ipv6-card shadow-lg mb-4">
+        <div class="card-header ipv6-card-header">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
                 <div>
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-globe mr-2"></i>IPv6独立绑定管理
+                    <h6 class="m-0">
+                        <i class="fas fa-globe-asia mr-2"></i>IPv6独立绑定管理
                     </h6>
-                    <small class="text-muted">管理容器的独立公网IPv6地址</small>
-                    <div class="mt-2">
-                        <span class="badge badge-secondary ml-2">
-                            已绑定: <span id="current-ipv6-count">0</span>/{$ipv6_limit} 个
+                    <small class="text-white-50 mt-1 d-block">管理容器的独立公网IPv6地址</small>
+                    <div class="mt-2 d-flex flex-wrap gap-2">
+                        <span class="badge badge-pill" style="background: rgba(255,255,255,0.2); color: white;">
+                            <i class="fas fa-server mr-1"></i>
+                            已绑定: <span id="current-ipv6-count" class="font-weight-bold">0</span>/{$ipv6_limit}
                         </span>
-                        <span class="badge badge-success ml-1">
-                            剩余: <span id="remaining-ipv6-count">0</span> 个
+                        <span class="badge badge-pill badge-success">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            剩余: <span id="remaining-ipv6-count" class="font-weight-bold">0</span>
                         </span>
                     </div>
                 </div>
-                <div class="d-flex">
-                    <button class="btn btn-create btn-sm mr-2" data-toggle="modal" data-target="#addIPv6Modal" id="add-ipv6-btn">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-create btn-sm" data-toggle="modal" data-target="#addIPv6Modal" id="add-ipv6-btn">
                         <i class="fas fa-plus mr-1"></i>绑定IPv6
                     </button>
-                    <button class="btn btn-secondary btn-sm" onclick="refreshIPv6List()">
+                    <button class="btn btn-light btn-sm shadow-sm" onclick="refreshIPv6List()">
                         <i class="fas fa-sync-alt mr-1"></i>刷新
                     </button>
                 </div>
             </div>
         </div>
 
-        <div class="card-body">
+        <div class="card-body p-0">
+            <!-- 空状态 -->
             <div id="ipv6-empty-state" class="text-center py-5" style="display:none">
                 <div class="empty-state-content">
-                    <i class="fas fa-globe fa-4x text-muted mb-4" style="opacity:0.3"></i>
-                    <h4 class="text-muted mb-3">暂无IPv6绑定</h4>
+                    <i class="fas fa-globe-asia fa-5x mb-4"></i>
+                    <h4 class="text-muted mb-3 font-weight-bold">暂无IPv6绑定</h4>
                     <p class="text-muted mb-4">您还没有创建任何IPv6独立地址绑定</p>
-                    <button class="btn btn-create btn-lg" data-toggle="modal" data-target="#addIPv6Modal" style="border-radius: 17px; padding: 6px 20px;">
+                    <button class="btn btn-create btn-lg shadow" data-toggle="modal" data-target="#addIPv6Modal">
                         <i class="fas fa-plus mr-2"></i>创建第一个IPv6绑定
                     </button>
                 </div>
             </div>
 
-            <div id="ipv6-list-container" style="display:block">
+            <!-- 列表容器 -->
+            <div id="ipv6-list-container" class="p-3" style="display:block">
                 <div class="table-responsive">
                     <table class="table modern-table mb-0">
                         <thead>
                             <tr>
-                                <th style="width:50%">
-                                    <i class="fas fa-globe"></i>公网IPv6地址
+                                <th style="width:55%">
+                                    <i class="fas fa-globe-asia"></i>公网IPv6地址
                                 </th>
                                 <th style="width:25%">
                                     <i class="fas fa-comment-alt"></i>描述信息
                                 </th>
-                                <th style="width:15%">
+                                <th style="width:12%">
                                     <i class="fas fa-chart-line"></i>状态
                                 </th>
-                                <th style="width:10%">
+                                <th style="width:8%" class="text-center">
                                     <i class="fas fa-cogs"></i>操作
                                 </th>
                             </tr>
@@ -258,7 +363,10 @@
                         <tbody id="ipv6-tbody">
                             <tr class="loading-row">
                                 <td colspan="4" class="text-center py-4">
-                                    <i class="fas fa-spinner fa-spin mr-2"></i>加载中...
+                                    <div class="spinner-border text-primary" role="status" style="color: var(--primary-color) !important;">
+                                        <span class="sr-only">加载中...</span>
+                                    </div>
+                                    <span class="ml-2 text-muted">正在加载IPv6列表...</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -268,43 +376,53 @@
         </div>
     </div>
 
+    <!-- 添加IPv6模态框 -->
     <div class="modal fade" id="addIPv6Modal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-plus-circle text-primary mr-2"></i>绑定独立IPv6地址
+            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), #9254de); border-radius: 12px 12px 0 0; color: white; border: none;">
+                    <h5 class="modal-title m-0">
+                        <i class="fas fa-plus-circle mr-2"></i>绑定独立IPv6地址
                     </h5>
-                    <button type="button" class="close" data-dismiss="modal" onclick="closeAddModal()">
+                    <button type="button" class="close" data-dismiss="modal" onclick="closeAddModal()" style="color: white; text-shadow: none; opacity: 0.8;">
                         <span>&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                    <div class="alert alert-success mb-3">
-                        <i class="fas fa-info-circle mr-1"></i><strong>功能说明:</strong> 系统将分配一个独立的公网IPv6地址
+                <div class="modal-body p-4">
+                    <div class="alert alert-primary d-flex align-items-center mb-3" style="border-radius: 8px; border: none; background: linear-gradient(135deg, #f9f0ff, #d3adf7);">
+                        <i class="fas fa-info-circle mr-2 fa-lg" style="color: var(--primary-color);"></i>
+                        <div class="flex-grow-1">
+                            <strong class="mr-1">功能说明:</strong> 系统将自动分配一个独立的公网IPv6地址
+                        </div>
                     </div>
                     <form id="addIPv6Form">
                         <div class="form-group">
-                            <label>
-                                <i class="fas fa-server mr-1"></i>容器名称
+                            <label class="font-weight-bold text-secondary">
+                                <i class="fas fa-server mr-1" style="color: var(--primary-color);"></i>容器名称
                             </label>
-                            <input type="text" class="form-control" value="{$container_name}" disabled>
+                            <input type="text" class="form-control" value="{$container_name}" disabled 
+                                   style="background: #fafafa; border-radius: 6px;">
                         </div>
                         <div class="form-group">
-                            <label for="ipv6Description">
-                                <i class="fas fa-comment mr-1"></i>描述信息 (可选)
+                            <label for="ipv6Description" class="font-weight-bold text-secondary">
+                                <i class="fas fa-comment mr-1" style="color: var(--primary-color);"></i>描述信息 <span class="text-muted font-weight-normal">(可选)</span>
                             </label>
                             <input name="description" type="text" class="form-control" id="ipv6Description" 
-                                   placeholder="请输入绑定描述">
-                            <small class="form-text text-muted">为该IPv6绑定添加描述信息，方便管理</small>
+                                   placeholder="请输入绑定描述，如：IPv6测试服务"
+                                   style="border-radius: 6px; border: 2px solid #e8e8e8; padding: 10px 14px;">
+                            <small class="form-text text-muted mt-1">
+                                <i class="fas fa-lightbulb mr-1"></i>为该IPv6绑定添加描述信息，方便管理
+                            </small>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm mr-2" data-dismiss="modal" onclick="closeAddModal()">
+                <div class="modal-footer" style="border-top: 1px solid #f0f0f0;">
+                    <button type="button" class="btn btn-light btn-sm mr-2" data-dismiss="modal" onclick="closeAddModal()" 
+                            style="border-radius: 6px; padding: 8px 20px;">
                         <i class="fas fa-times mr-1"></i>取消
                     </button>
-                    <button type="button" class="btn btn-primary btn-sm confirm-btn-ipv6">
+                    <button type="button" class="btn confirm-btn-ipv6 btn-sm" 
+                            style="background: linear-gradient(135deg, var(--primary-color), #9254de); border: none; border-radius: 6px; padding: 8px 20px; color: white; box-shadow: 0 2px 4px rgba(114, 46, 209, 0.2);">
                         <i class="fas fa-check mr-1"></i>确认绑定
                     </button>
                 </div>
@@ -312,26 +430,69 @@
         </div>
     </div>
 
-    <div class="card shadow mt-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
+    <!-- 使用说明卡片 -->
+    <div class="card ipv6-card shadow-sm mt-4">
+        <div class="card-header py-3" style="background: linear-gradient(135deg, #fafafa, #f5f5f5); border-bottom: 2px solid var(--primary-color); border-radius: 12px 12px 0 0;">
+            <h6 class="m-0 font-weight-bold" style="color: var(--primary-color);">
                 <i class="fas fa-question-circle mr-2"></i>使用说明
             </h6>
         </div>
-        <div class="card-body">
+        <div class="card-body p-4">
             <div class="row">
                 <div class="col-md-6">
                     <ul class="list-unstyled">
-                        <li class="mb-2"><i class="fas fa-globe text-primary mr-2"></i><strong>公网IPv6:</strong> 系统分配的独立公网地址</li>
-                        <li class="mb-2"><i class="fas fa-server text-success mr-2"></i><strong>容器IPv6:</strong> 容器内部的IPv6地址</li>
-                        <li class="mb-2"><i class="fas fa-link text-info mr-2"></i><strong>自动转发:</strong> 所有流量自动转发到容器</li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <span class="badge mr-2 mt-1" style="width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary-color), #9254de);">1</span>
+                            <div>
+                                <strong class="d-block" style="color: var(--primary-color);"><i class="fas fa-globe-asia mr-1"></i>公网IPv6</strong>
+                                <small class="text-muted">系统自动分配的独立IPv6地址，全球可达</small>
+                            </div>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <span class="badge badge-success mr-2 mt-1" style="width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">2</span>
+                            <div>
+                                <strong class="d-block text-success"><i class="fas fa-server mr-1"></i>容器IPv6</strong>
+                                <small class="text-muted">容器内部的IPv6地址，用于内部通信</small>
+                            </div>
+                        </li>
+                        <li class="mb-0 d-flex align-items-start">
+                            <span class="badge badge-info mr-2 mt-1" style="width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">3</span>
+                            <div>
+                                <strong class="d-block text-info"><i class="fas fa-link mr-1"></i>自动路由</strong>
+                                <small class="text-muted">所有流量自动路由到对应容器</small>
+                            </div>
+                        </li>
                     </ul>
                 </div>
                 <div class="col-md-6">
                     <ul class="list-unstyled">
-                        <li class="mb-2"><i class="fas fa-copy text-warning mr-2"></i>点击IPv6地址可复制到剪贴板</li>
-                        <li class="mb-2"><i class="fas fa-trash text-danger mr-2"></i>删除绑定将立即停止转发</li>
-                        <li class="mb-2"><i class="fas fa-shield-alt text-secondary mr-2"></i>容器IPv6地址绑定有数量限制</li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <span class="badge badge-warning mr-2 mt-1" style="width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-copy" style="font-size: 0.7rem;"></i>
+                            </span>
+                            <div>
+                                <strong class="d-block text-warning"><i class="fas fa-copy mr-1"></i>快速复制</strong>
+                                <small class="text-muted">点击IPv6地址可复制到剪贴板</small>
+                            </div>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <span class="badge badge-danger mr-2 mt-1" style="width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-trash" style="font-size: 0.7rem;"></i>
+                            </span>
+                            <div>
+                                <strong class="d-block text-danger"><i class="fas fa-trash mr-1"></i>删除绑定</strong>
+                                <small class="text-muted">删除绑定将立即停止路由</small>
+                            </div>
+                        </li>
+                        <li class="mb-0 d-flex align-items-start">
+                            <span class="badge badge-secondary mr-2 mt-1" style="width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-shield-alt" style="font-size: 0.7rem;"></i>
+                            </span>
+                            <div>
+                                <strong class="d-block text-secondary"><i class="fas fa-shield-alt mr-1"></i>数量限制</strong>
+                                <small class="text-muted">容器IPv6地址绑定有数量限制</small>
+                            </div>
+                        </li>
                     </ul>
                 </div>
             </div>

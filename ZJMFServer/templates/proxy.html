@@ -1,53 +1,83 @@
 <style>
-/* 简洁专业设计风格 */
+/* 现代化设计风格 - 统一配色和动画 */
+:root {
+    --primary-color: #fa541c;
+    --success-color: #52c41a;
+    --warning-color: #faad14;
+    --danger-color: #ff4d4f;
+    --info-color: #13c2c2;
+    --text-primary: #262626;
+    --text-secondary: #8c8c8c;
+    --bg-color: #f5f5f5;
+    --card-bg: #ffffff;
+    --border-color: #e8e8e8;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 .proxy-card {
-    border: 1px solid #e1e5e9;
-    border-radius: 8px;
-    background: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--card-bg);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.proxy-card:hover {
+    box-shadow: var(--shadow-md);
 }
 
 .proxy-card-header {
-    background: #4a5568;
-    border-radius: 8px 8px 0 0;
+    background: linear-gradient(135deg, var(--primary-color), #ff7a45);
+    border-radius: 12px 12px 0 0;
     color: white;
     border: none;
+    padding: 18px 20px;
+}
+
+.proxy-card-header h6 {
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .modern-table {
-    border: 1px solid #e1e5e9;
-    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
     overflow: hidden;
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: var(--card-bg);
+    box-shadow: var(--shadow-sm);
 }
 
 .modern-table thead {
-    background: #f8f9fa;
-    color: #495057;
+    background: linear-gradient(135deg, #fafafa, #f5f5f5);
+    color: var(--text-primary);
 }
 
 .modern-table thead th {
     border: none;
-    padding: 10px 12px;
+    padding: 16px 15px;
     font-weight: 600;
-    font-size: 0.8rem;
-    border-bottom: 2px solid #e9ecef;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--primary-color);
 }
 
 .modern-table thead th i {
-    margin-right: 6px;
-    color: #6c757d;
+    margin-right: 8px;
+    color: var(--primary-color);
 }
 
 .modern-table tbody tr {
     border: none;
-    transition: background-color 0.2s ease;
-    border-bottom: 1px solid #e9ecef;
+    transition: all 0.25s ease;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .modern-table tbody tr:hover {
-    background-color: #f8f9fa;
+    background: linear-gradient(135deg, #fff7e6, #ffe7ba);
+    transform: translateX(4px);
 }
 
 .modern-table tbody tr:last-child {
@@ -56,203 +86,363 @@
 
 .modern-table tbody td {
     border: none;
-    padding: 10px 12px;
+    padding: 14px 15px;
     vertical-align: middle;
-    font-size: 0.85rem;
+    font-size: 0.875rem;
+    color: var(--text-primary);
 }
 
-.domain-text {
-    background: #e3f2fd;
-    color: #1976d2;
-    border: 1px solid #bbdefb;
-    padding: 5px 10px;
-    border-radius: 4px;
+.proxy-domain {
+    background: linear-gradient(135deg, #fff7e6, #ffd8bf);
+    color: var(--primary-color);
+    border: 1px solid #ffbb96;
+    padding: 8px 14px;
+    border-radius: 6px;
     font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
     font-weight: 600;
     cursor: pointer;
-    font-size: 0.8rem;
-    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-block;
+    min-width: 140px;
     text-align: center;
+    box-shadow: 0 2px 4px rgba(250, 84, 28, 0.1);
 }
 
-.domain-text:hover {
-    background: #bbdefb;
-    color: #0d47a1;
+.proxy-domain:hover {
+    background: linear-gradient(135deg, #ffd8bf, #ffbb96);
+    color: #d4380d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(250, 84, 28, 0.2);
+}
+
+.proxy-domain:active {
+    transform: translateY(0);
+}
+
+.protocol-badge {
+    background: linear-gradient(135deg, #e6f7ff, #bae7ff);
+    color: #1890ff;
+    border: 1px solid #91d5ff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(24, 144, 255, 0.1);
+}
+
+.protocol-badge:hover {
+    background: linear-gradient(135deg, #bae7ff, #91d5ff);
+    transform: translateY(-2px);
+}
+
+.protocol-badge.ssl {
+    background: linear-gradient(135deg, #f6ffed, #d9f7be);
+    color: var(--success-color);
+    border: 1px solid #b7eb8f;
+    box-shadow: 0 2px 4px rgba(82, 196, 26, 0.1);
+}
+
+.protocol-badge.ssl:hover {
+    background: linear-gradient(135deg, #d9f7be, #b7eb8f);
 }
 
 .status-badge {
-    padding: 4px 12px;
-    border-radius: 4px;
-    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 600;
     font-size: 0.8rem;
-    display: inline-block;
-    min-width: 60px;
-    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    min-width: 70px;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.status-badge i {
+    margin-right: 4px;
 }
 
 .status-active {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+    background: linear-gradient(135deg, #f6ffed, #d9f7be);
+    color: var(--success-color);
+    border: 1px solid #b7eb8f;
+    box-shadow: 0 2px 4px rgba(82, 196, 26, 0.1);
+}
+
+.status-inactive {
+    background: linear-gradient(135deg, #fffbe6, #fff1b8);
+    color: var(--warning-color);
+    border: 1px solid #ffe58f;
+    box-shadow: 0 2px 4px rgba(250, 173, 20, 0.1);
 }
 
 .action-btn {
-    background: #ffffff;
-    color: #dc3545;
-    border: 1px solid #dc3545;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-weight: 500;
-    font-size: 0.75rem;
-    transition: all 0.2s ease;
+    background: var(--card-bg);
+    border: 1px solid #d9d9d9;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 4px;
 }
 
 .action-btn:hover {
-    background: #dc3545;
-    color: #ffffff;
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(250, 84, 28, 0.2);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+}
+
+.action-btn.danger:hover {
+    background: var(--danger-color);
+    border-color: var(--danger-color);
+    box-shadow: 0 4px 8px rgba(255, 77, 79, 0.2);
 }
 
 .btn-create {
-    background: #007bff;
-    border: 1px solid #007bff;
+    background: linear-gradient(135deg, var(--primary-color), #ff7a45);
+    border: 1px solid var(--primary-color);
     color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-weight: 500;
-    font-size: 0.75rem;
-    transition: all 0.2s ease;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 4px rgba(250, 84, 28, 0.2);
 }
 
 .btn-create:hover {
-    background: #0056b3;
-    border-color: #0056b3;
+    background: linear-gradient(135deg, #d4380d, var(--primary-color));
+    border-color: #d4380d;
     color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(250, 84, 28, 0.3);
+}
+
+.btn-create:active {
+    transform: translateY(0);
 }
 
 .description-text {
-    background: #f8f9fa;
-    color: #6c757d;
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-style: italic;
+    background: linear-gradient(135deg, #fafafa, #f5f5f5);
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    border-radius: 6px;
     font-size: 0.85rem;
-    border-left: 3px solid #007bff;
+    border-left: 3px solid var(--primary-color);
     max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.description-text:hover {
+    background: #fff7e6;
+    border-left-color: #ff7a45;
+    color: var(--text-primary);
 }
 
 .badge-modern {
-    background: #6c757d;
+    background: linear-gradient(135deg, #8c8c8c, #595959);
     color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
     font-size: 0.8rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .badge-success-modern {
-    background: #28a745;
+    background: linear-gradient(135deg, var(--success-color), #73d13d);
     color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
     font-size: 0.8rem;
+    box-shadow: 0 2px 4px rgba(82, 196, 26, 0.2);
 }
 
+/* 模态框优化 */
+.modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-color), #ff7a45);
+    border-radius: 12px 12px 0 0;
+    color: white;
+    border: none;
+}
+
+.modal-header .close {
+    color: white;
+    text-shadow: none;
+    opacity: 0.8;
+}
+
+/* 表单优化 */
+.form-control {
+    border-radius: 6px;
+    border: 2px solid #e8e8e8;
+    padding: 10px 14px;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(250, 84, 28, 0.1);
+}
+
+/* 空状态样式优化 */
+.empty-state-content {
+    padding: 40px 20px;
+}
+
+.empty-state-content i {
+    color: #bfbfbf;
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* 响应式设计 */
 @media (max-width: 768px) {
     .modern-table thead th,
     .modern-table tbody td {
-        padding: 8px 6px;
+        padding: 10px 8px;
         font-size: 0.75rem;
     }
     
-    .domain-text {
-        font-size: 0.7rem;
-        padding: 4px 8px;
+    .proxy-domain {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+        min-width: 100px;
     }
     
-    .action-btn {
-        font-size: 0.7rem;
-        padding: 4px 6px;
+    .action-btn, .btn-create {
+        font-size: 0.75rem;
+        padding: 6px 12px;
     }
     
     .status-badge {
-        font-size: 0.65rem;
-        padding: 2px 6px;
+        font-size: 0.7rem;
+        padding: 4px 10px;
     }
-    
-    .description-text {
-        max-width: 100px;
-        font-size: 0.75rem;
-    }
+}
+
+/* 加载动画优化 */
+.loading-row {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 切换开关优化 */
+.form-check-input:checked {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
 }
 </style>
 
 <div class="container-fluid" id="proxyManager">
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <div class="d-flex justify-content-between align-items-center">
+    <!-- 主卡片 -->
+    <div class="card proxy-card shadow-lg mb-4">
+        <div class="card-header proxy-card-header">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
                 <div>
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-globe mr-2"></i>Nginx反向代理管理
+                    <h6 class="m-0">
+                        <i class="fas fa-exchange-alt mr-2"></i>Nginx反向代理管理
                     </h6>
-                    <small class="text-muted">通过域名访问容器内的Web服务</small>
-                    <div class="mt-2">
-                        <span class="badge badge-secondary ml-2">
-                            已绑定: <span id="current-proxy-count">0</span>/{$proxy_limit} 个
+                    <small class="text-white-50 mt-1 d-block">管理容器的Nginx反向代理配置，支持SSL/HTTPS</small>
+                    <div class="mt-2 d-flex flex-wrap gap-2">
+                        <span class="badge badge-pill" style="background: rgba(255,255,255,0.2); color: white;">
+                            <i class="fas fa-server mr-1"></i>
+                            已配置: <span id="current-proxy-count" class="font-weight-bold">0</span>
                         </span>
-                        <span class="badge badge-success ml-1">
-                            剩余: <span id="remaining-proxy-count">0</span> 个
+                        <span class="badge badge-pill badge-success">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            运行中: <span id="running-proxy-count" class="font-weight-bold">0</span>
                         </span>
                     </div>
                 </div>
-                <div class="d-flex">
-                    <button class="btn btn-create btn-sm mr-2" data-toggle="modal" data-target="#addProxyModal" id="add-proxy-btn">
-                        <i class="fas fa-plus mr-1"></i>添加域名
+                <div class="d-flex gap-2">
+                    <button class="btn btn-create btn-sm" data-toggle="modal" data-target="#addProxyModal" id="add-proxy-btn">
+                        <i class="fas fa-plus mr-1"></i>添加代理
                     </button>
-                    <button class="btn btn-secondary btn-sm" onclick="refreshProxyList()">
+                    <button class="btn btn-light btn-sm shadow-sm" onclick="refreshProxyList()">
                         <i class="fas fa-sync-alt mr-1"></i>刷新
                     </button>
                 </div>
             </div>
         </div>
 
-        <div class="card-body">
+        <div class="card-body p-0">
+            <!-- 空状态 -->
             <div id="proxy-empty-state" class="text-center py-5" style="display:none">
                 <div class="empty-state-content">
-                    <i class="fas fa-globe fa-4x text-muted mb-4" style="opacity:0.3"></i>
-                    <h4 class="text-muted mb-3">暂无反向代理</h4>
-                    <p class="text-muted mb-4">您还没有创建任何域名反向代理</p>
-                    <button class="btn btn-create btn-lg" data-toggle="modal" data-target="#addProxyModal" style="border-radius: 17px; padding: 6px 20px;">
-                        <i class="fas fa-plus mr-2"></i>创建第一个反向代理
+                    <i class="fas fa-exchange-alt fa-5x mb-4"></i>
+                    <h4 class="text-muted mb-3 font-weight-bold">暂无反向代理配置</h4>
+                    <p class="text-muted mb-4">您还没有创建任何反向代理规则</p>
+                    <button class="btn btn-create btn-lg shadow" data-toggle="modal" data-target="#addProxyModal">
+                        <i class="fas fa-plus mr-2"></i>创建第一个代理规则
                     </button>
                 </div>
             </div>
 
-            <div id="proxy-list-container" style="display:block">
+            <!-- 列表容器 -->
+            <div id="proxy-list-container" class="p-3" style="display:block">
                 <div class="table-responsive">
                     <table class="table modern-table mb-0">
                         <thead>
                             <tr>
-                                <th style="width:25%">
+                                <th style="width:30%">
                                     <i class="fas fa-globe"></i>域名
                                 </th>
-                                <th style="width:12%">
-                                    <i class="fas fa-exchange-alt"></i>协议
+                                <th style="width:20%">
+                                    <i class="fas fa-server"></i>目标地址
                                 </th>
-                                <th style="width:12%">
-                                    <i class="fas fa-network-wired"></i>容器端口
+                                <th style="width:15%">
+                                    <i class="fas fa-shield-alt"></i>协议
                                 </th>
-                                <th style="width:25%">
-                                    <i class="fas fa-comment-alt"></i>描述信息
+                                <th style="width:15%">
+                                    <i class="fas fa-info-circle"></i>描述
                                 </th>
-                                <th style="width:13%">
+                                <th style="width:10%">
                                     <i class="fas fa-chart-line"></i>状态
                                 </th>
-                                <th style="width:13%">
+                                <th style="width:10%" class="text-center">
                                     <i class="fas fa-cogs"></i>操作
                                 </th>
                             </tr>
@@ -260,7 +450,10 @@
                         <tbody id="proxy-tbody">
                             <tr class="loading-row">
                                 <td colspan="6" class="text-center py-4">
-                                    <i class="fas fa-spinner fa-spin mr-2"></i>加载中...
+                                    <div class="spinner-border" role="status" style="color: var(--primary-color);">
+                                        <span class="sr-only">加载中...</span>
+                                    </div>
+                                    <span class="ml-2 text-muted">正在加载代理列表...</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -270,126 +463,295 @@
         </div>
     </div>
 
+    <!-- 添加代理模态框 -->
     <div class="modal fade" id="addProxyModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-plus-circle text-primary mr-2"></i>添加反向代理
+                    <h5 class="modal-title m-0">
+                        <i class="fas fa-plus-circle mr-2"></i>添加反向代理规则
                     </h5>
                     <button type="button" class="close" data-dismiss="modal" onclick="closeAddModal()">
                         <span>&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                    <div class="alert alert-success mb-3">
-                        <i class="fas fa-info-circle mr-1"></i><strong>功能说明:</strong> 通过域名访问容器内的Web服务，请先将域名DNS解析到服务器IP
+                <div class="modal-body p-4">
+                    <div class="alert alert-primary d-flex align-items-center mb-3" style="border-radius: 8px; border: none; background: linear-gradient(135deg, #fff7e6, #ffd8bf);">
+                        <i class="fas fa-info-circle mr-2 fa-lg" style="color: var(--primary-color);"></i>
+                        <div class="flex-grow-1">
+                            <strong class="mr-1">功能说明:</strong> 配置Nginx反向代理，支持HTTP/HTTPS协议
+                        </div>
                     </div>
                     <form id="addProxyForm">
-                        <div class="form-group">
-                            <label>
-                                <i class="fas fa-server mr-1"></i>容器名称
-                            </label>
-                            <input type="text" class="form-control" value="{$container_name}" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="proxyDomain">
-                                <i class="fas fa-globe mr-1"></i>域名 <span class="text-danger">*</span>
-                            </label>
-                            <input name="domain" type="text" class="form-control" id="proxyDomain" 
-                                   placeholder="例如: example.com" required>
-                            <small class="form-text text-muted">请输入已解析到服务器IP的域名</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="containerPort">
-                                <i class="fas fa-network-wired mr-1"></i>容器端口
-                            </label>
-                            <input name="container_port" type="number" class="form-control" id="containerPort" 
-                                   value="80" min="1" max="65535">
-                            <small class="form-text text-muted">容器内Web服务监听的端口，默认80</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="proxyDescription">
-                                <i class="fas fa-comment mr-1"></i>描述信息 (可选)
-                            </label>
-                            <input name="description" type="text" class="form-control" id="proxyDescription" 
-                                   placeholder="请输入描述">
-                            <small class="form-text text-muted">为该反向代理添加描述信息，方便管理</small>
-                        </div>
-                        <hr>
-                        <div class="form-group">
-                            <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="sslEnabled" name="ssl_enabled">
-                                <label class="custom-control-label" for="sslEnabled">
-                                    <i class="fas fa-lock text-success mr-1"></i><strong>启用 HTTPS (SSL/TLS)</strong>
-                                </label>
-                            </div>
-                            <small class="form-text text-muted">启用后HTTP请求将自动重定向到HTTPS</small>
-                        </div>
-                        <div id="sslOptions" style="display:none;">
-                            <div class="form-group">
-                                <label>
-                                    <i class="fas fa-certificate mr-1"></i>SSL 证书类型
-                                </label>
-                                <select name="ssl_type" class="form-control" id="sslType">
-                                    <option value="self-signed">自动生成自签名证书（10年有效期）</option>
-                                    <option value="custom">手动填写证书内容</option>
-                                </select>
-                                <small class="form-text text-muted">自签名证书：浏览器会提示不安全，但仍可加密传输</small>
-                            </div>
-                            <div id="customCertFields" style="display:none;">
+                        <div class="row">
+                            <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="sslCert">
-                                        <i class="fas fa-file-alt mr-1"></i>SSL 证书内容 <span class="text-danger">*</span>
+                                    <label for="proxyDomain" class="font-weight-bold text-secondary">
+                                        <i class="fas fa-globe mr-1" style="color: var(--primary-color);"></i>域名 <span class="text-danger">*</span>
                                     </label>
-                                    <textarea name="ssl_cert" class="form-control" id="sslCert" rows="6" 
-                                              placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"></textarea>
-                                    <small class="form-text text-muted">粘贴完整的证书内容（PEM格式）</small>
+                                    <input type="text" class="form-control" id="proxyDomain" name="domain" 
+                                           placeholder="例如: example.com"
+                                           required
+                                           style="border-radius: 6px; border: 2px solid #e8e8e8; padding: 10px 14px;">
+                                    <small class="form-text text-muted mt-1">
+                                        <i class="fas fa-lightbulb mr-1"></i>输入要绑定的域名
+                                    </small>
                                 </div>
+                            </div>
+                            <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="sslKey">
-                                        <i class="fas fa-key mr-1"></i>SSL 私钥内容 <span class="text-danger">*</span>
+                                    <label for="proxyTarget" class="font-weight-bold text-secondary">
+                                        <i class="fas fa-server mr-1" style="color: var(--primary-color);"></i>目标地址 <span class="text-danger">*</span>
                                     </label>
-                                    <textarea name="ssl_key" class="form-control" id="sslKey" rows="6" 
-                                              placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----"></textarea>
-                                    <small class="form-text text-muted">粘贴完整的私钥内容（PEM格式）</small>
+                                    <input type="text" class="form-control" id="proxyTarget" name="target" 
+                                           placeholder="例如: 127.0.0.1:8080"
+                                           required
+                                           style="border-radius: 6px; border: 2px solid #e8e8e8; padding: 10px 14px;">
+                                    <small class="form-text text-muted mt-1">
+                                        <i class="fas fa-lightbulb mr-1"></i>后端服务地址
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="proxyDescription" class="font-weight-bold text-secondary">
+                                        <i class="fas fa-comment mr-1" style="color: var(--primary-color);"></i>描述信息 <span class="text-muted font-weight-normal">(可选)</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="proxyDescription" name="description" 
+                                           placeholder="例如: Web服务代理"
+                                           style="border-radius: 6px; border: 2px solid #e8e8e8; padding: 10px 14px;">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-bold text-secondary">
+                                        <i class="fas fa-shield-alt mr-1" style="color: var(--primary-color);"></i>启用HTTPS
+                                    </label>
+                                    <div class="d-flex align-items-center mt-2">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="proxySSL" name="enable_ssl" onchange="toggleSSLConfig()">
+                                            <label class="custom-control-label" for="proxySSL">开启SSL证书</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SSL配置区域 -->
+                        <div id="sslConfigArea" style="display: none;" class="mb-3 p-3" style="background: #f6ffed; border-radius: 8px; border: 1px solid #b7eb8f;">
+                            <h6 class="mb-3 font-weight-bold text-success">
+                                <i class="fas fa-certificate mr-1"></i>SSL证书配置
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="sslCert" class="font-weight-bold text-secondary">
+                                            <i class="fas fa-file-alt mr-1"></i>证书文件路径
+                                        </label>
+                                        <input type="text" class="form-control" id="sslCert" name="ssl_cert_path" 
+                                               placeholder="/path/to/cert.pem"
+                                               style="border-radius: 6px; border: 2px solid #e8e8e8; padding: 10px 14px;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="sslKey" class="font-weight-bold text-secondary">
+                                            <i class="fas fa-key mr-1"></i>私钥文件路径
+                                        </label>
+                                        <input type="text" class="form-control" id="sslKey" name="ssl_key_path" 
+                                               placeholder="/path/to/key.pem"
+                                               style="border-radius: 6px; border: 2px solid #e8e8e8; padding: 10px 14px;">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm mr-2" data-dismiss="modal" onclick="closeAddModal()">
+                <div class="modal-footer" style="border-top: 1px solid #f0f0f0;">
+                    <button type="button" class="btn btn-light btn-sm mr-2" data-dismiss="modal" onclick="closeAddModal()" 
+                            style="border-radius: 6px; padding: 8px 20px;">
                         <i class="fas fa-times mr-1"></i>取消
                     </button>
-                    <button type="button" class="btn btn-primary btn-sm confirm-btn-proxy">
-                        <i class="fas fa-check mr-1"></i>确认添加
+                    <button type="button" class="btn confirm-btn-proxy btn-sm" 
+                            style="background: linear-gradient(135deg, var(--primary-color), #ff7a45); border: none; border-radius: 6px; padding: 8px 20px; color: white; box-shadow: 0 2px 4px rgba(250, 84, 28, 0.2);">
+                        <i class="fas fa-check mr-1"></i>添加代理
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow mt-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
+    <!-- 编辑代理模态框 -->
+    <div class="modal fade" id="editProxyModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title m-0">
+                        <i class="fas fa-edit mr-2"></i>编辑反向代理规则
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" onclick="closeEditModal()">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editProxyForm">
+                        <input type="hidden" id="editProxyId" name="proxy_id">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editProxyDomain" class="font-weight-bold text-secondary">
+                                        <i class="fas fa-globe mr-1" style="color: var(--primary-color);"></i>域名 <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="editProxyDomain" name="domain" 
+                                           required
+                                           style="border-radius: 6px; border: 2px solid #e8e8e8; padding: 10px 14px;">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editProxyTarget" class="font-weight-bold text-secondary">
+                                        <i class="fas fa-server mr-1" style="color: var(--primary-color);"></i>目标地址 <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="editProxyTarget" name="target" 
+                                           required
+                                           style="border-radius: 6px; border: 2px solid #e8e8e8; padding: 10px 14px;">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editProxyDescription" class="font-weight-bold text-secondary">
+                                        <i class="fas fa-comment mr-1" style="color: var(--primary-color);"></i>描述信息
+                                    </label>
+                                    <input type="text" class="form-control" id="editProxyDescription" name="description" 
+                                           style="border-radius: 6px; border: 2px solid #e8e8e8; padding: 10px 14px;">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-bold text-secondary">
+                                        <i class="fas fa-shield-alt mr-1" style="color: var(--primary-color);"></i>启用HTTPS
+                                    </label>
+                                    <div class="d-flex align-items-center mt-2">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="editProxySSL" name="enable_ssl" onchange="toggleEditSSLConfig()">
+                                            <label class="custom-control-label" for="editProxySSL">开启SSL证书</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SSL配置区域 -->
+                        <div id="editSslConfigArea" style="display: none;" class="mb-3 p-3" style="background: #f6ffed; border-radius: 8px; border: 1px solid #b7eb8f;">
+                            <h6 class="mb-3 font-weight-bold text-success">
+                                <i class="fas fa-certificate mr-1"></i>SSL证书配置
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editSslCert" class="font-weight-bold text-secondary">
+                                            <i class="fas fa-file-alt mr-1"></i>证书文件路径
+                                        </label>
+                                        <input type="text" class="form-control" id="editSslCert" name="ssl_cert_path" 
+                                               style="border-radius: 6px; border: 2px solid #e8e8e8; padding: 10px 14px;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editSslKey" class="font-weight-bold text-secondary">
+                                            <i class="fas fa-key mr-1"></i>私钥文件路径
+                                        </label>
+                                        <input type="text" class="form-control" id="editSslKey" name="ssl_key_path" 
+                                               style="border-radius: 6px; border: 2px solid #e8e8e8; padding: 10px 14px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #f0f0f0;">
+                    <button type="button" class="btn btn-light btn-sm mr-2" data-dismiss="modal" onclick="closeEditModal()" 
+                            style="border-radius: 6px; padding: 8px 20px;">
+                        <i class="fas fa-times mr-1"></i>取消
+                    </button>
+                    <button type="button" class="btn confirm-edit-proxy btn-sm" 
+                            style="background: linear-gradient(135deg, var(--primary-color), #ff7a45); border: none; border-radius: 6px; padding: 8px 20px; color: white; box-shadow: 0 2px 4px rgba(250, 84, 28, 0.2);">
+                        <i class="fas fa-check mr-1"></i>保存更改
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 使用说明卡片 -->
+    <div class="card proxy-card shadow-sm mt-4">
+        <div class="card-header py-3" style="background: linear-gradient(135deg, #fafafa, #f5f5f5); border-bottom: 2px solid var(--primary-color); border-radius: 12px 12px 0 0;">
+            <h6 class="m-0 font-weight-bold" style="color: var(--primary-color);">
                 <i class="fas fa-question-circle mr-2"></i>使用说明
             </h6>
         </div>
-        <div class="card-body">
+        <div class="card-body p-4">
             <div class="row">
                 <div class="col-md-6">
                     <ul class="list-unstyled">
-                        <li class="mb-2"><i class="fas fa-globe text-primary mr-2"></i><strong>域名解析:</strong> 先将域名A记录指向服务器IP</li>
-                        <li class="mb-2"><i class="fas fa-server text-success mr-2"></i><strong>容器端口:</strong> 容器内Web服务监听的端口</li>
-                        <li class="mb-2"><i class="fas fa-link text-info mr-2"></i><strong>自动配置:</strong> 系统自动生成Nginx配置</li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <span class="badge mr-2 mt-1" style="width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary-color), #ff7a45);">1</span>
+                            <div>
+                                <strong class="d-block" style="color: var(--primary-color);"><i class="fas fa-globe mr-1"></i>域名绑定</strong>
+                                <small class="text-muted">将域名绑定到容器的反向代理服务</small>
+                            </div>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <span class="badge badge-success mr-2 mt-1" style="width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">2</span>
+                            <div>
+                                <strong class="d-block text-success"><i class="fas fa-server mr-1"></i>目标地址</strong>
+                                <small class="text-muted">设置后端服务的监听地址和端口</small>
+                            </div>
+                        </li>
+                        <li class="mb-0 d-flex align-items-start">
+                            <span class="badge badge-info mr-2 mt-1" style="width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">3</span>
+                            <div>
+                                <strong class="d-block text-info"><i class="fas fa-shield-alt mr-1"></i>HTTPS支持</strong>
+                                <small class="text-muted">支持SSL证书配置，启用HTTPS</small>
+                            </div>
+                        </li>
                     </ul>
                 </div>
                 <div class="col-md-6">
                     <ul class="list-unstyled">
-                        <li class="mb-2"><i class="fas fa-copy text-warning mr-2"></i>点击域名可复制到剪贴板</li>
-                        <li class="mb-2"><i class="fas fa-trash text-danger mr-2"></i>删除后域名将无法访问</li>
-                        <li class="mb-2"><i class="fas fa-shield-alt text-secondary mr-2"></i>容器域名绑定有数量限制</li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <span class="badge badge-warning mr-2 mt-1" style="width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-play-circle" style="font-size: 0.7rem;"></i>
+                            </span>
+                            <div>
+                                <strong class="d-block text-warning"><i class="fas fa-play-circle mr-1"></i>启用/禁用</strong>
+                                <small class="text-muted">可以随时启用或禁用代理规则</small>
+                            </div>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <span class="badge badge-danger mr-2 mt-1" style="width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-trash" style="font-size: 0.7rem;"></i>
+                            </span>
+                            <div>
+                                <strong class="d-block text-danger"><i class="fas fa-trash mr-1"></i>删除代理</strong>
+                                <small class="text-muted">删除代理将立即停止转发</small>
+                            </div>
+                        </li>
+                        <li class="mb-0 d-flex align-items-start">
+                            <span class="badge badge-secondary mr-2 mt-1" style="width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-sync-alt" style="font-size: 0.7rem;"></i>
+                            </span>
+                            <div>
+                                <strong class="d-block text-secondary"><i class="fas fa-sync-alt mr-1"></i>重载配置</strong>
+                                <small class="text-muted">修改后自动重载Nginx配置</small>
+                            </div>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -577,6 +939,14 @@ function closeAddModal() {
         if (formEl) formEl.reset();
         $('#sslOptions').hide();
         $('#customCertFields').hide();
+    }, 150);
+}
+
+function closeEditModal() {
+    setTimeout(function() {
+        const formEl = document.getElementById('editProxyForm');
+        if (formEl) formEl.reset();
+        $('#editSslConfigArea').hide();
     }, 150);
 }
 
@@ -777,6 +1147,116 @@ $('.confirm-btn-proxy').on('click', function () {
     }
 });
 
+// 编辑反向代理
+$('.confirm-edit-proxy').on('click', function () {
+    if (!currentContainerName) {
+        Swal.fire({
+            type: 'error',
+            title: '容器信息未加载',
+            text: '请稍后再试'
+        });
+        return;
+    }
+
+    const domain = $('#editProxyDomain').val().trim();
+    if (!domain) {
+        Swal.fire({
+            type: 'warning',
+            title: '请输入域名',
+            text: '域名不能为空'
+        });
+        return;
+    }
+
+    if (!$(this).data('submit')) {
+        var current_button = $(this);
+        current_button.data('orig-html', current_button.html());
+        current_button.html('<i class="fas fa-circle-notch fa-spin"></i>');
+        current_button.data('submit', 'submit');
+
+        // 构建提交数据
+        var formData = $('#editProxyForm').serialize() + '&func=proxyedit';
+        
+        // 处理SSL复选框
+        if ($('#editProxySSL').is(':checked')) {
+            formData += '&ssl_enabled=true';
+        } else {
+            formData += '&ssl_enabled=false';
+        }
+
+        ajax({
+            type: 'post',
+            url: MODULE_API_URL,
+            data: formData,
+            success: function (data) {
+                current_button.html(current_button.data('orig-html') || '确认添加');
+                current_button.data('submit', '');
+
+                if (!data || typeof data !== 'object') {
+                    Swal.fire({
+                        type: 'error',
+                        title: '添加失败',
+                        text: '服务器响应格式异常'
+                    });
+                    return;
+                }
+
+                const isSuccess = data.status === 200 || data.status === '200' ||
+                                data.code === 200 || data.code === '200' ||
+                                data.status === 'success';
+
+                if (isSuccess) {
+                    Swal.fire({
+                        type: 'success',
+                        title: '添加成功',
+                        text: data.msg || data.message || '反向代理添加成功',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+
+                    $('#editProxyModal').modal('hide');
+                    closeEditModal();
+                    setTimeout(function() {
+                        fetchProxyList();
+                    }, 100);
+                } else {
+                    Swal.fire({
+                        type: 'error',
+                        title: '添加失败',
+                        text: data.msg || data.message || '操作失败'
+                    });
+                }
+            },
+            error: function (xhrStatus, errorData) {
+                current_button.html(current_button.data('orig-html') || '确认添加');
+                current_button.data('submit', '');
+
+                Swal.fire({
+                    type: 'error',
+                    title: '添加失败',
+                    text: '网络或服务器错误'
+                });
+            }
+        });
+    }
+});
+
+function toggleSSLConfig() {
+    if ($('#proxySSL').is(':checked')) {
+        $('#sslConfigArea').slideDown(200);
+    } else {
+        $('#sslConfigArea').slideUp(200);
+    }
+}
+
+function toggleEditSSLConfig() {
+    if ($('#editProxySSL').is(':checked')) {
+        $('#editSslConfigArea').slideDown(200);
+    } else {
+        $('#editSslConfigArea').slideUp(200);
+    }
+}
+
 function ajax(options) {
     var xhr = new XMLHttpRequest() || new ActiveXObject("Microsoft,XMLHTTP");
     var str = "";
@@ -820,4 +1300,3 @@ function ajax(options) {
     };
 }
 </script>
-
