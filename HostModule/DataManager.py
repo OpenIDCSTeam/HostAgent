@@ -330,7 +330,7 @@ class DataManager:
              filter_name, images_path, dvdrom_path, system_path, backup_path, extern_path,
              launch_path, network_nat, network_pub, i_kuai_addr, i_kuai_user, 
              i_kuai_pass, ports_start, ports_close, remote_port, system_maps, images_maps,
-             public_addr, extend_data, server_dnss, limits_nums, ipaddr_maps, ipaddr_dnss, is_enabled, updated_at)
+             public_addr, extend_data, server_dnss, limits_nums, ipaddr_maps, ipaddr_dnss, enable_host, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             """
             params = (
@@ -364,7 +364,7 @@ class DataManager:
                 hs_config.limits_nums,
                 json.dumps(hs_config.ipaddr_maps) if hs_config.ipaddr_maps else "{}",
                 json.dumps(hs_config.ipaddr_dnss) if hs_config.ipaddr_dnss else '["119.29.29.29", "223.5.5.5"]',
-                1 if getattr(hs_config, 'is_enabled', True) else 0  # 主机启用状态
+                1 if getattr(hs_config, 'enable_host', True) else 0  # 主机启用状态
             )
             conn.execute(sql, params)
             conn.commit()
@@ -903,6 +903,65 @@ class DataManager:
                 log_data['created_at'] = row["created_at"]
                 results.append(log_data)
             return results
+        finally:
+            conn.close()
+
+    def clear_hs_logger(self, hs_name: str = None) -> bool:
+        """清空日志记录"""
+        conn = self.get_db_sqlite()
+        try:
+            if hs_name:
+                conn.execute("DELETE FROM hs_logger WHERE hs_name = ?", (hs_name,))
+            else:
+                # 清空所有日志
+                conn.execute("DELETE FROM hs_logger")
+            conn.commit()
+            return True
+        except Exception as e:
+            logger.error(f"清空日志记录错误: {e}")
+            conn.rollback()
+            return False
+        finally:
+            conn.close()
+
+    def add_operation_log(self, hs_name: str = None, operation: str = "", target: str = "", 
+                         details: str = "", level: str = "INFO", username: str = None) -> bool:
+        """添加操作日志记录
+        
+        Args:
+            hs_name: 主机名称，如果是系统级操作可以为None
+            operation: 操作类型，如"创建"、"删除"、"修改"等
+            target: 操作目标，如"主机"、"虚拟机"、"用户"等
+            details: 操作详情描述
+            level: 日志级别，默认INFO
+            username: 操作用户名
+        """
+        conn = self.get_db_sqlite()
+        try:
+            # 构建日志消息
+            log_message = f"{operation}{target}"
+            if details:
+                log_message += f": {details}"
+            
+            # 创建日志对象
+            log_data = {
+                "level": level,
+                "message": log_message,
+                "operation": operation,
+                "target": target,
+                "details": details,
+                "username": username
+            }
+            
+            # 插入日志
+            sql = "INSERT INTO hs_logger (hs_name, log_data, log_level) VALUES (?, ?, ?)"
+            conn.execute(sql, (hs_name, json.dumps(log_data), level))
+            conn.commit()
+            return True
+        except Exception as e:
+            logger.error(f"添加操作日志错误: {e}")
+            conn.rollback()
+            return False
         finally:
             conn.close()
 

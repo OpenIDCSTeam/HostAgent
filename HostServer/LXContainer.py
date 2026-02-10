@@ -954,6 +954,9 @@ class HostServer(BasicServer):
 
     # 虚拟机电源 ###############################################################
     def VMPowers(self, vm_name: str, power: VMPowers) -> ZMessage:
+        # 先调用父类方法设置中间状态
+        super().VMPowers(vm_name, power)
+        
         # 专用操作 =============================================================
         client, result = self.lxd_conn()
         if not result.success:
@@ -1046,11 +1049,10 @@ class HostServer(BasicServer):
             return hs_result
 
         # 通用操作 =============================================================
-        super().VMPowers(vm_name, power)
         return hs_result
 
     # 获取虚拟机实际状态（从API）==============================================
-    def VMStatusAPI(self, vm_name: str) -> str:
+    def GetPower(self, vm_name: str) -> str:
         """从LXD API获取容器实际状态"""
         try:
             client, result = self.lxd_conn()

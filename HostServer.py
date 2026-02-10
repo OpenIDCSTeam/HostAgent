@@ -706,6 +706,14 @@ def api_get_logs():
     return rest_manager.get_logs()
 
 
+# 清空日志 ########################################################################
+@app.route('/api/system/logger/clear', methods=['POST'])
+@require_auth
+def api_clear_logs():
+    """清空日志记录"""
+    return rest_manager.clear_logs()
+
+
 # 获取任务 ########################################################################
 @app.route('/api/system/tasker', methods=['GET'])
 @require_auth
@@ -1338,6 +1346,18 @@ def api_get_current_user():
                         user_data['assigned_hosts'] = json.loads(user_data['assigned_hosts'])
                     except:
                         user_data['assigned_hosts'] = []
+                
+                # 过滤掉未启用的主机（所有用户均生效）
+                if hs_manage:
+                    enabled_hosts = []
+                    for hs_name in user_data.get('assigned_hosts', []):
+                        server = hs_manage.get_host(hs_name)
+                        if server:
+                            enable_host = getattr(server.hs_config, 'enable_host', True) if server.hs_config else True
+                            if enable_host:
+                                enabled_hosts.append(hs_name)
+                    user_data['assigned_hosts'] = enabled_hosts
+                
                 return api_response_wrapper(200, '获取成功', user_data)
         
         return api_response_wrapper(401, '未授权访问')

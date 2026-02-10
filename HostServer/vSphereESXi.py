@@ -141,7 +141,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             
         # 通用操作 =============================================================
-        return True
+        # 调用父类方法同步虚拟机状态
+        return super().Crontabs()
 
     # 宿主机状态 ===============================================================
     def HSStatus(self) -> HWStatus:
@@ -243,7 +244,7 @@ class HostServer(BasicServer):
         return super().VMStatus(vm_name)
 
     # 获取虚拟机实际状态（从API）==============================================
-    def VMStatusAPI(self, vm_name: str) -> str:
+    def GetPower(self, vm_name: str) -> str:
         """从vSphere ESXi API获取虚拟机实际状态"""
         try:
             connect_result = self.esxi_api.connect()
@@ -649,10 +650,19 @@ class HostServer(BasicServer):
     # 虚拟机电源 ===============================================================
     def VMPowers(self, vm_name: str, power: VMPowers) -> ZMessage:
         # 专用操作 =============================================================
+        original_flag = None
         try:
+            # 先调用父类方法设置中间状态
+            parent_result = super().VMPowers(vm_name, power)
+            original_flag = parent_result.results.get("original_flag") if parent_result.results else None
+            
             # 连接到ESXi =======================================================
             connect_result = self.esxi_api.connect()
             if not connect_result.success:
+                # 连接失败，回退状态
+                if original_flag is not None:
+                    self.vm_saving[vm_name].vm_flag = original_flag
+                    self.data_set()
                 return connect_result
 
             # 执行电源操作 =====================================================
@@ -660,9 +670,20 @@ class HostServer(BasicServer):
                 hs_result = self.esxi_api.power_on(vm_name)
             elif power == VMPowers.H_CLOSE:
                 hs_result = self.esxi_api.power_off(vm_name)
+            elif power == VMPowers.S_CLOSE:
+                # 软关机：使用power_off但标记为软关机，启动监控线程
+                hs_result = ZMessage(success=True, action="VMPowers", message="正在等待系统软关机")
+                # 启动持续监控（5分钟内每5秒检查一次状态）
+                self._monitor_soft_power_operation(vm_name, VMPowers.S_CLOSE, VMPowers.ON_STOP)
             elif power == VMPowers.A_PAUSE:
                 hs_result = self.esxi_api.suspend(vm_name)
-            elif power == VMPowers.H_RESET or power == VMPowers.S_RESET:
+            elif power == VMPowers.S_RESET:
+                # 软重启：使用reset但启动监控线程
+                hs_result = self.esxi_api.reset(vm_name)
+                if hs_result.success:
+                    # 启动持续监控（5分钟内每5秒检查一次状态）
+                    self._monitor_soft_power_operation(vm_name, VMPowers.S_RESET, VMPowers.ON_STOP)
+            elif power == VMPowers.H_RESET:
                 hs_result = self.esxi_api.reset(vm_name)
             else:
                 hs_result = ZMessage(
@@ -671,6 +692,22 @@ class HostServer(BasicServer):
 
             # 断开连接 =========================================================
             self.esxi_api.disconnect()
+
+            # 如果操作失败，回退状态
+            if not hs_result.success and original_flag is not None:
+                logger.error(f"[{self.hs_config.server_name}] 虚拟机电源操作失败，回退状态: {vm_name}")
+                self.vm_saving[vm_name].vm_flag = original_flag
+                self.data_set()
+            elif hs_result.success and power not in [VMPowers.S_CLOSE, VMPowers.S_RESET]:
+                # 对于非软关机/软重启操作，操作成功后异步刷新虚拟机状态（延迟3秒后执行）
+                import threading
+                def delayed_refresh():
+                    import time
+                    time.sleep(3)  # 等待3秒让虚拟机状态稳定
+                    self._refresh_vm_status(vm_name)
+                
+                refresh_thread = threading.Thread(target=delayed_refresh, daemon=True)
+                refresh_thread.start()
 
             # 记录日志 =========================================================
             self.logs_set(hs_result)
@@ -684,13 +721,18 @@ class HostServer(BasicServer):
                 self.esxi_api.disconnect()
             except:
                 pass
+            
+            # 回退状态
+            if original_flag is not None:
+                self.vm_saving[vm_name].vm_flag = original_flag
+                self.data_set()
+            
             hs_result = ZMessage(
                 success=False, action="VMPowers",
                 message=f"电源操作失败: {str(e)}")
             self.logs_set(hs_result)
 
         # 通用操作 =============================================================
-        super().VMPowers(vm_name, power)
         return hs_result
 
     # 设置虚拟机密码 ===========================================================

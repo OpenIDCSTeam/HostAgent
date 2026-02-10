@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenIDCS 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-05 15:30\n"
-"PO-Revision-Date: 2026-02-05 15:30\n"
+"POT-Creation-Date: 2026-02-10 00:30\n"
+"PO-Revision-Date: 2026-02-10 00:30\n"
 "Last-Translator: Auto Generated\n"
 "Language-Team: Korean\n"
 "Language: ko\n"
@@ -85,7 +85,7 @@ msgid "个人设置"
 msgstr "개인 설정"
 
 msgid "个人资料"
-msgstr "개인 데이터"
+msgstr "개인정보"
 
 msgid "为虚拟机"
 msgstr "가상머신용"
@@ -457,7 +457,7 @@ msgid "最后更新"
 msgstr "마지막 업데이트"
 
 msgid "最小要求"
-msgstr "최소 요구 사항"
+msgstr "최소 요구사항"
 
 msgid "未知主机"
 msgstr "알 수 없는 호스트"
@@ -832,7 +832,7 @@ msgid "个主机"
 msgstr "호스트"
 
 msgid "个字符"
-msgstr "문자"
+msgstr "캐릭터"
 
 msgid "主机名"
 msgstr "호스트 이름"
@@ -889,7 +889,7 @@ msgid "备份中"
 msgstr "백업 중"
 
 msgid "复制到"
-msgstr "복사 위치"
+msgstr "복사 대상"
 
 msgid "复杂度"
 msgstr "복잡성"
@@ -925,7 +925,7 @@ msgid "已开启"
 msgstr "이미 켜져 있음"
 
 msgid "已挂载"
-msgstr "탑재"
+msgstr "탑재됨"
 
 msgid "已暂停"
 msgstr "정지된"
@@ -1045,7 +1045,7 @@ msgid "请输入"
 msgstr "입력해주세요"
 
 msgid "请选择"
-msgstr "선택해주세요"
+msgstr "선택하세요"
 
 msgid "过滤器"
 msgstr "필터"
@@ -2065,7 +2065,7 @@ msgid "级别"
 msgstr "수준"
 
 msgid "组件"
-msgstr "구성 요소"
+msgstr "구성요소"
 
 msgid "结束"
 msgstr "마치다"
@@ -2431,7 +2431,7 @@ msgid "空"
 msgstr "null"
 
 msgid "全局"
-msgstr "글로벌"
+msgstr "전반적인 상황"
 
 msgid "查看您的资源使用情况和配额信息"
 msgstr "리소스 사용량 및 할당량 정보 보기"
@@ -2445,17 +2445,20 @@ msgstr "시스템 공간"
 msgid "实例管理"
 msgstr "인스턴스 관리"
 
+msgid "监控"
+msgstr "감시 장치"
+
 msgid "网络端口"
 msgstr "네트워크 포트"
 
 msgid "网络与配额"
-msgstr "네트워크 및 할당량"
+msgstr "네트워킹 및 할당량"
 
 msgid "上传带宽"
 msgstr "업로드 대역폭"
 
 msgid "下载带宽"
-msgstr "다운로드 대역폭"
+msgstr "대역폭 다운로드"
 
 msgid "实例配置"
 msgstr "인스턴스 구성"
@@ -2473,10 +2476,10 @@ msgid "转发规则"
 msgstr "전달 규칙"
 
 msgid "设备直通"
-msgstr "장치 패스스루"
+msgstr "장치 통과"
 
 msgid "物理"
-msgstr "물리적"
+msgstr "물리학"
 
 msgid "设备名"
 msgstr "장치 이름"
@@ -2488,13 +2491,13 @@ msgid "程序启动路径"
 msgstr "프로그램 시작 경로"
 
 msgid "爱快配置"
-msgstr "iKuai 구성"
+msgstr "아이쿠아이 구성"
 
 msgid "限制配置"
-msgstr "제한 구성"
+msgstr "구성 제한"
 
 msgid "（多个用逗号分隔）"
-msgstr "(여러 개는 쉼표로 구분)"
+msgstr "(여러 수는 쉼표로 구분)"
 
 msgid "高级配置"
 msgstr "고급 구성"
@@ -2503,7 +2506,7 @@ msgid "系统映射"
 msgstr "시스템 매핑"
 
 msgid "配置池"
-msgstr "구성 풀"
+msgstr "풀 구성"
 
 msgid "扩展选项"
 msgstr "확장 옵션"
@@ -2515,22 +2518,22 @@ msgid "(JSON格式)"
 msgstr "(JSON 형식)"
 
 msgid "和事件记录"
-msgstr "및 이벤트 기록"
+msgstr "및 이벤트 로깅"
 
 msgid "请从左侧选择一条"
-msgstr "왼쪽에서 하나를 선택하세요"
+msgstr "왼쪽에서 하나를 선택해주세요"
 
 msgid "安全提示"
-msgstr "보안 알림"
+msgstr "안전 수칙"
 
 msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
-msgstr "토큰을 재설정하면 이전 토큰을 사용하는 모든 API 호출이 무효화됩니다. 모든 관련 구성을 업데이트하세요."
+msgstr "토큰을 재설정하면 이전 토큰을 사용하는 모든 API 호출이 무효화됩니다. 모든 관련 구성을 업데이트했는지 확인하세요."
 
 msgid "在请求头中添加："
-msgstr "요청 헤더에 추가:"
+msgstr "요청 헤더에 다음을 추가합니다."
 
 msgid "受控端"
-msgstr "제어 대상"
+msgstr "통제된 끝"
 
 msgid "访问配置"
 msgstr "액세스 구성"
@@ -2539,23 +2542,23 @@ msgid "新账号"
 msgstr "새 계정"
 
 msgid "注册时需要验证邮箱"
-msgstr "등록 시 이메일 인증 필요"
+msgstr "등록시 이메일 인증이 필요합니다"
 
 msgid "新用户默认"
 msgstr "새 사용자 기본값"
 
 msgid "这是一封来自"
-msgstr "이것은 다음에서 보낸 이메일입니다"
+msgstr "이건 에서 온 편지야"
 
 msgid "系统的测试邮件"
 msgstr "시스템 테스트 이메일"
 
 msgid "如果您收到这封邮件"
-msgstr "이 이메일을 받으셨다면"
+msgstr "이 이메일을 받으면"
 
 msgid "说明邮件服务配置正常"
-msgstr "이메일 서비스가 올바르게 구성되었음을 나타냅니다"
+msgstr "메일 서비스 구성이 정상임을 나타냅니다."
 
 msgid "您的"
-msgstr "귀하의"
+msgstr "당신의"
 

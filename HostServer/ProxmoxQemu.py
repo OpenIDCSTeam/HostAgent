@@ -711,6 +711,9 @@ class HostServer(BasicServer):
     # 虚拟机电源 ###############################################################
     def VMPowers(self, vm_name: str, power: VMPowers) -> ZMessage:
         """虚拟机电源管理"""
+        # 先调用父类方法设置中间状态
+        super().VMPowers(vm_name, power)
+        
         client, result = self.api_conn()
         if not result.success:
             return result
@@ -787,11 +790,10 @@ class HostServer(BasicServer):
             self.logs_set(hs_result)
             return hs_result
 
-        super().VMPowers(vm_name, power)
         return hs_result
 
     # 获取虚拟机实际状态（从API）==============================================
-    def VMStatusAPI(self, vm_name: str) -> str:
+    def GetPower(self, vm_name: str) -> str:
         """从Proxmox API获取虚拟机实际状态"""
         try:
             client, result = self.api_conn()

@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS hs_config
     limits_nums INTEGER   DEFAULT 0,    -- VMS虚拟数量
     ipaddr_maps TEXT      DEFAULT '{}', -- IP地址的字典
     ipaddr_dnss TEXT      DEFAULT '["119.29.29.29", "223.5.5.5"]', -- DNS服务器列表
-    is_enabled  INTEGER   DEFAULT 1,    -- 主机是否启用 (1=启用, 0=禁用)
+    enable_host  INTEGER   DEFAULT 1,    -- 主机是否启用 (1=启用, 0=禁用)
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

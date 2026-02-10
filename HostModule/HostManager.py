@@ -281,7 +281,7 @@ class HostManage:
             
             # 更新主机配置的启用状态 ============================================
             if hasattr(server, 'hs_config') and server.hs_config:
-                server.hs_config.is_enabled = hs_flag
+                server.hs_config.enable_host = hs_flag
                 logger.info(f'[主机电源控制] 主机 {hs_name} 启用状态已更新为: {hs_flag}')
             
             # 执行启用/禁用操作 ================================================
@@ -368,8 +368,8 @@ class HostManage:
                         hs_conf_data["ipaddr_maps"] = json.loads(host_config["ipaddr_maps"]) if host_config.get("ipaddr_maps") else {}
                         hs_conf_data["ipaddr_dnss"] = json.loads(host_config["ipaddr_dnss"]) if host_config.get("ipaddr_dnss") else ["119.29.29.29", "223.5.5.5"]
                         
-                        # 加载is_enabled字段 ========================================
-                        hs_conf_data["is_enabled"] = bool(host_config.get("is_enabled", 1))
+                        # 加载enable_host字段 ========================================
+                        hs_conf_data["enable_host"] = bool(host_config.get("enable_host", 1))
                         
                         # 移除数据库字段，只保留配置字段 ============================
                         for field in ["id", "hs_name", "created_at", "updated_at"]:
@@ -415,8 +415,8 @@ class HostManage:
                             )
                             
                             # 加载主机（如果启用）================================
-                            is_enabled = getattr(hs_conf, 'is_enabled', True)
-                            if is_enabled:
+                            enable_host = getattr(hs_conf, 'enable_host', True)
+                            if enable_host:
                                 try:
                                     self.engine[hs_name].HSLoader()
                                     logger.debug(f'[加载配置] 主机 {hs_name} 已加载')
@@ -465,8 +465,8 @@ class HostManage:
                     try:
                         # 检查主机是否启用
                         if hasattr(server, 'hs_config') and server.hs_config:
-                            is_enabled = getattr(server.hs_config, 'is_enabled', True)
-                            if not is_enabled:
+                            enable_host = getattr(server.hs_config, 'enable_host', True)
+                            if not enable_host:
                                 logger.debug(f'[异步初始化] 跳过禁用的主机: {hs_name}')
                                 continue
                         
@@ -585,6 +585,11 @@ class HostManage:
 
         server = self.engine[hs_name]
 
+        # 检查主机是否启用
+        enable_host = getattr(server.hs_config, 'enable_host', True) if server.hs_config else True
+        if not enable_host:
+            return ZMessage(success=False, message=f"主机 {hs_name} 已禁用，无法扫描虚拟机")
+
         # 检查是否支持VScanner方法
         if not hasattr(server, 'VScanner'):
             return ZMessage(success=False, message="Host does not support VM scanning")
@@ -639,8 +644,8 @@ class HostManage:
                     
                     # 检查主机是否启用 ============================================
                     if hasattr(server, 'hs_config') and server.hs_config:
-                        is_enabled = getattr(server.hs_config, 'is_enabled', True)
-                        if not is_enabled:
+                        enable_host = getattr(server.hs_config, 'enable_host', True)
+                        if not enable_host:
                             logger.debug(f'[Cron] 跳过禁用的主机: {server_name}')
                             continue
                     

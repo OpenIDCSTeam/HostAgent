@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { message, Modal, Select } from 'antd'
 import api from '@/utils/apis.ts'
+import PageHeader from '@/components/PageHeader'
 
 /**
  * 任务数据接口
@@ -147,7 +148,7 @@ function TaskManage() {
       text: '未知',
       icon: 'mdi:help-circle',
       bgColor: 'bg-gray-100',
-      textColor: 'text-gray-600'
+        textColor: ''
     }
   }
 
@@ -197,15 +198,13 @@ function TaskManage() {
   }
 
   return (
-    <div>
+    <div className="p-6">
       {/* 页面标题 */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
-          <span className="iconify text-purple-600" data-icon="mdi:playlist-check" style={{ width: '36px', height: '36px' }}></span>
-          任务管理
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">查看虚拟机任务执行情况和状态</p>
-      </div>
+      <PageHeader
+        icon={<span className="iconify" data-icon="mdi:playlist-check" style={{ width: '24px', height: '24px' }}></span>}
+        title="任务管理"
+        subtitle="查看虚拟机任务执行情况和状态"
+      />
 
       {/* 过滤器 */}
       <div className="glass-card p-4 mb-6">
@@ -314,7 +313,7 @@ function TaskManage() {
               className={`text-xs px-3 py-1 rounded-lg transition-all duration-200 ${
                 autoRefresh
                   ? 'bg-green-100 hover:bg-green-200 text-green-700'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  : 'bg-gray-100 hover:bg-gray-200'
               }`}
             >
               <span className="iconify" data-icon={autoRefresh ? 'mdi:pause' : 'mdi:play'} style={{ width: '14px', height: '14px' }}></span>
@@ -389,7 +388,7 @@ function TaskManage() {
                           </div>
                         </div>
                       </div>
-                      <span className="iconify text-gray-400" data-icon="mdi:chevron-right" style={{ width: '20px', height: '20px' }}></span>
+                      <span className="iconify" data-icon="mdi:chevron-right" style={{ width: '20px', height: '20px', color: 'var(--text-secondary)' }}></span>
                     </div>
                   </div>
                 )

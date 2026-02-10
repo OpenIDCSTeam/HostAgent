@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Select, Button, Card, Statistic } from 'antd'
+import { Select, Button, Card, Statistic, Modal, message } from 'antd'
 import { 
   ReloadOutlined, 
   PlayCircleOutlined, 
@@ -12,6 +12,7 @@ import {
   EyeOutlined
 } from '@ant-design/icons'
 import api from '@/utils/apis.ts'
+import PageHeader from '@/components/PageHeader'
 
 /**
  * 日志数据接口
@@ -133,16 +134,40 @@ function LogsManage() {
   }
 
   /**
-   * 清空显示
+   * 清空日志
    */
   const clearLogs = () => {
-    setLogs([])
-    setFilteredLogs([])
-    setStatistics({
-      ERROR: 0,
-      WARNING: 0,
-      INFO: 0,
-      DEBUG: 0,
+    Modal.confirm({
+      title: '确认清空日志',
+      content: filters.host ? `确定要清空主机 "${filters.host}" 的所有日志吗？此操作不可恢复！` : '确定要清空所有日志吗？此操作不可恢复！',
+      okText: '确认清空',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          setLoading(true)
+          const result = await api.clearLogs(filters.host)
+          if (result && result.code === 200) {
+            // 清空成功后，清空前端显示
+            setLogs([])
+            setFilteredLogs([])
+            setStatistics({
+              ERROR: 0,
+              WARNING: 0,
+              INFO: 0,
+              DEBUG: 0,
+            })
+            message.success('日志清空成功')
+          } else {
+            message.error(result?.message || '清空日志失败')
+          }
+        } catch (error) {
+          console.error('清空日志失败:', error)
+          message.error('清空日志失败')
+        } finally {
+          setLoading(false)
+        }
+      },
     })
   }
 
@@ -176,9 +201,9 @@ function LogsManage() {
       case 'INFO':
         return 'text-blue-600 dark:text-blue-400'
       case 'DEBUG':
-        return 'text-gray-600 dark:text-gray-400'
+        return ''
       default:
-        return 'text-gray-600 dark:text-gray-400'
+        return ''
     }
   }
 
@@ -218,19 +243,18 @@ function LogsManage() {
   return (
     <div className="p-6 h-screen flex flex-col">
       {/* 页面标题 */}
-      <div className="mb-4 flex-shrink-0">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
-          <FileTextOutlined className="text-blue-600" style={{ fontSize: '36px' }} />
-          系统日志管理
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">查看系统运行日志和事件记录</p>
-      </div>
+      <PageHeader
+        icon={<FileTextOutlined />}
+        title="系统日志管理"
+        subtitle="查看系统运行日志和事件记录"
+        className="flex-shrink-0 mb-4"
+      />
 
       {/* 过滤器 */}
       <div className="glass-card p-4 mb-4 flex-shrink-0">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">主机筛选</label>
+            <label className="block text-sm font-medium mb-1">主机筛选</label>
             <Select
               className="w-full"
               placeholder="全部主机"
@@ -244,7 +268,7 @@ function LogsManage() {
             </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">日志级别</label>
+            <label className="block text-sm font-medium mb-1">日志级别</label>
             <Select
               className="w-full"
               placeholder="全部级别"
@@ -259,7 +283,7 @@ function LogsManage() {
             </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">显示条数</label>
+            <label className="block text-sm font-medium mb-1">显示条数</label>
             <Select
               className="w-full"
               value={filters.limit}
@@ -289,7 +313,7 @@ function LogsManage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 flex-shrink-0">
         <Card className="glass-card shadow-sm hover:shadow-md transition-shadow">
           <Statistic
-            title={<span className="text-gray-700 dark:text-gray-300">错误</span>}
+            title={<span>错误</span>}
             value={statistics.ERROR}
             prefix={<AlertOutlined className="text-red-600 dark:text-red-400" />}
             valueStyle={{ color: 'var(--error)' }}
@@ -297,7 +321,7 @@ function LogsManage() {
         </Card>
         <Card className="glass-card shadow-sm hover:shadow-md transition-shadow">
           <Statistic
-            title={<span className="text-gray-700 dark:text-gray-300">警告</span>}
+            title={<span>警告</span>}
             value={statistics.WARNING}
             prefix={<AlertOutlined className="text-yellow-600 dark:text-yellow-400" />}
             valueStyle={{ color: 'var(--warning)' }}
@@ -305,7 +329,7 @@ function LogsManage() {
         </Card>
         <Card className="glass-card shadow-sm hover:shadow-md transition-shadow">
           <Statistic
-            title={<span className="text-gray-700 dark:text-gray-300">信息</span>}
+            title={<span>信息</span>}
             value={statistics.INFO}
             prefix={<InfoCircleOutlined className="text-blue-600 dark:text-blue-400" />}
             valueStyle={{ color: 'var(--info)' }}
@@ -313,9 +337,9 @@ function LogsManage() {
         </Card>
         <Card className="glass-card shadow-sm hover:shadow-md transition-shadow">
           <Statistic
-            title={<span className="text-gray-700 dark:text-gray-300">调试</span>}
+            title={<span>调试</span>}
             value={statistics.DEBUG}
-            prefix={<BugOutlined className="text-gray-600 dark:text-gray-400" />}
+            prefix={<BugOutlined />}
             valueStyle={{ color: 'var(--text-secondary)' }}
           />
         </Card>
@@ -326,7 +350,7 @@ function LogsManage() {
         {/* 左侧：日志列表 */}
         <div className="glass-card flex-1 flex flex-col">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-            <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+            <h2 className="text-base font-semibold flex items-center gap-2">
               <FileTextOutlined className="text-blue-600" />
               日志记录
             </h2>
@@ -344,19 +368,20 @@ function LogsManage() {
                 danger
                 icon={<DeleteOutlined />}
                 onClick={clearLogs}
+                loading={loading}
               >
-                清空显示
+                清空日志
               </Button>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
             {loading && filteredLogs.length === 0 ? (
-              <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+              <div className="p-8 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <ReloadOutlined spin className="text-xl" />
                 <span className="ml-2">加载日志中...</span>
               </div>
             ) : filteredLogs.length === 0 ? (
-              <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+              <div className="p-8 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <FileTextOutlined className="text-xl" />
                 <span className="ml-2">暂无日志记录</span>
               </div>
@@ -370,7 +395,7 @@ function LogsManage() {
                   const host = log.host || '系统'
                   const actions = log.actions || '未知操作'
                   const success = log.success !== undefined ? (log.success ? '成功' : '失败') : '未知'
-                  const successColor = log.success === true ? 'text-green-600' : (log.success === false ? 'text-red-600' : 'text-gray-600')
+                  const successColor = log.success === true ? 'text-green-600' : (log.success === false ? 'text-red-600' : '')
                   const isSelected = selectedLog === log
 
                   return (
@@ -388,14 +413,14 @@ function LogsManage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{host}</span>
+                              <span className="text-xs font-semibold">{host}</span>
                               <span className={`text-xs ${getLevelTextColor(level)} font-medium uppercase`}>{level}</span>
                               <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">{actions}</span>
                               <span className={`text-xs ${successColor} dark:brightness-125 font-medium`}>{success}</span>
                             </div>
-                            <span className="text-xs text-gray-600 dark:text-gray-400">{time}</span>
+                            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{time}</span>
                           </div>
-                          <p className="text-sm text-gray-800 dark:text-gray-200 break-words line-clamp-2">{message}</p>
+                          <p className="text-sm break-words line-clamp-2">{message}</p>
                         </div>
                       </div>
                     </div>
@@ -409,7 +434,7 @@ function LogsManage() {
         {/* 右侧：日志详情 */}
         <div className="glass-card w-1/2 flex flex-col">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-            <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+            <h2 className="text-base font-semibold flex items-center gap-2">
               <EyeOutlined className="text-blue-600" />
               日志详情
             </h2>
@@ -419,34 +444,34 @@ function LogsManage() {
               <div className="space-y-4">
                 {/* 基本信息 */}
                 <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">基本信息</h3>
+                  <h3 className="text-sm font-semibold mb-3">基本信息</h3>
                   <div className="space-y-2">
                     <div className="flex items-start">
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-20 flex-shrink-0">主机:</span>
-                      <span className="text-xs text-gray-800 dark:text-gray-200">{selectedLog.host || '系统'}</span>
+                      <span className="text-xs font-medium w-20 flex-shrink-0" style={{ color: 'var(--text-secondary)' }}>主机:</span>
+                      <span className="text-xs">{selectedLog.host || '系统'}</span>
                     </div>
                     <div className="flex items-start">
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-20 flex-shrink-0">级别:</span>
+                      <span className="text-xs font-medium w-20 flex-shrink-0" style={{ color: 'var(--text-secondary)' }}>级别:</span>
                       <span className={`text-xs ${getLevelTextColor(selectedLog.level || 'INFO')} font-medium uppercase`}>
                         {selectedLog.level || 'INFO'}
                       </span>
                     </div>
                     <div className="flex items-start">
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-20 flex-shrink-0">操作:</span>
-                      <span className="text-xs text-gray-800 dark:text-gray-200">{selectedLog.actions || '未知操作'}</span>
+                      <span className="text-xs font-medium w-20 flex-shrink-0" style={{ color: 'var(--text-secondary)' }}>操作:</span>
+                      <span className="text-xs">{selectedLog.actions || '未知操作'}</span>
                     </div>
                     <div className="flex items-start">
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-20 flex-shrink-0">状态:</span>
+                      <span className="text-xs font-medium w-20 flex-shrink-0" style={{ color: 'var(--text-secondary)' }}>状态:</span>
                       <span className={`text-xs font-medium ${
                         selectedLog.success === true ? 'text-green-600' : 
-                        selectedLog.success === false ? 'text-red-600' : 'text-gray-600'
+                        selectedLog.success === false ? 'text-red-600' : ''
                       }`}>
                         {selectedLog.success !== undefined ? (selectedLog.success ? '成功' : '失败') : '未知'}
                       </span>
                     </div>
                     <div className="flex items-start">
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-20 flex-shrink-0">时间:</span>
-                      <span className="text-xs text-gray-800 dark:text-gray-200">
+                      <span className="text-xs font-medium w-20 flex-shrink-0" style={{ color: 'var(--text-secondary)' }}>时间:</span>
+                      <span className="text-xs">
                         {new Date(selectedLog.timestamp || new Date().toISOString()).toLocaleString('zh-CN')}
                       </span>
                     </div>
@@ -455,8 +480,8 @@ function LogsManage() {
 
                 {/* 消息内容 */}
                 <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">消息内容</h3>
-                  <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
+                  <h3 className="text-sm font-semibold mb-3">消息内容</h3>
+                  <p className="text-sm whitespace-pre-wrap break-words">
                     {selectedLog.message || selectedLog.content || '无消息内容'}
                   </p>
                 </div>
@@ -468,7 +493,7 @@ function LogsManage() {
                       <EyeOutlined />
                       操作结果
                     </h3>
-                    <pre className="text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 p-3 rounded border border-purple-200 dark:border-purple-800 whitespace-pre-wrap break-words overflow-x-auto">
+                    <pre className="text-xs bg-white dark:bg-gray-800 p-3 rounded border border-purple-200 dark:border-purple-800 whitespace-pre-wrap break-words overflow-x-auto">
                       {JSON.stringify(selectedLog.results, null, 2)}
                     </pre>
                   </div>
@@ -488,7 +513,7 @@ function LogsManage() {
                 )}
               </div>
             ) : (
-              <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+              <div className="h-full flex items-center justify-center" style={{ color: 'var(--text-secondary)' }}>
                 <div className="text-center">
                   <InfoCircleOutlined className="text-4xl mb-2" />
                   <p className="text-sm">请从左侧选择一条日志查看详情</p>

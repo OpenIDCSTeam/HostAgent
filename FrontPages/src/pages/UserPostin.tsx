@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Form, Input, Button, Alert } from 'antd'
-import { UserOutlined, LockOutlined, MailOutlined, UserAddOutlined, CheckCircleOutlined, CloseCircleOutlined, BulbOutlined, BulbFilled, BgColorsOutlined } from '@ant-design/icons'
+import { Form, Input, Button, Alert, Dropdown } from 'antd'
+import { UserOutlined, LockOutlined, MailOutlined, UserAddOutlined, CheckCircleOutlined, CloseCircleOutlined, BulbOutlined, BulbFilled, BgColorsOutlined, TranslationOutlined, SwapOutlined } from '@ant-design/icons'
 import api from '@/utils/apis.ts'
 import { useTheme } from '@/contexts/ThemeContext'
+import { changeLanguage, getAvailableLanguages, getCurrentLanguage } from '@/utils/i18n.ts'
+import type { MenuProps } from 'antd'
 
 /**
  * 注册表单数据接口
@@ -25,6 +27,41 @@ function UserPostin() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>('')
   const [success, setSuccess] = useState<string>('')
+  const [currentLang, setCurrentLang] = useState('zh-cn') // 当前语言
+  const [languages, setLanguages] = useState<any[]>([]) // 可用语言列表
+
+  // 初始化语言状态
+  useEffect(() => {
+    setCurrentLang(getCurrentLanguage())
+    setLanguages(getAvailableLanguages())
+
+    // 监听语言变更事件
+    const handleLangChange = (e: any) => {
+      setCurrentLang(e.detail.language)
+    }
+    window.addEventListener('languageChanged', handleLangChange)
+    
+    // 轮询检查语言列表是否加载完成
+    const interval = setInterval(() => {
+      const langs = getAvailableLanguages()
+      if (langs.length > 0 && languages.length === 0) {
+        setLanguages(langs)
+        setCurrentLang(getCurrentLanguage())
+      }
+    }, 1000)
+    
+    return () => {
+      window.removeEventListener('languageChanged', handleLangChange)
+      clearInterval(interval)
+    }
+  }, [languages.length])
+
+  // 语言菜单项
+  const languageMenuItems: MenuProps['items'] = languages.map(lang => ({
+    key: lang.code,
+    label: lang.native || lang.name,
+    icon: lang.code === currentLang ? <SwapOutlined /> : undefined,
+  }))
 
   /**
    * 处理注册提交
@@ -85,6 +122,43 @@ function UserPostin() {
           zIndex: 1000,
         }}
       >
+        {/* 语言切换按钮 */}
+        <Dropdown
+          menu={{
+            items: languageMenuItems,
+            onClick: ({key}) => changeLanguage(key)
+          }}
+          placement="bottomRight"
+          overlayStyle={{
+            zIndex: 20000,
+            maxHeight: '400px',
+            overflow: 'auto'
+          }}
+          getPopupContainer={(trigger) => trigger.parentElement || document.body}
+        >
+          <Button
+            size="large"
+            icon={<TranslationOutlined />}
+            style={{
+              background: 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-primary)',
+              borderRadius: '12px',
+              boxShadow: 'var(--shadow-glass)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '48px',
+              height: '48px',
+              padding: 0,
+              transition: 'all 0.3s',
+            }}
+            title="切换语言"
+          />
+        </Dropdown>
+
         {/* 透明模式切换按钮 */}
         <Button
           onClick={toggleTransparentMode}
@@ -155,8 +229,8 @@ function UserPostin() {
               <UserAddOutlined className="text-white text-5xl" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">用户注册</h1>
-          <p className="text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2">
+        <h1 className="text-3xl font-bold mb-2">用户注册</h1>
+          <p className="flex items-center justify-center gap-2" style={{ color: 'var(--text-secondary)' }}>
             <span className="iconify" data-icon="mdi:server-network"></span>
             OpenIDCS 虚拟化管理平台
           </p>
@@ -173,7 +247,7 @@ function UserPostin() {
           {/* 用户名输入框 */}
           <Form.Item
             label={
-              <span className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <span className="flex items-center gap-2 text-sm font-medium">
                 <UserOutlined className="text-blue-500" />
                 用户名
               </span>
@@ -194,7 +268,7 @@ function UserPostin() {
           {/* 邮箱输入框 */}
           <Form.Item
             label={
-              <span className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <span className="flex items-center gap-2 text-sm font-medium">
                 <MailOutlined className="text-blue-500" />
                 邮箱
               </span>
@@ -214,7 +288,7 @@ function UserPostin() {
           {/* 密码输入框 */}
           <Form.Item
             label={
-              <span className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <span className="flex items-center gap-2 text-sm font-medium">
                 <LockOutlined className="text-blue-500" />
                 密码
               </span>
@@ -234,7 +308,7 @@ function UserPostin() {
           {/* 确认密码输入框 */}
           <Form.Item
             label={
-              <span className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <span className="flex items-center gap-2 text-sm font-medium">
                 <LockOutlined className="text-blue-500" />
                 确认密码
               </span>

@@ -70,7 +70,10 @@ function MainLayout() {
     } = theme.useToken()
 
     // 语言菜单项
-    const languageMenuItems: MenuProps['items'] = languages.map(lang => ({
+    const languageMenuItems: MenuProps['items'] = (languages.length > 0 ? languages : [
+        { code: 'zh-cn', native: '简体中文' },
+        { code: 'en-us', native: 'English' }
+    ]).map(lang => ({
         key: lang.code,
         label: lang.native || lang.name,
         icon: lang.code === currentLang ? <SwapOutlined /> : undefined,
@@ -202,8 +205,7 @@ function MainLayout() {
 
     return (
         <Layout style={{
-            minHeight: '100vh',
-            background: currentTheme === 'dark' ? 'var(--bg-primary)' : '#f0f2f5'
+            minHeight: '100vh'
         }}>
             {/* 侧边栏 */}
             <Sider
@@ -212,12 +214,13 @@ function MainLayout() {
                 collapsed={collapsed}
                 width={160}
                 collapsedWidth={60}
+                className="main-sider"
                 style={{
-                    background: currentTheme === 'dark' ? 'var(--bg-secondary)' : '#001529',
-                    borderRight: currentTheme === 'dark' ? '1px solid var(--border-primary)' : 'none',
                     marginLeft: '16px',
                     marginTop: '6px',
                     marginBottom: '16px',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
                 }}
             >
                 {/* Logo区域 */}
@@ -242,8 +245,8 @@ function MainLayout() {
 
                 {/* 菜单 */}
                 <Menu
-                    theme="dark"
                     mode="inline"
+                    className="main-menu"
                     selectedKeys={[location.pathname]}
                     items={menuItems}
                     onClick={handleMenuClick}
@@ -257,15 +260,15 @@ function MainLayout() {
             <Layout>
                 {/* 顶部导航 */}
                 <Header
-                    className="glass-card"
+                    className="glass-card main-header"
                     style={{
                         padding: '0 16px',
-                        background: currentTheme === 'dark' ? 'var(--bg-card)' : colorBgContainer,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         borderBottom: currentTheme === 'dark' ? '1px solid var(--border-primary)' : '1px solid #f0f0f0',
                         backdropFilter: currentTheme === 'dark' ? 'blur(20px)' : 'none',
+                        background: currentTheme === 'light' ? '#ffffff' : undefined,
                         margin: '6px 16px 16px ',
                     }}
                 >
@@ -319,7 +322,7 @@ function MainLayout() {
                                 maxHeight: '400px',
                                 overflow: 'auto'
                             }}
-                            getPopupContainer={(trigger) => trigger.parentElement || document.body}
+                            getPopupContainer={() => document.body}
                         >
                             <Button
                                 type="text"
@@ -351,7 +354,7 @@ function MainLayout() {
                                 maxHeight: '400px',
                                 overflow: 'auto'
                             }}
-                            getPopupContainer={(trigger) => trigger.parentElement || document.body}
+                            getPopupContainer={() => document.body}
                         >
                             <div
                                 style={{
@@ -387,12 +390,11 @@ function MainLayout() {
 
                 {/* 内容区域 */}
                 <Content
-                    className={currentTheme === 'dark' ? 'grid-background' : ''}
+                    className={`main-content main-layout-content ${currentTheme === 'dark' ? 'grid-background' : ''}`}
                     style={{
                         margin: '0px 16px 16px 16px',
                         padding: 24,
                         minHeight: 280,
-                        background: currentTheme === 'dark' ? 'var(--bg-primary)' : colorBgContainer,
                         borderRadius: 16,
                         overflow: 'auto',
                     }}

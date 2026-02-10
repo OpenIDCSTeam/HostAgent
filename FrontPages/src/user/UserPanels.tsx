@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Typography, Row, Col, Progress, Spin, message } from 'antd';
+import { Card, Row, Col, Progress, Spin, message, Tag, Button, Empty, Tooltip } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '@/utils/data.ts';
-import api from '@/utils/apis.ts';
+import api, { getHosts } from '@/utils/apis.ts';
+import PageHeader from '@/components/PageHeader';
+import { VM_STATUS_MAP } from '@/constants/status';
 import { 
   CpuChipIcon, 
   CircleStackIcon, 
@@ -11,15 +14,30 @@ import {
   ArrowDownIcon,
   CubeIcon
 } from '@heroicons/react/24/outline';
-
-const { Title } = Typography;
+import {
+  DesktopOutlined,
+  PoweroffOutlined,
+  EyeOutlined,
+  PlayCircleOutlined,
+  PauseCircleOutlined,
+  LoadingOutlined,
+  QuestionCircleOutlined,
+  CloudServerOutlined,
+  RightOutlined
+} from '@ant-design/icons';
 
 const UserPanels: React.FC = () => {
+  const navigate = useNavigate();
   const { user, setUser } = useUserStore();
   const [loading, setLoading] = useState(false);
+  const [vmsLoading, setVmsLoading] = useState(false);
+  const [vms, setVMs] = useState<Record<string, any>>({});
+  const [availableHosts, setAvailableHosts] = useState<Record<string, any>>({});
 
   useEffect(() => {
     fetchUserData();
+    loadAvailableHosts();
+    loadAllVMs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -38,288 +56,657 @@ const UserPanels: React.FC = () => {
     }
   };
 
+  const loadAvailableHosts = async () => {
+    try {
+      const result = await getHosts();
+      if (result.code === 200 && result.data) {
+        const hostsWithEnabled = Object.entries(result.data).reduce((acc, [key, host]: [string, any]) => {
+          acc[key] = {
+            ...host,
+            enabled: host.enable_host !== false
+          };
+          return acc;
+        }, {} as Record<string, any>);
+        setAvailableHosts(hostsWithEnabled);
+      }
+    } catch (error) {
+      console.error('加载主机列表失败:', error);
+    }
+  };
+
+  const loadAllVMs = async () => {
+    try {
+      setVmsLoading(true);
+      let allVMs: Record<string, any> = {};
+      const hostsRes = await getHosts();
+      if (hostsRes.code === 200 && hostsRes.data) {
+        // 过滤掉未启用的主机，不请求其虚拟机列表
+        const hosts = Object.keys(hostsRes.data).filter(
+          (host) => hostsRes.data[host].enable_host !== false
+        );
+        await Promise.all(hosts.map(async (host) => {
+          try {
+            const vmsRes = await api.getVMs(host);
+            if (vmsRes.code === 200 && vmsRes.data) {
+              Object.entries(vmsRes.data).forEach(([uuid, vm]) => {
+                allVMs[`${host}-${uuid}`] = { ...vm, _host: host, _realUuid: uuid };
+              });
+            }
+          } catch (err) {
+            console.error(`获取主机 ${host} 的虚拟机失败`, err);
+          }
+        }));
+      }
+      setVMs(allVMs);
+    } catch (error) {
+      message.error('加载虚拟机列表失败');
+    } finally {
+      setVmsLoading(false);
+    }
+  };
+
   if (!user) return <Spin />;
 
+  // 智能单位换算（MB -> GB -> TB），超过0.95则进位
   const formatStorage = (mb: number): string => {
-    if (mb < 1024) return `${mb}MB`;
+    if (mb === 0) return '0';
+    if (mb < 1024 * 0.95) return `${Math.round(mb)} MB`;
     const gb = mb / 1024;
-    if (gb < 1024) return `${gb.toFixed(1)}GB`;
-    const tb = gb / 1024;
-    return `${tb.toFixed(1)}TB`;
-  }
-
-  const renderResourceCard = (
-    title: string, 
-    used: number, 
-    quota: number, 
-    unit: string = '', 
-    isStorage: boolean = false,
-    icon: React.ReactNode,
-    gradientFrom: string,
-    gradientTo: string,
-    strokeColor: string
-  ) => {
-    const percent = quota > 0 ? Math.min(Math.round((used / quota) * 100), 100) : 0;
-    const status = percent > 90 ? 'exception' : percent > 70 ? 'active' : 'normal';
-    
-    // 如果配额非常大（比如99999），显示为无限制
-    const isUnlimited = quota > 1000000;
-    
-    let usedDisplay = `${used}${unit}`;
-    let quotaDisplay = isUnlimited ? '无限制' : `${quota}${unit}`;
-
-    if (isStorage) {
-        usedDisplay = formatStorage(used);
-        quotaDisplay = isUnlimited ? '无限制' : formatStorage(quota);
+    if (gb < 1024 * 0.95) {
+      if (gb >= 0.95 && gb < 1) return '1 GB';
+      return `${gb >= 10 ? Math.round(gb) : (Math.round(gb * 10) / 10)} GB`;
     }
-    
-    return (
-      <Col xs={24} sm={12} md={8} lg={6} style={{ marginBottom: 24 }}>
-        <Card 
-          className="glass-card-enhanced hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-          style={{
-            background: `linear-gradient(135deg, ${gradientFrom} 0%, ${gradientTo} 100%)`,
-            border: `1px solid ${gradientFrom.replace('0.1', '0.2')}`,
-            borderRadius: '16px',
-            overflow: 'hidden'
-          }}
-          bodyStyle={{ padding: '24px' }}
-        >
-          {/* 图标容器 */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            marginBottom: '16px'
-          }}>
-            <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              background: `linear-gradient(135deg, ${gradientFrom.replace('0.1', '0.3')} 0%, ${gradientTo.replace('0.1', '0.4')} 100%)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              {icon}
-            </div>
-            <div style={{ 
-              fontSize: '14px', 
-              fontWeight: 500,
-              color: 'var(--text-primary)'
-            }}>
-              {title}
-            </div>
-          </div>
+    const tb = gb / 1024;
+    if (tb >= 0.95 && tb < 1) return '1 TB';
+    return `${tb >= 10 ? Math.round(tb) : (Math.round(tb * 10) / 10)} TB`;
+  };
 
-          {/* 进度环 */}
-          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-            <Progress 
-              type="dashboard" 
-              percent={isUnlimited ? 0 : percent} 
-              status={status}
-              strokeColor={strokeColor}
-              format={() => (
-                <div style={{
-                  fontSize: '24px',
-                  fontWeight: 700,
-                  background: `linear-gradient(135deg, ${strokeColor} 0%, ${strokeColor}dd 100%)`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
-                }}>
-                  {usedDisplay}
-                </div>
-              )}
+  // 智能单位换算（带宽 Mbps -> Gbps -> Tbps），超过0.95则进位
+  const formatBandwidth = (mbps: number): string => {
+    if (mbps === 0) return '0';
+    if (mbps < 1000 * 0.95) return `${Math.round(mbps)} M`;
+    const gbps = mbps / 1000;
+    if (gbps < 1000 * 0.95) {
+      if (gbps >= 0.95 && gbps < 1) return '1 G';
+      return `${gbps >= 10 ? Math.round(gbps) : (Math.round(gbps * 10) / 10)} G`;
+    }
+    const tbps = gbps / 1000;
+    if (tbps >= 0.95 && tbps < 1) return '1 T';
+    return `${tbps >= 10 ? Math.round(tbps) : (Math.round(tbps * 10) / 10)} T`;
+  };
+
+  // 智能数量换算，超过0.95则进位
+  const formatCount = (count: number, unit: string): string => {
+    if (count === 0) return '0';
+    if (count >= 10000 * 0.95) {
+      const wan = count / 10000;
+      if (wan >= 0.95 && wan < 1) return `1万${unit}`;
+      return `${wan >= 10 ? Math.round(wan) : (Math.round(wan * 10) / 10)}万${unit}`;
+    }
+    if (count >= 1000 * 0.95) {
+      const k = count / 1000;
+      if (k >= 0.95 && k < 1) return `1k${unit}`;
+      return `${k >= 10 ? Math.round(k) : (Math.round(k * 10) / 10)}k${unit}`;
+    }
+    return `${Math.round(count)} ${unit}`;
+  };
+
+  const formatMemory = (mb?: number): string => {
+    if (!mb) return '0 MB';
+    if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`;
+    return `${mb} MB`;
+  };
+
+  // CPU核心数量换算（支持万核），超过0.95则进位
+  const formatCpuCores = (cores: number): string => {
+    if (cores === 0) return '0';
+    if (cores >= 10000 * 0.95) {
+      const wan = cores / 10000;
+      if (wan >= 0.95 && wan < 1) return '1万核';
+      return `${wan >= 10 ? Math.round(wan) : (Math.round(wan * 10) / 10)}万核`;
+    }
+    if (cores >= 1000 * 0.95) {
+      const k = cores / 1000;
+      if (k >= 0.95 && k < 1) return '1k核';
+      return `${k >= 10 ? Math.round(k) : (Math.round(k * 10) / 10)}k核`;
+    }
+    return `${Math.round(cores)} 核`;
+  };
+
+  // 资源项数据
+  const computeResources = [
+    {
+      title: 'CPU',
+      used: user.used_cpu || 0,
+      quota: user.quota_cpu || 0,
+      unit: '核',
+      icon: <CpuChipIcon style={{ width: '18px', height: '18px', color: '#3b82f6' }} />,
+      color: '#3b82f6',
+      formatter: formatCpuCores
+    },
+    {
+      title: '内存',
+      used: user.used_ram || 0,
+      quota: user.quota_ram || 0,
+      icon: <CircleStackIcon style={{ width: '18px', height: '18px', color: '#10b981' }} />,
+      color: '#10b981',
+      formatter: formatStorage
+    },
+    {
+      title: '磁盘',
+      used: user.used_ssd || 0,
+      quota: user.quota_ssd || 0,
+      icon: <ServerIcon style={{ width: '18px', height: '18px', color: '#8b5cf6' }} />,
+      color: '#8b5cf6',
+      formatter: formatStorage
+    },
+    ...(user.quota_gpu > 0 ? [{
+      title: 'GPU',
+      used: user.used_gpu || 0,
+      quota: user.quota_gpu || 0,
+      icon: <CubeIcon style={{ width: '18px', height: '18px', color: '#ec4899' }} />,
+      color: '#ec4899',
+      formatter: formatStorage
+    }] : [])
+  ];
+
+  const networkResources = [
+    {
+      title: 'NAT',
+      used: user.used_nat_ports || 0,
+      quota: user.quota_nat_ports || 0,
+      icon: <GlobeAltIcon style={{ width: '18px', height: '18px', color: '#6366f1' }} />,
+      color: '#6366f1',
+      formatter: (val: number) => formatCount(val, '')
+    },
+    {
+      title: 'Web',
+      used: user.used_web_proxy || 0,
+      quota: user.quota_web_proxy || 0,
+      icon: <GlobeAltIcon style={{ width: '18px', height: '18px', color: '#14b8a6' }} />,
+      color: '#14b8a6',
+      formatter: (val: number) => formatCount(val, '')
+    },
+    {
+      title: '上行',
+      used: user.used_bandwidth_up || 0,
+      quota: user.quota_bandwidth_up || 0,
+      icon: <ArrowUpIcon style={{ width: '18px', height: '18px', color: '#ef4444' }} />,
+      color: '#ef4444',
+      formatter: formatBandwidth
+    },
+    {
+      title: '下行',
+      used: user.used_bandwidth_down || 0,
+      quota: user.quota_bandwidth_down || 0,
+      icon: <ArrowDownIcon style={{ width: '18px', height: '18px', color: '#06b6d4' }} />,
+      color: '#06b6d4',
+      formatter: formatBandwidth
+    }
+  ];
+
+  // 渲染资源项（卡片样式）
+  const renderResourceItem = (item: any) => {
+    const percent = item.quota > 0 ? Math.min(Math.round((item.used / item.quota) * 100), 100) : 0;
+    const isUnlimited = item.quota > 1000000;
+    
+    const usedDisplay = item.formatter ? item.formatter(item.used) : `${item.used}`;
+    const quotaDisplay = isUnlimited ? '∞' : (item.formatter ? item.formatter(item.quota) : `${item.quota}`);
+
+    return (
+      <Card 
+        key={item.title}
+        hoverable
+        size="small"
+        className="ant-card-bordered glass-effect"
+        styles={{ body: { padding: '12px' } }}
+        style={{ flex: '1 1 0', minWidth: '120px' }}
+      >
+        <div className="flex items-center gap-2">
+          <div className="flex-shrink-0">{item.icon}</div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-gray-500 dark:text-gray-400">{item.title}</span>
+              <span className="text-xs font-semibold" style={{ color: item.color }}>
+                {usedDisplay} / {quotaDisplay}
+              </span>
+            </div>
+            <Progress
+              percent={isUnlimited ? 0 : percent}
+              size="small"
+              strokeColor={item.color}
+              showInfo={false}
+              style={{ margin: 0 }}
             />
           </div>
+        </div>
+      </Card>
+    );
+  };
 
-          {/* 配额信息 */}
-          <div style={{ 
-            textAlign: 'center',
-            fontSize: '13px',
-            color: 'var(--text-secondary)',
-            fontWeight: 500
-          }}>
-            总配额: <span style={{ 
-              color: 'var(--text-primary)',
-              fontWeight: 600
-            }}>{quotaDisplay}</span>
+  // 收集所有NAT端口和Web代理
+  const allNatPorts: Array<{host: string, uuid: string, port: any, portKey: string}> = [];
+  const allWebProxies: Array<{host: string, uuid: string, proxy: any, proxyKey: string}> = [];
+  
+  Object.entries(vms).forEach(([key, vm]: [string, any]) => {
+    const config = vm.config || {};
+    const vmHost = vm._host;
+    const vmUuid = vm._realUuid || key;
+    
+    // 收集NAT端口 - nat_all 是对象，key为端口索引
+    const natAll = config.nat_all || {};
+    if (typeof natAll === 'object' && !Array.isArray(natAll)) {
+      Object.entries(natAll).forEach(([portKey, nat]: [string, any]) => {
+        allNatPorts.push({ host: vmHost, uuid: vmUuid, port: nat, portKey });
+      });
+    } else if (Array.isArray(natAll)) {
+      natAll.forEach((nat: any, index: number) => {
+        allNatPorts.push({ host: vmHost, uuid: vmUuid, port: nat, portKey: String(index) });
+      });
+    }
+    
+    // 收集Web代理 - web_all 是对象，key为代理索引
+    const webAll = config.web_all || {};
+    if (typeof webAll === 'object' && !Array.isArray(webAll)) {
+      Object.entries(webAll).forEach(([proxyKey, web]: [string, any]) => {
+        allWebProxies.push({ host: vmHost, uuid: vmUuid, proxy: web, proxyKey });
+      });
+    } else if (Array.isArray(webAll)) {
+      webAll.forEach((web: any, index: number) => {
+        allWebProxies.push({ host: vmHost, uuid: vmUuid, proxy: web, proxyKey: String(index) });
+      });
+    }
+  });
+
+  // 渲染端口卡片
+  const renderPortCard = (item: {host: string, uuid: string, port: any, portKey: string}, index: number) => {
+    const port = item.port;
+    // 兼容不同字段名：wan_port/outer_port, lan_port/inner_port
+    const outerPort = port.wan_port || port.outer_port || '-';
+    const innerPort = port.lan_port || port.inner_port || '-';
+    const portName = port.nat_tips || port.name || `端口${outerPort}`;
+    const protocol = port.nat_type || port.protocol || 'TCP';
+    
+    return (
+      <Card 
+        key={`nat-${index}`}
+        hoverable
+        size="small"
+        className="ant-card-bordered glass-effect cursor-pointer"
+        styles={{ body: { padding: '12px' } }}
+        onClick={() => navigate(`/hosts/${item.host}/vms/${item.uuid}`)}
+      >
+        <div className="flex items-center justify-between mb-1">
+          <Tooltip title={portName}>
+            <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 truncate" style={{maxWidth: '100px'}}>
+              {portName}
+            </span>
+          </Tooltip>
+          <Tag color="blue" className="m-0 text-xs">{protocol}</Tag>
+        </div>
+        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+          外:{outerPort} → 内:{innerPort}
+        </div>
+        <Tooltip title={item.uuid}>
+          <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            {item.uuid}
+          </div>
+        </Tooltip>
+      </Card>
+    );
+  };
+
+  // 渲染Web代理卡片
+  const renderProxyCard = (item: {host: string, uuid: string, proxy: any, proxyKey: string}, index: number) => {
+    const proxy = item.proxy;
+    // 兼容不同字段名
+    const domain = proxy.domain || proxy.web_domain || '未配置域名';
+    const backendPort = proxy.backend_port || proxy.inner_port || 80;
+    const sslEnabled = proxy.ssl_enabled || proxy.https || false;
+    const fullUrl = `${sslEnabled ? 'https' : 'http'}://${domain}`;
+    
+    return (
+      <Card 
+        key={`web-${index}`}
+        hoverable
+        size="small"
+        className="ant-card-bordered glass-effect"
+        styles={{ body: { padding: '12px' } }}
+      >
+        <div className="flex items-center justify-between mb-1">
+          <Tooltip title={domain}>
+            <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 truncate" style={{maxWidth: '100px'}}>
+              {domain}
+            </span>
+          </Tooltip>
+          <div className="flex items-center gap-1">
+            <Tag color={sslEnabled ? 'green' : 'orange'} className="m-0 text-xs">
+              {sslEnabled ? 'HTTPS' : 'HTTP'}
+            </Tag>
+            <Tooltip title={`访问 ${fullUrl}`}>
+              <Button
+                type="link"
+                size="small"
+                className="p-0 h-auto text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(fullUrl, '_blank');
+                }}
+              >
+                访问
+              </Button>
+            </Tooltip>
+          </div>
+        </div>
+        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+          → :{backendPort}
+        </div>
+        <Tooltip title={item.uuid}>
+          <div 
+            className="text-xs text-gray-400 dark:text-gray-500 mt-1 cursor-pointer hover:text-blue-500"
+            onClick={() => navigate(`/hosts/${item.host}/vms/${item.uuid}`)}
+          >
+            {item.uuid}
+          </div>
+        </Tooltip>
+      </Card>
+    );
+  };
+
+  // 获取虚拟机状态图标
+  const getStatusIcon = (powerStatus: string) => {
+    switch (powerStatus) {
+      case 'STARTED':
+        return <PlayCircleOutlined className="text-green-600 dark:text-green-400" />;
+      case 'STOPPED':
+        return <PoweroffOutlined className="text-red-600 dark:text-red-400" />;
+      case 'SUSPEND':
+        return <PauseCircleOutlined className="text-yellow-600 dark:text-yellow-400" />;
+      case 'ON_STOP':
+      case 'ON_OPEN':
+      case 'ON_SAVE':
+      case 'ON_WAKE':
+        return <LoadingOutlined className="text-blue-600 dark:text-blue-400" spin />;
+      default:
+        return <QuestionCircleOutlined />;
+    }
+  };
+
+  // 渲染虚拟机概要卡片
+  const renderVMCard = (key: string, vm: any) => {
+    const config = vm.config || {};
+    const statusList = vm.status || [];
+    const firstStatus = statusList.length > 0 ? statusList[0] : { ac_status: 'UNKNOWN' };
+    const powerStatus = firstStatus.ac_status || 'UNKNOWN';
+    const statusInfo = VM_STATUS_MAP[powerStatus] || VM_STATUS_MAP.UNKNOWN;
+    const vmHost = vm._host;
+    const vmUuid = vm._realUuid || key;
+
+    const cpuTotal = firstStatus.cpu_total || config.cpu_num || 0;
+    const cpuUsage = firstStatus.cpu_usage || 0;
+    const cpuPercent = cpuTotal > 0 ? Math.round((cpuUsage / cpuTotal) * 100) : 0;
+
+    const memTotal = firstStatus.mem_total || config.mem_num || 0;
+    const memUsage = firstStatus.mem_usage || 0;
+    const memPercent = memTotal > 0 ? Math.round((memUsage / memTotal) * 100) : 0;
+
+    const nicAll = config.nic_all || {};
+    const firstNic = Object.values(nicAll)[0] || {};
+    // @ts-ignore
+    const ipv4 = firstNic.ip4_addr || '-';
+
+    const handleDetail = () => {
+      navigate(`/hosts/${vmHost}/vms/${vmUuid}`);
+    };
+
+    return (
+      <Col key={key} xs={24} sm={12} lg={8} xl={6}>
+        <Card
+          hoverable
+          className="glass-effect"
+          styles={{ body: { padding: '16px' } }}
+          onClick={handleDetail}
+        >
+          {/* 头部：名称和状态 */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center border border-purple-600/30 dark:border-purple-400/30 flex-shrink-0">
+                <DesktopOutlined className="text-xl text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <Tooltip title={vmUuid}>
+                  <h4 className="m-0 text-sm font-bold truncate">{vmUuid}</h4>
+                </Tooltip>
+                <span className="text-xs text-gray-500">{config.os_name || '未知系统'}</span>
+              </div>
+            </div>
+            <Tag color={statusInfo.color} icon={getStatusIcon(powerStatus)} className="m-0 flex-shrink-0">
+              {statusInfo.text}
+            </Tag>
           </div>
 
-          {/* 使用率标签 */}
-          <div style={{
-            marginTop: '12px',
-            padding: '6px 12px',
-            borderRadius: '8px',
-            background: percent > 90 
-              ? 'rgba(239, 68, 68, 0.1)' 
-              : percent > 70 
-                ? 'rgba(251, 191, 36, 0.1)' 
-                : 'rgba(34, 197, 94, 0.1)',
-            textAlign: 'center',
-            fontSize: '12px',
-            fontWeight: 600,
-            color: percent > 90 
-              ? '#ef4444' 
-              : percent > 70 
-                ? '#f59e0b' 
-                : '#22c55e'
-          }}>
-            使用率 {isUnlimited ? '0' : percent}%
+          {/* 资源使用 */}
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="p-2 rounded-lg ">
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="text-gray-500">CPU</span>
+                <span className="font-semibold">{cpuPercent}%</span>
+              </div>
+              <Progress percent={cpuPercent} size="small" strokeColor="#3b82f6" showInfo={false} />
+            </div>
+            <div className="p-2 rounded-lg ">
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="text-gray-500">内存</span>
+                <span className="font-semibold">{memPercent}%</span>
+              </div>
+              <Progress percent={memPercent} size="small" strokeColor="#10b981" showInfo={false} />
+            </div>
+          </div>
+
+          {/* 底部信息 */}
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              {vmHost && (
+                <Tag icon={<CloudServerOutlined />} color="blue" className="m-0 text-xs">
+                  {vmHost}
+                </Tag>
+              )}
+              <span className="text-gray-500">{ipv4}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Tooltip title="VNC控制台">
+                <Button 
+                  type="text" 
+                  size="small"
+                  icon={<DesktopOutlined />}
+                  disabled={powerStatus !== 'STARTED'}
+                  className="hover:bg-purple-50 dark:hover:bg-purple-900/30"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`/hosts/${vmHost}/vms/${vmUuid}/vnc`, '_blank');
+                  }}
+                />
+              </Tooltip>
+              <Tooltip title="电源操作">
+                <Button 
+                  type="text" 
+                  size="small"
+                  icon={<PoweroffOutlined className={powerStatus === 'STARTED' ? 'text-green-500' : ''} />}
+                  className="hover:bg-green-50 dark:hover:bg-green-900/30"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // 跳转到详情页的电源控制
+                    handleDetail();
+                  }}
+                />
+              </Tooltip>
+              <Button 
+                type="link" 
+                size="small" 
+                icon={<EyeOutlined />}
+                className="p-0 h-auto"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDetail();
+                }}
+              >
+                详情
+              </Button>
+            </div>
           </div>
         </Card>
       </Col>
     );
   };
 
+  const vmCount = Object.keys(vms).length;
+  const runningCount = Object.values(vms).filter((vm: any) => {
+    const statusList = vm.status || [];
+    const firstStatus = statusList.length > 0 ? statusList[0] : { ac_status: 'UNKNOWN' };
+    return firstStatus.ac_status === 'STARTED';
+  }).length;
+
   return (
-    <div style={{ 
-      padding: '32px',
-      minHeight: '100vh'
-    }}>
+    <div className="p-6 min-h-screen">
       {/* 页面标题 */}
-      <div style={{ marginBottom: '32px' }}>
-        <Title 
-          level={2} 
-          style={{ 
-            margin: 0,
-            fontSize: '32px',
-            fontWeight: 700,
-            color: 'var(--text-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}
-        >
-          <CubeIcon style={{ width: '36px', height: '36px', color: 'var(--accent-primary)' }} />
-          全局资源概览
-        </Title>
-        <div style={{ 
-          marginTop: '8px',
-          fontSize: '14px',
-          color: 'var(--text-secondary)'
-        }}>
-          查看您的资源使用情况和配额信息
-        </div>
-      </div>
+      <PageHeader
+        icon={<CubeIcon style={{ width: '24px', height: '24px' }} />}
+        title="资源概览"
+        subtitle="查看您的资源使用情况和虚拟机状态"
+      />
       
       <Spin spinning={loading}>
-        {/* 计算资源 */}
-        <div style={{ marginBottom: '32px' }}>
-          <div style={{ 
-            fontSize: '18px', 
-            fontWeight: 600,
-            marginBottom: '16px',
-            color: 'var(--text-primary)'
-          }}>
-            💻 计算资源
+        {/* 资源概况 */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-lg font-semibold text-gray-800 dark:text-gray-200">📊 资源概况</span>
           </div>
-          <Row gutter={[24, 24]}>
-            {renderResourceCard(
-              'CPU 核心', 
-              user.used_cpu || 0, 
-              user.quota_cpu || 0, 
-              '核',
-              false,
-              <CpuChipIcon style={{ width: '24px', height: '24px', color: '#3b82f6' }} />,
-              'rgba(59, 130, 246, 0.1)',
-              'rgba(37, 99, 235, 0.1)',
-              '#3b82f6'
-            )}
-            {renderResourceCard(
-              '内存', 
-              user.used_ram || 0, 
-              user.quota_ram || 0, 
-              '',
-              true,
-              <CircleStackIcon style={{ width: '24px', height: '24px', color: '#10b981' }} />,
-              'rgba(16, 185, 129, 0.1)',
-              'rgba(5, 150, 105, 0.1)',
-              '#10b981'
-            )}
-            {renderResourceCard(
-              '磁盘存储', 
-              user.used_ssd || 0, 
-              user.quota_ssd || 0, 
-              '',
-              true,
-              <ServerIcon style={{ width: '24px', height: '24px', color: '#8b5cf6' }} />,
-              'rgba(139, 92, 246, 0.1)',
-              'rgba(124, 58, 237, 0.1)',
-              '#8b5cf6'
-            )}
-            {/* 如果有GPU配额，也显示 */}
-            {(user.quota_gpu || 0) > 0 && renderResourceCard(
-              'GPU 显存', 
-              user.used_gpu || 0, 
-              user.quota_gpu || 0, 
-              '',
-              true,
-              <CubeIcon style={{ width: '24px', height: '24px', color: '#ec4899' }} />,
-              'rgba(236, 72, 153, 0.1)',
-              'rgba(219, 39, 119, 0.1)',
-              '#ec4899'
-            )}
-          </Row>
+          <div className="flex flex-wrap gap-2">
+            {computeResources.map(renderResourceItem)}
+            {networkResources.map(renderResourceItem)}
+          </div>
         </div>
 
-        {/* 网络资源 */}
-        <div>
-          <div style={{ 
-            fontSize: '18px', 
-            fontWeight: 600,
-            marginBottom: '16px',
-            color: 'var(--text-primary)'
-          }}>
-            🌐 网络资源
+        {/* 端口转发概要 */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-semibold text-gray-800 dark:text-gray-200">🔗 端口转发</span>
+              <Tag color="blue">{allNatPorts.length} 个</Tag>
+            </div>
           </div>
-          <Row gutter={[24, 24]}>
-            {renderResourceCard(
-              'NAT 端口', 
-              user.used_nat_ports || 0, 
-              user.quota_nat_ports || 0, 
-              '个',
-              false,
-              <GlobeAltIcon style={{ width: '24px', height: '24px', color: '#6366f1' }} />,
-              'rgba(99, 102, 241, 0.1)',
-              'rgba(79, 70, 229, 0.1)',
-              '#6366f1'
+          {allNatPorts.length === 0 ? (
+            <div className="text-center py-6 text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+              暂无端口转发
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {allNatPorts.slice(0, allNatPorts.length > 5 ? 4 : 5).map((item, index) => renderPortCard(item, index))}
+              {allNatPorts.length > 5 && (
+                <div 
+                  className="p-3 rounded-lg border-2 border-dashed border-blue-300 dark:border-blue-600 bg-blue-50/50 dark:bg-blue-900/20 hover:border-blue-500 transition-colors cursor-pointer flex flex-col items-center justify-center"
+                  onClick={() => navigate('/user/vms')}
+                >
+                  <RightOutlined className="text-2xl text-blue-500 mb-1" />
+                  <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">查看全部</span>
+                  <span className="text-xs text-blue-500">{allNatPorts.length} 个</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 反向代理概要 */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-semibold text-gray-800 dark:text-gray-200">🌐 反向代理</span>
+              <Tag color="purple">{allWebProxies.length} 个</Tag>
+            </div>
+          </div>
+          {allWebProxies.length === 0 ? (
+            <div className="text-center py-6 text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+              暂无反向代理
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {allWebProxies.slice(0, allWebProxies.length > 5 ? 4 : 5).map((item, index) => renderProxyCard(item, index))}
+              {allWebProxies.length > 5 && (
+                <div 
+                  className="p-3 rounded-lg border-2 border-dashed border-purple-300 dark:border-purple-600 bg-purple-50/50 dark:bg-purple-900/20 hover:border-purple-500 transition-colors cursor-pointer flex flex-col items-center justify-center"
+                  onClick={() => navigate('/user/vms')}
+                >
+                  <RightOutlined className="text-2xl text-purple-500 mb-1" />
+                  <span className="text-xs text-purple-600 dark:text-purple-400 font-semibold">查看全部</span>
+                  <span className="text-xs text-purple-500">{allWebProxies.length} 个</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 虚拟机概要 */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-semibold text-gray-800 dark:text-gray-200">🖥️ 实例概要</span>
+              <Tag color="blue">{vmCount} 台</Tag>
+              <Tag color="green">{runningCount} 运行中</Tag>
+            </div>
+            <Button 
+              type="link" 
+              onClick={() => navigate('/user/vms')}
+              className="flex items-center gap-1"
+            >
+              管理全部虚拟机 <RightOutlined />
+            </Button>
+          </div>
+
+          <Spin spinning={vmsLoading}>
+            {vmCount === 0 ? (
+              <Empty 
+                description="暂无虚拟机" 
+                className="py-12 glass-card-enhanced rounded-2xl"
+                style={{
+                  background: 'var(--card-bg)',
+                  border: '1px solid var(--border-color)',
+                }}
+              >
+                <Button type="primary" onClick={() => navigate('/user/vms')}>
+                  创建虚拟机
+                </Button>
+              </Empty>
+            ) : (
+              <Row gutter={[16, 16]}>
+                {Object.entries(vms).slice(0, vmCount > 12 ? 11 : 12).map(([key, vm]) => renderVMCard(key, vm))}
+                {vmCount > 12 && (
+                  <Col xs={24} sm={12} lg={8} xl={6}>
+                    <Card
+                      hoverable
+                      className="glass-effect h-full flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-blue-300 dark:border-blue-600 bg-blue-50/30 dark:bg-blue-900/20 hover:border-blue-500 transition-colors"
+                      styles={{ body: { padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '180px' } }}
+                      onClick={() => navigate('/user/vms')}
+                    >
+                      <div className="text-4xl text-blue-400 dark:text-blue-500 mb-3">···</div>
+                      <div className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-1">管理更多实例</div>
+                      <div className="text-sm text-blue-500">还有 {vmCount - 11} 台虚拟机</div>
+                      <Button 
+                        type="primary" 
+                        icon={<RightOutlined />}
+                        className="mt-3"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/user/vms');
+                        }}
+                      >
+                        查看全部
+                      </Button>
+                    </Card>
+                  </Col>
+                )}
+              </Row>
             )}
-            {renderResourceCard(
-              'Web 代理', 
-              user.used_web_proxy || 0, 
-              user.quota_web_proxy || 0, 
-              '个',
-              false,
-              <GlobeAltIcon style={{ width: '24px', height: '24px', color: '#14b8a6' }} />,
-              'rgba(20, 184, 166, 0.1)',
-              'rgba(13, 148, 136, 0.1)',
-              '#14b8a6'
-            )}
-            {renderResourceCard(
-              '上行带宽', 
-              user.used_bandwidth_up || 0, 
-              user.quota_bandwidth_up || 0, 
-              'Mbps',
-              false,
-              <ArrowUpIcon style={{ width: '24px', height: '24px', color: '#ef4444' }} />,
-              'rgba(239, 68, 68, 0.1)',
-              'rgba(220, 38, 38, 0.1)',
-              '#ef4444'
-            )}
-            {renderResourceCard(
-              '下行带宽', 
-              user.used_bandwidth_down || 0, 
-              user.quota_bandwidth_down || 0, 
-              'Mbps',
-              false,
-              <ArrowDownIcon style={{ width: '24px', height: '24px', color: '#06b6d4' }} />,
-              'rgba(6, 182, 212, 0.1)',
-              'rgba(8, 145, 178, 0.1)',
-              '#06b6d4'
-            )}
-          </Row>
+          </Spin>
         </div>
       </Spin>
     </div>

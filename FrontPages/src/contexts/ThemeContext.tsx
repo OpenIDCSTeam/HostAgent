@@ -1,4 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { ThemeConfig, ConfigProvider } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
+import { lightTheme, darkTheme, Theme, lightTransparentTheme, darkTransparentTheme } from '../config/theme.config';
 
 type Theme = 'light' | 'dark';
 
@@ -8,6 +11,7 @@ interface ThemeContextType {
   setTheme: (theme: Theme) => void;
   transparentMode: boolean;
   toggleTransparentMode: () => void;
+  getThemeConfig: () => ThemeConfig;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -47,15 +51,19 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   // 当透明模式变化时，更新 DOM 和 localStorage
   useEffect(() => {
     const root = document.documentElement;
+    const body = document.body;
     if (transparentMode) {
       root.setAttribute('data-transparent', 'true');
-      root.style.backgroundImage = 'url(https://images.524228.xyz/)';
-      root.style.backgroundSize = 'cover';
-      root.style.backgroundPosition = 'center';
-      root.style.backgroundAttachment = 'fixed';
+      // 将背景图片设置在body上，避免被其他样式遮挡
+      body.style.backgroundImage = 'url(https://images.524228.xyz/)';
+      body.style.backgroundSize = 'cover';
+      body.style.backgroundPosition = 'center';
+      body.style.backgroundAttachment = 'fixed';
+      body.style.backgroundColor = 'transparent';
     } else {
       root.removeAttribute('data-transparent');
-      root.style.backgroundImage = '';
+      body.style.backgroundImage = '';
+      body.style.backgroundColor = '';
     }
     localStorage.setItem('transparentMode', String(transparentMode));
   }, [transparentMode]);
@@ -72,9 +80,25 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     setTransparentMode(prev => !prev);
   };
 
+  const getThemeConfig = (): ThemeConfig => {
+    if (transparentMode) {
+      return theme === 'light' ? lightTransparentTheme : darkTransparentTheme;
+    }
+    return theme === 'light' ? lightTheme : darkTheme;
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme, transparentMode, toggleTransparentMode }}>
-      {children}
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme, transparentMode, toggleTransparentMode, getThemeConfig }}>
+      <ConfigProvider 
+        theme={getThemeConfig()}
+        locale={zhCN}
+        getPopupContainer={(node) => node?.parentElement || document.body}
+        modal={{
+          mask: false
+        }}
+      >
+        {children}
+      </ConfigProvider>
     </ThemeContext.Provider>
   );
 };

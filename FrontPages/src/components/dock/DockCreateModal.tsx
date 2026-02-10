@@ -21,7 +21,8 @@ import {
     RadarChartOutlined,
     ThunderboltOutlined,
     DesktopOutlined,
-    GlobalOutlined
+    GlobalOutlined,
+    ReloadOutlined
 } from '@ant-design/icons'
 import api from '@/utils/apis.ts'
 
@@ -103,6 +104,25 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
     const [saveConfirmVisible, setSaveConfirmVisible] = useState(false)
     const [pendingValues, setPendingValues] = useState<any>(null)
 
+    // 生成随机字符串
+    const generateRandomString = (length: number) => {
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+        const numbers = '0123456789'
+        let result = ''
+        result += letters.charAt(Math.floor(Math.random() * letters.length))
+        result += numbers.charAt(Math.floor(Math.random() * numbers.length))
+        const allChars = letters + numbers
+        for (let i = result.length; i < length; i++) {
+            result += allChars.charAt(Math.floor(Math.random() * allChars.length))
+        }
+        return result.split('').sort(() => Math.random() - 0.5).join('')
+    }
+
+    // 生成随机VNC端口
+    const generateRandomVncPort = () => {
+        return Math.floor(Math.random() * (6999 - 5900 + 1)) + 5900
+    }
+
     // Helper for rendering slider + input
     const renderResourceInput = (
         name: string,
@@ -121,7 +141,7 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
         return (
             <Form.Item label={label} style={{ marginBottom: 24 }}>
                 {showQuota && !isAdmin && (
-                    <div className="flex justify-between text-xs text-gray-500 mb-2">
+                    <div className="flex justify-between text-xs mb-2">
                         <span>当前: <strong>{currentValue}</strong> {unit}</span>
                         <span>可用: {Math.max(0, quotaTotal - quotaUsed)} {unit}</span>
                     </div>
@@ -147,15 +167,14 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                                 step={step}
                                 disabled={disabled}
                                 style={{ width: '100%' }}
-                                formatter={value => `${value}${unit ? ` ${unit}` : ''}`}
-                                parser={value => value!.replace(new RegExp(`\\s?${unit}$`), '')}
+                                addonAfter={unit || undefined}
                             />
                         </Form.Item>
                     </Col>
                 </Row>
                 {/* Special hint for HDD */}
                 {name === 'hdd_num' && selectedOsMinDisk > 0 && (
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs mt-1">
                         最小要求: {selectedOsMinDisk}GB
                     </div>
                 )}
@@ -210,7 +229,12 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
 
     const loadVmDetails = async () => {
         const targetHost = hostName
-        if (!targetHost || !vmUuid) return
+        if (!targetHost || !vmUuid) {
+            if (isEditMode && !targetHost) {
+                message.error('未指定主机，无法加载虚拟机详情')
+            }
+            return
+        }
 
         try {
             setLoading(true)
@@ -300,6 +324,8 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                         [`nic_ip6_${index}`]: typedNic.ip6_addr,
                     })
                 })
+            } else {
+                message.error(result.msg || '加载虚拟机详情失败')
             }
         } catch (error) {
             message.error('加载虚拟机详情失败')
@@ -309,82 +335,6 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
         }
     }
 
-    const resetForm = async () => {
-        form.resetFields()
-        setNicList([])
-        
-        if (hostName) {
-            setSelectedHost(hostName)
-            form.setFieldsValue({ host_name: hostName })
-            await loadHostData(hostName)
-        } else {
-            setSelectedHost('')
-            setHostImages({})
-            setGpuList({})
-        }
-
-        const generateRandomString = (length: number) => {
-            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-            const numbers = '0123456789'
-            let result = ''
-            result += letters.charAt(Math.floor(Math.random() * letters.length))
-            result += numbers.charAt(Math.floor(Math.random() * numbers.length))
-            const allChars = letters + numbers
-            for (let i = result.length; i < length; i++) {
-                result += allChars.charAt(Math.floor(Math.random() * allChars.length))
-            }
-            return result.split('').sort(() => Math.random() - 0.5).join('')
-        }
-
-        form.setFieldsValue({
-            vm_uuid_suffix: generateRandomString(8),
-            os_pass: generateRandomString(8),
-            vc_pass: generateRandomString(8),
-            vc_port: Math.floor(Math.random() * (6999 - 5900 + 1)) + 5900,
-            cpu_num: 2,
-            cpu_per: 100,
-            mem_num: 2048,
-            hdd_num: 20480,
-            hdd_iop: 1000,
-            gpu_id: '',
-            gpu_num: 0,
-            gpu_mem: 128,
-            gpu_mdev: '',
-            gpu_remark: '',
-            usb_vid: '',
-            usb_pid: '',
-            usb_remark: '',
-            speed_u: 100,
-            speed_d: 100,
-            flu_num: 102400,
-            flu_rst_day: 31,
-            flu_rst_limit: 10,
-            flu_rst_time: Math.floor(Date.now() / 1000),
-            nat_num: 100,
-            web_num: 100,
-        })
-
-        if (userQuota) {
-            const availableNatIps = userQuota.quota_nat_ips - userQuota.used_nat_ips
-            const availablePubIps = userQuota.quota_pub_ips - userQuota.used_pub_ips
-            let defaultType = 'nat'
-            if (availableNatIps <= 0 && availablePubIps > 0) defaultType = 'pub'
-            
-            if (availableNatIps > 0 || availablePubIps > 0) {
-                const initialNic = { key: 0, name: 'ethernet0', type: defaultType }
-                setNicList([initialNic])
-                setNicCounter(1)
-                form.setFieldsValue({
-                    nic_name_0: 'ethernet0',
-                    nic_type_0: defaultType
-                })
-            }
-        } else {
-            setNicList([{ key: 0, name: 'ethernet0', type: 'nat' }])
-            setNicCounter(1)
-            form.setFieldsValue({ nic_name_0: 'ethernet0', nic_type_0: 'nat' })
-        }
-    }
 
     const isFieldDisabled = (fieldName: string) => {
         if (!hostConfig) return false
@@ -491,13 +441,18 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                 }
             } else {
                 const hide = message.loading('创建中...', 0)
-                const result = await api.createVM(targetHost, vmData)
-                hide()
-                if (result.code === 200) {
-                    message.success('创建成功')
-                    onSuccess()
-                } else {
-                    message.error(result.msg || '创建失败')
+                try {
+                    const result = await api.createVM(targetHost, vmData)
+                    hide()
+                    if (result.code === 200) {
+                        message.success('创建成功')
+                        onSuccess()
+                    } else {
+                        message.error(result.msg || '创建失败')
+                    }
+                } catch (error) {
+                    hide()
+                    throw error
                 }
             }
         } catch (error) {
@@ -527,6 +482,70 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
         fontWeight: 600
     }
 
+    const resetForm = async () => {
+        form.resetFields()
+        setNicList([])
+        
+        if (hostName) {
+            setSelectedHost(hostName)
+            form.setFieldsValue({ host_name: hostName })
+            await loadHostData(hostName)
+        } else {
+            setSelectedHost('')
+            setHostImages({})
+            setGpuList({})
+        }
+
+        form.setFieldsValue({
+            vm_uuid_suffix: generateRandomString(8),
+            os_pass: generateRandomString(8),
+            vc_pass: generateRandomString(8),
+            vc_port: generateRandomVncPort(),
+            cpu_num: 2,
+            cpu_per: 100,
+            mem_num: 2048,
+            hdd_num: 20480,
+            hdd_iop: 1000,
+            gpu_id: '',
+            gpu_num: 0,
+            gpu_mem: 128,
+            gpu_mdev: '',
+            gpu_remark: '',
+            usb_vid: '',
+            usb_pid: '',
+            usb_remark: '',
+            speed_u: 100,
+            speed_d: 100,
+            flu_num: 102400,
+            flu_rst_day: 31,
+            flu_rst_limit: 10,
+            flu_rst_time: Math.floor(Date.now() / 1000),
+            nat_num: 100,
+            web_num: 100,
+        })
+
+        if (userQuota) {
+            const availableNatIps = userQuota.quota_nat_ips - userQuota.used_nat_ips
+            const availablePubIps = userQuota.quota_pub_ips - userQuota.used_pub_ips
+            let defaultType = 'nat'
+            if (availableNatIps <= 0 && availablePubIps > 0) defaultType = 'pub'
+            
+            if (availableNatIps > 0 || availablePubIps > 0) {
+                const initialNic = { key: 0, name: 'ethernet0', type: defaultType }
+                setNicList([initialNic])
+                setNicCounter(1)
+                form.setFieldsValue({
+                    nic_name_0: 'ethernet0',
+                    nic_type_0: defaultType
+                })
+            }
+        } else {
+            setNicList([{ key: 0, name: 'ethernet0', type: 'nat' }])
+            setNicCounter(1)
+            form.setFieldsValue({ nic_name_0: 'ethernet0', nic_type_0: 'nat' })
+        }
+    }
+
     return (
         <>
             <Modal
@@ -554,9 +573,11 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                                 }}
                                 placeholder="请选择部署主机"
                             >
-                                {Object.keys(availableHosts).map(h => (
-                                    <Select.Option key={h} value={h}>{h}</Select.Option>
-                                ))}
+                                {Object.keys(availableHosts)
+                                    .filter(h => availableHosts[h]?.enabled !== false)
+                                    .map(h => (
+                                        <Select.Option key={h} value={h}>{h}</Select.Option>
+                                    ))}
                             </Select>
                         </Form.Item>
                     )}
@@ -572,15 +593,30 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                         <Row gutter={24}>
                             <Col span={12}>
                                 <Form.Item 
-                                    name="vm_uuid_suffix" 
                                     label="虚拟机UUID" 
-                                    rules={[{ required: true }]}
+                                    required
                                 >
-                                    <Input 
-                                        addonBefore={hostConfig?.filter_name} 
-                                        disabled={isEditMode}
-                                        placeholder="唯一标识符"
-                                    />
+                                    <Space.Compact style={{ width: '100%' }}>
+                                        <Form.Item
+                                            name="vm_uuid_suffix"
+                                            noStyle
+                                            rules={[{ required: true }]}
+                                        >
+                                            <Input 
+                                                addonBefore={hostConfig?.filter_name} 
+                                                disabled={isEditMode}
+                                                placeholder="唯一标识符"
+                                            />
+                                        </Form.Item>
+                                        {!isEditMode && (
+                                            <Button 
+                                                htmlType="button"
+                                                icon={<ReloadOutlined />} 
+                                                onClick={() => form.setFieldValue('vm_uuid_suffix', generateRandomString(8))}
+                                                title="随机生成UUID"
+                                            />
+                                        )}
+                                    </Space.Compact>
                                 </Form.Item>
                             </Col>
                             <Col span={12}>
@@ -609,18 +645,48 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                         
                         <Row gutter={24}>
                             <Col span={8}>
-                                <Form.Item name="os_pass" label="系统密码">
-                                    <Input.Password placeholder="系统登录密码" />
+                                <Form.Item label="系统密码">
+                                    <Space.Compact style={{ width: '100%' }}>
+                                        <Form.Item name="os_pass" noStyle>
+                                            <Input.Password placeholder="系统登录密码" />
+                                        </Form.Item>
+                                        <Button 
+                                            htmlType="button"
+                                            icon={<ReloadOutlined />} 
+                                            onClick={() => form.setFieldValue('os_pass', generateRandomString(8))}
+                                            title="随机生成密码"
+                                        />
+                                    </Space.Compact>
                                 </Form.Item>
                             </Col>
                             <Col span={8}>
-                                <Form.Item name="vc_pass" label="VNC密码">
-                                    <Input.Password placeholder="VNC连接密码" />
+                                <Form.Item label="VNC密码">
+                                    <Space.Compact style={{ width: '100%' }}>
+                                        <Form.Item name="vc_pass" noStyle>
+                                            <Input.Password placeholder="VNC连接密码" />
+                                        </Form.Item>
+                                        <Button 
+                                            htmlType="button"
+                                            icon={<ReloadOutlined />} 
+                                            onClick={() => form.setFieldValue('vc_pass', generateRandomString(8))}
+                                            title="随机生成密码"
+                                        />
+                                    </Space.Compact>
                                 </Form.Item>
                             </Col>
                             <Col span={8}>
-                                <Form.Item name="vc_port" label="VNC端口">
-                                    <InputNumber style={{ width: '100%' }} min={5900} max={6999} />
+                                <Form.Item label="VNC端口">
+                                    <Space.Compact style={{ width: '100%' }}>
+                                        <Form.Item name="vc_port" noStyle>
+                                            <InputNumber style={{ width: '100%' }} min={5900} max={6999} />
+                                        </Form.Item>
+                                        <Button 
+                                            htmlType="button"
+                                            icon={<ReloadOutlined />} 
+                                            onClick={() => form.setFieldValue('vc_port', generateRandomVncPort())}
+                                            title="随机生成端口"
+                                        />
+                                    </Space.Compact>
                                 </Form.Item>
                             </Col>
                         </Row>
@@ -765,12 +831,12 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                                 )}
                             </Col>
                             <Col span={6}>
-                                <Form.Item label="重置时间(天)" name="flu_rst_day" style={{ marginBottom: 24 }}>
-                                    <InputNumber min={1} max={365} style={{ width: '100%' }} />
+                                <Form.Item label="重置时间" name="flu_rst_day" style={{ marginBottom: 24 }}>
+                                    <InputNumber min={1} max={365} style={{ width: '100%' }} addonAfter="天" />
                                 </Form.Item>
                             </Col>
                             <Col span={6}>
-                                <Form.Item label="达标限速(M)" name="flu_rst_limit" style={{ marginBottom: 24 }}>
+                                <Form.Item label="达标限速" name="flu_rst_limit" style={{ marginBottom: 24 }}>
                                     <InputNumber min={1} max={1000} style={{ width: '100%' }} addonAfter="Mbps" />
                                 </Form.Item>
                             </Col>
@@ -814,10 +880,10 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
                                     </Select>
                                 </Form.Item>
                                 <Form.Item name={`nic_ip_${nic.key}`} noStyle>
-                                    <Input placeholder="IPv4 (可选)" />
+                                    <Input placeholder="IPv4 (可选)" style={{ margin: '0 10px' }} />
                                 </Form.Item>
                                 <Form.Item name={`nic_ip6_${nic.key}`} noStyle>
-                                    <Input placeholder="IPv6 (可选)" />
+                                    <Input placeholder="IPv6 (可选)" style={{ margin: '0 10px' }} />
                                 </Form.Item>
                                 <Button danger icon={<DeleteOutlined />} onClick={() => handleRemoveNic(nic.key)} />
                             </Space.Compact>

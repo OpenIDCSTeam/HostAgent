@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Row, Col, Card, Button, Modal, Form, Input, Select, Slider, Progress, Tag, message, Space, Divider, Typography } from 'antd'
+import { Row, Col, Card, Button, Modal, Form, Input, Select, Slider, Progress, Tag, message, Space, Divider, Table, Tooltip } from 'antd'
 
-const { Title } = Typography
 import {
   DesktopOutlined,
   CloudServerOutlined,
@@ -11,7 +10,6 @@ import {
   MonitorOutlined,
   SettingOutlined,
   SaveOutlined,
-  InfoCircleOutlined,
   ThunderboltOutlined,
   RadarChartOutlined,
   HddOutlined,
@@ -23,7 +21,11 @@ import {
   DownloadOutlined,
   DatabaseOutlined,
   MinusCircleOutlined,
+  TeamOutlined,
+  CloseCircleOutlined,
+  SyncOutlined,
 } from '@ant-design/icons'
+import PageHeader from '@/components/PageHeader'
 import { useNavigate } from 'react-router-dom'
 import api from '@/utils/apis.ts'
 import { useUserStore } from '@/utils/data.ts'
@@ -32,17 +34,33 @@ import { useUserStore } from '@/utils/data.ts'
  * 系统统计数据接口
  */
 interface SystemStats {
-  host_count: number
-  vm_count: number
-  running_vm_count: number
+  hosts_count: number
+  vms_count: number
+  users_count: number
+  running_vms: number
+  stopped_vms: number
+  total_nat_ports: number
+  total_web_proxy: number
 }
 
 /**
  * 主机信息接口
  */
 interface HostInfo {
-  addr: string
-  vm_count: number
+  server_name: string
+  server_type: string
+  server_addr: string
+  status: string
+  vms_count: number
+  max_vms: number
+  running_vms: number
+  stopped_vms: number
+  cpu_usage: number
+  gpu_usage: number
+  memory_usage: number
+  disk_usage: number
+  enabled: boolean
+  last_check: string
 }
 
 /**
@@ -118,9 +136,13 @@ function Dashboards() {
 
   // 管理员视图状态
   const [systemStats, setSystemStats] = useState<SystemStats>({
-    host_count: 0,
-    vm_count: 0,
-    running_vm_count: 0,
+    hosts_count: 0,
+    vms_count: 0,
+    users_count: 0,
+    running_vms: 0,
+    stopped_vms: 0,
+    total_nat_ports: 0,
+    total_web_proxy: 0,
   })
   const [hosts, setHosts] = useState<Record<string, HostInfo>>({})
 
@@ -152,14 +174,22 @@ function Dashboards() {
   const [lastUpdate, setLastUpdate] = useState<string>('')
 
   /**
-   * 加载管理员仪表盘数据
+   * 加载管理员仪表板数据
    */
   const loadAdminDashboard = async () => {
     try {
       // 加载系统统计数据
       const statsResult = await api.get('/api/system/statis')
       if (statsResult.code === 200) {
-        setSystemStats(statsResult.data)
+        setSystemStats({
+          hosts_count: statsResult.data.hosts_count || statsResult.data.host_count || 0,
+          vms_count: statsResult.data.vms_count || statsResult.data.vm_count || 0,
+          users_count: statsResult.data.users_count || 0,
+          running_vms: statsResult.data.running_vms || statsResult.data.running_vm_count || 0,
+          stopped_vms: statsResult.data.stopped_vms || 0,
+          total_nat_ports: statsResult.data.total_nat_ports || 0,
+          total_web_proxy: statsResult.data.total_web_proxy || 0,
+        })
       }
 
       // 加载主机列表
@@ -539,236 +569,601 @@ function Dashboards() {
    */
   const renderAdminView = () => (
     <>
-      {/* 统计卡片 - 重新设计 */}
-      <Row gutter={[24, 24]} className="mb-6">
-        <Col xs={24} sm={8}>
+      {/* 统计卡片 - 5个核心指标 */}
+      <Row gutter={[16, 16]} className="mb-4">
+        {/* 主机数量 */}
+        <Col xs={12} sm={8} lg={4} xl={4} style={{ display: 'flex' }}>
           <Card 
-            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
             style={{
               background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%)',
               border: '1px solid rgba(59, 130, 246, 0.2)',
               borderRadius: '16px',
-              overflow: 'hidden'
+              height: '100%',
+              width: '100%',
             }}
+            onClick={() => navigate('/hosts')}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{
                 background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
               }}>
-                <CloudServerOutlined className="text-white text-2xl" />
+                <CloudServerOutlined className="text-white text-xl" />
               </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-500 dark:text-gray-300 mb-1">主机总数</div>
-                <div className="text-4xl font-bold" style={{
+              <div className="min-w-0">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">主机数量</div>
+                <div className="text-2xl font-bold" style={{
                   background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent'
                 }}>
-                  {systemStats.host_count}
+                  {systemStats.hosts_count}
                 </div>
               </div>
             </div>
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-              <Button 
-                type="link" 
-                onClick={() => navigate('/hosts')} 
-                className="p-0 text-blue-600 hover:text-blue-700"
-              >
-                管理主机 →
-              </Button>
-            </div>
           </Card>
         </Col>
-        <Col xs={24} sm={8}>
+        
+        {/* 虚拟机数量 */}
+        <Col xs={12} sm={8} lg={4} xl={4} style={{ display: 'flex' }}>
           <Card 
             className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
             style={{
               background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
               border: '1px solid rgba(139, 92, 246, 0.2)',
               borderRadius: '16px',
-              overflow: 'hidden'
+              height: '100%',
+              width: '100%',
             }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{
                 background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
               }}>
-                <DesktopOutlined className="text-white text-2xl" />
+                <DesktopOutlined className="text-white text-xl" />
               </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-500 dark:text-gray-300 mb-1">虚拟机总数</div>
-                <div className="text-4xl font-bold" style={{
+              <div className="min-w-0">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">虚拟机数量</div>
+                <div className="text-2xl font-bold" style={{
                   background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent'
                 }}>
-                  {systemStats.vm_count}
+                  {systemStats.vms_count}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <CheckCircleOutlined className="text-green-500 mr-1" />{systemStats.running_vms} 运行中
                 </div>
               </div>
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">
-              <CheckCircleOutlined className="text-green-500" /> 运行中: <span className="font-semibold">{systemStats.running_vm_count}</span>
-            </div>
           </Card>
         </Col>
-        <Col xs={24} sm={8}>
+        
+        {/* 用户数量 */}
+        <Col xs={12} sm={8} lg={4} xl={4} style={{ display: 'flex' }}>
           <Card 
-            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
             style={{
               background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)',
               border: '1px solid rgba(16, 185, 129, 0.2)',
               borderRadius: '16px',
-              overflow: 'hidden'
+              height: '100%',
+              width: '100%',
             }}
+            onClick={() => navigate('/settings')}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{
                 background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
               }}>
-                <CheckCircleOutlined className="text-white text-2xl" />
+                <TeamOutlined className="text-white text-xl" />
               </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-500 dark:text-gray-300 mb-1">系统状态</div>
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  正常运行
+              <div className="min-w-0">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">用户数量</div>
+                <div className="text-2xl font-bold" style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  {systemStats.users_count}
                 </div>
               </div>
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">
-              最后更新: <span className="font-semibold">{lastUpdate}</span>
             </div>
           </Card>
         </Col>
-      </Row>
-
-      {/* 主要内容区域 */}
-      <Row gutter={[24, 24]}>
-        {/* 主机列表 */}
-        <Col xs={24} lg={16}>
+        
+        {/* NAT端口数量 */}
+        <Col xs={12} sm={8} lg={4} xl={4} style={{ display: 'flex' }}>
           <Card 
-            title={<><CloudServerOutlined className="mr-2" />主机概览</>} 
-            extra={<Button type="link" onClick={() => navigate('/hosts')}>查看全部 →</Button>}
-            className="glass-card"
-            style={{ borderRadius: '16px' }}
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            style={{
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%)',
+              border: '1px solid rgba(245, 158, 11, 0.2)',
+              borderRadius: '16px',
+              height: '100%',
+              width: '100%',
+            }}
           >
-            <div className="space-y-3">
-              {Object.entries(hosts).slice(0, 5).map(([name, host]) => (
-                <div
-                  key={name}
-                  className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md cursor-pointer transition-all duration-300"
-                  onClick={() => navigate(`/hosts`)}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{
-                      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
-                    }}>
-                      <CloudServerOutlined className="text-white text-lg" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-800 dark:text-gray-100 text-base">{name}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{host.addr || '未配置'}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold" style={{
-                      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent'
-                    }}>
-                      {host.vm_count || 0}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">台虚拟机</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </Col>
-
-        {/* 快速操作 */}
-        <Col xs={24} lg={8}>
-          <Card 
-            title={<><InfoCircleOutlined className="mr-2" />快速操作</>}
-            className="glass-card"
-            style={{ borderRadius: '16px' }}
-          >
-            <Space direction="vertical" className="w-full" size="middle">
-              <div
-                className="p-4 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-md"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%)',
-                  border: '1px solid rgba(59, 130, 246, 0.2)'
-                }}
-                onClick={() => navigate('/hosts')}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{
-                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
-                  }}>
-                    <PlusOutlined className="text-white" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-800 dark:text-gray-100">添加主机</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">添加新的虚拟化主机</div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="p-4 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-md"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
-                  border: '1px solid rgba(139, 92, 246, 0.2)'
-                }}
-                onClick={() => navigate('/settings')}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{
-                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
-                  }}>
-                    <SettingOutlined className="text-white" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-800 dark:text-gray-100">系统设置</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">管理Token和系统配置</div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="p-4 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-md"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)',
-                  border: '1px solid rgba(16, 185, 129, 0.2)'
-                }}
-                onClick={handleSaveAll}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                  }}>
-                    <SaveOutlined className="text-white" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-800 dark:text-gray-100">保存配置</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">保存所有主机和虚拟机配置</div>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 rounded-xl" style={{
-                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.02) 100%)',
-                border: '1px solid rgba(59, 130, 246, 0.15)'
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
               }}>
-                <div className="flex items-center gap-2 mb-2">
-                  <InfoCircleOutlined className="text-blue-600 dark:text-blue-400" />
-                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">提示</span>
-                </div>
-                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                  通过<span className="font-medium text-blue-600 dark:text-blue-400">主机管理</span>页面可以管理主机和虚拟机。支持使用API+Token进行自动化管理。
-                </p>
+                <ApiOutlined className="text-white text-xl" />
               </div>
-            </Space>
+              <div className="min-w-0">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">NAT端口</div>
+                <div className="text-2xl font-bold" style={{
+                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  {systemStats.total_nat_ports}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </Col>
+        
+        {/* WEB代理数量 */}
+        <Col xs={12} sm={8} lg={4} xl={4} style={{ display: 'flex' }}>
+          <Card 
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            style={{
+              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(8, 145, 178, 0.05) 100%)',
+              border: '1px solid rgba(6, 182, 212, 0.2)',
+              borderRadius: '16px',
+              height: '100%',
+              width: '100%',
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{
+                background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+              }}>
+                <GlobalOutlined className="text-white text-xl" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">WEB代理</div>
+                <div className="text-2xl font-bold" style={{
+                  background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  {systemStats.total_web_proxy}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </Col>
+        
+        {/* 系统状态 */}
+        <Col xs={12} sm={8} lg={4} xl={4} style={{ display: 'flex' }}>
+          <Card 
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            style={{
+              background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(22, 163, 74, 0.05) 100%)',
+              border: '1px solid rgba(34, 197, 94, 0.2)',
+              borderRadius: '16px',
+              height: '100%',
+              width: '100%',
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{
+                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
+              }}>
+                <CheckCircleOutlined className="text-white text-xl" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">系统状态</div>
+                <div className="text-lg font-bold text-green-600 dark:text-green-400">正常运行</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{lastUpdate}</div>
+              </div>
+            </div>
           </Card>
         </Col>
       </Row>
+
+      {/* 主机列表表格 */}
+      <Card 
+        title={
+          <div className="flex items-center gap-2">
+            <CloudServerOutlined className="text-xl" />
+            <span>主机列表</span>
+          </div>
+        }
+        extra={
+          <Space>
+            <Button 
+              icon={<SaveOutlined />} 
+              onClick={handleSaveAll}
+            >
+              保存配置
+            </Button>
+            <Button 
+              icon={<SyncOutlined />} 
+              onClick={loadDashboard}
+            >
+              刷新
+            </Button>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              onClick={() => navigate('/hosts')}
+            >
+              管理主机
+            </Button>
+          </Space>
+        }
+        className="glass-card mt-12"
+        style={{ borderRadius: '16px' }}
+      >
+        <Table
+          dataSource={Object.entries(hosts).map(([name, host]: [string, any]) => ({
+            key: name,
+            name: name,
+            ...host,
+          }))}
+          columns={[
+            {
+              title: '主机名称',
+              dataIndex: 'name',
+              key: 'name',
+              width: 160,
+              fixed: 'left',
+              render: (name: string, record: any) => (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{
+                    background: record.status === 'online' 
+                      ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                      : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
+                  }}>
+                    <CloudServerOutlined className="text-white text-lg" />
+                  </div>
+                  <div>
+                    <div className="font-semibold">{name}</div>
+                    <div className="text-xs text-gray-500">{record.server_addr || record.addr || '-'}</div>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              title: '类型',
+              dataIndex: 'server_type',
+              key: 'server_type',
+              width: 120,
+              render: (type: string) => (
+                <Tag color={
+                  type === 'VmwareWork' ? 'blue' :
+                  type === 'vSphereESXi' ? 'purple' :
+                  type === 'Containers' ? 'cyan' : 'default'
+                }>
+                  {type || '未知'}
+                </Tag>
+              ),
+            },
+            {
+              title: '虚拟机',
+              key: 'vms',
+              width: 120,
+              render: (_: any, record: any) => {
+                const current = record.vms_count || record.vm_count || 0
+                const max = record.max_vms || 50
+                const percent = max > 0 ? Math.round((current / max) * 100) : 0
+                return (
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">{current} / {max}</div>
+                    <Progress percent={percent} size="small"
+                      strokeColor={percent > 80 ? '#ef4444' : percent > 60 ? '#f59e0b' : '#22c55e'}
+                      format={(p) => `${p || 0}%`}
+                    />
+                  </div>
+                )
+              },
+            },
+            {
+              title: 'CPU',
+              dataIndex: 'cpu_usage',
+              key: 'cpu_usage',
+              width: 120,
+              render: (usage: number, record: any) => {
+                const percent = usage || 0
+                const used = record.cpu_used || '-'
+                const total = record.cpu_total || '-'
+                return (
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">{used} / {total}</div>
+                    <Progress 
+                      percent={percent} 
+                      size="small"
+                      strokeColor={percent > 80 ? '#ef4444' : percent > 60 ? '#f59e0b' : '#22c55e'}
+                      format={(p) => `${(p || 0).toFixed(0)}%`}
+                    />
+                  </div>
+                )
+              },
+            },
+            {
+              title: 'GPU',
+              dataIndex: 'gpu_usage',
+              key: 'gpu_usage',
+              width: 120,
+              render: (usage: number, record: any) => {
+                const percent = usage || 0
+                const used = record.gpu_used || '-'
+                const total = record.gpu_total || '-'
+                return (
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">{used} / {total}</div>
+                    <Progress 
+                      percent={percent} 
+                      size="small"
+                      strokeColor={percent > 80 ? '#ef4444' : percent > 60 ? '#f59e0b' : '#8b5cf6'}
+                      format={(p) => `${(p || 0).toFixed(0)}%`}
+                    />
+                  </div>
+                )
+              },
+            },
+            {
+              title: '内存',
+              dataIndex: 'memory_usage',
+              key: 'memory_usage',
+              width: 120,
+              render: (usage: number, record: any) => {
+                const percent = usage || 0
+                const used = record.memory_used || '-'
+                const total = record.memory_total || '-'
+                return (
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">{used} / {total}</div>
+                    <Progress 
+                      percent={percent} 
+                      size="small"
+                      strokeColor={percent > 80 ? '#ef4444' : percent > 60 ? '#f59e0b' : '#10b981'}
+                      format={(p) => `${(p || 0).toFixed(0)}%`}
+                    />
+                  </div>
+                )
+              },
+            },
+            {
+              title: '硬盘',
+              dataIndex: 'disk_usage',
+              key: 'disk_usage',
+              width: 120,
+              render: (usage: number, record: any) => {
+                const percent = usage || 0
+                const used = record.disk_used || '-'
+                const total = record.disk_total || '-'
+                return (
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">{used} / {total}</div>
+                    <Progress 
+                      percent={percent} 
+                      size="small"
+                      strokeColor={percent > 80 ? '#ef4444' : percent > 60 ? '#f59e0b' : '#06b6d4'}
+                      format={(p) => `${(p || 0).toFixed(0)}%`}
+                    />
+                  </div>
+                )
+              },
+            },
+            {
+              title: '状态',
+              key: 'status',
+              width: 100,
+              render: (_: any, record: any) => {
+                const status = record.status || 'unknown'
+                const enabled = record.enabled !== false
+                return (
+                  <Space direction="vertical" size={0}>
+                    <Tag color={
+                      status === 'online' ? 'success' :
+                      status === 'offline' ? 'error' : 'default'
+                    }>
+                      {status === 'online' ? '在线' : status === 'offline' ? '离线' : '未知'}
+                    </Tag>
+                    <span className="text-xs text-gray-500">
+                      {enabled ? <CheckCircleOutlined className="text-green-500" /> : <CloseCircleOutlined className="text-red-500" />}
+                      {enabled ? ' 已启用' : ' 已禁用'}
+                    </span>
+                  </Space>
+                )
+              },
+            },
+            {
+              title: '操作',
+              key: 'action',
+              width: 120,
+              fixed: 'right',
+              render: (_: any, _record: any) => (
+                <Space>
+                  <Tooltip title="查看详情">
+                    <Button 
+                      type="primary" 
+                      size="small"
+                      icon={<SettingOutlined />}
+                      onClick={() => navigate(`/hosts`)}
+                    >
+                      管理
+                    </Button>
+                  </Tooltip>
+                </Space>
+              ),
+            },
+          ]}
+          pagination={false}
+          scroll={{ x: 1000, y: 440 }}
+          size="middle"
+          locale={{ emptyText: '暂无主机数据' }}
+        />
+      </Card>
+
+      {/* 快速操作 */}
+      <div className="mt-6" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ flex: '1 1 0', minWidth: '120px', display: 'flex' }}>
+          <Card
+            hoverable
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+            style={{
+              borderRadius: '16px',
+              height: '100%',
+              width: '100%',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+            }}
+            onClick={() => navigate('/hosts')}
+          >
+            <div className="flex flex-col items-center justify-center py-2 gap-2">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{
+                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+              }}>
+                <CloudServerOutlined className="text-white text-2xl" />
+              </div>
+              <div className="text-sm font-semibold">管理主机</div>
+              <div className="text-xs text-gray-400 text-center">查看和管理所有物理主机</div>
+            </div>
+          </Card>
+        </div>
+        <div style={{ flex: '1 1 0', minWidth: '120px', display: 'flex' }}>
+          <Card
+            hoverable
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+            style={{
+              borderRadius: '16px',
+              height: '100%',
+              width: '100%',
+              border: '1px solid rgba(139, 92, 246, 0.2)',
+            }}
+            onClick={() => navigate('/docks')}
+          >
+            <div className="flex flex-col items-center justify-center py-2 gap-2">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{
+                background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
+              }}>
+                <DesktopOutlined className="text-white text-2xl" />
+              </div>
+              <div className="text-sm font-semibold">管理实例</div>
+              <div className="text-xs text-gray-400 text-center">管理所有虚拟机实例</div>
+            </div>
+          </Card>
+        </div>
+        <div style={{ flex: '1 1 0', minWidth: '120px', display: 'flex' }}>
+          <Card
+            hoverable
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+            style={{
+              borderRadius: '16px',
+              height: '100%',
+              width: '100%',
+              border: '1px solid rgba(245, 158, 11, 0.2)',
+            }}
+            onClick={() => navigate('/nat')}
+          >
+            <div className="flex flex-col items-center justify-center py-2 gap-2">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+              }}>
+                <ApiOutlined className="text-white text-2xl" />
+              </div>
+              <div className="text-sm font-semibold">管理端口</div>
+              <div className="text-xs text-gray-400 text-center">NAT端口映射配置</div>
+            </div>
+          </Card>
+        </div>
+        <div style={{ flex: '1 1 0', minWidth: '120px', display: 'flex' }}>
+          <Card
+            hoverable
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+            style={{
+              borderRadius: '16px',
+              height: '100%',
+              width: '100%',
+              border: '1px solid rgba(6, 182, 212, 0.2)',
+            }}
+            onClick={() => navigate('/proxy')}
+          >
+            <div className="flex flex-col items-center justify-center py-2 gap-2">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{
+                background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+              }}>
+                <GlobalOutlined className="text-white text-2xl" />
+              </div>
+              <div className="text-sm font-semibold">管理代理</div>
+              <div className="text-xs text-gray-400 text-center">WEB反向代理配置</div>
+            </div>
+          </Card>
+        </div>
+        <div style={{ flex: '1 1 0', minWidth: '120px', display: 'flex' }}>
+          <Card
+            hoverable
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+            style={{
+              borderRadius: '16px',
+              height: '100%',
+              width: '100%',
+              border: '1px solid rgba(16, 185, 129, 0.2)',
+            }}
+            onClick={() => navigate('/users')}
+          >
+            <div className="flex flex-col items-center justify-center py-2 gap-2">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+              }}>
+                <TeamOutlined className="text-white text-2xl" />
+              </div>
+              <div className="text-sm font-semibold">管理用户</div>
+              <div className="text-xs text-gray-400 text-center">用户账号与权限管理</div>
+            </div>
+          </Card>
+        </div>
+        <div style={{ flex: '1 1 0', minWidth: '120px', display: 'flex' }}>
+          <Card
+            hoverable
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+            style={{
+              borderRadius: '16px',
+              height: '100%',
+              width: '100%',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+            }}
+            onClick={() => navigate('/logs')}
+          >
+            <div className="flex flex-col items-center justify-center py-2 gap-2">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+              }}>
+                <DatabaseOutlined className="text-white text-2xl" />
+              </div>
+              <div className="text-sm font-semibold">日志查看</div>
+              <div className="text-xs text-gray-400 text-center">系统操作与审计日志</div>
+            </div>
+          </Card>
+        </div>
+        <div style={{ flex: '1 1 0', minWidth: '120px', display: 'flex' }}>
+          <Card
+            hoverable
+            className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+            style={{
+              borderRadius: '16px',
+              height: '100%',
+              width: '100%',
+              border: '1px solid rgba(107, 114, 128, 0.2)',
+            }}
+            onClick={() => navigate('/settings')}
+          >
+            <div className="flex flex-col items-center justify-center py-2 gap-2">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{
+                background: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
+              }}>
+                <SettingOutlined className="text-white text-2xl" />
+              </div>
+              <div className="text-sm font-semibold">系统设置</div>
+              <div className="text-xs text-gray-400 text-center">全局参数与系统配置</div>
+            </div>
+          </Card>
+        </div>
+      </div>
     </>
   )
 
@@ -789,8 +1184,8 @@ function Dashboards() {
                   <ThunderboltOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">CPU核心</div>
-                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                  <div className="text-xs mb-1">CPU核心</div>
+                  <div className="text-lg font-bold">
                     {userQuota.used_cpu}/{userQuota.quota_cpu}
                   </div>
                 </div>
@@ -805,14 +1200,14 @@ function Dashboards() {
                   <PlayCircleOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">GPU显存使用率</div>
-                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                  <div className="text-xs mb-1">GPU显存使用率</div>
+                  <div className="text-lg font-bold">
                     {Math.round((userQuota.used_gpu / userQuota.quota_gpu) * 100)}%
                   </div>
                 </div>
               </div>
               <Progress percent={Math.round((userQuota.used_gpu / userQuota.quota_gpu) * 100)} size="small" strokeColor="#ec4899" />
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <div className="text-xs mt-1">
                 {(userQuota.used_gpu / 1024).toFixed(1)}/{(userQuota.quota_gpu / 1024).toFixed(1)}GB
               </div>
             </Card>
@@ -824,14 +1219,14 @@ function Dashboards() {
                   <RadarChartOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">内存使用率</div>
-                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                  <div className="text-xs mb-1">内存使用率</div>
+                  <div className="text-lg font-bold">
                     {Math.round((userQuota.used_ram / userQuota.quota_ram) * 100)}%
                   </div>
                 </div>
               </div>
               <Progress percent={Math.round((userQuota.used_ram / userQuota.quota_ram) * 100)} size="small" strokeColor="#10b981" />
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <div className="text-xs mt-1">
                 {(userQuota.used_ram / 1024).toFixed(1)}/{(userQuota.quota_ram / 1024).toFixed(1)}GB
               </div>
             </Card>
@@ -843,14 +1238,14 @@ function Dashboards() {
                   <HddOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">存储使用率</div>
-                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                  <div className="text-xs mb-1">存储使用率</div>
+                  <div className="text-lg font-bold">
                     {Math.round((userQuota.used_ssd / userQuota.quota_ssd) * 100)}%
                   </div>
                 </div>
               </div>
               <Progress percent={Math.round((userQuota.used_ssd / userQuota.quota_ssd) * 100)} size="small" strokeColor="#8b5cf6" />
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <div className="text-xs mt-1">
                 {(userQuota.used_ssd / 1024).toFixed(1)}/{(userQuota.quota_ssd / 1024).toFixed(1)}GB
               </div>
             </Card>
@@ -862,8 +1257,8 @@ function Dashboards() {
                   <GlobalOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">流量</div>
-                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                  <div className="text-xs mb-1">流量</div>
+                  <div className="text-lg font-bold">
                     {(userQuota.used_traffic / 1024).toFixed(1)}/{(userQuota.quota_traffic / 1024).toFixed(1)}GB
                   </div>
                 </div>
@@ -878,8 +1273,8 @@ function Dashboards() {
                   <ApiOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">NAT端口</div>
-                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                  <div className="text-xs mb-1">NAT端口</div>
+                  <div className="text-lg font-bold">
                     {userQuota.used_nat_ports}/{userQuota.quota_nat_ports}
                   </div>
                 </div>
@@ -898,8 +1293,8 @@ function Dashboards() {
                   <CloudOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">WEB代理</div>
-                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                  <div className="text-xs mb-1">WEB代理</div>
+                  <div className="text-lg font-bold">
                     {userQuota.used_web_proxy}/{userQuota.quota_web_proxy}
                   </div>
                 </div>
@@ -914,8 +1309,8 @@ function Dashboards() {
                   <UploadOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">上行带宽</div>
-                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                  <div className="text-xs mb-1">上行带宽</div>
+                  <div className="text-lg font-bold">
                     {userQuota.used_bandwidth_up}/{userQuota.quota_bandwidth_up}Mbps
                   </div>
                 </div>
@@ -930,8 +1325,8 @@ function Dashboards() {
                   <DownloadOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">下行带宽</div>
-                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                  <div className="text-xs mb-1">下行带宽</div>
+                  <div className="text-lg font-bold">
                     {userQuota.used_bandwidth_down}/{userQuota.quota_bandwidth_down}Mbps
                   </div>
                 </div>
@@ -946,11 +1341,11 @@ function Dashboards() {
                   <DatabaseOutlined className="text-white text-lg" />
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">我的虚拟机</div>
-                  <div className="text-lg font-bold text-gray-800 dark:text-gray-100">{myVMCount}</div>
+                  <div className="text-xs mb-1">我的虚拟机</div>
+                  <div className="text-lg font-bold">{myVMCount}</div>
                 </div>
               </div>
-              <div className="text-xs text-gray-600 dark:text-gray-300">
+              <div className="text-xs">
                 <CheckCircleOutlined className="text-green-500" /> 运行中: {myRunningVMCount}
               </div>
             </Card>
@@ -969,9 +1364,9 @@ function Dashboards() {
         >
           {myVMs.length === 0 ? (
             <div className="text-center py-8">
-              <DesktopOutlined className="text-gray-300 dark:text-gray-600 text-5xl mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">暂无虚拟机</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">请联系管理员为您分配权限</p>
+              <DesktopOutlined className="text-5xl mb-4" style={{ color: 'var(--text-tertiary)' }} />
+              <p style={{ color: 'var(--text-secondary)' }}>暂无虚拟机</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>请联系管理员为您分配权限</p>
             </div>
           ) : (
             <Row gutter={[16, 16]}>
@@ -989,8 +1384,8 @@ function Dashboards() {
                             <DesktopOutlined className="text-white text-xl" />
                           </div>
                           <div>
-                            <div className="font-semibold text-gray-800 dark:text-gray-100">{vm.display_name || vm.uuid}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">{vm.host} - {config.os_name || '未知系统'}</div>
+                            <div className="font-semibold">{vm.display_name || vm.uuid}</div>
+                            <div className="text-sm">{vm.host} - {config.os_name || '未知系统'}</div>
                           </div>
                         </div>
                         {getVMStatusTag(vm)}
@@ -998,33 +1393,33 @@ function Dashboards() {
 
                       {/* 基础资源信息 */}
                       <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                        <div className="flex items-center gap-2">
                           <ThunderboltOutlined />
-                          <span>CPU: <span className="font-medium text-gray-800 dark:text-gray-100">{config.cpu_num || 0} 核</span></span>
+                          <span>CPU: <span className="font-medium">{config.cpu_num || 0} 核</span></span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                        <div className="flex items-center gap-2">
                           <RadarChartOutlined />
-                          <span>内存: <span className="font-medium text-gray-800 dark:text-gray-100">{formatMemory(config.mem_num)}</span></span>
+                          <span>内存: <span className="font-medium">{formatMemory(config.mem_num)}</span></span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                        <div className="flex items-center gap-2">
                           <HddOutlined />
-                          <span>硬盘: <span className="font-medium text-gray-800 dark:text-gray-100">{formatMemory(config.hdd_num)}</span></span>
+                          <span>硬盘: <span className="font-medium">{formatMemory(config.hdd_num)}</span></span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                        <div className="flex items-center gap-2">
                           <PlayCircleOutlined />
-                          <span>显存: <span className="font-medium text-gray-800 dark:text-gray-100">{formatMemory(config.gpu_mem)}</span></span>
+                          <span>显存: <span className="font-medium">{formatMemory(config.gpu_mem)}</span></span>
                         </div>
                       </div>
 
                       {/* 端口信息 */}
                       <div className="grid grid-cols-2 gap-3 text-sm mb-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                        <div className="flex items-center gap-2">
                           <ApiOutlined />
-                          <span>NAT端口: <span className="font-medium text-gray-800 dark:text-gray-100">{config.nat_num || 0}个</span></span>
+                          <span>NAT端口: <span className="font-medium">{config.nat_num || 0}个</span></span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                        <div className="flex items-center gap-2">
                           <CloudOutlined />
-                          <span>Web代理: <span className="font-medium text-gray-800 dark:text-gray-100">{config.web_num || 0}个</span></span>
+                          <span>Web代理: <span className="font-medium">{config.web_num || 0}个</span></span>
                         </div>
                       </div>
 
@@ -1036,16 +1431,16 @@ function Dashboards() {
                         </div>
                         <div className="space-y-1 text-xs">
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-500 dark:text-gray-400 w-12">IPv4:</span>
-                            <span className="font-mono text-gray-700 dark:text-gray-200">{firstNic.ip4_addr || '-'}</span>
+                            <span className="w-12" style={{ color: 'var(--text-secondary)' }}>IPv4:</span>
+                            <span className="font-mono">{firstNic.ip4_addr || '-'}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-500 dark:text-gray-400 w-12">IPv6:</span>
-                            <span className="font-mono text-gray-700 dark:text-gray-200">{firstNic.ip6_addr || '未配置'}</span>
+                            <span className="w-12" style={{ color: 'var(--text-secondary)' }}>IPv6:</span>
+                            <span className="font-mono">{firstNic.ip6_addr || '未配置'}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-500 dark:text-gray-400 w-12">MAC:</span>
-                            <span className="font-mono text-gray-700 dark:text-gray-200">{firstNic.mac_addr || '-'}</span>
+                            <span className="w-12" style={{ color: 'var(--text-secondary)' }}>MAC:</span>
+                            <span className="font-mono">{firstNic.mac_addr || '-'}</span>
                           </div>
                         </div>
                       </div>
@@ -1074,23 +1469,13 @@ function Dashboards() {
   }
 
   return (
-    <div style={{ 
-      padding: '32px',
-      minHeight: '100vh'
-    }}>
+    <div className="p-6 min-h-screen">
       {/* 页面标题 */}
-      <div className="page-header">
-        <Title 
-          level={2} 
-          className="page-header-title"
-        >
-          <DesktopOutlined />
-          全局资源概览
-        </Title>
-        <div className="page-header-subtitle">
-          查看您的资源使用情况和配额信息
-        </div>
-      </div>
+      <PageHeader
+        icon={<DesktopOutlined />}
+        title="全局资源概览"
+        subtitle="查看您的资源使用情况和配额信息"
+      />
 
       {/* 根据用户角色渲染不同视图 */}
       {isAdmin ? renderAdminView() : renderUserView()}
@@ -1156,12 +1541,22 @@ function Dashboards() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item label="系统密码" name="os_pass">
-                <Input.Password placeholder="自动生成密码" autoComplete="new-password" />
+                <Input.Password 
+                  placeholder="自动生成密码" 
+                  autoComplete="new-password"
+                  data-lpignore="true"
+                  data-form-type="other"
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item label="VNC密码" name="vc_pass">
-                <Input.Password placeholder="与系统密码一致" autoComplete="new-password" />
+                <Input.Password 
+                  placeholder="与系统密码一致" 
+                  autoComplete="new-password"
+                  data-lpignore="true"
+                  data-form-type="other"
+                />
               </Form.Item>
             </Col>
           </Row>

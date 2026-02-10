@@ -4,6 +4,7 @@ Web用户模型
 """
 from typing import List, Dict, Any
 from datetime import datetime
+from MainObject.Config.UserMask import UserMask, FULL_MASK
 
 
 class WebUser:
@@ -23,6 +24,7 @@ class WebUser:
         can_create_vm: bool = False,
         can_delete_vm: bool = False,
         can_modify_vm: bool = False,
+        user_permission: int = FULL_MASK,
         # 资源配额
         quota_cpu: int = 0,
         quota_ram: int = 0,
@@ -66,7 +68,7 @@ class WebUser:
         self.can_create_vm = can_create_vm
         self.can_delete_vm = can_delete_vm
         self.can_modify_vm = can_modify_vm
-
+        self.user_permission = user_permission
         # 资源配额
         self.quota_cpu = quota_cpu
         self.quota_ram = quota_ram
@@ -113,6 +115,7 @@ class WebUser:
             "can_create_vm": self.can_create_vm,
             "can_delete_vm": self.can_delete_vm,
             "can_modify_vm": self.can_modify_vm,
+            "user_permission": self.user_permission,
             "quota_cpu": self.quota_cpu,
             "quota_ram": self.quota_ram,
             "quota_ssd": self.quota_ssd,
@@ -142,6 +145,18 @@ class WebUser:
             data.pop("password", None)
             data.pop("verify_token", None)
         return data
+
+    def get_user_mask(self) -> UserMask:
+        """
+        根据 user_permission 构建 UserMask 对象
+        user_permission 为掩码数字（int）
+        """
+        if isinstance(self.user_permission, int):
+            return UserMask(self.user_permission)
+        elif isinstance(self.user_permission, dict):
+            return UserMask(**self.user_permission)
+        else:
+            return UserMask.full()
 
     def check_resource_available(
         self, cpu: int = 0, ram: int = 0, ssd: int = 0, gpu: int = 0,

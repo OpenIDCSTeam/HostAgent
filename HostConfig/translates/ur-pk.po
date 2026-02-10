@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenIDCS 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-05 16:19\n"
-"PO-Revision-Date: 2026-02-05 16:19\n"
+"POT-Creation-Date: 2026-02-10 01:27\n"
+"PO-Revision-Date: 2026-02-10 01:27\n"
 "Last-Translator: Auto Generated\n"
 "Language-Team: Urdu\n"
 "Language: ur\n"
@@ -85,7 +85,7 @@ msgid "个人设置"
 msgstr "ذاتی ترتیبات"
 
 msgid "个人资料"
-msgstr "ذاتی ڈیٹا"
+msgstr "ذاتی معلومات"
 
 msgid "为虚拟机"
 msgstr "ورچوئل مشین کے لئے"
@@ -436,7 +436,7 @@ msgid "暂无主机"
 msgstr "ابھی تک کوئی میزبان نہیں ہے"
 
 msgid "暂无备份"
-msgstr "ابھی تک بیک اپ نہیں ہے"
+msgstr "ابھی تک کوئی بیک اپ نہیں ہے"
 
 msgid "更新主机"
 msgstr "میزبان کو اپ ڈیٹ کریں"
@@ -781,7 +781,7 @@ msgid "邮件标题"
 msgstr "ای میل کا عنوان"
 
 msgid "邮件正文"
-msgstr "ای میل کا متن"
+msgstr "ای میل متن"
 
 msgid "邮箱地址"
 msgstr "ای میل ایڈریس"
@@ -1228,7 +1228,7 @@ msgid "兼容"
 msgstr "مطابقت پذیر"
 
 msgid "内存"
-msgstr "یادداشت"
+msgstr "میموری"
 
 msgid "内容"
 msgstr "مواد"
@@ -1642,7 +1642,7 @@ msgid "扫描"
 msgstr "اسکیننگ"
 
 msgid "折叠"
-msgstr "گنا"
+msgstr "فولڈ"
 
 msgid "拥有"
 msgstr "ہے"
@@ -2056,7 +2056,7 @@ msgid "类型"
 msgstr "قسم"
 
 msgid "系统"
-msgstr "نظام"
+msgstr "سسٹم"
 
 msgid "红色"
 msgstr "سرخ"
@@ -2431,7 +2431,7 @@ msgid "空"
 msgstr "null"
 
 msgid "全局"
-msgstr "عالمی"
+msgstr "مجموعی طور پر صورتحال"
 
 msgid "查看您的资源使用情况和配额信息"
 msgstr "اپنے وسائل کے استعمال اور کوٹہ کی معلومات دیکھیں"
@@ -2443,28 +2443,28 @@ msgid "系统空间"
 msgstr "سسٹم کی جگہ"
 
 msgid "实例管理"
-msgstr "مثال کا انتظام"
+msgstr "مثال کے طور پر انتظامیہ"
 
 msgid "监控"
-msgstr "نگرانی"
+msgstr "مانیٹر"
 
 msgid "网络端口"
-msgstr "نیٹ ورک پورٹس"
+msgstr "نیٹ ورک پورٹ"
 
 msgid "网络与配额"
-msgstr "نیٹ ورک اور کوٹہ"
+msgstr "نیٹ ورکنگ اور کوٹہ"
 
 msgid "上传带宽"
-msgstr "اپ لوڈ بینڈوتھ"
+msgstr "بینڈوڈتھ اپ لوڈ کریں"
 
 msgid "下载带宽"
-msgstr "ڈاؤن لوڈ بینڈوتھ"
+msgstr "بینڈوتھ ڈاؤن لوڈ کریں"
 
 msgid "实例配置"
-msgstr "مثال کی ترتیب"
+msgstr "مثال کے طور پر ترتیب"
 
 msgid "设置密码"
-msgstr "پاس ورڈ سیٹ کریں"
+msgstr "پاس ورڈ مرتب کریں"
 
 msgid "一键远程"
 msgstr "ایک کلک ریموٹ"
@@ -2473,13 +2473,13 @@ msgid "网卡列表"
 msgstr "نیٹ ورک کارڈ کی فہرست"
 
 msgid "转发规则"
-msgstr "فارورڈنگ کے قوانین"
+msgstr "فارورڈنگ قواعد"
 
 msgid "设备直通"
 msgstr "ڈیوائس پاس تھرو"
 
 msgid "物理"
-msgstr "جسمانی"
+msgstr "طبیعیات"
 
 msgid "设备名"
 msgstr "ڈیوائس کا نام"
@@ -2488,76 +2488,76 @@ msgid "存储路径"
 msgstr "اسٹوریج کا راستہ"
 
 msgid "程序启动路径"
-msgstr "پروگرام اسٹارٹ اپ کا راستہ"
+msgstr "پروگرام اسٹارٹ اپ راہ"
 
 msgid "爱快配置"
-msgstr "iKuai کنفیگریشن"
+msgstr "Aikuai ترتیب"
 
 msgid "限制配置"
-msgstr "حد کی ترتیب"
+msgstr "ترتیب کو محدود کریں"
 
 msgid "（多个用逗号分隔）"
-msgstr "(متعدد کو کوما سے الگ کریں)"
+msgstr "(متعدد کوما کے ساتھ الگ کریں)"
 
 msgid "高级配置"
-msgstr "جدید ترتیب"
+msgstr "اعلی درجے کی ترتیب"
 
 msgid "系统映射"
 msgstr "سسٹم میپنگ"
 
 msgid "配置池"
-msgstr "کنفیگریشن پول"
+msgstr "تالاب تشکیل دیں"
 
 msgid "扩展选项"
 msgstr "توسیعی اختیارات"
 
 msgid "扩展数据"
-msgstr "توسیعی ڈیٹا"
+msgstr "توسیعی اعداد و شمار"
 
 msgid "(JSON格式)"
 msgstr "(JSON فارمیٹ)"
 
 msgid "和事件记录"
-msgstr "اور ایونٹ ریکارڈز"
+msgstr "اور ایونٹ لاگنگ"
 
 msgid "请从左侧选择一条"
-msgstr "براہ کرم بائیں جانب سے ایک منتخب کریں"
+msgstr "براہ کرم بائیں سے ایک کا انتخاب کریں"
 
 msgid "安全提示"
-msgstr "سیکیورٹی کی تنبیہ"
+msgstr "حفاظتی نکات"
 
 msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
-msgstr "ٹوکن کو ری سیٹ کرنے کے بعد، پرانے ٹوکن کا استعمال کرتے ہوئے تمام API کالز غیر فعال ہو جائیں گی۔ براہ کرم تمام متعلقہ کنفیگریشنز کو اپ ڈیٹ کرنا یقینی بنائیں۔"
+msgstr "ٹوکن کو دوبارہ ترتیب دینے کے بعد ، پرانے ٹوکن کا استعمال کرتے ہوئے تمام API کالز غلط ہوجائیں گی۔ براہ کرم تمام متعلقہ ترتیب کو اپ ڈیٹ کرنا یقینی بنائیں۔"
 
 msgid "在请求头中添加："
-msgstr "درخواست کے ہیڈر میں شامل کریں:"
+msgstr "درخواست ہیڈر میں شامل کریں:"
 
 msgid "受控端"
-msgstr "کنٹرول شدہ سائیڈ"
+msgstr "کنٹرول اختتام"
 
 msgid "访问配置"
-msgstr "رسائی کی ترتیب"
+msgstr "کنفیگریشن تک رسائی حاصل کریں"
 
 msgid "新账号"
 msgstr "نیا اکاؤنٹ"
 
 msgid "注册时需要验证邮箱"
-msgstr "رجسٹریشن کے لیے ای میل کی تصدیق درکار ہے"
+msgstr "اندراج کرتے وقت ای میل کی توثیق کی ضرورت ہوتی ہے"
 
 msgid "新用户默认"
-msgstr "نئے صارفین کے لیے ڈیفالٹ"
+msgstr "نیا صارف ڈیفالٹ"
 
 msgid "这是一封来自"
 msgstr "یہ ایک خط ہے"
 
 msgid "系统的测试邮件"
-msgstr "سسٹم کا ٹیسٹ ای میل"
+msgstr "سسٹم ٹیسٹ ای میل"
 
 msgid "如果您收到这封邮件"
-msgstr "اگر آپ کو یہ ای میل موصول ہوا"
+msgstr "اگر آپ کو یہ ای میل موصول ہوتا ہے"
 
 msgid "说明邮件服务配置正常"
-msgstr "اس کا مطلب ہے کہ میل سروس صحیح طریقے سے کنفیگر ہے"
+msgstr "اس بات کی نشاندہی کرتا ہے کہ میل سروس کی ترتیب معمول کی بات ہے"
 
 msgid "您的"
 msgstr "آپ کا"

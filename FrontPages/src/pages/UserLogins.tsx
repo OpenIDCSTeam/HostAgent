@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Form, Input, Button, Modal, message, Alert } from 'antd'
-import { UserOutlined, LockOutlined, KeyOutlined, LoginOutlined, MailOutlined, InfoCircleOutlined, BulbOutlined, BulbFilled, BgColorsOutlined } from '@ant-design/icons'
+import { Form, Input, Button, Modal, message, Alert, Dropdown } from 'antd'
+import { UserOutlined, LockOutlined, KeyOutlined, LoginOutlined, MailOutlined, InfoCircleOutlined, BulbOutlined, BulbFilled, BgColorsOutlined, TranslationOutlined, SwapOutlined } from '@ant-design/icons'
 import { useUserStore } from '@/utils/data.ts'
 import api from '@/utils/apis.ts'
 import { useTheme } from '@/contexts/ThemeContext'
+import { changeLanguage, getAvailableLanguages, getCurrentLanguage } from '@/utils/i18n.ts'
+import type { MenuProps } from 'antd'
 
 /**
  * 登录表单数据接口
@@ -43,6 +45,41 @@ function UserLogins() {
   const [userForm] = Form.useForm() // 用户登录表单实例
   const [tokenForm] = Form.useForm() // Token登录表单实例
   const [forgotPasswordForm] = Form.useForm() // 找回密码表单实例
+  const [currentLang, setCurrentLang] = useState('zh-cn') // 当前语言
+  const [languages, setLanguages] = useState<any[]>([]) // 可用语言列表
+
+  // 初始化语言状态
+  useEffect(() => {
+    setCurrentLang(getCurrentLanguage())
+    setLanguages(getAvailableLanguages())
+
+    // 监听语言变更事件
+    const handleLangChange = (e: any) => {
+      setCurrentLang(e.detail.language)
+    }
+    window.addEventListener('languageChanged', handleLangChange)
+    
+    // 轮询检查语言列表是否加载完成
+    const interval = setInterval(() => {
+      const langs = getAvailableLanguages()
+      if (langs.length > 0 && languages.length === 0) {
+        setLanguages(langs)
+        setCurrentLang(getCurrentLanguage())
+      }
+    }, 1000)
+    
+    return () => {
+      window.removeEventListener('languageChanged', handleLangChange)
+      clearInterval(interval)
+    }
+  }, [languages.length])
+
+  // 语言菜单项
+  const languageMenuItems: MenuProps['items'] = languages.map(lang => ({
+    key: lang.code,
+    label: lang.native || lang.name,
+    icon: lang.code === currentLang ? <SwapOutlined /> : undefined,
+  }))
 
   /**
    * 处理用户名密码登录提交
@@ -184,6 +221,43 @@ function UserLogins() {
           zIndex: 1000,
         }}
       >
+        {/* 语言切换按钮 */}
+        <Dropdown
+          menu={{
+            items: languageMenuItems,
+            onClick: ({key}) => changeLanguage(key)
+          }}
+          placement="bottomRight"
+          overlayStyle={{
+            zIndex: 20000,
+            maxHeight: '400px',
+            overflow: 'auto'
+          }}
+          getPopupContainer={(trigger) => trigger.parentElement || document.body}
+        >
+          <Button
+            size="large"
+            icon={<TranslationOutlined />}
+            style={{
+              background: 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-primary)',
+              borderRadius: '12px',
+              boxShadow: 'var(--shadow-glass)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '48px',
+              height: '48px',
+              padding: 0,
+              transition: 'all 0.3s',
+            }}
+            title="切换语言"
+          />
+        </Dropdown>
+
         {/* 透明模式切换按钮 */}
         <Button
           onClick={toggleTransparentMode}
@@ -275,7 +349,7 @@ function UserLogins() {
               </svg>
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+        <h1 className="text-3xl font-bold mb-2">
             OpenIDCS受控端
           </h1>
           <p style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>

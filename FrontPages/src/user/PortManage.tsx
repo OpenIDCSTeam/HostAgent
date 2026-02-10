@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Table, Button, message, Tag, Modal, Form, Input, Select, InputNumber, Space, Typography } from 'antd';
+import { Card, Table, Button, message, Tag, Modal, Form, Input, Select, InputNumber, Space } from 'antd';
 import { ReloadOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { ArrowsRightLeftIcon } from '@heroicons/react/24/outline';
-
-const { Title } = Typography;
+import PageHeader from '@/components/PageHeader';
 import api from '@/utils/apis.ts';
 import { NATRule } from '@/types';
 
@@ -175,25 +174,25 @@ const PortManage: React.FC = () => {
       title: '虚拟机',
       dataIndex: 'vmUuid',
       key: 'vmUuid',
-      render: (text: string) => <span className="dark:text-gray-200">{text}</span>,
+      render: (text: string) => <span className="dark:text-white">{text}</span>,
     },
     {
       title: '公网端口',
       dataIndex: 'wan_port', // 后端返回的是 wan_port
       key: 'wan_port',
-      render: (text: number) => <span className="dark:text-gray-200">{text || '-'}</span>,
+      render: (text: number) => <span className="dark:text-white">{text || '-'}</span>,
     },
     {
         title: '虚拟机端口',
         dataIndex: 'lan_port', // 后端返回的是 lan_port
         key: 'lan_port',
-        render: (text: number) => <span className="dark:text-gray-200">{text || '-'}</span>,
+        render: (text: number) => <span className="dark:text-white">{text || '-'}</span>,
     },
     {
       title: '备注',
       dataIndex: 'nat_tips',
       key: 'nat_tips',
-      render: (text: string) => <span className="dark:text-gray-200">{text}</span>,
+      render: (text: string) => <span className="dark:text-white">{text}</span>,
     },
     {
         title: '操作',
@@ -212,44 +211,23 @@ const PortManage: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="p-6">
       {/* 页面标题 */}
-      <div style={{ marginBottom: '32px' }}>
-        <Title 
-          level={2} 
-          style={{ 
-            margin: 0,
-            fontSize: '32px',
-            fontWeight: 700,
-            color: 'var(--text-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}
-        >
-          <ArrowsRightLeftIcon style={{ width: '36px', height: '36px', color: 'var(--accent-primary)' }} />
-          端口转发管理
-        </Title>
-        <div style={{ 
-          marginTop: '8px',
-          fontSize: '14px',
-          color: 'var(--text-secondary)'
-        }}>
-          管理您的NAT端口转发规则
-        </div>
-      </div>
-
-      {/* 操作按钮 */}
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'flex-end' }}>
-        <Space>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            添加规则
-          </Button>
-          <Button icon={<ReloadOutlined />} onClick={fetchNATRules} loading={loading}>
-            刷新
-          </Button>
-        </Space>
-      </div>
+      <PageHeader
+        icon={<ArrowsRightLeftIcon style={{ width: '24px', height: '24px' }} />}
+        title="端口转发管理"
+        subtitle="管理您的NAT端口转发规则"
+        actions={
+          <Space>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+              添加规则
+            </Button>
+            <Button icon={<ReloadOutlined />} onClick={fetchNATRules} loading={loading}>
+              刷新
+            </Button>
+          </Space>
+        }
+      />
 
       <Card className="glass-card">
         <Table

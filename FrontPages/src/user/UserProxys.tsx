@@ -10,8 +10,9 @@ import {
 } from '@heroicons/react/24/outline';
 import api from '@/utils/apis.ts';
 import { ProxyConfig } from '@/types';
+import PageHeader from '@/components/PageHeader';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface UserProxy extends ProxyConfig {
   hostName: string;
@@ -246,7 +247,7 @@ const UserProxys: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '24px', minHeight: '100vh' }}>
+    <div className="p-6 min-h-screen">
       <style>
         {`
           @keyframes fadeInUp {
@@ -263,26 +264,22 @@ const UserProxys: React.FC = () => {
       </style>
 
       {/* 页面标题 */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: '24px' 
-      }}>
-        <Title level={2} style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-primary)' }}>
-          <ArrowTopRightOnSquareIcon style={{ width: '32px', height: '32px', color: 'var(--accent-primary)' }} />
-          反向代理管理
-        </Title>
-        <Button 
-          icon={<ReloadOutlined />} 
-          onClick={fetchProxies} 
-          loading={loading}
-          size="large"
-          type="primary"
-        >
-          刷新
-        </Button>
-      </div>
+      <PageHeader
+        icon={<ArrowTopRightOnSquareIcon style={{ width: '24px', height: '24px' }} />}
+        title="反向代理管理"
+        subtitle="管理您的Web反向代理配置"
+        actions={
+          <Button 
+            icon={<ReloadOutlined />} 
+            onClick={fetchProxies} 
+            loading={loading}
+            size="large"
+            type="primary"
+          >
+            刷新
+          </Button>
+        }
+      />
 
       {/* 统计卡片 */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>

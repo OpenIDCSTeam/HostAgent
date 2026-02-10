@@ -6,8 +6,10 @@ from MainObject.Config.NCConfig import NCConfig
 from MainObject.Config.PortData import PortData
 from MainObject.Config.SDConfig import SDConfig
 from MainObject.Config.USBInfos import USBInfos
+from MainObject.Config.UserMask import UserMask
 from MainObject.Config.VFConfig import VFConfig
 from MainObject.Config.VMBackup import VMBackup
+from MainObject.Config.VMPowers import VMPowers
 from MainObject.Config.WebProxy import WebProxy
 
 
@@ -21,6 +23,7 @@ class VMConfig:
     def __init__(self, **kwargs):
         # 机器配置 ===========================
         self.vm_uuid = ""  # 设置虚拟机名-UUID
+        self.vm_flag = VMPowers.UNKNOWN  # PWR
         self.os_name = ""  # 设置SYS操作系统名
         self.os_pass = ""  # 设置SYS系统的密码
         # 远程连接 ===========================
@@ -50,7 +53,27 @@ class VMConfig:
         self.nat_all: list[PortData] = []
         self.web_all: list[WebProxy] = []
         self.backups: list[VMBackup] = []
-        self.own_all: list[str] = ["admin"]
+        self.own_all: dict[str, UserMask] = {
+            "admin": UserMask(
+                pwr_edits=True,  # 是否允许编辑电源
+                pwd_edits=True,  # 是否允许编辑密码
+                sys_edits=True,  # 是否允许编辑系统
+                nic_edits=True,  # 是否允许编辑网卡
+                iso_edits=True,  # 是否允许编辑光盘
+                hdd_edits=True,  # 是否允许编辑硬盘
+                net_edits=True,  # 是否允许编辑网络
+                web_edits=True,  # 是否允许编辑网页
+                vnc_edits=True,  # 是否允许控制桌面
+                pci_edits=True,  # 是否允许编辑PCIe
+                usb_edits=True,  # 是否允许编辑USBs
+                vm_backup=True,  # 是否允许备份还原
+                vm_grants=True,  # 是否允许管理用户
+                vm_modify=True,  # 是否允许修改配置
+                vm_delete=True,  # 是否允许删除实例
+                firewalls=True,  # 是否可编辑防火墙
+            )
+        }
+
         # 加载数据 ===========================
         self.__load__(**kwargs)
 
@@ -140,6 +163,29 @@ class VMConfig:
                 self.backups.append(bak_obj)
             else:
                 self.backups.append(bak)
+        if type(self.vm_flag) is str:
+            self.vm_flag = VMPowers.from_json(self.vm_flag)
+        # 所有者数据 ===========================
+        own_data = self.own_all
+        self.own_all = {}
+        if isinstance(own_data, list):
+            # 兼容旧格式: list[str] -> dict[str, UserMask(全权限)]
+            for username in own_data:
+                self.own_all[username] = UserMask.full()
+        elif isinstance(own_data, dict):
+            for username, mask_data in own_data.items():
+                if isinstance(mask_data, UserMask):
+                    self.own_all[username] = mask_data
+                elif isinstance(mask_data, int):
+                    # 掩码数字 -> UserMask
+                    self.own_all[username] = UserMask(mask_data)
+                elif isinstance(mask_data, dict):
+                    # 字典格式 -> UserMask
+                    self.own_all[username] = UserMask(**mask_data)
+                else:
+                    self.own_all[username] = UserMask.full()
+        if not self.own_all:
+            self.own_all = {"admin": UserMask.full()}
 
     # 读取数据 ###############################
     def __read__(self, data: dict):
@@ -153,6 +199,7 @@ class VMConfig:
             "vm_uuid": self.vm_uuid,
             "os_name": self.os_name,
             "os_pass": self.os_pass,
+            "vm_flag": str(self.vm_flag),
             # 资源配置 =======================
             "cpu_num": self.cpu_num,
             "cpu_per": self.cpu_per,
@@ -191,7 +238,7 @@ class VMConfig:
             "pci_all": {
                 k: v.__save__()
                 if hasattr(v, '__save__')
-                and callable(
+                   and callable(
                     getattr(v, '__save__'))
                 else v for k, v
                 in self.pci_all.items()},
@@ -199,7 +246,7 @@ class VMConfig:
             "usb_all": {
                 k: v.__save__()
                 if hasattr(v, '__save__')
-                and callable(
+                   and callable(
                     getattr(v, '__save__'))
                 else v for k, v
                 in self.usb_all.items()},
@@ -236,7 +283,12 @@ class VMConfig:
                 else b for b
                 in self.backups],
             # 所有者配置 =======================
-            "own_all": self.own_all,
+            "own_all": {
+                k: v._to_mask()
+                if isinstance(v, UserMask)
+                else v for k, v
+                in self.own_all.items()
+            },
         }
 
     # 转换字符 ###############################

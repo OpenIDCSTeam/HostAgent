@@ -4,6 +4,7 @@ import { PlusOutlined, DeleteOutlined, EditOutlined, ReloadOutlined, GlobalOutli
 import api from '@/utils/apis.ts'
 import type { ColumnsType } from 'antd/es/table'
 import { ProxyConfig } from '@/types'
+import PageHeader from '@/components/PageHeader'
 
 /**
  * Web代理数据接口（扩展自ProxyConfig）
@@ -354,7 +355,7 @@ function HttpProxys() {
       title: '后端地址',
       key: 'backend',
       render: (_, record: WebProxy) => (
-        <code className="text-sm text-gray-800 dark:text-gray-200">
+        <code className="text-sm ">
           {record.backend_ip || 'auto'}:{record.backend_port}
         </code>
       )
@@ -385,7 +386,7 @@ function HttpProxys() {
       title: '描述',
       dataIndex: 'description',
       key: 'description',
-      render: (desc: string) => <span className="text-gray-600 dark:text-gray-400">{desc || '-'}</span>
+      render: (desc: string) => <span style={{ color: 'var(--text-secondary)' }}>{desc || '-'}</span>
     },
     {
       title: '操作',
@@ -415,17 +416,13 @@ function HttpProxys() {
   ]
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div className="p-6">
       {/* 页面标题 */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
-              <GlobalOutlined className="text-blue-600 dark:text-blue-400" />
-              反向代理管理
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">管理所有虚拟机的Web反向代理配置</p>
-          </div>
+      <PageHeader
+        icon={<GlobalOutlined />}
+        title="反向代理管理"
+        subtitle="管理所有虚拟机的Web反向代理配置"
+        actions={
           <Button
             type="primary"
             icon={<PlusOutlined />}
@@ -435,8 +432,8 @@ function HttpProxys() {
           >
             添加反向代理
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* 统计卡片 - 重新设计 */}
       <Row gutter={[16, 16]} className="mb-6">
@@ -456,7 +453,7 @@ function HttpProxys() {
                 <GlobalOutlined className="text-white text-xl" />
               </div>
               <div className="text-right">
-                <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">总代理数</div>
+<div className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>总代理数</div>
                 <div className="text-3xl font-bold" style={{
                   background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                   WebkitBackgroundClip: 'text',
@@ -484,7 +481,7 @@ function HttpProxys() {
                 <UnlockOutlined className="text-white text-xl" />
               </div>
               <div className="text-right">
-                <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">HTTP代理</div>
+<div className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>HTTP代理</div>
                 <div className="text-3xl font-bold" style={{
                   background: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
                   WebkitBackgroundClip: 'text',
@@ -512,7 +509,7 @@ function HttpProxys() {
                 <LockOutlined className="text-white text-xl" />
               </div>
               <div className="text-right">
-                <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">HTTPS代理</div>
+<div className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>HTTPS代理</div>
                 <div className="text-3xl font-bold" style={{
                   background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                   WebkitBackgroundClip: 'text',
@@ -540,7 +537,7 @@ function HttpProxys() {
                 <CloudServerOutlined className="text-white text-xl" />
               </div>
               <div className="text-right">
-                <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">主机数</div>
+<div className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>主机数</div>
                 <div className="text-3xl font-bold" style={{
                   background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
                   WebkitBackgroundClip: 'text',
@@ -618,8 +615,8 @@ function HttpProxys() {
           locale={{
             emptyText: (
               <div style={{ padding: '48px 0', textAlign: 'center' }}>
-                <GlobalOutlined className="text-gray-300 dark:text-gray-600" style={{ fontSize: '5rem' }} />
-                <p className="text-gray-600 dark:text-gray-400 mt-4 text-lg">暂无反向代理配置</p>
+                <GlobalOutlined style={{ fontSize: '5rem', color: 'var(--text-tertiary)' }} />
+                <p className="mt-4 text-lg" style={{ color: 'var(--text-secondary)' }}>暂无反向代理配置</p>
                 <Button 
                   type="primary" 
                   onClick={showAddModal} 

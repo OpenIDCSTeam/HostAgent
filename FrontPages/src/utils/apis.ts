@@ -278,7 +278,7 @@ export const getVMMonitorData = (hsName: string, vmUuid: string, range: number):
  * 获取虚拟机截图
  */
 export const getVMScreenshot = (hsName: string, vmUuid: string): Promise<ApiResponse<{ screenshot: string }>> => {
-  return http.get(`/api/client/screenshot/${hsName}/${vmUuid}`);
+  return http.get(`/api/client/screenshot/${hsName}/${vmUuid}`, { silent: true });
 };
 
 /**
@@ -571,6 +571,14 @@ export const getLoggerDetail = (): Promise<ApiResponse<any[]>> => {
 };
 
 /**
+ * 清空系统日志
+ */
+export const clearLogs = (hsName?: string): Promise<ApiResponse> => {
+  const params = hsName ? { hs_name: hsName } : {};
+  return http.post('/api/system/logger/clear', null, { params });
+};
+
+/**
  * 获取系统设置
  */
 export const getSystemSettings = (): Promise<ApiResponse<any>> => {
@@ -644,6 +652,7 @@ export default {
   setToken,
   resetToken,
   getLoggerDetail,
+  clearLogs,
   getSystemSettings,
   saveSystemSettings,
   

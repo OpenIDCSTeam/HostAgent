@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { ConfigProvider } from 'antd'
+import { ConfigProvider, App as AntdApp } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
@@ -26,13 +26,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     {/* 主题管理 */}
     <ThemeProvider>
-      {/* Ant Design中文配置 */}
-      <ConfigProvider 
-        locale={zhCN}
-        getPopupContainer={(node) => node?.parentElement || document.body}
-      >
+      <AntdApp>
         <App />
-      </ConfigProvider>
+      </AntdApp>
     </ThemeProvider>
   </React.StrictMode>,
 )

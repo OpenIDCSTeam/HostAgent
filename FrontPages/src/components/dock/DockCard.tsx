@@ -24,6 +24,7 @@ interface DockCardProps {
     uuid: string
     vm: any // Using any for VM type for now to avoid duplicating interfaces
     hostName?: string
+    hostDisabled?: boolean // 主机是否被禁用
     onEdit: (uuid: string) => void
     onDelete: (uuid: string) => void
     onPower: (uuid: string) => void
@@ -70,6 +71,7 @@ const DockCard: React.FC<DockCardProps> = ({
     uuid,
     vm,
     hostName,
+    hostDisabled = false,
     onEdit,
     onDelete,
     onPower,
@@ -131,7 +133,7 @@ const DockCard: React.FC<DockCardProps> = ({
             case 'RESUMING':
                 return <LoadingOutlined className="text-yellow-600 dark:text-yellow-400" spin />
             default:
-                return <QuestionCircleOutlined className="text-gray-500 dark:text-gray-400" />
+                return <QuestionCircleOutlined className="" />
         }
     }
 
@@ -159,7 +161,7 @@ const DockCard: React.FC<DockCardProps> = ({
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                                 <Tooltip title={uuid}>
-                                    <h3 className="m-0 text-base font-bold text-gray-900 dark:text-white truncate">
+                                    <h3 className="m-0 text-base font-bold  truncate">
                                         {uuid}
                                     </h3>
                                 </Tooltip>
@@ -173,7 +175,7 @@ const DockCard: React.FC<DockCardProps> = ({
                                 </Tag>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-600 dark:text-gray-400">
+                                <span className="text-xs ">
                                     {config.os_name || '未知系统'}
                                 </span>
                             </div>
@@ -186,7 +188,7 @@ const DockCard: React.FC<DockCardProps> = ({
             <div className="flex-1 p-4 space-y-3 overflow-y-auto">
                 {/* 资源配置 */}
                 <div className="space-y-2">
-                    <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    <div className="text-xs font-semibold  flex items-center gap-1">
                         <DatabaseOutlined className="text-blue-500" />
                         资源配置
                     </div>
@@ -194,8 +196,8 @@ const DockCard: React.FC<DockCardProps> = ({
                         <Col span={12}>
                             <div className="p-2 rounded-lg border border-white/20 dark:border-gray-700/30">
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className="text-xs text-gray-600 dark:text-gray-400">CPU</span>
-                                    <span className="text-xs font-bold text-gray-900 dark:text-white">
+                                    <span className="text-xs ">CPU</span>
+                                    <span className="text-xs font-bold ">
                                         {cpuTotal} 核 {cpuPercent}%
                                     </span>
                                 </div>
@@ -210,8 +212,8 @@ const DockCard: React.FC<DockCardProps> = ({
                         <Col span={12}>
                             <div className="p-2 rounded-lg border border-white/20 dark:border-gray-700/30">
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className="text-xs text-gray-600 dark:text-gray-400">内存</span>
-                                    <span className="text-xs font-bold text-gray-900 dark:text-white">
+                                    <span className="text-xs ">内存</span>
+                                    <span className="text-xs font-bold ">
                                         {formatMemory(memUsage)} / {formatMemory(memTotal)}
                                     </span>
                                 </div>
@@ -226,8 +228,8 @@ const DockCard: React.FC<DockCardProps> = ({
                         <Col span={12}>
                             <div className="p-2 rounded-lg border border-white/20 dark:border-gray-700/30">
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className="text-xs text-gray-600 dark:text-gray-400">硬盘</span>
-                                    <span className="text-xs font-bold text-gray-900 dark:text-white">
+                                    <span className="text-xs ">硬盘</span>
+                                    <span className="text-xs font-bold ">
                                         {formatMemory(hddUsage)} / {formatMemory(hddTotal)}
                                     </span>
                                 </div>
@@ -242,8 +244,8 @@ const DockCard: React.FC<DockCardProps> = ({
                         <Col span={12}>
                             <div className="p-2 rounded-lg border border-white/20 dark:border-gray-700/30">
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className="text-xs text-gray-600 dark:text-gray-400">显存</span>
-                                    <span className="text-xs font-bold text-gray-900 dark:text-white">
+                                    <span className="text-xs ">显存</span>
+                                    <span className="text-xs font-bold ">
                                         {formatMemory(Number(gpuUsageValue) || 0)} / {formatMemory(config.gpu_mem || gpuTotal)}
                                     </span>
                                 </div>
@@ -258,31 +260,40 @@ const DockCard: React.FC<DockCardProps> = ({
                     </Row>
                 </div>
 
-                {/* 运行状态 */}
-                {isRunning && (
-                    <div className="p-3 rounded-lg border border-green-200/50 dark:border-green-700/50">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <ThunderboltOutlined className="text-green-600 dark:text-green-400" />
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">运行时长</span>
-                            </div>
-                            <span className="text-sm font-bold text-green-700 dark:text-green-400">
-                                {formatUptime(uptime)}
-                            </span>
-                        </div>
+                {/* 流量 */}
+                <div className="p-3 rounded-lg border border-white/20 dark:border-gray-700/30">
+                    <div className="text-xs font-semibold mb-2 flex items-center gap-1">
+                        <ThunderboltOutlined className="text-green-600 dark:text-green-400" />
+                        流量
                     </div>
-                )}
+                    <div className="flex items-center justify-between mb-1 text-xs">
+                            <span>
+                                <span className="ml-2 text-green-600 dark:text-green-400">↑ {formatDisk(firstStatus.bindbindwidth_up_usage || 0)} / {formatDisk(firstStatus.bindwidth_up_total || 0)}</span>
+                                <span className="ml-2 text-blue-600 dark:text-blue-400">↓ {formatDisk(firstStatus.bindwidth_down_usage || 0)} / {formatDisk(firstStatus.bindwidth_down_total || 0)}</span>
+                            </span>
+                            <span className="text-xs font-bold">
+                                {formatDisk(firstStatus.flu_usage || 0)} / {formatDisk(firstStatus.flu_total || 0)}
+                            </span>
+                    </div>
+                    <Progress
+                            percent={firstStatus.flu_total > 0 ? Math.round((firstStatus.flu_usage || 0) / firstStatus.flu_total * 100) : 0}
+                            size="small"
+                            strokeColor={{ '0%': '#10b981', '100%': '#3b82f6' }}
+                            showInfo={false}
+                    />
+
+                </div>
 
                 {/* 网络端口 */}
                 <div className="p-3 rounded-lg border border-white/20 dark:border-gray-700/30">
-                    <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">
+                    <div className="text-xs font-semibold  mb-2 flex items-center gap-1">
                         <ApiOutlined className="text-cyan-600 dark:text-cyan-400" />
                         网络端口
                     </div>
                     <Row gutter={[8, 8]}>
                         <Col span={12}>
                             <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-600 dark:text-gray-400">NAT端口</span>
+                                <span className="text-xs ">NAT端口</span>
                                 <span className="text-xs font-mono text-cyan-600 dark:text-cyan-400">
                                     {(config.nat_all || []).length} / {config.nat_num || 100}
                                 </span>
@@ -290,7 +301,7 @@ const DockCard: React.FC<DockCardProps> = ({
                         </Col>
                         <Col span={12}>
                             <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-600 dark:text-gray-400">Web代理</span>
+                                <span className="text-xs ">Web代理</span>
                                 <span className="text-xs font-mono text-purple-600 dark:text-purple-400">
                                     {(config.web_all || []).length} / {config.web_num || 100}
                                 </span>
@@ -301,14 +312,14 @@ const DockCard: React.FC<DockCardProps> = ({
 
                 {/* 网卡信息 */}
                 <div className="p-3 rounded-lg border border-white/20 dark:border-gray-700/30">
-                    <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">
+                    <div className="text-xs font-semibold  mb-2 flex items-center gap-1">
                         <GlobalOutlined className="text-indigo-600 dark:text-indigo-400" />
                         网卡信息
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-600 dark:text-gray-400 shrink-0">IP/MAC:</span>
+                        <span className="text-xs  shrink-0">IP/MAC:</span>
                         <Tooltip title={`IPv4: ${ipv4} | IPv6: ${ipv6 !== '-' ? ipv6 : '未配置'} | MAC: ${macAddr}`}>
-                            <span className="text-xs font-mono text-gray-900 dark:text-white truncate flex-1">
+                            <span className="text-xs font-mono  truncate flex-1">
                                 {ipv4} / {ipv6 !== '-' ? ipv6 : '未配置'} | {macAddr}
                             </span>
                         </Tooltip>
@@ -327,41 +338,44 @@ const DockCard: React.FC<DockCardProps> = ({
                 >
                     查看详情
                 </Button>
-                <Tooltip title="VNC控制台">
+                <Tooltip title={hostDisabled ? '主机已禁用' : 'VNC控制台'}>
                     <Button 
                         type="text" 
                         size="small"
                         icon={<DesktopOutlined />} 
                         onClick={() => onVnc(uuid)}
-                        disabled={!isRunning}
+                        disabled={!isRunning || hostDisabled}
                         className="hover:bg-purple-50 dark:hover:bg-purple-900/30"
                     />
                 </Tooltip>
-                <Tooltip title="电源操作">
+                <Tooltip title={hostDisabled ? '主机已禁用' : '电源操作'}>
                     <Button 
                         type="text" 
                         size="small"
-                        icon={<PoweroffOutlined className={isRunning ? 'text-green-500' : 'text-gray-400'} />} 
+                icon={<PoweroffOutlined className={isRunning ? 'text-green-500' : ''} />}
                         onClick={() => onPower(uuid)}
+                        disabled={hostDisabled}
                         className="hover:bg-green-50 dark:hover:bg-green-900/30"
                     />
                 </Tooltip>
-                <Tooltip title="编辑配置">
+                <Tooltip title={hostDisabled ? '主机已禁用' : '编辑配置'}>
                     <Button 
                         type="text" 
                         size="small"
                         icon={<EditOutlined />} 
                         onClick={() => onEdit(uuid)}
+                        disabled={hostDisabled}
                         className="hover:bg-orange-50 dark:hover:bg-orange-900/30"
                     />
                 </Tooltip>
-                <Tooltip title="删除虚拟机">
+                <Tooltip title={hostDisabled ? '主机已禁用' : '删除虚拟机'}>
                     <Button 
                         type="text" 
                         size="small"
                         danger
                         icon={<DeleteOutlined />} 
                         onClick={() => onDelete(uuid)}
+                        disabled={hostDisabled}
                         className="hover:bg-red-50 dark:hover:bg-red-900/30"
                     />
                 </Tooltip>

@@ -918,6 +918,10 @@ class HostServer(BasicServer):
             VMPowers.A_WAKED: "恢复"
         }
         logger.info(f"[{self.hs_config.server_name}] 容器电源操作: {vm_name} - {power_map.get(power, '未知')}")
+        
+        # 先调用父类方法设置中间状态
+        super().VMPowers(vm_name, power)
+        
         # 专用操作 =============================================================
         client, result = self.api_conn()
         if not result.success:
@@ -1034,11 +1038,10 @@ class HostServer(BasicServer):
             return hs_result
 
         # 通用操作 =============================================================
-        super().VMPowers(vm_name, power)
         return hs_result
 
     # 获取虚拟机实际状态（从API）==============================================
-    def VMStatusAPI(self, vm_name: str) -> str:
+    def GetPower(self, vm_name: str) -> str:
         """从Docker API获取容器实际状态"""
         try:
             client, result = self.api_conn()

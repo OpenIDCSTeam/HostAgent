@@ -35,6 +35,7 @@ import {
 } from '@ant-design/icons'
 import {useNavigate} from 'react-router-dom'
 import api from '@/utils/apis.ts'
+import PageHeader from '@/components/PageHeader'
 
 // 主机配置接口
 interface HostConfig {
@@ -184,15 +185,18 @@ function HostManage() {
             if (result.code === 200 && result.data) {
                 setHosts(result.data as unknown as Record<string, Host>)
 
-                // 并行加载所有主机状态
-                const statusPromises = Object.keys(result.data).map(name =>
+                // 仅对已启用的主机加载状态，禁用主机不调用getHostStatus
+                const enabledNames = Object.keys(result.data).filter(name =>
+                    (result.data as any)[name].status === 'active'
+                )
+                const statusPromises = enabledNames.map(name =>
                     api.getHostStatus(name).catch(() => null)
                 )
                 const statusResults = await Promise.all(statusPromises)
 
                 // 构建状态映射
                 const statusMap: Record<string, HostStatus> = {}
-                Object.keys(result.data).forEach((name, index) => {
+                enabledNames.forEach((name, index) => {
                     const statusResult = statusResults[index] as any
                     if (statusResult && statusResult.code === 200) {
                         statusMap[name] = statusResult.data
@@ -213,7 +217,7 @@ function HostManage() {
         loadHosts()
     }, [])
 
-    // 定时刷新状态 - 刷新主机列表和状态，确保is_enabled等字段实时更新
+    // 定时刷新状态 - 刷新主机列表和状态，确保enable_host等字段实时更新
     useEffect(() => {
         const refreshHostsAndStatus = async () => {
             try {
@@ -222,17 +226,19 @@ function HostManage() {
                 if (hostsResult.code === 200 && hostsResult.data) {
                     setHosts(hostsResult.data as unknown as Record<string, Host>)
                     
-                    // 2. 并行刷新所有主机状态
-                    const hostNames = Object.keys(hostsResult.data)
-                    if (hostNames.length > 0) {
-                        const statusPromises = hostNames.map(name =>
+                    // 2. 仅对已启用的主机刷新状态，禁用主机不调用getHostStatus
+                    const enabledNames = Object.keys(hostsResult.data).filter(name =>
+                        (hostsResult.data as any)[name].status === 'active'
+                    )
+                    if (enabledNames.length > 0) {
+                        const statusPromises = enabledNames.map(name =>
                             api.getHostStatus(name).catch(() => null)
                         )
                         const statusResults = await Promise.all(statusPromises)
 
                         // 构建状态映射
                         const statusMap: Record<string, HostStatus> = {}
-                        hostNames.forEach((name, index) => {
+                        enabledNames.forEach((name, index) => {
                             const statusResult = statusResults[index] as any
                             if (statusResult && statusResult.code === 200) {
                                 statusMap[name] = statusResult.data
@@ -509,13 +515,13 @@ function HostManage() {
                 content: (
                     <div>
                         <p>确定要禁用主机 <strong>"{name}"</strong> 吗？</p>
-                        <p style={{color: '#ff4d4f', marginTop: 8}}>
+                        <p style={{marginTop: 8}}>
                             禁用后：
                         </p>
                         <ul style={{marginTop: 4, paddingLeft: 20}}>
                             <li>该主机的虚拟机操作将不可用</li>
-                            <li>系统将不再自动更新该主机状态</li>
-                            <li>运行中的虚拟机不会被关闭</li>
+                            <li>系统不再自动更新该主机状态</li>
+                            <li>但运行中的虚拟机不会被关闭</li>
                         </ul>
                     </div>
                 ),
@@ -641,8 +647,8 @@ function HostManage() {
                                 <CloudServerOutlined className="text-white text-2xl"/>
                             </div>
                             <div>
-                                <div className="font-semibold text-gray-800 dark:text-gray-100">{name}</div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">{typeInfo.description || host.type}</div>
+                                <div className="font-semibold">{name}</div>
+                                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{typeInfo.description || host.type}</div>
                             </div>
                         </div>
                         <Tag color={host.status === 'active' ? 'success' : 'error'}>
@@ -661,20 +667,6 @@ function HostManage() {
                             管理
                         </Button>
                         <Button
-                            type="text"
-                            icon={<CloudSyncOutlined/>}
-                            onClick={() => handleScanBackups(name)}
-                            title="扫描备份"
-                            disabled={host.status !== 'active'}
-                        />
-                        <Button
-                            type="text"
-                            icon={<ScanOutlined/>}
-                            onClick={() => handleScanVMs(name)}
-                            title="扫描虚拟机"
-                            disabled={host.status !== 'active'}
-                        />
-                        <Button
                             type={host.status === 'active' ? 'default' : 'primary'}
                             danger={host.status === 'active'}
                             icon={host.status === 'active' ? <StopOutlined/> : <PlayCircleOutlined/>}
@@ -682,32 +674,6 @@ function HostManage() {
                         >
                             {host.status === 'active' ? '禁用' : '启用'}
                         </Button>
-                        <Button
-                            type="text"
-                            icon={<EditOutlined/>}
-                            onClick={() => handleEdit(name)}
-                            title="编辑"
-                            disabled={host.status !== 'active'}
-                        />
-                        <Button
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined/>}
-                            title="删除"
-                            disabled={host.status !== 'active'}
-                            onClick={() => {
-                                Modal.confirm({
-                                    title: '确认删除',
-                                    icon: <DeleteOutlined style={{color: 'red'}}/>,
-                                    content: `确定要删除主机 "${name}" 吗？此操作不可恢复。`,
-                                    okText: '确认删除',
-                                    okType: 'danger',
-                                    cancelText: '取消',
-                                    mask: false,
-                                    onOk: () => handleDelete(name)
-                                })
-                            }}
-                        />
                     </Space>
                 }
             >
@@ -716,19 +682,19 @@ function HostManage() {
                     <Col span={8} style={{minWidth: '240px', flexShrink: 0, flexGrow: 0}}>
                         <div className="space-y-1 text-xs">
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600 dark:text-gray-400">主机连接IP:</span>
-                                <span className="truncate dark:text-gray-200">{host.addr || '未配置'}</span>
+                                <span style={{ color: 'var(--text-secondary)' }}>主机连接IP:</span>
+                                <span className="truncate ">{host.addr || '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-start">
-                                <span className="text-gray-600 dark:text-gray-400">公共公共IP:</span>
+                                <span style={{ color: 'var(--text-secondary)' }}>公共公共IP:</span>
                                 <div className="text-right max-w-[60%]">
                                     {host.config?.public_addr && host.config.public_addr.length > 0 ? (
                                         host.config.public_addr.map((ip, idx) => (
                                             <div key={idx} className="flex items-center justify-end gap-1 mb-1">
-                                                <span className="truncate dark:text-gray-200">{ip}</span>
+                                                <span className="truncate ">{ip}</span>
                                                 <Tooltip title="复制">
                                                     <CopyOutlined
-                                                        className="text-gray-400 hover:text-blue-600 cursor-pointer text-xs"
+                                                        className="hover:text-blue-600 cursor-pointer text-xs"
                                                         onClick={() => copyToClipboard(ip)}/>
                                                 </Tooltip>
                                             </div>
@@ -739,42 +705,42 @@ function HostManage() {
                                 </div>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600 dark:text-gray-400">访问端口:</span>
-                                <span className="dark:text-gray-200">{host.config?.server_port && host.config.server_port > 0 ? host.config.server_port : '未配置'}</span>
+                                <span style={{ color: 'var(--text-secondary)' }}>访问端口:</span>
+                                <span className="">{host.config?.server_port && host.config.server_port > 0 ? host.config.server_port : '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600 dark:text-gray-400">桌面端口:</span>
-                                <span className="dark:text-gray-200">{host.config?.remote_port || '未配置'}</span>
+                                <span style={{ color: 'var(--text-secondary)' }}>桌面端口:</span>
+                                <span className="">{host.config?.remote_port || '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600 dark:text-gray-400">虚拟机前缀:</span>
-                                <span className="truncate dark:text-gray-200">{host.config?.filter_name || '未配置'}</span>
+                                <span style={{ color: 'var(--text-secondary)' }}>虚拟机前缀:</span>
+                                <span className="truncate ">{host.config?.filter_name || '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600 dark:text-gray-400">虚拟机数量:</span>
-                                <span className="dark:text-gray-200"
+                                <span style={{ color: 'var(--text-secondary)' }}>虚拟机数量:</span>
+                                <span className=""
                                 >{host.vm_count || 0} / {host.config?.limits_nums || 0} 台</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600 dark:text-gray-400">内网网桥:</span>
-                                <span className="dark:text-gray-200">{host.config?.network_nat || '未配置'}</span>
+                                <span style={{ color: 'var(--text-secondary)' }}>内网网桥:</span>
+                                <span className="">{host.config?.network_nat || '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600 dark:text-gray-400">公网网桥:</span>
-                                <span className="dark:text-gray-200">{host.config?.network_pub || '未配置'}</span>
+                                <span style={{ color: 'var(--text-secondary)' }}>公网网桥:</span>
+                                <span className="">{host.config?.network_pub || '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600 dark:text-gray-400">端口范围:</span>
-                                <span className="dark:text-gray-200"
+                                <span style={{ color: 'var(--text-secondary)' }}>端口范围:</span>
+                                <span className=""
                                 >{host.config?.ports_start && host.config?.ports_close ? `${host.config.ports_start}-${host.config.ports_close}` : '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600 dark:text-gray-400">爱快地址:</span>
-                                <span className="truncate dark:text-gray-200">{host.config?.i_kuai_addr || '未配置'}</span>
+                                <span style={{ color: 'var(--text-secondary)' }}>爱快地址:</span>
+                                <span className="truncate ">{host.config?.i_kuai_addr || '未配置'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600 dark:text-gray-400">模板数:</span>
-                                <span className="dark:text-gray-200"
+                                <span style={{ color: 'var(--text-secondary)' }}>模板数:</span>
+                                <span className=""
                                 >系统盘 {host.config?.system_maps && Object.keys(host.config.system_maps).length > 0 ? Object.keys(host.config.system_maps).length : 0} / 光盘 {host.config?.images_maps && Object.keys(host.config.images_maps).length > 0 ? Object.keys(host.config.images_maps).length : 0} 个</span>
                             </div>
 
@@ -788,7 +754,7 @@ function HostManage() {
                                 {/* CPU */}
                                 <div style={{minWidth: 0}}>
                                     <div className="flex justify-between text-xs mb-1">
-                                        <span className="text-gray-600 truncate"
+                                        <span style={{ color: 'var(--text-secondary)' }} className="truncate"
                                               title={status.cpu_model || '核心使用率'}>{status.cpu_model || '核心使用率'}</span>
                                         <span
                                             className="font-bold whitespace-nowrap">{status.cpu_total || 0}核 {cpuPercent.toFixed(1)}%</span>
@@ -802,7 +768,7 @@ function HostManage() {
                                 {/* 内存 */}
                                 <div style={{minWidth: 0}}>
                                     <div className="flex justify-between text-xs mb-1">
-                                        <span className="text-gray-600 truncate">内存使用率</span>
+                                        <span style={{ color: 'var(--text-secondary)' }} className="truncate">内存使用率</span>
                                         <span
                                             className="font-bold whitespace-nowrap">{memUsageGB}GB/{memTotalGB}GB {memPercent.toFixed(1)}%</span>
                                     </div>
@@ -815,7 +781,7 @@ function HostManage() {
                                 {/* 磁盘 */}
                                 <div style={{minWidth: 0}}>
                                     <div className="flex justify-between text-xs mb-1">
-                                        <span className="text-gray-600 truncate">硬盘使用率</span>
+                                        <span style={{ color: 'var(--text-secondary)' }} className="truncate">硬盘使用率</span>
                                         <span
                                             className="font-bold whitespace-nowrap">{diskUsageGB.toFixed(1)}GB/{diskTotalGB.toFixed(1)}GB {diskPercent.toFixed(1)}%</span>
                                     </div>
@@ -828,7 +794,7 @@ function HostManage() {
                                 {/* 网络 */}
                                 <div style={{minWidth: 0}}>
                                     <div className="flex justify-between text-xs mb-1">
-                                        <span className="text-gray-600 truncate">网络使用率</span>
+                                        <span style={{ color: 'var(--text-secondary)' }} className="truncate">网络使用率</span>
                                         <span className="font-bold whitespace-nowrap">↑{(networkU / 1024).toFixed(1)}MB/s ↓{(networkD / 1024).toFixed(1)}MB/s</span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-2 flex gap-0.5 overflow-hidden">
@@ -842,7 +808,7 @@ function HostManage() {
                                 {/* GPU */}
                                 <div style={{minWidth: 0}}>
                                     <div className="flex justify-between text-xs mb-1">
-                                        <span className="text-gray-600 truncate">显卡使用率</span>
+                                        <span style={{ color: 'var(--text-secondary)' }} className="truncate">显卡使用率</span>
                                         <span
                                             className="font-bold whitespace-nowrap">{status.gpu_total || 0}个 {gpuPercent.toFixed(1)}%</span>
                                     </div>
@@ -853,10 +819,60 @@ function HostManage() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="text-center text-gray-400 py-8 text-xs">暂无状态数据</div>
+                            <div className="text-center py-8 text-xs" style={{ color: 'var(--text-tertiary)' }}>暂无状态数据</div>
                         )}
                     </Col>
                 </Row>
+
+                {/* 底部操作栏 */}
+                <div style={{borderTop: '1px solid var(--border-color, #f0f0f0)', marginTop: 16, paddingTop: 12, display: 'flex', justifyContent: 'flex-end'}}>
+                    <Space>
+                        <Button
+                            type="text"
+                            icon={<CloudSyncOutlined/>}
+                            onClick={() => handleScanBackups(name)}
+                            disabled={host.status !== 'active'}
+                        >
+                            扫描备份
+                        </Button>
+                        <Button
+                            type="text"
+                            icon={<ScanOutlined/>}
+                            onClick={() => handleScanVMs(name)}
+                            disabled={host.status !== 'active'}
+                        >
+                            扫描虚拟机
+                        </Button>
+                        <Button
+                            type="text"
+                            icon={<EditOutlined/>}
+                            onClick={() => handleEdit(name)}
+                            disabled={host.status !== 'active'}
+                        >
+                            编辑
+                        </Button>
+                        <Button
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined/>}
+                            disabled={host.status !== 'active'}
+                            onClick={() => {
+                                Modal.confirm({
+                                    title: '确认删除',
+                                    icon: <DeleteOutlined style={{color: 'red'}}/>,
+                                    content: `确定要删除主机 "${name}" 吗？此操作不可恢复。`,
+                                    okText: '确认删除',
+                                    okType: 'danger',
+                                    cancelText: '取消',
+                                    mask: false,
+                                    onOk: () => handleDelete(name)
+                                })
+                            }}
+                        >
+                            删除
+                        </Button>
+                    </Space>
+                </div>
             </Card>
         )
     }
@@ -864,13 +880,11 @@ function HostManage() {
     return (
         <div className="p-6">
             {/* 页面标题 */}
-            <div className="page-header">
-                <h1 className="page-header-title">
-                    <CloudServerOutlined />
-                    物理主机管理
-                </h1>
-                <p className="page-header-subtitle">管理所有虚拟化主机</p>
-            </div>
+            <PageHeader
+                icon={<CloudServerOutlined />}
+                title="物理主机管理"
+                subtitle="管理所有虚拟化主机"
+            />
 
             {/* 操作栏 */}
             <div className="glass-card p-4 mb-6 flex items-center justify-between">
@@ -882,26 +896,26 @@ function HostManage() {
                         刷新
                     </Button>
                 </Space>
-                <div className="text-sm text-gray-600 dark:text-gray-300 flex items-center gap-2">
+                <div className="text-sm flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
                     <InfoCircleOutlined/>
-                    共 <span className="font-medium text-gray-800 dark:text-gray-100">{Object.keys(hosts).length}</span> 个主机
+                    共 <span className="font-medium">{Object.keys(hosts).length}</span> 个主机
                 </div>
             </div>
 
             {/* 主机列表 */}
             {loading ? (
                 <div className="text-center py-16">
-                    <div className="text-gray-400 text-4xl mb-4">⏳</div>
-                    <p className="text-gray-500">加载中...</p>
+                    <div className=" text-4xl mb-4">⏳</div>
+                    <p className=" ">加载中...</p>
                 </div>
             ) : Object.keys(hosts).length === 0 ? (
                 <div className="text-center py-16">
-                    <div className="text-gray-300 text-6xl mb-4">📦</div>
-                    <p className="text-gray-500 mb-4">暂无主机</p>
+                    <div className=" text-6xl mb-4">📦</div>
+                    <p className=" mb-4">暂无主机</p>
                     <Button type="primary" onClick={handleAdd}>添加第一个主机</Button>
                 </div>
             ) : (
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(800px,1fr))] gap-4">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(500px,1fr))] gap-4">
                     {Object.entries(hosts).map(([name, host]) => (
                         <div key={name}>
                             {renderHostCard(name, host)}

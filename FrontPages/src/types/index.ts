@@ -63,6 +63,8 @@ export interface Host {
   server_addr: string;
   server_user: string;
   status: 'online' | 'offline' | 'error';
+  enabled?: boolean; // 主机是否启用（对应后端的enable_host字段）
+  enable_host?: boolean; // 后端返回的原始字段
   vms_count: number;
   running_vms?: number;
   stopped_vms?: number;

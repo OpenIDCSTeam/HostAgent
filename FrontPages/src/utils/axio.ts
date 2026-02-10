@@ -1,6 +1,13 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { message } from 'antd';
 import type { ApiResponse } from '@/types';
+
+// 扩展AxiosRequestConfig，支持silent选项（静默模式不弹出错误提示）
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    silent?: boolean;
+  }
+}
 
 // 创建axios实例
 const axio: AxiosInstance = axios.create({
@@ -34,8 +41,10 @@ axio.interceptors.response.use(
 
     // 如果返回的状态码不是200，则认为是错误
     if (res.code !== 200) {
-      // 显示错误消息
-      message.error(res.msg || '请求失败');
+      // 非静默模式下显示错误消息
+      if (!response.config?.silent) {
+        message.error(res.msg || '请求失败');
+      }
 
       // 401: 未授权，跳转到登录页
       if (res.code === 401) {
@@ -45,7 +54,7 @@ axio.interceptors.response.use(
       }
 
       // 403: 权限不足
-      if (res.code === 403) {
+      if (res.code === 403 && !response.config?.silent) {
         message.error('权限不足，无法执行此操作');
       }
 
@@ -58,42 +67,52 @@ axio.interceptors.response.use(
   (error: AxiosError<ApiResponse>) => {
     console.error('响应错误:', error);
 
+    const isSilent = (error.config as AxiosRequestConfig)?.silent;
+
     // 处理网络错误
     if (!error.response) {
-      message.error('网络连接失败，请检查网络设置');
+      if (!isSilent) {
+        message.error('网络连接失败，请检查网络设置');
+      }
       return Promise.reject(error);
     }
 
     // 处理HTTP错误状态码
     const { status, data } = error.response;
     
-    switch (status) {
-      case 400:
-        message.error(data?.msg || '请求参数错误');
-        break;
-      case 401:
-        message.error('未授权，请重新登录');
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        break;
-      case 403:
-        message.error('权限不足');
-        break;
-      case 404:
-        message.error('请求的资源不存在');
-        break;
-      case 500:
-        message.error(data?.msg || '服务器内部错误');
-        break;
-      case 502:
-        message.error('网关错误');
-        break;
-      case 503:
-        message.error('服务暂时不可用');
-        break;
-      default:
-        message.error(data?.msg || `请求失败 (${status})`);
+    if (!isSilent) {
+      switch (status) {
+        case 400:
+          message.error(data?.msg || '请求参数错误');
+          break;
+        case 401:
+          message.error('未授权，请重新登录');
+          break;
+        case 403:
+          message.error('权限不足');
+          break;
+        case 404:
+          message.error('请求的资源不存在');
+          break;
+        case 500:
+          message.error(data?.msg || '服务器内部错误');
+          break;
+        case 502:
+          message.error('网关错误');
+          break;
+        case 503:
+          message.error('服务暂时不可用');
+          break;
+        default:
+          message.error(data?.msg || `请求失败 (${status})`);
+      }
+    }
+
+    // 401需要跳转登录（无论是否静默）
+    if (status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
     }
 
     return Promise.reject(error);

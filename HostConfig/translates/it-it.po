@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenIDCS 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-05 14:57\n"
-"PO-Revision-Date: 2026-02-05 14:57\n"
+"POT-Creation-Date: 2026-02-09 23:52\n"
+"PO-Revision-Date: 2026-02-09 23:52\n"
 "Last-Translator: Auto Generated\n"
 "Language-Team: Italian\n"
 "Language: it\n"
@@ -85,7 +85,7 @@ msgid "个人设置"
 msgstr "impostazioni personali"
 
 msgid "个人资料"
-msgstr "dati personali"
+msgstr "informazioni personali"
 
 msgid "为虚拟机"
 msgstr "per macchina virtuale"
@@ -106,7 +106,7 @@ msgid "主机概览"
 msgstr "Panoramica dell'host"
 
 msgid "主机筛选"
-msgstr "Filtraggio dell'host"
+msgstr "Filtraggio dell'ospite"
 
 msgid "主机管理"
 msgstr "Gestione dell'ospite"
@@ -1819,7 +1819,7 @@ msgid "来自"
 msgstr "da"
 
 msgid "构建"
-msgstr "Costruire"
+msgstr "costruire"
 
 msgid "构造"
 msgstr "struttura"
@@ -1849,7 +1849,7 @@ msgid "格式"
 msgstr "Formato"
 
 msgid "桌面"
-msgstr "desktop"
+msgstr "scrivania"
 
 msgid "检查"
 msgstr "esaminare"
@@ -2116,7 +2116,7 @@ msgid "节点"
 msgstr "nodo"
 
 msgid "范围"
-msgstr "portata"
+msgstr "ambito"
 
 msgid "获取"
 msgstr "Ottenere"
@@ -2431,134 +2431,134 @@ msgid "空"
 msgstr "nullo"
 
 msgid "全局"
-msgstr "Globale"
+msgstr "situazione generale"
 
 msgid "查看您的资源使用情况和配额信息"
-msgstr "Visualizza l'utilizzo delle risorse e le informazioni sulle quote"
+msgstr "Visualizza l'utilizzo delle risorse e le informazioni sulla quota"
 
 msgid "用户空间"
-msgstr "Spazio utente"
+msgstr "spazio utente"
 
 msgid "系统空间"
-msgstr "Spazio di sistema"
+msgstr "spazio del sistema"
 
 msgid "实例管理"
-msgstr "Gestione istanze"
+msgstr "Gestione delle istanze"
 
 msgid "监控"
-msgstr "Monitoraggio"
+msgstr "monitorare"
 
 msgid "网络端口"
-msgstr "Porte di rete"
+msgstr "porta di rete"
 
 msgid "网络与配额"
-msgstr "Rete e quote"
+msgstr "Reti e quote"
 
 msgid "上传带宽"
-msgstr "Larghezza di banda upload"
+msgstr "Carica larghezza di banda"
 
 msgid "下载带宽"
-msgstr "Larghezza di banda download"
+msgstr "Scarica larghezza di banda"
 
 msgid "实例配置"
-msgstr "Configurazione istanza"
+msgstr "Configurazione dell'istanza"
 
 msgid "设置密码"
-msgstr "Imposta password"
+msgstr "Imposta la password"
 
 msgid "一键远程"
-msgstr "Accesso remoto con un clic"
+msgstr "Telecomando con un clic"
 
 msgid "网卡列表"
-msgstr "Elenco schede di rete"
+msgstr "Elenco delle schede di rete"
 
 msgid "转发规则"
 msgstr "Regole di inoltro"
 
 msgid "设备直通"
-msgstr "Passthrough dispositivo"
+msgstr "Passaggio del dispositivo"
 
 msgid "物理"
-msgstr "Fisico"
+msgstr "fisica"
 
 msgid "设备名"
-msgstr "Nome dispositivo"
+msgstr "Nome del dispositivo"
 
 msgid "存储路径"
-msgstr "Percorso di archiviazione"
+msgstr "percorso di archiviazione"
 
 msgid "程序启动路径"
-msgstr "Percorso di avvio programma"
+msgstr "Percorso di avvio del programma"
 
 msgid "爱快配置"
-msgstr "Configurazione iKuai"
+msgstr "Configurazione Aikuai"
 
 msgid "限制配置"
-msgstr "Configurazione limiti"
+msgstr "Limita la configurazione"
 
 msgid "（多个用逗号分隔）"
-msgstr "(Separare più elementi con virgole)"
+msgstr "(separare i multipli con virgole)"
 
 msgid "高级配置"
 msgstr "Configurazione avanzata"
 
 msgid "系统映射"
-msgstr "Mappatura di sistema"
+msgstr "Mappatura del sistema"
 
 msgid "配置池"
-msgstr "Pool di configurazione"
+msgstr "Configura piscina"
 
 msgid "扩展选项"
 msgstr "Opzioni estese"
 
 msgid "扩展数据"
-msgstr "Dati estesi"
+msgstr "dati estesi"
 
 msgid "(JSON格式)"
-msgstr "(Formato JSON)"
+msgstr "(formato JSON)"
 
 msgid "和事件记录"
-msgstr "e registri eventi"
+msgstr "e registrazione degli eventi"
 
 msgid "请从左侧选择一条"
-msgstr "Seleziona un elemento dalla sinistra"
+msgstr "Scegline uno da sinistra"
 
 msgid "安全提示"
-msgstr "Avviso di sicurezza"
+msgstr "Suggerimenti per la sicurezza"
 
 msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
-msgstr "Dopo il reset del Token, tutte le chiamate API che utilizzano il vecchio Token non saranno più valide. Assicurati di aggiornare tutte le configurazioni correlate."
+msgstr "Dopo aver reimpostato il token, tutte le chiamate API che utilizzano il vecchio token diventeranno non valide. Assicurati di aggiornare tutte le configurazioni pertinenti."
 
 msgid "在请求头中添加："
 msgstr "Aggiungi nell'intestazione della richiesta:"
 
 msgid "受控端"
-msgstr "Endpoint controllato"
+msgstr "Fine controllata"
 
 msgid "访问配置"
-msgstr "Configurazione accesso"
+msgstr "accedere alla configurazione"
 
 msgid "新账号"
-msgstr "Nuovo account"
+msgstr "nuovo conto"
 
 msgid "注册时需要验证邮箱"
-msgstr "Verifica email richiesta durante la registrazione"
+msgstr "Al momento della registrazione è richiesta la verifica dell'e-mail"
 
 msgid "新用户默认"
-msgstr "Predefinito per nuovi utenti"
+msgstr "Nuovo utente predefinito"
 
 msgid "这是一封来自"
-msgstr "Questa è un'email da"
+msgstr "Questa è una lettera di"
 
 msgid "系统的测试邮件"
-msgstr "email di test del sistema"
+msgstr "E-mail di prova del sistema"
 
 msgid "如果您收到这封邮件"
 msgstr "Se ricevi questa email"
 
 msgid "说明邮件服务配置正常"
-msgstr "significa che il servizio email è configurato correttamente"
+msgstr "Indica che la configurazione del servizio di posta è normale"
 
 msgid "您的"
-msgstr "Il tuo"
+msgstr "tuo"
 

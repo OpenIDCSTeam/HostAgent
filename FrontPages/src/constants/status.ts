@@ -2,7 +2,7 @@ export const VM_STATUS_MAP: Record<string, { text: string; color: string; classN
     STOPPED: {
         text: '已停止',
         color: 'default',
-        className: 'bg-gray-100 dark:bg-gray-700/40 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
+        className: 'bg-gray-100 dark:bg-gray-700/40 border-gray-300 dark:border-gray-600'
     },
     STARTED: {
         text: '运行中',
@@ -25,6 +25,16 @@ export const VM_STATUS_MAP: Record<string, { text: string; color: string; classN
         color: 'processing',
         className: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-600'
     },
+    ON_SAVE: {
+        text: '暂停中',
+        color: 'processing',
+        className: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-600'
+    },
+    ON_WAKE: {
+        text: '唤醒中',
+        color: 'processing',
+        className: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-600'
+    },
     CRASHED: {
         text: '已崩溃',
         color: 'error',
@@ -33,6 +43,6 @@ export const VM_STATUS_MAP: Record<string, { text: string; color: string; classN
     UNKNOWN: {
         text: '未知',
         color: 'default',
-        className: 'bg-gray-100 dark:bg-gray-700/40 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
+        className: 'bg-gray-100 dark:bg-gray-700/40 border-gray-300 dark:border-gray-600'
     },
 }

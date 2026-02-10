@@ -482,29 +482,63 @@ class HostServer(BasicServer):
             logger.info(f"[Workstation] 虚拟机电源操作: {vm_name} - {power_str}")
 
             # 专用操作 =========================================================
+            # 先调用父类方法设置中间状态
+            parent_result = super().VMPowers(vm_name, power)
+            original_flag = parent_result.results.get("original_flag") if parent_result.results else None
+            
             # 重启操作 =========================================================
             if power == VMPowers.H_RESET:
                 self.vmrest_api.powers_set(vm_name, VMPowers.H_CLOSE)
                 hs_result = self.vmrest_api.powers_set(vm_name, VMPowers.S_START)
             elif power == VMPowers.S_CLOSE:
+                # 软关机：发送关机命令后立即返回，启动监控线程
                 hs_result = ZMessage(
                     success=True,
                     action="VMPowers", message="正在等待系统软关机"
                 )
+                # 启动持续监控（5分钟内每5秒检查一次状态）
+                self._monitor_soft_power_operation(vm_name, VMPowers.S_CLOSE, VMPowers.ON_STOP)
+            elif power == VMPowers.S_RESET:
+                # 软重启：发送重启命令后立即返回，启动监控线程
+                hs_result = self.vmrest_api.powers_set(vm_name, VMPowers.S_RESET)
+                if hs_result.success:
+                    # 启动持续监控（5分钟内每5秒检查一次状态）
+                    self._monitor_soft_power_operation(vm_name, VMPowers.S_RESET, VMPowers.ON_STOP)
             else:
                 # 其他电源操作 =================================================
                 hs_result = self.vmrest_api.powers_set(vm_name, power)
 
+            # 如果操作失败，回退状态
+            if not hs_result.success and original_flag is not None:
+                logger.error(f"[Workstation] 虚拟机电源操作失败，回退状态: {vm_name}")
+                self.vm_saving[vm_name].vm_flag = original_flag
+                self.data_set()
+            elif hs_result.success and power not in [VMPowers.S_CLOSE, VMPowers.S_RESET]:
+                # 对于非软关机/软重启操作，操作成功后异步刷新虚拟机状态（延迟3秒后执行）
+                import threading
+                def delayed_refresh():
+                    import time
+                    time.sleep(3)  # 等待3秒让虚拟机状态稳定
+                    self._refresh_vm_status(vm_name)
+                
+                refresh_thread = threading.Thread(target=delayed_refresh, daemon=True)
+                refresh_thread.start()
+
             # 记录日志 =========================================================
             self.logs_set(hs_result)
-            # 通用操作 =========================================================
-            super().VMPowers(vm_name, power)
+            
             return hs_result
 
         except Exception as e:
             # 异常处理 =========================================================
             logger.error(f"[Workstation] 虚拟机电源操作失败: {vm_name}, 错误: {str(e)}")
             traceback.print_exc()
+            
+            # 回退状态
+            if original_flag is not None:
+                self.vm_saving[vm_name].vm_flag = original_flag
+                self.data_set()
+            
             return ZMessage(success=False, action="VMPowers", message=str(e))
 
     # 备份虚拟机 ===============================================================
@@ -588,7 +622,7 @@ class HostServer(BasicServer):
             return ""
 
     # 获取虚拟机实际状态（从API）==============================================
-    def VMStatusAPI(self, vm_name: str) -> str:
+    def GetPower(self, vm_name: str) -> str:
         """从VMWare Workstation API获取虚拟机实际状态"""
         try:
             result = self.vmrest_api.powers_get(vm_name)

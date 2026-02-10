@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenIDCS 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-05 13:54\n"
-"PO-Revision-Date: 2026-02-05 13:54\n"
+"POT-Creation-Date: 2026-02-09 22:43\n"
+"PO-Revision-Date: 2026-02-09 22:43\n"
 "Last-Translator: Auto Generated\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -85,7 +85,7 @@ msgid "个人设置"
 msgstr "personal settings"
 
 msgid "个人资料"
-msgstr "personal data"
+msgstr "personal information"
 
 msgid "为虚拟机"
 msgstr "for virtual machine"
@@ -1819,7 +1819,7 @@ msgid "来自"
 msgstr "from"
 
 msgid "构建"
-msgstr "Build"
+msgstr "build"
 
 msgid "构造"
 msgstr "structure"
@@ -2431,134 +2431,134 @@ msgid "空"
 msgstr "null"
 
 msgid "全局"
-msgstr "Global"
+msgstr "overall situation"
 
 msgid "查看您的资源使用情况和配额信息"
 msgstr "View your resource usage and quota information"
 
 msgid "用户空间"
-msgstr "User Space"
+msgstr "user space"
 
 msgid "系统空间"
-msgstr "System Space"
+msgstr "system space"
 
 msgid "实例管理"
-msgstr "Instance Management"
+msgstr "Instance management"
 
 msgid "监控"
-msgstr "Monitoring"
+msgstr "monitor"
 
 msgid "网络端口"
-msgstr "Network Ports"
+msgstr "network port"
 
 msgid "网络与配额"
-msgstr "Network & Quota"
+msgstr "Networking and Quotas"
 
 msgid "上传带宽"
-msgstr "Upload Bandwidth"
+msgstr "Upload bandwidth"
 
 msgid "下载带宽"
-msgstr "Download Bandwidth"
+msgstr "Download bandwidth"
 
 msgid "实例配置"
-msgstr "Instance Configuration"
+msgstr "Instance configuration"
 
 msgid "设置密码"
-msgstr "Set Password"
+msgstr "Set password"
 
 msgid "一键远程"
-msgstr "One-Click Remote"
+msgstr "One click remote"
 
 msgid "网卡列表"
-msgstr "Network Interface List"
+msgstr "Network card list"
 
 msgid "转发规则"
-msgstr "Forwarding Rules"
+msgstr "Forwarding rules"
 
 msgid "设备直通"
-msgstr "Device Passthrough"
+msgstr "Device pass-through"
 
 msgid "物理"
-msgstr "Physical"
+msgstr "physics"
 
 msgid "设备名"
-msgstr "Device Name"
+msgstr "Device name"
 
 msgid "存储路径"
-msgstr "Storage Path"
+msgstr "storage path"
 
 msgid "程序启动路径"
-msgstr "Program Startup Path"
+msgstr "Program startup path"
 
 msgid "爱快配置"
-msgstr "iKuai Configuration"
+msgstr "Aikuai configuration"
 
 msgid "限制配置"
-msgstr "Limit Configuration"
+msgstr "Limit configuration"
 
 msgid "（多个用逗号分隔）"
-msgstr "(Separate multiple items with commas)"
+msgstr "(separate multiple with commas)"
 
 msgid "高级配置"
-msgstr "Advanced Configuration"
+msgstr "Advanced configuration"
 
 msgid "系统映射"
-msgstr "System Mapping"
+msgstr "System mapping"
 
 msgid "配置池"
-msgstr "Configuration Pool"
+msgstr "Configure pool"
 
 msgid "扩展选项"
-msgstr "Extended Options"
+msgstr "Extended options"
 
 msgid "扩展数据"
-msgstr "Extended Data"
+msgstr "extended data"
 
 msgid "(JSON格式)"
 msgstr "(JSON format)"
 
 msgid "和事件记录"
-msgstr "and Event Records"
+msgstr "and event logging"
 
 msgid "请从左侧选择一条"
-msgstr "Please select one from the left"
+msgstr "Please choose one from the left"
 
 msgid "安全提示"
-msgstr "Security Notice"
+msgstr "Safety tips"
 
 msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
-msgstr "After resetting the Token, all API calls using the old Token will become invalid. Please ensure all related configurations are updated."
+msgstr "After resetting the token, all API calls using the old token will become invalid. Please make sure to update all relevant configurations."
 
 msgid "在请求头中添加："
-msgstr "Add to request header:"
+msgstr "Add in the request header:"
 
 msgid "受控端"
-msgstr "Controlled End"
+msgstr "Controlled end"
 
 msgid "访问配置"
-msgstr "Access Configuration"
+msgstr "access configuration"
 
 msgid "新账号"
-msgstr "New Account"
+msgstr "new account"
 
 msgid "注册时需要验证邮箱"
-msgstr "Email verification required during registration"
+msgstr "Email verification is required when registering"
 
 msgid "新用户默认"
-msgstr "New User Default"
+msgstr "New user default"
 
 msgid "这是一封来自"
-msgstr "This is an email from"
+msgstr "This is a letter from"
 
 msgid "系统的测试邮件"
-msgstr "system test email"
+msgstr "System test email"
 
 msgid "如果您收到这封邮件"
 msgstr "If you receive this email"
 
 msgid "说明邮件服务配置正常"
-msgstr "it means the email service is configured correctly"
+msgstr "Indicates that the mail service configuration is normal"
 
 msgid "您的"
-msgstr "Your"
+msgstr "your"
 

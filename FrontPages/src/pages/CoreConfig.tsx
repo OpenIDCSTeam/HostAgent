@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Card, Form, Input, Button, Switch, message, InputNumber, Checkbox, Alert, Typography } from 'antd'
+import { Card, Form, Input, Button, Switch, message, InputNumber, Checkbox, Alert } from 'antd'
 import { EyeOutlined, EyeInvisibleOutlined, CopyOutlined, ReloadOutlined, SaveOutlined, FolderOpenOutlined, MailOutlined, SettingOutlined } from '@ant-design/icons'
 import api from '@/utils/apis.ts'
 import { SystemStats } from '@/types'
+import PageHeader from '@/components/PageHeader'
 
 const { TextArea } = Input
-const { Title } = Typography
 
 /**
  * 系统设置页面
@@ -267,42 +267,20 @@ function CoreConfig() {
   }
 
   return (
-    <div style={{ 
-      padding: '32px',
-      minHeight: '100vh'
-    }}>
+    <div className="p-6 min-h-screen">
       {/* 页面标题 */}
-      <div style={{ marginBottom: '32px' }}>
-        <Title 
-          level={2} 
-          style={{ 
-            margin: 0,
-            fontSize: '32px',
-            fontWeight: 700,
-            color: 'var(--text-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}
-        >
-          <SettingOutlined style={{ width: '36px', height: '36px', color: 'var(--accent-primary)' }} />
-          平台系统设置
-        </Title>
-        <div style={{ 
-          marginTop: '8px',
-          fontSize: '14px',
-          color: 'var(--text-secondary)'
-        }}>
-          管理访问Token和系统配置
-        </div>
-      </div>
+      <PageHeader
+        icon={<SettingOutlined />}
+        title="平台系统设置"
+        subtitle="管理访问Token和系统配置"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Token管理 */}
         <Card title={<span><span className="text-blue-600">🔑</span> 访问Token管理</span>} className="shadow-sm">
           <div className="space-y-4">
             <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">当前Token</label>
+                <label className="block text-sm font-medium mb-2">当前Token</label>
               <div className="flex gap-2">
                 <Input
                   type={tokenVisible ? 'text' : 'password'}
@@ -316,7 +294,7 @@ function CoreConfig() {
             </div>
 
             <div className="border-t pt-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">设置新Token</label>
+                <label className="block text-sm font-medium mb-2">设置新Token</label>
               <Form onFinish={setNewToken}>
                 <div className="flex gap-2">
                   <Form.Item name="newToken" className="flex-1 mb-0">
@@ -344,40 +322,40 @@ function CoreConfig() {
         <Card title={<span><span className="text-green-600">🔌</span> API接口说明</span>} className="shadow-sm">
           <div className="space-y-3 text-sm">
             <div className="bg-gray-50 rounded-lg p-3">
-                <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">认证方式</p>
-                <p className="text-gray-600 dark:text-gray-400">在请求头中添加：</p>
+                <p className="font-medium mb-1">认证方式</p>
+                <p className="">在请求头中添加：</p>
               <code className="block mt-1 bg-gray-200 px-2 py-1 rounded text-xs">
                 Authorization: Bearer YOUR_TOKEN
               </code>
             </div>
 
             <div className="border-t pt-3">
-                <p className="font-medium text-gray-800 dark:text-gray-200 mb-2">主要接口</p>
+                <p className="font-medium mb-2">主要接口</p>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">GET</span>
-                    <code className="text-xs text-gray-600 dark:text-gray-400">/api/hosts</code>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">- 获取主机列表</span>
+                  <code className="text-xs">/api/hosts</code>
+                  <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>- 获取主机列表</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">POST</span>
-                    <code className="text-xs text-gray-600 dark:text-gray-400">/api/hosts</code>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">- 添加主机</span>
+                  <code className="text-xs">/api/hosts</code>
+                  <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>- 添加主机</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">GET</span>
-                    <code className="text-xs text-gray-600 dark:text-gray-400">/api/hosts/{'{name}'}/vms</code>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">- 获取虚拟机列表</span>
+                  <code className="text-xs">/api/hosts/{'{name}'}/vms</code>
+                  <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>- 获取虚拟机列表</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">POST</span>
-                    <code className="text-xs text-gray-600 dark:text-gray-400">/api/hosts/{'{name}'}/vms</code>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">- 创建虚拟机</span>
+                  <code className="text-xs">/api/hosts/{'{name}'}/vms</code>
+                  <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>- 创建虚拟机</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">POST</span>
-                    <code className="text-xs text-gray-600 dark:text-gray-400">/api/hosts/{'{name}'}/vms/{'{uuid}'}/power</code>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">- 电源操作</span>
+                  <code className="text-xs">/api/hosts/{'{name}'}/vms/{'{uuid}'}/power</code>
+                  <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>- 电源操作</span>
                 </div>
               </div>
             </div>
@@ -396,7 +374,7 @@ function CoreConfig() {
             >
               <div className="ml-2">
                 <p className="text-sm font-semibold">保存配置</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">将当前配置保存到文件</p>
+                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>将当前配置保存到文件</p>
               </div>
             </Button>
 
@@ -409,30 +387,30 @@ function CoreConfig() {
             >
               <div className="ml-2">
                 <p className="text-sm font-semibold">重新加载配置</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">从文件重新加载配置</p>
+                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>从文件重新加载配置</p>
               </div>
             </Button>
           </div>
         </Card>
 
         {/* 系统信息 */}
-            <Card title={<span><span className="text-gray-600 dark:text-gray-400">ℹ️</span> 系统信息</span>} className="shadow-sm">
+        <Card title={<span><span>ℹ️</span> 系统信息</span>} className="shadow-sm">
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">系统名称</span>
-                    <span className="font-medium text-gray-800 dark:text-gray-200">OpenIDCS受控端</span>
+              <span style={{ color: 'var(--text-secondary)' }}>系统名称</span>
+<span className="font-medium">OpenIDCS受控端</span>
             </div>
             <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">版本</span>
-                    <span className="font-medium text-gray-800 dark:text-gray-200">1.0.0</span>
+<span style={{ color: 'var(--text-secondary)' }}>版本</span>
+                    <span className="font-medium">1.0.0</span>
             </div>
             <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">主机数量</span>
-                    <span className="font-medium text-gray-800 dark:text-gray-200">{systemInfo.hosts_count}</span>
+<span style={{ color: 'var(--text-secondary)' }}>主机数量</span>
+                    <span className="font-medium">{systemInfo.hosts_count}</span>
             </div>
             <div className="flex items-center justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">虚拟机数量</span>
-                    <span className="font-medium text-gray-800 dark:text-gray-200">{systemInfo.vms_count}</span>
+<span style={{ color: 'var(--text-secondary)' }}>虚拟机数量</span>
+                    <span className="font-medium">{systemInfo.vms_count}</span>
             </div>
           </div>
         </Card>
@@ -443,8 +421,8 @@ function CoreConfig() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">开放注册</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">允许新用户注册账号</p>
+<p className="text-sm font-medium">开放注册</p>
+                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>允许新用户注册账号</p>
                 </div>
                 <Form.Item name="registration_enabled" valuePropName="checked" className="mb-0">
                   <Switch />
@@ -453,8 +431,8 @@ function CoreConfig() {
 
               <div className="flex items-center justify-between">
                 <div>
-                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">邮箱验证</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">注册时需要验证邮箱</p>
+<p className="text-sm font-medium">邮箱验证</p>
+                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>注册时需要验证邮箱</p>
                 </div>
                 <Form.Item name="email_verification_enabled" valuePropName="checked" className="mb-0">
                   <Switch />
@@ -462,7 +440,7 @@ function CoreConfig() {
               </div>
 
               <div className="border-t pt-4">
-              <h4 className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-3">新用户默认资源配额</h4>
+<h4 className="text-sm font-medium mb-3">新用户默认资源配额</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <Form.Item name="default_quota_cpu" label="CPU核心" className="mb-2">
                     <InputNumber min={0} max={32} className="w-full" />
@@ -495,7 +473,7 @@ function CoreConfig() {
               </div>
 
               <div className="border-t pt-4">
-              <h4 className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-3">新用户默认权限</h4>
+<h4 className="text-sm font-medium mb-3">新用户默认权限</h4>
                 <div className="space-y-2">
                   <Form.Item name="default_can_create_vm" valuePropName="checked" className="mb-0">
                     <Checkbox>允许创建虚拟机</Checkbox>
@@ -551,7 +529,7 @@ function CoreConfig() {
           </Form>
 
           <div className="border-t mt-4 pt-4">
-              <h4 className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-3">测试邮件发送</h4>
+<h4 className="text-sm font-medium mb-3">测试邮件发送</h4>
             <Form form={testEmailForm} onFinish={sendTestEmail} layout="vertical">
               <Form.Item name="test_email" label="收件邮箱" rules={[{ required: true, type: 'email', message: '请输入有效的邮箱地址' }]}>
                 <Input placeholder="test@example.com" />

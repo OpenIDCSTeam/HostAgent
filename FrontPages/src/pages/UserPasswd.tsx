@@ -128,10 +128,10 @@ function UserPasswd() {
           <div className="mx-auto h-16 w-16 bg-blue-600 dark:bg-blue-500 rounded-xl flex items-center justify-center shadow-lg">
             <LockOutlined className="text-white text-3xl" style={{ fontSize: 32 }} />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
+<h2 className="mt-6 text-3xl font-extrabold">
             重置密码
           </h2>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+<p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
             请输入您的新密码
           </p>
         </div>
@@ -149,7 +149,7 @@ function UserPasswd() {
             {/* 新密码输入框 */}
             <Form.Item
               label={
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+<span className="text-sm font-medium">
                   新密码 <span className="text-red-500">*</span>
                 </span>
               }
@@ -170,7 +170,7 @@ function UserPasswd() {
             {/* 确认密码输入框 */}
             <Form.Item
               label={
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+<span className="text-sm font-medium">
                   确认新密码 <span className="text-red-500">*</span>
                 </span>
               }
@@ -211,7 +211,7 @@ function UserPasswd() {
             {/* 密码强度指示器 */}
             <div>
               <div className="flex items-center justify-between text-sm mb-1">
-                <span className="text-gray-600 dark:text-gray-300">密码强度</span>
+<span style={{ color: 'var(--text-secondary)' }}>密码强度</span>
                 <span className="font-medium" style={{ color: passwordStrength.color }}>
                   {passwordStrength.text}
                 </span>
@@ -252,7 +252,7 @@ function UserPasswd() {
         </div>
 
         {/* 底部提示信息 */}
-        <div className="text-center text-xs text-gray-500 dark:text-gray-400">
+<div className="text-center text-xs" style={{ color: 'var(--text-secondary)' }}>
           <p>如果您遇到问题，请联系管理员</p>
         </div>
       </div>

@@ -598,6 +598,17 @@ class RestManager:
     def save_system(self):
         """保存系统配置"""
         if self.hs_manage.all_save():
+            # 记录操作日志
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            self.hs_manage.saving.add_operation_log(
+                hs_name=None,
+                operation="保存",
+                target="系统配置",
+                details="保存系统配置",
+                level="INFO",
+                username=username
+            )
             return self.api_response(200, '配置已保存')
         return self.api_response(500, '保存失败')
 
@@ -608,6 +619,17 @@ class RestManager:
         """加载系统配置"""
         try:
             self.hs_manage.all_load()
+            # 记录操作日志
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            self.hs_manage.saving.add_operation_log(
+                hs_name=None,
+                operation="加载",
+                target="系统配置",
+                details="加载系统配置",
+                level="INFO",
+                username=username
+            )
             if return_api_response:
                 return self.api_response(200, '配置已加载')
             return True
@@ -678,6 +700,24 @@ class RestManager:
         except Exception as e:
             return self.api_response(500, f'获取日志失败: {str(e)}')
 
+    # 清空日志记录 ########################################################################
+    # :return: API响应
+    # ####################################################################################
+    def clear_logs(self):
+        """清空日志记录"""
+        try:
+            hs_name = request.args.get('hs_name')
+            
+            # 使用 DataManage 的 clear_hs_logger 函数清空日志
+            success = self.hs_manage.saving.clear_hs_logger(hs_name)
+            
+            if success:
+                return self.api_response(200, '清空日志成功')
+            else:
+                return self.api_response(500, '清空日志失败')
+        except Exception as e:
+            return self.api_response(500, f'清空日志失败: {str(e)}')
+
     # 获取任务记录 ########################################################################
     # :return: 包含任务记录列表的API响应
     # ####################################################################################
@@ -711,15 +751,15 @@ class RestManager:
         hosts_data = {}
         for hs_name, server in self.hs_manage.engine.items():
             # 获取主机启用状态
-            is_enabled = getattr(server.hs_config, 'is_enabled', True) if server.hs_config else True
+            enable_host = getattr(server.hs_config, 'enable_host', True) if server.hs_config else True
             hosts_data[hs_name] = {
                 'name': hs_name,
                 'type': server.hs_config.server_type if server.hs_config else '',
                 'addr': server.hs_config.server_addr if server.hs_config else '',
                 'config': server.hs_config.__save__() if server.hs_config else {},
                 'vm_count': len(server.vm_saving),
-                'status': 'active' if is_enabled else 'disabled',  # 根据is_enabled返回状态
-                'is_enabled': is_enabled  # 添加is_enabled字段
+                'status': 'active' if enable_host else 'disabled',  # 根据enable_host返回状态
+                'enable_host': enable_host  # 添加enable_host字段
             }
         return self.api_response(200, 'success', hosts_data)
 
@@ -749,32 +789,38 @@ class RestManager:
 
         # 只有明确要求时才获取状态信息（避免每次调用都执行耗时的系统检查）
         if include_status:
-            try:
-                cached_status = getattr(server, '_status_cache', None)
-                cache_time = getattr(server, '_status_cache_time', 0)
-
-                # 检查缓存是否有效（30秒内的数据认为是新鲜的）
-                import time
-                current_time = int(time.time())
-                if cached_status and (current_time - cache_time) < 30:
-                    host_data['status'] = cached_status
-                    host_data['status_source'] = 'cached'
-                else:
-                    # 获取新状态并缓存
-                    status_obj = server.HSStatus()
-                    if status_obj:
-                        host_data['status'] = status_obj.__save__()
-                        host_data['status_source'] = 'fresh'
-                        # 缓存状态数据
-                        server._status_cache = status_obj.__save__()
-                        server._status_cache_time = current_time
-                    else:
-                        host_data['status'] = {}
-                        host_data['status_source'] = 'unavailable'
-            except Exception as e:
+            # 禁用的主机不调用HSStatus
+            enable_host = getattr(server.hs_config, 'enable_host', True) if server.hs_config else True
+            if not enable_host:
                 host_data['status'] = {}
-                host_data['status_source'] = 'error'
-                host_data['status_error'] = str(e)
+                host_data['status_source'] = 'disabled'
+            else:
+                try:
+                    cached_status = getattr(server, '_status_cache', None)
+                    cache_time = getattr(server, '_status_cache_time', 0)
+
+                    # 检查缓存是否有效（30秒内的数据认为是新鲜的）
+                    import time
+                    current_time = int(time.time())
+                    if cached_status and (current_time - cache_time) < 30:
+                        host_data['status'] = cached_status
+                        host_data['status_source'] = 'cached'
+                    else:
+                        # 获取新状态并缓存
+                        status_obj = server.HSStatus()
+                        if status_obj:
+                            host_data['status'] = status_obj.__save__()
+                            host_data['status_source'] = 'fresh'
+                            # 缓存状态数据
+                            server._status_cache = status_obj.__save__()
+                            server._status_cache_time = current_time
+                        else:
+                            host_data['status'] = {}
+                            host_data['status_source'] = 'unavailable'
+                except Exception as e:
+                    host_data['status'] = {}
+                    host_data['status_source'] = 'error'
+                    host_data['status_error'] = str(e)
         else:
             host_data['status'] = None
             host_data['status_note'] = 'Use ?status=true to get detailed host status'
@@ -876,6 +922,17 @@ class RestManager:
 
         if result.success:
             self.hs_manage.all_save()
+            # 记录操作日志
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            self.hs_manage.saving.add_operation_log(
+                hs_name=hs_name,
+                operation="创建",
+                target="主机",
+                details=f"主机名称: {hs_name}, 类型: {hs_type}",
+                level="INFO",
+                username=username
+            )
             return self.api_response(200, result.message)
         return self.api_response(400, result.message)
 
@@ -896,6 +953,17 @@ class RestManager:
 
         if result.success:
             self.hs_manage.all_save()
+            # 记录操作日志
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            self.hs_manage.saving.add_operation_log(
+                hs_name=hs_name,
+                operation="修改",
+                target="主机",
+                details=f"主机名称: {hs_name}",
+                level="INFO",
+                username=username
+            )
             return self.api_response(200, result.message)
         return self.api_response(400, result.message)
 
@@ -907,6 +975,17 @@ class RestManager:
         """删除主机"""
         if self.hs_manage.del_host(hs_name):
             self.hs_manage.all_save()
+            # 记录操作日志
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            self.hs_manage.saving.add_operation_log(
+                hs_name=None,  # 主机已删除，不关联到特定主机
+                operation="删除",
+                target="主机",
+                details=f"主机名称: {hs_name}",
+                level="WARNING",
+                username=username
+            )
             return self.api_response(200, '主机已删除')
         return self.api_response(404, '主机不存在')
 
@@ -941,6 +1020,17 @@ class RestManager:
                 try:
                     self.hs_manage.all_save()
                     logger.info(f'[主机启用控制] 主机 {hs_name} 配置已保存')
+                    # 记录操作日志
+                    user_data = self._get_current_user()
+                    username = user_data.get('username', '') if user_data else ''
+                    self.hs_manage.saving.add_operation_log(
+                        hs_name=hs_name,
+                        operation="启用" if enable else "禁用",
+                        target="主机",
+                        details=f"主机名称: {hs_name}",
+                        level="INFO",
+                        username=username
+                    )
                 except Exception as e:
                     logger.error(f'[主机启用控制] 保存配置失败: {e}')
                     traceback.print_exc()
@@ -966,6 +1056,11 @@ class RestManager:
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
+
+        # 禁用的主机不允许获取状态
+        enable_host = getattr(server.hs_config, 'enable_host', True) if server.hs_config else True
+        if not enable_host:
+            return self.api_response(403, '该主机已禁用，无法获取状态')
 
         # 检查是否强制刷新缓存
         force_refresh = request.args.get('refresh', 'false').lower() == 'true'
@@ -1040,6 +1135,11 @@ class RestManager:
         is_admin = user_data.get('is_admin', False) if user_data else False
         is_token_login = user_data.get('is_token_login', False) if user_data else False
         current_username = user_data.get('username', '') if user_data else ''
+
+        # 禁用的主机不返回虚拟机列表
+        enable_host = getattr(server.hs_config, 'enable_host', True) if server.hs_config else True
+        if not enable_host:
+            return self.api_response(200, 'success', {})
 
         def serialize_obj(obj):
             """将对象序列化为可JSON化的格式"""
@@ -1154,6 +1254,11 @@ class RestManager:
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
+
+        # 禁用的主机禁止创建虚拟机
+        enable_host = getattr(server.hs_config, 'enable_host', True) if server.hs_config else True
+        if not enable_host:
+            return self.api_response(403, '该主机已禁用，无法创建虚拟机')
 
         data = request.get_json() or {}
 
@@ -1305,6 +1410,20 @@ class RestManager:
                     )
 
         self.hs_manage.all_save()
+        
+        # 记录操作日志
+        if result and result.success:
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            self.hs_manage.saving.add_operation_log(
+                hs_name=hs_name,
+                operation="创建",
+                target="虚拟机",
+                details=f"虚拟机名称: {vm_config.vm_uuid}, CPU: {vm_config.cpu_num}核, 内存: {vm_config.mem_num}GB, 硬盘: {vm_config.hdd_num}GB",
+                level="INFO",
+                username=username
+            )
+        
         return self.api_response(200 if result and result.success else 400, result.message)
 
     # 修改虚拟机配置 ########################################################################
@@ -1505,6 +1624,17 @@ class RestManager:
 
         if result and result.success:
             self.hs_manage.all_save()
+            # 记录操作日志
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            self.hs_manage.saving.add_operation_log(
+                hs_name=hs_name,
+                operation="修改",
+                target="虚拟机",
+                details=f"虚拟机名称: {vm_uuid}",
+                level="INFO",
+                username=username
+            )
             return self.api_response(200, result.message if result.message else '虚拟机更新成功')
 
         return self.api_response(400, result.message if result else '更新失败')
@@ -1538,6 +1668,11 @@ class RestManager:
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
+
+        # 禁用的主机禁止删除虚拟机
+        enable_host = getattr(server.hs_config, 'enable_host', True) if server.hs_config else True
+        if not enable_host:
+            return self.api_response(403, '该主机已禁用，无法删除虚拟机')
 
         # 获取虚拟机配置以便释放资源
         vm_resource_usage = {'cpu': 0, 'ram': 0, 'ssd': 0, 'gpu': 0, 'traffic': 0, 'nat_ports': 0, 'web_proxy': 0,
@@ -1608,6 +1743,17 @@ class RestManager:
 
         if result and result.success:
             self.hs_manage.all_save()
+            # 记录操作日志
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            self.hs_manage.saving.add_operation_log(
+                hs_name=hs_name,
+                operation="删除",
+                target="虚拟机",
+                details=f"虚拟机名称: {vm_uuid}",
+                level="WARNING",
+                username=username
+            )
             return self.api_response(200, result.message if result.message else '虚拟机已删除')
 
         return self.api_response(400, result.message if result else '操作失败')
@@ -1881,6 +2027,21 @@ class RestManager:
             logger.error(f"更新资源配额失败: {str(e)}")
             # 不影响主要功能，记录错误即可
 
+        # 保存配置
+        self.hs_manage.all_save()
+        
+        # 记录操作日志
+        user_data = self._get_current_user()
+        username = user_data.get('username', '') if user_data else ''
+        self.hs_manage.saving.add_operation_log(
+            hs_name=hs_name,
+            operation="移交所有权",
+            target="虚拟机",
+            details=f"虚拟机: {vm_uuid}, 原所有者: {current_username}, 新所有者: {new_owner}",
+            level="WARNING",
+            username=username
+        )
+        
         return self.api_response(200, f'虚拟机所有权已成功移交给 {new_owner}')
 
     # 虚拟机密码修改 ########################################################################
@@ -1959,6 +2120,11 @@ class RestManager:
         if not server:
             return self.api_response(404, '主机不存在')
 
+        # 禁用的主机禁止电源操作
+        enable_host = getattr(server.hs_config, 'enable_host', True) if server.hs_config else True
+        if not enable_host:
+            return self.api_response(403, '该主机已禁用，无法执行电源操作')
+
         data = request.get_json() or {}
         action = data.get('action', 'start')
 
@@ -1980,6 +2146,26 @@ class RestManager:
         result = server.VMPowers(vm_uuid, power_action)
 
         if result and result.success:
+            # 记录操作日志
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            action_cn = {
+                'start': '启动',
+                'stop': '关机',
+                'hard_stop': '强制关机',
+                'reset': '重启',
+                'hard_reset': '强制重启',
+                'pause': '暂停',
+                'resume': '恢复'
+            }.get(action, action)
+            self.hs_manage.saving.add_operation_log(
+                hs_name=hs_name,
+                operation=action_cn,
+                target="虚拟机",
+                details=f"虚拟机名称: {vm_uuid}",
+                level="INFO",
+                username=username
+            )
             return self.api_response(200, result.message if result.message else f'电源操作 {action} 成功')
 
         return self.api_response(400, result.message if result else '操作失败')
@@ -2063,10 +2249,15 @@ class RestManager:
     # :return: 包含虚拟机状态的API响应
     # ####################################################################################
     def get_vm_status(self, hs_name, vm_uuid):
-        """获取虚拟机状态"""
+        """获取虚拟机状态（从VMConfig.vm_flag读取最新状态）"""
         server = self.hs_manage.get_host(hs_name)
         if not server:
             return self.api_response(404, '主机不存在')
+
+        # 检查虚拟机是否存在
+        vm_conf = server.VMSelect(vm_uuid)
+        if not vm_conf:
+            return self.api_response(404, '虚拟机不存在')
 
         # 从请求参数中获取时间范围（分钟数，默认30分钟）
         time_range_minutes = request.args.get('limit', type=int, default=30)
@@ -2109,7 +2300,15 @@ class RestManager:
                             result.append(vars(hw_status))
                 else:
                     result.append(None)
-        return self.api_response(200, 'success', result)
+        
+        # 添加最新的电源状态（从VMConfig.vm_flag读取）
+        from MainObject.Config.VMPowers import VMPowers
+        power_status = str(vm_conf.vm_flag) if vm_conf.vm_flag else str(VMPowers.UNKNOWN)
+        
+        return self.api_response(200, 'success', {
+            'power_status': power_status,  # 最新电源状态
+            'history': result  # 历史状态数据
+        })
 
     # 扫描主机上的虚拟机 ########################################################################
     # :param hs_name: 主机名称
@@ -2313,6 +2512,17 @@ class RestManager:
             return self.api_response(500, f'端口映射创建失败: {str(e)}')
 
         self.hs_manage.all_save()
+        # 记录操作日志
+        user_data = self._get_current_user()
+        username = user_data.get('username', '') if user_data else ''
+        self.hs_manage.saving.add_operation_log(
+            hs_name=hs_name,
+            operation="添加",
+            target="NAT端口转发",
+            details=f"虚拟机: {vm_uuid}, WAN端口: {port_data.wan_port}, LAN端口: {port_data.lan_port}",
+            level="INFO",
+            username=username
+        )
         return self.api_response(200, 'NAT规则添加成功')
 
     # 删除虚拟机NAT端口转发规则 ########################################################################
@@ -2352,6 +2562,17 @@ class RestManager:
         # 从列表中移除
         vm_config.nat_all.pop(rule_index)
         self.hs_manage.all_save()
+        # 记录操作日志
+        user_data = self._get_current_user()
+        username = user_data.get('username', '') if user_data else ''
+        self.hs_manage.saving.add_operation_log(
+            hs_name=hs_name,
+            operation="删除",
+            target="NAT端口转发",
+            details=f"虚拟机: {vm_uuid}, WAN端口: {port_data.wan_port}",
+            level="INFO",
+            username=username
+        )
         return self.api_response(200, 'NAT规则已删除')
 
     # ========================================================================
@@ -2493,6 +2714,18 @@ class RestManager:
             # 注意：IP配额检查会在操作时通过_calculate_user_ip_usage实时获取准确的使用量
             logger.info(f"网卡添加成功，IP使用量将通过实时计算更新")
 
+            # 记录操作日志
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            self.hs_manage.saving.add_operation_log(
+                hs_name=hs_name,
+                operation="添加",
+                target="网卡",
+                details=f"虚拟机: {vm_uuid}, 网卡: {nic_name}, 类型: {nic_type}",
+                level="INFO",
+                username=username
+            )
+
             return self.api_response(200, f'网卡 {nic_name} 添加成功')
 
         return self.api_response(400, result.message if result else '添加网卡失败')
@@ -2548,6 +2781,18 @@ class RestManager:
             # 更新用户IP使用量 - 由于数据库中没有used_nat_ips和used_pub_ips字段，
             # IP使用量通过_calculate_user_ip_usage函数实时计算，无需在数据库中维护
             logger.info(f"网卡删除成功，IP使用量将通过实时计算更新")
+
+            # 记录操作日志
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            self.hs_manage.saving.add_operation_log(
+                hs_name=hs_name,
+                operation="删除",
+                target="网卡",
+                details=f"虚拟机: {vm_uuid}, 网卡: {nic_name}",
+                level="INFO",
+                username=username
+            )
 
             return self.api_response(200, f'网卡 {nic_name} 已删除')
 
@@ -2613,6 +2858,17 @@ class RestManager:
 
         if result and result.success:
             self.hs_manage.all_save()
+            # 记录操作日志
+            user_data = self._get_current_user()
+            username = user_data.get('username', '') if user_data else ''
+            self.hs_manage.saving.add_operation_log(
+                hs_name=hs_name,
+                operation="修改",
+                target="网卡",
+                details=f"虚拟机: {vm_uuid}, 网卡: {nic_name}",
+                level="INFO",
+                username=username
+            )
             return self.api_response(200, f'网卡 {nic_name} 配置已更新')
 
         return self.api_response(400, result.message if result else '修改网卡失败')
@@ -2729,6 +2985,17 @@ class RestManager:
             return self.api_response(500, f'添加代理失败: {result.message}')
         # 保存配置
         self.hs_manage.all_save()
+        # 记录操作日志
+        user_data = self._get_current_user()
+        username = user_data.get('username', '') if user_data else ''
+        self.hs_manage.saving.add_operation_log(
+            hs_name=hs_name,
+            operation="添加",
+            target="WEB转发",
+            details=f"虚拟机: {vm_uuid}, 域名: {proxy_config.web_addr}",
+            level="INFO",
+            username=username
+        )
         return self.api_response(200, '代理配置添加成功')
 
     # 删除虚拟机反向代理配置 ########################################################################
@@ -2763,6 +3030,17 @@ class RestManager:
 
         # 保存配置
         self.hs_manage.all_save()
+        # 记录操作日志
+        user_data = self._get_current_user()
+        username = user_data.get('username', '') if user_data else ''
+        self.hs_manage.saving.add_operation_log(
+            hs_name=hs_name,
+            operation="删除",
+            target="WEB转发",
+            details=f"虚拟机: {vm_uuid}, 域名: {proxy_config.web_addr}",
+            level="INFO",
+            username=username
+        )
         return self.api_response(200, '代理配置已删除')
 
     # ========================================================================
@@ -3193,6 +3471,17 @@ class RestManager:
 
         # 保存配置
         self.hs_manage.all_save()
+        # 记录操作日志
+        user_data = self._get_current_user()
+        username = user_data.get('username', '') if user_data else ''
+        self.hs_manage.saving.add_operation_log(
+            hs_name=hs_name,
+            operation="删除",
+            target="数据盘",
+            details=f"虚拟机: {vm_uuid}, 硬盘: {hdd_name}",
+            level="INFO",
+            username=username
+        )
         return self.api_response(200, '数据盘已删除')
 
     # ========================================================================
@@ -3264,6 +3553,17 @@ class RestManager:
 
         # 保存配置
         self.hs_manage.all_save()
+        # 记录操作日志
+        user_data = self._get_current_user()
+        username = user_data.get('username', '') if user_data else ''
+        self.hs_manage.saving.add_operation_log(
+            hs_name=hs_name,
+            operation="挂载",
+            target="ISO镜像",
+            details=f"虚拟机: {vm_uuid}, ISO: {iso_file}",
+            level="INFO",
+            username=username
+        )
         return self.api_response(200, 'ISO挂载成功')
 
     # 卸载ISO ########################################################################
@@ -3298,6 +3598,17 @@ class RestManager:
 
         # 保存配置
         self.hs_manage.all_save()
+        # 记录操作日志
+        user_data = self._get_current_user()
+        username = user_data.get('username', '') if user_data else ''
+        self.hs_manage.saving.add_operation_log(
+            hs_name=hs_name,
+            operation="卸载",
+            target="ISO镜像",
+            details=f"虚拟机: {vm_uuid}, ISO: {iso_name}",
+            level="INFO",
+            username=username
+        )
         return self.api_response(200, 'ISO已卸载')
 
     # ========================================================================
@@ -3440,6 +3751,17 @@ class RestManager:
 
         # 保存配置
         self.hs_manage.all_save()
+        # 记录操作日志
+        user_data = self._get_current_user()
+        username = user_data.get('username', '') if user_data else ''
+        self.hs_manage.saving.add_operation_log(
+            hs_name=hs_name,
+            operation="创建备份",
+            target="虚拟机",
+            details=f"虚拟机: {vm_uuid}, 备注: {vm_tips}",
+            level="INFO",
+            username=username
+        )
         return self.api_response(200, '备份创建成功')
 
     # 还原备份 ########################################################################
@@ -3470,6 +3792,17 @@ class RestManager:
 
         # 保存配置
         self.hs_manage.all_save()
+        # 记录操作日志
+        user_data = self._get_current_user()
+        username = user_data.get('username', '') if user_data else ''
+        self.hs_manage.saving.add_operation_log(
+            hs_name=hs_name,
+            operation="还原备份",
+            target="虚拟机",
+            details=f"虚拟机: {vm_uuid}, 备份: {vm_back}",
+            level="WARNING",
+            username=username
+        )
         return self.api_response(200, '备份还原成功')
 
     # 删除备份 ########################################################################
@@ -3503,6 +3836,17 @@ class RestManager:
 
         # 保存配置
         self.hs_manage.all_save()
+        # 记录操作日志
+        user_data = self._get_current_user()
+        username = user_data.get('username', '') if user_data else ''
+        self.hs_manage.saving.add_operation_log(
+            hs_name=hs_name,
+            operation="删除备份",
+            target="虚拟机",
+            details=f"虚拟机: {vm_uuid}, 备份: {vm_back}",
+            level="INFO",
+            username=username
+        )
         return self.api_response(200, '备份已删除')
 
     # 扫描备份 ########################################################################

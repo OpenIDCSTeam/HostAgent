@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenIDCS 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-05 16:41\n"
-"PO-Revision-Date: 2026-02-05 16:41\n"
+"POT-Creation-Date: 2026-02-10 01:52\n"
+"PO-Revision-Date: 2026-02-10 01:52\n"
 "Last-Translator: Auto Generated\n"
 "Language-Team: Traditional Chinese\n"
 "Language: zh-TW\n"
@@ -2431,13 +2431,13 @@ msgid "空"
 msgstr "空"
 
 msgid "全局"
-msgstr "全域"
+msgstr "全局"
 
 msgid "查看您的资源使用情况和配额信息"
-msgstr "查看您的資源使用情況和配額資訊"
+msgstr "查看您的資源使用情況和配額信息"
 
 msgid "用户空间"
-msgstr "使用者空間"
+msgstr "用戶空間"
 
 msgid "系统空间"
 msgstr "系統空間"
@@ -2449,58 +2449,58 @@ msgid "监控"
 msgstr "監控"
 
 msgid "网络端口"
-msgstr "網路埠"
+msgstr "網絡端口"
 
 msgid "网络与配额"
-msgstr "網路與配額"
+msgstr "網絡與配額"
 
 msgid "上传带宽"
-msgstr "上傳頻寬"
+msgstr "上傳帶寬"
 
 msgid "下载带宽"
-msgstr "下載頻寬"
+msgstr "下載帶寬"
 
 msgid "实例配置"
 msgstr "實例配置"
 
 msgid "设置密码"
-msgstr "設定密碼"
+msgstr "設置密碼"
 
 msgid "一键远程"
-msgstr "一鍵遠端"
+msgstr "一鍵遠程"
 
 msgid "网卡列表"
-msgstr "網卡清單"
+msgstr "網卡列表"
 
 msgid "转发规则"
 msgstr "轉發規則"
 
 msgid "设备直通"
-msgstr "裝置直通"
+msgstr "設備直通"
 
 msgid "物理"
-msgstr "實體"
+msgstr "物理"
 
 msgid "设备名"
-msgstr "裝置名稱"
+msgstr "設備名"
 
 msgid "存储路径"
-msgstr "儲存路徑"
+msgstr "存儲路徑"
 
 msgid "程序启动路径"
-msgstr "程式啟動路徑"
+msgstr "程序啟動路徑"
 
 msgid "爱快配置"
 msgstr "愛快配置"
 
 msgid "限制配置"
-msgstr "限制配置"
+msgstr "限製配置"
 
 msgid "（多个用逗号分隔）"
 msgstr "（多個用逗號分隔）"
 
 msgid "高级配置"
-msgstr "進階配置"
+msgstr "高級配置"
 
 msgid "系统映射"
 msgstr "系統映射"
@@ -2509,10 +2509,10 @@ msgid "配置池"
 msgstr "配置池"
 
 msgid "扩展选项"
-msgstr "擴充選項"
+msgstr "擴展選項"
 
 msgid "扩展数据"
-msgstr "擴充資料"
+msgstr "擴展數據"
 
 msgid "(JSON格式)"
 msgstr "(JSON格式)"
@@ -2527,25 +2527,25 @@ msgid "安全提示"
 msgstr "安全提示"
 
 msgid "重置Token后，所有使用旧Token的API调用都将失效。请确保更新所有相关配置。"
-msgstr "重置Token後，所有使用舊Token的API呼叫都將失效。請確保更新所有相關配置。"
+msgstr "重置Token後，所有使用舊Token的API調用都將失效。請確保更新所有相關配置。"
 
 msgid "在请求头中添加："
-msgstr "在請求標頭中新增："
+msgstr "在請求頭中添加："
 
 msgid "受控端"
 msgstr "受控端"
 
 msgid "访问配置"
-msgstr "存取配置"
+msgstr "訪問配置"
 
 msgid "新账号"
-msgstr "新帳號"
+msgstr "新賬號"
 
 msgid "注册时需要验证邮箱"
-msgstr "註冊時需要驗證信箱"
+msgstr "註冊時需要驗證郵箱"
 
 msgid "新用户默认"
-msgstr "新使用者預設"
+msgstr "新用戶默認"
 
 msgid "这是一封来自"
 msgstr "這是一封來自"

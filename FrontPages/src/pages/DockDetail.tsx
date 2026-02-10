@@ -1,4 +1,4 @@
-import {useEffect, useState, useMemo} from 'react'
+import {useEffect, useState, useMemo, useRef} from 'react'
 import {useParams, useNavigate} from 'react-router-dom'
 import {
     Card,
@@ -188,6 +188,7 @@ interface HostConfig {
     system_maps: Record<string, [string, number]>
     images_maps?: Record<string, string>
     tab_lock?: string[]
+    server_type?: string
 }
 
 function VMDetail() {
@@ -196,6 +197,7 @@ function VMDetail() {
 
     // 状态管理
     const [vm, setVM] = useState<DockDetail | null>(null)
+    const vmRef = useRef<DockDetail | null>(null)
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState('overview')
     const [showPassword, setShowPassword] = useState(false)
@@ -209,6 +211,7 @@ function VMDetail() {
         cpu: [], memory: [], disk: [], gpu: [], netUp: [], netDown: [], traffic: [], nat: [], proxy: [], labels: []
     })
     const [hostConfig, setHostConfig] = useState<HostConfig | null>(null)
+    const [hostEnabled, setHostEnabled] = useState<boolean>(true) // 主机是否启用
 
     // 模态框状态
     const [editModalVisible, setEditModalVisible] = useState(false)
@@ -249,6 +252,9 @@ function VMDetail() {
         onConfirm: () => Promise<void>;
         requireShutdown?: boolean;
         confirmChecked?: boolean;
+        requireInput?: boolean;
+        confirmInput?: string;
+        expectedInput?: string;
     } | null>(null)
 
     const [isos, setIsos] = useState<ISOInfo[]>([])
@@ -306,7 +312,7 @@ function VMDetail() {
     const [vmScreenshot, setVmScreenshot] = useState<string>('')
     const [loadingScreenshot, setLoadingScreenshot] = useState<boolean>(false)
     const [screenshotError, setScreenshotError] = useState<boolean>(false)
-    const [isFirstScreenshotLoad, setIsFirstScreenshotLoad] = useState<boolean>(true)
+    const isFirstScreenshotLoadRef = useRef<boolean>(true)
 
     // 当前虚拟机状态 - 用于避免使用未初始化的变量
     const [currentStatus, setCurrentStatus] = useState<VMStatus>({
@@ -326,6 +332,10 @@ function VMDetail() {
 
     // 临时状态管理 - 用于显示操作中的状态
     const [tempStatus, setTempStatus] = useState<string | null>(null)
+    
+    // 操作锁定状态 - 执行操作时禁用所有按钮
+    const [operationLocked, setOperationLocked] = useState<boolean>(false)
+    const [operationTimeoutId, setOperationTimeoutId] = useState<NodeJS.Timeout | null>(null)
 
     // 计算所有可用的IP地址
     const availableIPs = useMemo(() => {
@@ -354,21 +364,22 @@ function VMDetail() {
     const getOSIcon = (osName: string) => {
         const name = (osName || '').toLowerCase()
         const iconStyle = {fontSize: '60px', marginRight: '0px'}
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
 
         if (name.includes('windows')) return <WindowsOutlined style={{...iconStyle, color: '#1890ff'}}/>
-        if (name.includes('macos')) return <AppleOutlined style={{...iconStyle, color: '#000000'}}/>
+        if (name.includes('macos')) return <AppleOutlined style={{...iconStyle, color: isDark ? '#ffffff' : '#000000'}}/>
         if (name.includes('ubuntu')) return <span className="anticon" style={{...iconStyle, color: '#E95420'}}><i
             className="fab fa-ubuntu"></i><CodeOutlined/></span>
         if (name.includes('centos')) return <span className="anticon"
-                                                  style={{...iconStyle, color: '#262577'}}><CodeOutlined/></span>
+                                                  style={{...iconStyle, color: isDark ? '#7B7FFF' : '#262577'}}><CodeOutlined/></span>
         if (name.includes('debian')) return <span className="anticon"
-                                                  style={{...iconStyle, color: '#A81D33'}}><CodeOutlined/></span>
+                                                  style={{...iconStyle, color: isDark ? '#FF6B8A' : '#A81D33'}}><CodeOutlined/></span>
         if (name.includes('fedora')) return <span className="anticon"
-                                                  style={{...iconStyle, color: '#294172'}}><CodeOutlined/></span>
+                                                  style={{...iconStyle, color: isDark ? '#6B9FFF' : '#294172'}}><CodeOutlined/></span>
         if (name.includes('linux')) return <span className="anticon"
-                                                 style={{...iconStyle, color: '#333'}}><DesktopOutlined/></span>
+                                                 style={{...iconStyle, color: isDark ? '#999' : '#333'}}><DesktopOutlined/></span>
 
-        return <DesktopOutlined style={iconStyle}/>
+        return <DesktopOutlined style={{...iconStyle, color: isDark ? '#999' : undefined}}/>
     }
 
     // 获取操作系统显示名称
@@ -388,10 +399,18 @@ function VMDetail() {
     const loadHostInfo = async () => {
         if (!hostName) return
         try {
+            // 加载主机配置
             const result = await api.getOSImages(hostName)
             if (result.code === 200) {
                 const config = result.data as unknown as HostConfig
                 setHostConfig(config)
+            }
+            
+            // 加载主机详情检查启用状态
+            const hostDetail = await api.getHostDetail(hostName)
+            if (hostDetail.code === 200 && hostDetail.data) {
+                const enabled = hostDetail.data.enable_host !== false
+                setHostEnabled(enabled)
             }
         } catch (error: any) {
             console.error('加载主机配置失败:', error)
@@ -401,16 +420,17 @@ function VMDetail() {
 
     // 获取虚拟机截图
     const loadVMScreenshot = async () => {
-        if (!hostName || !uuid || !vm) return
+        const currentVm = vmRef.current
+        if (!hostName || !uuid || !currentVm) return
 
-        const vmType = vm.config?.virt_type || '';
-        if (vmType === 'OCInterface' || vmType === 'LxContainer') return;
+        const serverType = hostConfig?.server_type || '';
+        if (serverType === 'OCInterface' || serverType === 'LxContainer') return;
 
         // 直接从vm对象获取最新状态，而不是依赖currentStatus
-        const latestStatus = vm.status && vm.status.length > 0 ? vm.status[vm.status.length - 1] : null;
+        const latestStatus = currentVm.status && currentVm.status.length > 0 ? currentVm.status[currentVm.status.length - 1] : null;
         if (latestStatus && latestStatus.ac_status === 'STARTED') {
             // 只在首次加载时显示加载状态
-            if (isFirstScreenshotLoad) {
+            if (isFirstScreenshotLoadRef.current) {
                 setLoadingScreenshot(true);
             }
             setScreenshotError(false);
@@ -428,9 +448,9 @@ function VMDetail() {
                 setScreenshotError(true);
                 setVmScreenshot('');
             } finally {
-                if (isFirstScreenshotLoad) {
+                if (isFirstScreenshotLoadRef.current) {
                     setLoadingScreenshot(false);
-                    setIsFirstScreenshotLoad(false);
+                    isFirstScreenshotLoadRef.current = false;
                 }
             }
         }
@@ -450,8 +470,32 @@ function VMDetail() {
             if (detailRes.data) {
                 const vmData = detailRes.data as unknown as DockDetail
                 if (statusRes.data) {
-                    const statusData = Array.isArray(statusRes.data) ? statusRes.data : [statusRes.data]
-                    vmData.status = statusData
+                    // 新API返回格式: {power_status: "STARTED", history: [...]}
+                    if (statusRes.data.power_status && statusRes.data.history) {
+                        // 使用历史数据作为status数组
+                        vmData.status = Array.isArray(statusRes.data.history) ? statusRes.data.history : []
+                        // 如果历史数据为空或最新状态与power_status不一致，添加当前电源状态
+                        if (vmData.status.length === 0 || vmData.status[vmData.status.length - 1]?.ac_status !== statusRes.data.power_status) {
+                            vmData.status.push({
+                                ac_status: statusRes.data.power_status,
+                                mem_total: 0,
+                                mem_usage: 0,
+                                hdd_total: 0,
+                                hdd_usage: 0,
+                                gpu_total: 0,
+                                gpu_usage: 0,
+                                cpu_usage: 0,
+                                network_u: 0,
+                                network_d: 0,
+                                ext_usage: {},
+                                on_update: Date.now() / 1000
+                            })
+                        }
+                    } else {
+                        // 兼容旧API格式
+                        const statusData = Array.isArray(statusRes.data) ? statusRes.data : [statusRes.data]
+                        vmData.status = statusData
+                    }
                 }
 
                 // 修正IPv4显示
@@ -473,6 +517,7 @@ function VMDetail() {
                 }
 
                 setVM(vmData)
+                vmRef.current = vmData
             }
         } catch (error: any) {
             console.error('加载虚拟机详情失败:', error)
@@ -535,6 +580,7 @@ function VMDetail() {
     }
 
     const handleAddUSB = async () => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         try {
             const values = await usbForm.validateFields()
             setUsbActionLoading(true)
@@ -552,6 +598,7 @@ function VMDetail() {
     }
 
     const handleDeleteUSB = async (usbKey: string) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         try {
             setUsbActionLoading(true)
             await api.deleteUSB(hostName!, uuid!, usbKey)
@@ -644,8 +691,9 @@ function VMDetail() {
         if (!hostName || !uuid) return
         try {
             const response = await api.getVMMonitorData(hostName, uuid, timeRange)
-            if (response.data && Array.isArray(response.data)) {
-                setMonitorData(processMonitorData(response.data, timeRange))
+            const history = response.data?.history
+            if (history && Array.isArray(history)) {
+                setMonitorData(processMonitorData(history, timeRange))
             }
         } catch (error: any) {
             console.error('加载监控数据失败:', error)
@@ -817,46 +865,88 @@ function VMDetail() {
     }, [natModalVisible])
 
     // 通用确认弹窗逻辑
-    const showConfirmAction = (title: string, content: string, onConfirm: () => Promise<void>, requireShutdown: boolean = false) => {
-        setCurrentAction({title, content, onConfirm, requireShutdown, confirmChecked: false})
+    const showConfirmAction = (
+        title: string,
+        content: string,
+        onConfirm: () => Promise<void>,
+        requireShutdown: boolean = false,
+        requireInput: boolean = false,
+        expectedInput: string = ''
+    ) => {
+        setCurrentAction({
+            title,
+            content,
+            onConfirm,
+            requireShutdown,
+            confirmChecked: false,
+            requireInput,
+            confirmInput: '',
+            expectedInput
+        })
         setActionConfirmModalVisible(true)
     }
 
     const executeAction = async () => {
         if (!currentAction) return
+        
+        // 如果需要输入验证，检查输入是否匹配
+        if (currentAction.requireInput && currentAction.confirmInput !== currentAction.expectedInput) {
+            message.error('输入的虚拟机名称不匹配')
+            return
+        }
+        
         setActionConfirmModalVisible(false)
-        const hide = message.loading('操作执行中，请稍候...', 0)
+        
+        // 锁定操作
+        setOperationLocked(true)
+        
         try {
             await currentAction.onConfirm()
-            hide()
             message.success('操作成功')
+            // 操作成功后刷新状态
             setTimeout(loadVMDetail, 1500)
         } catch (error: any) {
-            hide()
             message.error(error.message || '操作失败')
+            // 操作失败也刷新状态
+            setTimeout(loadVMDetail, 1000)
+        } finally {
+            // 解锁操作
+            setOperationLocked(false)
+            // 清除超时定时器
+            if (operationTimeoutId) {
+                clearTimeout(operationTimeoutId)
+                setOperationTimeoutId(null)
+            }
         }
     }
 
     // 操作处理函数
     const handlePowerAction = async (action: string) => {
         if (!hostName || !uuid) return
+        
+        // 检查主机是否被禁用
+        if (!hostEnabled) {
+            message.error('该主机已被禁用，无法控制虚拟机电源')
+            return
+        }
+        
         const actionMap: any = {
-            stop: '关机',
+            stop: '软关机',
             hard_stop: '强制关机',
             hard_reset: '强制重启',
-            reset: '重启',
+            reset: '软重启',
             start: '启动',
             pause: '暂停',
             resume: '恢复'
         }
         const statusMap: any = {
-            start: 'starting',
-            stop: 'stopping',
-            hard_stop: 'stopping',
-            reset: 'restarting',
-            hard_reset: 'restarting',
-            pause: 'pausing',
-            resume: 'resuming'
+            start: 'ON_OPEN',
+            stop: 'ON_STOP',
+            hard_stop: 'ON_STOP',
+            reset: 'ON_STOP',
+            hard_reset: 'ON_STOP',
+            pause: 'ON_SAVE',
+            resume: 'ON_WAKE'
         }
         const requireShutdown = ['stop', 'hard_stop', 'hard_reset'].includes(action)
 
@@ -864,21 +954,26 @@ function VMDetail() {
             `${actionMap[action]}确认`,
             `确定要执行${actionMap[action]}操作吗？${requireShutdown ? '此操作可能导致数据丢失！' : ''}`,
             async () => {
-                // 设置临时状态
+                // 设置临时状态为中间状态
                 setTempStatus(statusMap[action])
-                const hide = message.loading(`正在执行${actionMap[action]}操作...`, 0)
+                
+                // 设置10分钟超时
+                const timeoutId = setTimeout(() => {
+                    setTempStatus(null)
+                    setOperationLocked(false)
+                    message.error('操作超时，请检查虚拟机状态')
+                    loadVMDetail()
+                }, 10 * 60 * 1000) // 10分钟
+                setOperationTimeoutId(timeoutId)
+                
                 try {
                     await api.vmPower(hostName, uuid, action as any)
-                    // 操作完成后，清除临时状态，让真实状态重新显示
-                    setTimeout(() => {
-                        setTempStatus(null)
-                    }, 1500)
+                    // 操作成功后，清除临时状态，让真实状态重新显示
+                    setTempStatus(null)
                 } catch (error) {
                     // 操作失败，清除临时状态
                     setTempStatus(null)
                     throw error
-                } finally {
-                    hide()
                 }
             },
             requireShutdown
@@ -886,16 +981,30 @@ function VMDetail() {
     }
 
     const handleDelete = () => {
-        showConfirmAction('确认删除', '确定要删除这个虚拟机吗？此操作不可恢复！', async () => {
-            await api.deleteVM(hostName!, uuid!)
-            navigate(`/hosts/${hostName}/vms`)
-        }, true)
+        // 检查主机是否被禁用
+        if (!hostEnabled) {
+            message.error('该主机已被禁用，无法删除虚拟机')
+            return
+        }
+        
+        showConfirmAction(
+            '确认删除',
+            `此操作将永久删除虚拟机 "${uuid}" 且不可恢复，请输入虚拟机名称以确认删除：`,
+            async () => {
+                await api.deleteVM(hostName!, uuid!)
+                navigate(`/hosts/${hostName}/vms`)
+            },
+            true,
+            true,
+            uuid || ''
+        )
     }
 
     const handleOpenVNC = async () => {
         if (!hostName || !uuid) return
+        if (!hostEnabled) { message.error('该主机已被禁用，无法打开控制台'); return }
+        const hide = message.loading('正在获取控制台地址...', 0)
         try {
-            const hide = message.loading('正在获取控制台地址...', 0)
             const response = await api.getVMConsole(hostName, uuid)
             hide()
 
@@ -906,6 +1015,7 @@ function VMDetail() {
                 message.error('获取的控制台地址无效')
             }
         } catch (error) {
+            hide()
             message.error('打开控制台失败')
         }
     }
@@ -916,28 +1026,35 @@ function VMDetail() {
     }
 
     const handleChangePassword = async (_values: any) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法修改密码'); return }
         showConfirmAction('修改密码确认', '确定要修改密码吗？虚拟机需要重启才能生效。', async () => {
-            // 设置临时状态为配置中
-            setTempStatus('configuring')
-            const hide = message.loading('正在修改密码...', 0)
+            // 设置临时状态为改密中
+            setTempStatus('ON_PASSWD')
+            
+            // 设置10分钟超时
+            const timeoutId = setTimeout(() => {
+                setTempStatus(null)
+                setOperationLocked(false)
+                message.error('操作超时，请检查虚拟机状态')
+                loadVMDetail()
+            }, 10 * 60 * 1000)
+            setOperationTimeoutId(timeoutId)
+            
             try {
                 await api.changeVMPassword(hostName!, uuid!, {password: _values.new_password})
                 // 操作完成后，清除临时状态
-                setTimeout(() => {
-                    setTempStatus(null)
-                }, 1500)
+                setTempStatus(null)
                 setPasswordModalVisible(false)
             } catch (error) {
                 // 操作失败，清除临时状态
                 setTempStatus(null)
                 throw error
-            } finally {
-                hide()
             }
         }, true)
     }
 
     const handleAddIPAddress = async (_values: any) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         // 显示确认对话框，提示需要重启虚拟机
         Modal.confirm({
             title: '添加网卡确认',
@@ -946,9 +1063,9 @@ function VMDetail() {
                     <p className="mb-3">确定要添加网卡吗？</p>
                     <Alert message="添加网卡后需要重启虚拟机才能生效" type="warning" showIcon className="mb-3"/>
                 <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded">
-                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">网卡类型：{_values.nic_type === 'pub' ? '公网' : '内网'}</p>
-                        {_values.ip4_addr && <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">IPv4地址：{_values.ip4_addr}</p>}
-                        {_values.ip6_addr && <p className="text-sm text-gray-700 dark:text-gray-300">IPv6地址：{_values.ip6_addr}</p>}
+                        <p className="text-sm mb-1">网卡类型：{_values.nic_type === 'pub' ? '公网' : '内网'}</p>
+                        {_values.ip4_addr && <p className="text-sm mb-1">IPv4地址：{_values.ip4_addr}</p>}
+                        {_values.ip6_addr && <p className="text-sm">IPv6地址：{_values.ip6_addr}</p>}
                     </div>
                 </div>
             ),
@@ -982,6 +1099,7 @@ function VMDetail() {
     }
 
     const handleDeleteIPAddress = async (nicName: string) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         Modal.confirm({
             title: '删除网卡确认',
             content: (
@@ -1019,6 +1137,7 @@ function VMDetail() {
     }
 
     const handleAddProxy = async (_values: any) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         setProxyActionLoading(true);
         try {
             const data = {
@@ -1041,6 +1160,7 @@ function VMDetail() {
     }
 
     const handleDeleteProxy = async (proxyId: number) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         showConfirmAction('删除代理确认', '确定要删除这个反向代理吗？', async () => {
             setProxyActionLoading(true);
             try {
@@ -1053,6 +1173,7 @@ function VMDetail() {
     }
 
     const handleAddNATRule = async (_values: any) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         setNatActionLoading(true);
         try {
             // 使用老前端的字段名：wan_port, lan_port, lan_addr, nat_tips
@@ -1077,6 +1198,7 @@ function VMDetail() {
     }
 
     const handleDeleteNAT = async (index: number) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         showConfirmAction('删除NAT规则', '确定要删除该规则吗？', async () => {
             setNatActionLoading(true);
             try {
@@ -1089,6 +1211,7 @@ function VMDetail() {
     }
 
     const handleAddHDD = async (_values: any) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         const regex = /^[a-zA-Z0-9_]+$/
         if (!regex.test(_values.hdd_name)) {
             message.error('磁盘名称只能包含数字、字母和下划线');
@@ -1122,6 +1245,7 @@ function VMDetail() {
 
     const handleMountHDD = async () => {
         if (!currentMountHdd) return
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         // 设置临时状态为配置中
         setTempStatus('configuring')
         setHddActionLoading(true)
@@ -1153,6 +1277,7 @@ function VMDetail() {
 
     const handleUnmountHDD = async () => {
         if (!currentUnmountHdd) return
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         // 设置临时状态为配置中
         setTempStatus('configuring')
         setHddActionLoading(true)
@@ -1179,6 +1304,7 @@ function VMDetail() {
     }
 
     const handleDeleteHDD = async (hddPath: string) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         showConfirmAction('删除数据盘确认', `确定要删除数据盘 "${hddPath}" 吗？此操作不可恢复！`, async () => {
             // 设置临时状态为配置中
             setTempStatus('configuring')
@@ -1201,6 +1327,7 @@ function VMDetail() {
     }
 
     const handleAddGpu = async (_values: any) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         setTempStatus('configuring')
         setGpuActionLoading(true)
         const hide = message.loading('正在添加显卡...', 0)
@@ -1239,6 +1366,7 @@ function VMDetail() {
     }
 
     const handleDeleteGpu = async (gpuKey: string) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         showConfirmAction('删除显卡确认', `确定要删除显卡 "${gpuKey}" 吗？`, async () => {
             setTempStatus('configuring')
             const hide = message.loading('正在删除显卡...', 0)
@@ -1272,6 +1400,7 @@ function VMDetail() {
 
     const handleTransferHDD = async () => {
         if (!currentTransferHdd) return
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         setHddActionLoading(true)
         const hide = message.loading('正在移交数据盘，请稍候...', 0)
         try {
@@ -1297,6 +1426,7 @@ function VMDetail() {
     }
 
     const handleAddISO = async (_values: any) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         // 设置临时状态为配置中
         setTempStatus('configuring')
         setIsoActionLoading(true)
@@ -1329,6 +1459,7 @@ function VMDetail() {
 
     const executeUnmountISO = async () => {
         if (!currentUnmountIso) return
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         // 设置临时状态为配置中
         setTempStatus('configuring')
         setIsoActionLoading(true)
@@ -1355,58 +1486,68 @@ function VMDetail() {
     }
 
     const handleCreateBackup = async (_values: any) => {
-        // 设置临时状态为备份中
-        setTempStatus('backing_up')
-        setBackupActionLoading(true)
-        const hide = message.loading('正在创建备份，请稍候...', 0)
-        try {
-            await api.createVMBackup(hostName!, uuid!, {vm_tips: _values.backup_name})
-            hide()
-            message.success('备份创建指令已发送，备份可能需要数十分钟')
-            setBackupModalVisible(false);
-            backupForm.resetFields();
-            setBackupCreateConfirmChecked(false);
-            loadBackups()
-            // 操作完成后，清除临时状态
-            setTimeout(() => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
+        showConfirmAction('创建备份确认', '确定要创建备份吗？备份可能需要较长时间。', async () => {
+            // 设置临时状态为备份中
+            setTempStatus('ON_BACKUP')
+            setBackupActionLoading(true)
+            setOperationLocked(true)
+            
+            // 备份操作不设置超时（可能需要很长时间）
+            
+            try {
+                await api.createVMBackup(hostName!, uuid!, {vm_tips: _values.backup_name})
+                message.success('备份创建指令已发送，备份可能需要数十分钟')
+                setBackupModalVisible(false);
+                backupForm.resetFields();
+                setBackupCreateConfirmChecked(false);
+                loadBackups()
+                // 操作完成后，清除临时状态
                 setTempStatus(null)
-            }, 1500)
-        } catch (error) {
-            // 操作失败，清除临时状态
-            setTempStatus(null)
-            hide()
-            message.error('创建失败')
-        } finally {
-            setBackupActionLoading(false)
-        }
+            } catch (error) {
+                // 操作失败，清除临时状态
+                setTempStatus(null)
+                throw error
+            } finally {
+                setBackupActionLoading(false)
+                setOperationLocked(false)
+            }
+        }, true)
     }
 
     const executeRestoreBackup = async () => {
         if (!currentRestoreBackup) return
-        // 设置临时状态为还原中
-        setTempStatus('restoring')
-        setBackupActionLoading(true)
-        const hide = message.loading('正在恢复备份，请稍候...', 0)
-        try {
-            await api.restoreVMBackup(hostName!, uuid!, currentRestoreBackup)
-            hide()
-            message.success('备份恢复指令已发送，页面将自动刷新')
-            setRestoreBackupModalVisible(false);
-            setRestoreConfirmChecked1(false);
-            setRestoreConfirmChecked2(false);
-            // 页面会自动刷新，无需手动清除临时状态
-            setTimeout(() => window.location.reload(), 3000)
-        } catch (error) {
-            // 操作失败，清除临时状态
-            setTempStatus(null)
-            hide()
-            message.error('恢复失败')
-        } finally {
-            setBackupActionLoading(false)
-        }
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
+        
+        showConfirmAction('恢复备份确认', '确定要恢复备份吗？此操作将覆盖当前数据！', async () => {
+            // 设置临时状态为还原中
+            setTempStatus('ON_RESTORE')
+            setBackupActionLoading(true)
+            setOperationLocked(true)
+            
+            // 还原操作不设置超时（可能需要很长时间）
+            
+            try {
+                await api.restoreVMBackup(hostName!, uuid!, currentRestoreBackup)
+                message.success('备份恢复指令已发送，页面将自动刷新')
+                setRestoreBackupModalVisible(false);
+                setRestoreConfirmChecked1(false);
+                setRestoreConfirmChecked2(false);
+                // 页面会自动刷新，无需手动清除临时状态
+                setTimeout(() => window.location.reload(), 3000)
+            } catch (error) {
+                // 操作失败，清除临时状态
+                setTempStatus(null)
+                throw error
+            } finally {
+                setBackupActionLoading(false)
+                setOperationLocked(false)
+            }
+        }, true)
     }
 
     const handleDeleteBackup = async (backupName: string) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         showConfirmAction('删除备份确认', '确定要删除这个备份吗？此操作不可恢复！', async () => {
             await api.deleteVMBackup(hostName!, uuid!, backupName)
             loadBackups()
@@ -1414,6 +1555,7 @@ function VMDetail() {
     }
 
     const handleAddOwner = async (_values: any) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         setOwnerActionLoading(true)
         try {
             await api.addVMOwner(hostName!, uuid!, {username: _values.username})
@@ -1429,6 +1571,7 @@ function VMDetail() {
     }
 
     const handleDeleteOwner = async (username: string) => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         showConfirmAction('删除用户确认', `确定要移除用户 "${username}" 吗？`, async () => {
             await api.deleteVMOwner(hostName!, uuid!, username)
             loadOwners()
@@ -1437,6 +1580,7 @@ function VMDetail() {
 
     const handleTransferOwnership = async () => {
         if (!transferOwnerUsername) return
+        if (!hostEnabled) { message.error('该主机已被禁用，无法操作'); return }
         setOwnerActionLoading(true)
         const hide = message.loading('正在移交所有权，请稍候...', 0)
         try {
@@ -1461,28 +1605,45 @@ function VMDetail() {
     }
 
     const handleReinstall = async (values: any) => {
-        // 设置临时状态为重装中
-        setTempStatus('reinstalling')
-        setReinstallActionLoading(true)
-        try {
-            await api.reinstallVM(hostName!, uuid!, values)
-            message.success('系统重装指令已发送')
-            setReinstallModalVisible(false);
-            reinstallForm.resetFields()
-            // 操作完成后，清除临时状态
-            setTimeout(() => {
+        if (!hostEnabled) { message.error('该主机已被禁用，无法重装系统'); return }
+        showConfirmAction('重装系统确认', '确定要重装系统吗？此操作将清空所有数据！', async () => {
+            // 设置临时状态为安装中
+            setTempStatus('ON_INSTALL')
+            setReinstallActionLoading(true)
+            
+            // 设置10分钟超时
+            const timeoutId = setTimeout(() => {
                 setTempStatus(null)
-            }, 1500)
-        } catch (error) {
-            // 操作失败，清除临时状态
-            setTempStatus(null)
-            message.error('重装失败')
-        } finally {
-            setReinstallActionLoading(false)
-        }
+                setOperationLocked(false)
+                setReinstallActionLoading(false)
+                message.error('操作超时，请检查虚拟机状态')
+                loadVMDetail()
+            }, 10 * 60 * 1000)
+            setOperationTimeoutId(timeoutId)
+            
+            try {
+                await api.reinstallVM(hostName!, uuid!, values)
+                // 操作完成后，清除临时状态
+                setTempStatus(null)
+                setReinstallModalVisible(false);
+                reinstallForm.resetFields()
+            } catch (error) {
+                // 操作失败，清除临时状态
+                setTempStatus(null)
+                throw error
+            } finally {
+                setReinstallActionLoading(false)
+            }
+        }, true)
     }
 
     const handleUpdateVM = async (values: any) => {
+        // 检查主机是否被禁用
+        if (!hostEnabled) {
+            message.error('该主机已被禁用，无法修改虚拟机配置')
+            return
+        }
+        
         if (values.os_pass && !/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(values.os_pass)) {
             message.error('系统密码必须至少8位，且包含字母和数字');
             return
@@ -1498,7 +1659,20 @@ function VMDetail() {
 
     const handleConfirmUpdateVM = async () => {
         if (!pendingEditValues) return
-        const hide = message.loading('保存中...', 0)
+        
+        // 设置临时状态为修改中
+        setTempStatus('ON_CONFIG')
+        setOperationLocked(true)
+        
+        // 设置10分钟超时
+        const timeoutId = setTimeout(() => {
+            setTempStatus(null)
+            setOperationLocked(false)
+            message.error('操作超时，请检查虚拟机状态')
+            loadVMDetail()
+        }, 10 * 60 * 1000)
+        setOperationTimeoutId(timeoutId)
+        
         try {
             const nicAll: any = {}
             editNicList.forEach(nic => {
@@ -1513,15 +1687,21 @@ function VMDetail() {
             delete updateData.speed_up;
             delete updateData.speed_down
             await api.updateVM(hostName!, uuid!, updateData)
-            hide()
             message.success('配置更新成功');
             setSaveConfirmModalVisible(false);
             setEditModalVisible(false);
             setPendingEditValues(null);
+            setTempStatus(null)
             setTimeout(() => window.location.reload(), 1500)
         } catch (error) {
-            hide();
+            setTempStatus(null)
             message.error('配置更新失败')
+        } finally {
+            setOperationLocked(false)
+            if (operationTimeoutId) {
+                clearTimeout(operationTimeoutId)
+                setOperationTimeoutId(null)
+            }
         }
     }
 
@@ -1535,36 +1715,57 @@ function VMDetail() {
         [field]: value
     } : n))
 
-    const getStatusText = (status: string) => ({
-        running: '运行中', started: '运行中',
-        stopped: '已停止',
-        paused: '已暂停', suspend: '已暂停',
-        starting: '启动中',
-        stopping: '关机中',
-        restarting: '重启中',
-        resuming: '恢复中',
-        pausing: '暂停中',
-        configuring: '配置中',
-        backing_up: '备份中',
-        restoring: '还原中',
-        reinstalling: '重装中',
-        error: '错误',
-        unknown: '未知'
-    }[status.toLowerCase()] || status)
+    const getStatusText = (status: string | undefined) => {
+        if (!status) return '未知'
+        return ({
+            running: '运行中', started: '运行中', STARTED: '运行中',
+            stopped: '已停止', STOPPED: '已停止',
+            paused: '已暂停', suspend: '已暂停', SUSPEND: '已暂停',
+            starting: '启动中',
+            stopping: '关机中',
+            restarting: '重启中',
+            resuming: '恢复中',
+            pausing: '暂停中',
+            configuring: '配置中',
+            backing_up: '备份中',
+            restoring: '还原中',
+            reinstalling: '重装中',
+            error: '错误',
+            unknown: '未知', UNKNOWN: '未知',
+            // 新的中间状态
+            ON_OPEN: '启动中',
+            ON_STOP: '关机中',
+            ON_SAVE: '暂停中',
+            ON_WAKE: '唤醒中',
+            ON_PASSWD: '改密中',
+            ON_CONFIG: '修改中',
+            ON_INSTALL: '安装中',
+            ON_BACKUP: '备份中',
+            ON_RESTORE: '还原中',
+            // 旧的中间状态（兼容）
+            on_open: '启动中',
+            on_stop: '关机中',
+            on_save: '暂停中',
+            on_wake: '唤醒中'
+        }[status] || status)
+    }
 
     // 根据状态获取Badge颜色
-    const getStatusColor = (status: string) => {
+    const getStatusColor = (status: string | undefined) => {
+        if (!status) return 'default'
         const lowerStatus = status.toLowerCase()
-        // 中间状态显示黄色
-        if (['starting', 'stopping', 'restarting', 'resuming', 'pausing', 'configuring', 'backing_up', 'restoring'].includes(lowerStatus)) {
-            return 'warning'
+        // 中间状态显示黄色（processing）
+        if (['starting', 'stopping', 'restarting', 'resuming', 'pausing', 'configuring', 'backing_up', 'restoring',
+             'on_open', 'on_stop', 'on_save', 'on_wake',
+             'ON_OPEN', 'ON_STOP', 'ON_SAVE', 'ON_WAKE', 'ON_PASSWD', 'ON_CONFIG', 'ON_INSTALL', 'ON_BACKUP', 'ON_RESTORE'].includes(status)) {
+            return 'processing'
         }
         // 已关机显示灰色
-        if (['stopped'].includes(lowerStatus)) {
+        if (['stopped', 'STOPPED'].includes(status)) {
             return 'default'
         }
         // 重装中显示红色
-        if (['reinstalling'].includes(lowerStatus)) {
+        if (['reinstalling'].includes(status)) {
             return 'error'
         }
         // 运行中显示绿色
@@ -1583,8 +1784,10 @@ function VMDetail() {
         return 'default'
     }
 
-    const getChartOption = (title: string, data: number[], color: string, labels?: string[], unit: string = '%') => ({
-        title: {text: title, left: 'center', textStyle: {fontSize: 12, fontWeight: 'normal', color: '#666'}},
+    const getChartOption = (title: string, data: number[], color: string, labels?: string[], unit: string = '%') => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+        return ({
+        title: {text: title, left: 'center', textStyle: {fontSize: 12, fontWeight: 'normal', color: isDark ? '#ccc' : '#666'}},
         tooltip: {
             trigger: 'axis',
             formatter: (params: any[]) => `${params[0].axisValue}<br/>${params[0].marker}${params[0].seriesName}: ${params[0].value}${unit}`
@@ -1615,7 +1818,7 @@ function VMDetail() {
             lineStyle: {color: color, width: 2},
             itemStyle: {color: color}
         }]
-    })
+    })}
 
     // 计算最终显示的状态，优先使用临时状态
     const displayStatus = tempStatus || currentStatus.ac_status
@@ -1632,25 +1835,25 @@ function VMDetail() {
                 key: 'power', label: '电源操作', icon: <PoweroffOutlined/>, children: [
                     {
                         key: 'start',
-                        label: '启动',
+                        label: '启动系统',
                         onClick: () => handlePowerAction('start'),
                         disabled: currentStatus.ac_status === 'STARTED'
                     },
                     {
                         key: 'stop',
-                        label: '关机',
+                        label: '关闭系统',
                         onClick: () => handlePowerAction('stop'),
                         disabled: currentStatus.ac_status !== 'STARTED'
                     },
                     {
                         key: 'pause',
-                        label: '暂停',
+                        label: '暂停运行',
                         onClick: () => handlePowerAction('pause'),
                         disabled: currentStatus.ac_status !== 'STARTED'
                     },
                     {
                         key: 'resume',
-                        label: '恢复',
+                        label: '恢复运行',
                         onClick: () => handlePowerAction('resume'),
                         disabled: currentStatus.ac_status !== 'SUSPEND'
                     },
@@ -1671,11 +1874,11 @@ function VMDetail() {
                 <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded-lg p-3 border border-white/20 dark:border-gray-700/30 h-full flex flex-col justify-between">
             <div className="flex items-center gap-2 mb-[15px]">
                 {icon}
-                <span className="text-base text-gray-500 dark:text-gray-400">{title}</span>
+                <span className="text-base">{title}</span>
             </div>
             <div>
-                <div className="flex justify-between text-sm text-gray-500 mb-1">
-                                    <span className="font-medium text-gray-700 dark:text-gray-300">{value}</span>
+                <div className="flex justify-between text-sm mb-1">
+                                    <span className="font-mediu">{value}</span>
                     <span>{percent}%</span>
                 </div>
                 <Progress percent={Math.min(percent, 100)} size="small" showInfo={false} strokeColor={color}/>
@@ -1720,9 +1923,9 @@ function VMDetail() {
                                         <Space size="small">
                                             <span
                                                 className="font-mono">{showPassword ? config.os_pass : '••••••••'}</span>
-                                            <EyeOutlined className="cursor-pointer text-gray-400"
+                                            <EyeOutlined className="cursor-pointer"
                                                          onClick={() => setShowPassword(!showPassword)}/>
-                                            <CopyOutlined className="cursor-pointer text-gray-400"
+                                            <CopyOutlined className="cursor-pointer"
                                                           onClick={() => handleCopyPassword(config.os_pass || '', '系统')}/>
                                         </Space>
                                     </Descriptions.Item>
@@ -1734,16 +1937,16 @@ function VMDetail() {
                                         <Space size="small">
                                             <span
                                                 className="font-mono">{showVncPassword ? config.vc_pass : '••••••••'}</span>
-                                            <EyeOutlined className="cursor-pointer text-gray-400"
+                                            <EyeOutlined className="cursor-pointer"
                                                          onClick={() => setShowVncPassword(!showVncPassword)}/>
-                                            <CopyOutlined className="cursor-pointer text-gray-400"
+                                            <CopyOutlined className="cursor-pointer"
                                                           onClick={() => handleCopyPassword(config.vc_pass || '', 'VNC')}/>
                                         </Space>
                                     </Descriptions.Item>
 
                                     <Descriptions.Item label="主机名称">{hostName}</Descriptions.Item>
                                     <Descriptions.Item
-                                        label="主机类型">{vm.config?.virt_type || 'Hyper-V'}</Descriptions.Item>
+                                        label="主机类型">{hostConfig?.server_type || vm.config?.virt_type || 'Hyper-V'}</Descriptions.Item>
                                     <Descriptions.Item label="操作系统">
                                         <Space>
                                             {/*{getOSIcon(config.os_name || '')}*/}
@@ -1767,12 +1970,33 @@ function VMDetail() {
                                 <div className="rounded-lg flex items-center justify-center mb-4"
                                      style={{height: 170}}>
                                     {(() => {
-                                        const vmType = vm.config?.virt_type || '';
-                                        if (vmType === 'OCInterface' || vmType === 'LxContainer') {
+                                        const serverType = hostConfig?.server_type || '';
+                                        if (serverType === 'OCInterface' || serverType === 'LxContainer') {
                                             return (
-                                                <div className="text-center">
-                                                    <div className="text-lg text-gray-500 mb-2">容器类型虚拟机</div>
-                                                    <div className="text-xs text-gray-400">截图功能不可用</div>
+                                                <div className="text-center flex flex-col items-center justify-center">
+                                                    <div style={{
+                                                        width: 240, height: 120,
+                                                        background: 'var(--bg-secondary, #1a1a2e)',
+                                                        borderRadius: 8,
+                                                        display: 'flex', flexDirection: 'column',
+                                                        alignItems: 'center', justifyContent: 'center',
+                                                        border: '2px solid var(--border-color, #333)',
+                                                        position: 'relative',
+                                                        overflow: 'hidden'
+                                                    }}>
+                                                        <div style={{
+                                                            position: 'absolute', top: 0, left: 0, right: 0,
+                                                            height: 16, background: 'var(--border-color, #333)',
+                                                            display: 'flex', alignItems: 'center', paddingLeft: 6, gap: 3
+                                                        }}>
+                                                            <span style={{width: 6, height: 6, borderRadius: '50%', background: '#ff5f57'}}/>
+                                                            <span style={{width: 6, height: 6, borderRadius: '50%', background: '#febc2e'}}/>
+                                                            <span style={{width: 6, height: 6, borderRadius: '50%', background: '#28c840'}}/>
+                                                        </div>
+                                                        <CodeOutlined style={{fontSize: 28, color: '#52c41a', marginTop: 8}}/>
+                                                        <div style={{fontSize: 9, color: '#52c41a', fontFamily: 'monospace', marginTop: 2}}>Shell</div>
+                                                    </div>
+                                                    <div className="text-xs mt-2" style={{ color: 'var(--text-tertiary)' }}>此虚拟机所属的物理机不提供桌面截图</div>
                                                 </div>
                                             );
                         } else if (currentStatus.ac_status === 'STARTED') {
@@ -1783,14 +2007,19 @@ function VMDetail() {
                                         {screenshotError ? (
                                             <div className="text-center">
                                                 <div className="text-4xl mb-2">📷</div>
-                                                <div className="text-xs text-gray-400">无法获取截图</div>
+                                                <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>无法获取截图</div>
                                             </div>
                                         ) : (
                                             vmScreenshot && (
                                                 <img
                                                     src={vmScreenshot}
                                                     alt="虚拟机截图"
-                                                    className="max-w-full max-h-full object-contain"
+                                                    style={{
+                                                        maxWidth: '320px',
+                                                        maxHeight: '180px',
+                                                        aspectRatio: '16/9',
+                                                        objectFit: 'contain'
+                                                    }}
                                                 />
                                             )
                                         )}
@@ -1802,7 +2031,7 @@ function VMDetail() {
                                                 <div className="text-center">
                                                     <div
                                                         className="text-4xl mb-2">{getOSIcon(config.os_name || '')}</div>
-                                                    <div className="text-xs text-gray-400">虚拟机未运行，无法获取截图
+                                                    <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>虚拟机未运行，无法获取截图
                                                     </div>
                                                 </div>
                                             );
@@ -1934,7 +2163,7 @@ function VMDetail() {
 
             {/* 右侧面板：历史资源用量 */}
             <Col span={8} style={{padding: '0'}}>
-                <Card title="资源用量" size="small" variant="borderless" className="shadow-sm glass-card-transparent" style={{padding: '0'}}
+                <Card title="资源用量" size="small" variant="borderless" className="shadow-sm glass-card-transparent h-full" style={{padding: '0', minHeight: '780px'}}
                       extra={
                           <Radio.Group value={timeRange} onChange={e => setTimeRange(e.target.value)} size="small"
                                        optionType="button" buttonStyle="solid">
@@ -1957,61 +2186,79 @@ function VMDetail() {
                         </Radio.Group>
                     </div>
 
-                    <div className="space-y-4 h-[calc(100%-40px)] flex flex-col" style={{padding: '0'}}>
+                    <div className="space-y-4 flex flex-col" style={{padding: '0'}}>
                         {chartView === 'performance' && (
                             <>
-                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
                                     <ReactECharts
                                         option={getChartOption('CPU使用率', monitorData.cpu, '#3b82f6', monitorData.labels)}
-                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
+                                        style={{height: '100%', width: '100%'}}
+                                        notMerge={true}
+                                    />
                                 </div>
-                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
                                     <ReactECharts
                                         option={getChartOption('RAM使用率', monitorData.memory, '#f59e0b', monitorData.labels)}
-                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
+                                        style={{height: '100%', width: '100%'}}
+                                        notMerge={true}
+                                    />
                                 </div>
-                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
                                     <ReactECharts
                                         option={getChartOption('GPU使用率', monitorData.gpu, '#8b5cf6', monitorData.labels, 'MB')}
-                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
+                                        style={{height: '100%', width: '100%'}}
+                                        notMerge={true}
+                                    />
                                 </div>
                             </>
                         )}
                         {chartView === 'resource' && (
                             <>
-                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
                                     <ReactECharts
                                         option={getChartOption('硬盘使用率', monitorData.disk, '#10b981', monitorData.labels)}
-                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
+                                        style={{height: '100%', width: '100%'}}
+                                        notMerge={true}
+                                    />
                                 </div>
-                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
                                     <ReactECharts
                                         option={getChartOption('流量使用率', monitorData.traffic, '#ef4444', monitorData.labels, 'GB')}
-                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
+                                        style={{height: '100%', width: '100%'}}
+                                        notMerge={true}
+                                    />
                                 </div>
-                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
                                     <ReactECharts
                                         option={getChartOption('端口使用数', monitorData.nat, '#6366f1', monitorData.labels, '个')}
-                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
+                                        style={{height: '100%', width: '100%'}}
+                                        notMerge={true}
+                                    />
                                 </div>
                             </>
                         )}
                         {chartView === 'network' && (
                             <>
-                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
                                     <ReactECharts
                                         option={getChartOption('上行带宽率', monitorData.netUp, '#06b6d4', monitorData.labels, 'Mbps')}
-                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
+                                        style={{height: '100%', width: '100%'}}
+                                        notMerge={true}
+                                    />
                                 </div>
-                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
                                     <ReactECharts
                                         option={getChartOption('下行带宽率', monitorData.netDown, '#0891b2', monitorData.labels, 'Mbps')}
-                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
+                                        style={{height: '100%', width: '100%'}}
+                                        notMerge={true}
+                                    />
                                 </div>
-                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 h-[33%] min-h-0 overflow-hidden">
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
                                     <ReactECharts
                                         option={getChartOption('反向代理数', monitorData.proxy, '#ec4899', monitorData.labels, '个')}
-                                        style={{height: '100%', width: '100%', minHeight: '238px'}}/>
+                                        style={{height: '100%', width: '100%'}}
+                                        notMerge={true}
+                                    />
                                 </div>
                             </>
                         )}
@@ -2032,9 +2279,9 @@ function VMDetail() {
                 {vm && vm.config && vm.config.nic_all && Object.keys(vm.config.nic_all).length > 0 ? (
                     <div className="space-y-3">
                         {Object.entries(vm.config.nic_all).map(([nicName, nicConfig]: [string, any]) => (
-                <div key={nicName} className="rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                <div key={nicName} className="rounded-lg p-3 glass-card">
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="font-medium text-gray-700 dark:text-gray-300">{nicName}</span>
+                                    <span className="font-medium">{nicName}</span>
                                     <div className="flex items-center gap-2">
                                         <Tag color={nicConfig.nic_type === 'pub' ? 'blue' : 'green'}>
                                             {nicConfig.nic_type === 'pub' ? '公网' : '内网'}
@@ -2045,25 +2292,25 @@ function VMDetail() {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-gray-500">IPv4:</span>
-                                        <span className="font-mono text-gray-700 dark:text-gray-300">{nicConfig.ip4_addr || '-'}</span>
+                                        <span style={{ color: 'var(--text-secondary)' }}>IPv4:</span>
+                                        <span className="font-mono">{nicConfig.ip4_addr || '-'}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-gray-500">IPv6:</span>
+                                        <span style={{ color: 'var(--text-secondary)' }}>IPv6:</span>
                                         <span
-                                            className="font-mono text-gray-700 dark:text-gray-300 break-all">{nicConfig.ip6_addr || '-'}</span>
+                                            className="font-mono break-all">{nicConfig.ip6_addr || '-'}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-gray-500">MAC:</span>
+                                        <span style={{ color: 'var(--text-secondary)' }}>MAC:</span>
                                         <span
-                                            className="font-mono text-gray-700 dark:text-gray-300 break-all">{nicConfig.mac_addr || '-'}</span>
+                                            className="font-mono break-all">{nicConfig.mac_addr || '-'}</span>
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center text-gray-500 py-8">暂无网卡配置</div>
+                    <div className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>暂无网卡配置</div>
                 )}
             </Card>
         },
@@ -2120,20 +2367,20 @@ function VMDetail() {
                                         </Space>
                                     </div>
                                     <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-2">
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">磁盘名称</p>
-                                        <code className="text-sm font-mono text-gray-800 dark:text-gray-200 break-all">{hddName}</code>
+                                        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>磁盘名称</p>
+                                        <code className="text-sm font-mono break-all">{hddName}</code>
                                     </div>
                                     <div className="flex items-center justify-between text-xs">
-                                        <span className="text-gray-500 dark:text-gray-400">容量</span>
+                                        <span style={{ color: 'var(--text-secondary)' }}>容量</span>
                                         <code
-                                            className="px-2 py-0.5 font-medium font-mono text-gray-700 dark:text-gray-300  dark:bg-gray-700/50 rounded">{sizeGB} GB</code>
+                                            className="px-2 py-0.5 font-medium font-mono dark:bg-gray-700/50 rounded">{sizeGB} GB</code>
                                     </div>
                                 </div>
                             )
                         })}
                     </div>
                 ) : (
-                    <div className="text-center text-gray-500 py-8">暂无数据盘</div>
+                    <div className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>暂无数据盘</div>
                 )}
             </Card>
         },
@@ -2162,19 +2409,19 @@ function VMDetail() {
                                 </div>
                                 <div className="space-y-2">
                                     <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">挂载名称</p>
+                                        <p className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>挂载名称</p>
                                         <code
-                                            className="text-sm font-mono text-gray-800 dark:text-gray-200 break-all">{iso.iso_name || '-'}</code>
+                                            className="text-sm font-mono break-all">{iso.iso_name || '-'}</code>
                                     </div>
                                     <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">文件名</p>
+                                        <p className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>文件名</p>
                                         <code
-                                            className="text-sm font-mono text-gray-800 dark:text-gray-200 break-all">{iso.iso_file || '-'}</code>
+                                            className="text-sm font-mono break-all">{iso.iso_file || '-'}</code>
                                     </div>
                                     {iso.iso_hint && (
                                         <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3">
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">备注</p>
-                                            <p className="text-sm text-gray-700 dark:text-gray-300">{iso.iso_hint}</p>
+                                            <p className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>备注</p>
+                                            <p className="text-sm">{iso.iso_hint}</p>
                                         </div>
                                     )}
                                 </div>
@@ -2182,7 +2429,7 @@ function VMDetail() {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center text-gray-500 py-8">暂无ISO挂载</div>
+                    <div className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>暂无ISO挂载</div>
                 )}
             </Card>
         },
@@ -2209,30 +2456,30 @@ function VMDetail() {
                                 </div>
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-500 dark:text-gray-400">外网端口</span>
+                                        <span style={{ color: 'var(--text-secondary)' }}>外网端口</span>
                                         <code className="px-2 py-1 font-medium font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded">
                                             {rule.wan_port || '-'}
                                         </code>
                                     </div>
-                                    <div className="flex items-center justify-center text-gray-400">
+                                    <div className="flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>
                                         <span className="iconify" data-icon="mdi:arrow-down" style={{width: '20px', height: '20px'}}></span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-500 dark:text-gray-400">内网端口</span>
+                                        <span style={{ color: 'var(--text-secondary)' }}>内网端口</span>
                                         <code className="px-2 py-1 font-medium font-mono text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 rounded">
                                             {rule.lan_port || '-'}
                                         </code>
                                     </div>
                                     <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mt-2">
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">内网地址</p>
-                                        <code className="text-sm font-mono text-gray-800 dark:text-gray-200 break-all">
+                                        <p className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>内网地址</p>
+                                        <code className="text-sm font-mono break-all">
                                             {rule.lan_addr || '-'}
                                         </code>
                                     </div>
                                     {rule.nat_tips && (
                                         <div className="bg-yellow-50 dark:bg-yellow-900/30 rounded-lg p-3 mt-2">
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">备注</p>
-                                            <p className="text-sm text-gray-700 dark:text-gray-300">{rule.nat_tips}</p>
+                                            <p className="text-xs mb-1">备注</p>
+                                            <p className="text-sm">{rule.nat_tips}</p>
                                         </div>
                                     )}
                                 </div>
@@ -2240,7 +2487,7 @@ function VMDetail() {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center text-gray-500 py-8">暂无NAT端口转发规则</div>
+                    <div className="text-center  py-8">暂无NAT端口转发规则</div>
                 )}
             </Card>
         },
@@ -2258,9 +2505,9 @@ function VMDetail() {
                                  className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-pink-400 dark:hover:border-pink-500">
                                 <div className="flex items-center justify-between mb-3">
                                     <span className={`px-2 py-0.5 text-xs font-medium rounded ${
-                                        proxy.ssl_enabled 
-                                            ? 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40' 
-                                            : 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/40'
+                                        proxy.ssl_enabled
+                                            ? 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40'
+                                            : 'bg-gray-100 dark:bg-gray-700/40'
                                     }`}>
                                         {proxy.ssl_enabled ? 'HTTPS' : 'HTTP'}
                                     </span>
@@ -2269,23 +2516,23 @@ function VMDetail() {
                                             onClick={() => handleDeleteProxy(index)}>删除</Button>
                                 </div>
                                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-2">
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">域名</p>
-                                    <code className="text-sm font-mono text-gray-800 dark:text-gray-200 break-all">{proxy.domain}</code>
+                                    <p className="text-xs mb-1">域名</p>
+                                    <code className="text-sm font-mono break-all">{proxy.domain}</code>
                                 </div>
                                 <div className="flex items-center justify-between text-xs mb-2">
-                                    <span className="text-gray-500 dark:text-gray-400">后端地址</span>
-                                    <code className="px-2 py-0.5 font-medium font-mono text-gray-700 dark:text-gray-300  dark:bg-gray-700/50 rounded">
+                                    <span className="">后端地址</span>
+                                    <code className="px-2 py-0.5 font-medium font-mono dark:bg-gray-700/50 rounded">
                                         {proxy.backend_ip || '默认'}:{proxy.backend_port}
                                     </code>
                                 </div>
                                 {proxy.description && (
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{proxy.description}</p>
+                                    <p className="text-xs  mt-2">{proxy.description}</p>
                                 )}
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center text-gray-500 py-8">暂无反向代理配置</div>
+                    <div className="text-center  py-8">暂无反向代理配置</div>
                 )}
             </Card>
         },
@@ -2300,24 +2547,24 @@ function VMDetail() {
                         {Object.entries(vm.config.pci_all).map(([gpuKey, gpuConfig]: [string, any]) => (
                             <div key={gpuKey} className="bg-gray-50/20 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="font-medium text-gray-700 dark:text-gray-300">{gpuConfig.gpu_hint || gpuKey}</span>
+                                    <span className="font-medium">{gpuConfig.gpu_hint || gpuKey}</span>
                                     <Button danger size="small" onClick={() => handleDeleteGpu(gpuKey)}>删除</Button>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-gray-500">UUID:</span>
-                                        <span className="font-mono text-gray-700 dark:text-gray-300">{gpuConfig.gpu_uuid || '-'}</span>
+                                        <span className="">UUID:</span>
+                                        <span className="font-mono">{gpuConfig.gpu_uuid || '-'}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-gray-500">MDEV:</span>
-                                        <span className="font-mono text-gray-700 dark:text-gray-300">{gpuConfig.gpu_mdev || '-'}</span>
+                                        <span className="">MDEV:</span>
+                                        <span className="font-mono">{gpuConfig.gpu_mdev || '-'}</span>
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center text-gray-500 py-8">暂无显卡配置</div>
+                    <div className="text-center  py-8">暂无显卡配置</div>
                 )}
             </Card>
         },
@@ -2338,22 +2585,22 @@ function VMDetail() {
                                 </div>
                                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-2">
                                     <div className="flex justify-between mb-1">
-                                        <span className="text-xs text-gray-500">VID</span>
+                                        <span className="text-xs ">VID</span>
                                         <code className="text-sm font-mono">{usb.vid_uuid || '-'}</code>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-xs text-gray-500">PID</span>
+                                        <span className="text-xs ">PID</span>
                                         <code className="text-sm font-mono">{usb.pid_uuid || '-'}</code>
                                     </div>
                                 </div>
                                 {usb.usb_hint && (
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{usb.usb_hint}</p>
+                                    <p className="text-xs  mt-2">{usb.usb_hint}</p>
                                 )}
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center text-gray-500 py-8">暂无USB直通设备</div>
+                    <div className="text-center  py-8">暂无USB直通设备</div>
                 )}
             </Card>
         },
@@ -2391,17 +2638,17 @@ function VMDetail() {
                                         </Space>
                                     </div>
                                     <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-2">
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">备份名称</p>
+                                        <p className="text-xs mb-1">备份名称</p>
                                         <code
-                                            className="text-sm font-mono text-gray-800 dark:text-gray-200 break-all">{backup.backup_name || '-'}</code>
+                                            className="text-sm font-mono break-all">{backup.backup_name || '-'}</code>
                                     </div>
                                     {backupHint && (
                                         <div className="mb-2">
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">备份注释</p>
-                                            <p className="text-sm text-gray-700 dark:text-gray-300">{backupHint}</p>
+                                            <p className="text-xs mb-1">备份注释</p>
+                                            <p className="text-sm">{backupHint}</p>
                                         </div>
                                     )}
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    <div className="text-xs  ">
                                         <span className="iconify inline" data-icon="mdi:clock-outline"
                                               style={{width: '14px'}}></span>
                                         {' '}{backupDate}
@@ -2411,7 +2658,7 @@ function VMDetail() {
                         })}
                     </div>
                 ) : (
-                    <div className="text-center text-gray-500 py-8">暂无备份</div>
+                    <div className="text-center  py-8">暂无备份</div>
                 )}
             </Card>
         },
@@ -2434,7 +2681,7 @@ function VMDetail() {
                         {owners.map((owner, index) => {
                             const isFirstOwner = index === 0
                             const roleText = isFirstOwner ? '所有者' : '使用者'
-                const roleClass = isFirstOwner ? 'dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' : 'dark:bg-gray-700/40 dark:text-gray-300'
+                const roleClass = isFirstOwner ? 'dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' : 'dark:bg-gray-700/40 dark:'
                             return (
                                 <div key={owner.username || `owner-${index}`}
                                      className="glass-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-blue-400 dark:hover:border-blue-500">
@@ -2442,9 +2689,9 @@ function VMDetail() {
                                         <div className="flex items-center gap-2">
                                             <span className="iconify text-blue-600" data-icon="mdi:account"
                                                   style={{fontSize: '24px'}}></span>
-                                            <span className="font-medium text-gray-800 dark:text-gray-200">{owner.username}</span>
+                                            <span className="font-medium">{owner.username}</span>
                                             {isFirstOwner &&
-                                                <span className="text-xs text-gray-500 ml-1">(主所有者)</span>}
+                                                <span className="text-xs  ml-1">(主所有者)</span>}
                                         </div>
                                         <div className="flex items-center gap-1">
                                             {!isFirstOwner && (
@@ -2473,7 +2720,7 @@ function VMDetail() {
                         })}
                     </div>
                 ) : (
-                    <div className="text-center text-gray-500 py-8">暂无使用者</div>
+                    <div className="text-center  py-8">暂无使用者</div>
                 )}
             </Card>
         },
@@ -2512,20 +2759,30 @@ function VMDetail() {
                     ]}/>
                 </div>
                 <div className="px-6 py-4">
+                    {!hostEnabled && (
+                        <Alert
+                            message="主机已被禁用"
+                            description="该主机已被管理员禁用，所有虚拟机操作（创建、删除、修改、电源控制）均已被禁止。"
+                            type="warning"
+                            showIcon
+                            closable
+                            className="mb-4"
+                        />
+                    )}
                     <div className="flex justify-between items-center">
                         <div className="flex items-center gap-4">
                             <div
-                                className="p-3 rounded text-8xl text-gray-600 dark:text-gray-300 flex items-center justify-center w-30 h-30">
+                                className="p-3 rounded text-8xl flex items-center justify-center w-30 h-30">
                                 {getOSIcon(config.os_name || '')}
                             </div>
                             <div>
                                 <div className="flex items-center gap-3">
-                                    <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 m-0">{config.vm_uuid}</h1>
-                                    <Tag color="blue">{vm.config?.virt_type || 'Hyper-V'}</Tag>
+                                    <h1 className="text-3xl font-bold dark:text-white m-0">{config.vm_uuid}</h1>
+                                    <Tag color="blue">{hostConfig?.server_type || vm.config?.virt_type || 'Hyper-V'}</Tag>
                                     <Badge status={getStatusColor(displayStatus)}
                                            text={getStatusText(displayStatus)}/>
                                     <span
-                                        className="dark:text-gray-400 text-sm border-l pl-3 ml-1">
+                                        className="text-sm border-l pl-3 ml-1">
                                         IPv4 : {vm.ipv4_address || '未分配'} <CopyOutlined className="cursor-pointer"
                                                                                            onClick={() => handleCopyPassword(vm.ipv4_address || '', 'IPv4')}/>
                                         &nbsp;| IPv6 : {vm.ipv6_address || '未分配'} <CopyOutlined
@@ -2535,24 +2792,25 @@ function VMDetail() {
                                 </div>
                                 <div className="flex gap-4 mt-2 text-sm ">
                                     <span>主机名称: {hostName}</span>
-                                    <span>主机类型: {vm.config?.virt_type || 'Hyper-V'}</span>
+                                    <span>主机类型: {hostConfig?.server_type || vm.config?.virt_type || 'Hyper-V'}</span>
                                     <span>系统: {getOSDisplayName(config.os_name || '')}</span>
                                 </div>
                             </div>
                         </div>
                         <Space>
-                            <Button type="primary" className="bg-blue-600" onClick={handleOpenVNC}>一键远程</Button>
-                            <Button onClick={() => setPasswordModalVisible(true)}>设置密码</Button>
+                            <Button type="primary" className="bg-blue-600" onClick={handleOpenVNC} disabled={!hostEnabled || operationLocked}>一键远程</Button>
+                            <Button onClick={() => setPasswordModalVisible(true)} disabled={!hostEnabled || operationLocked}>设置密码</Button>
                             <Dropdown menu={powerMenuProps}>
                                 <Button icon={defaultPowerAction.icon}
-                                        onClick={() => handlePowerAction(defaultPowerAction.key)}>
+                                        onClick={() => handlePowerAction(defaultPowerAction.key)}
+                                        disabled={!hostEnabled || operationLocked}>
                                     {defaultPowerAction.label} <DownOutlined/>
                                 </Button>
                             </Dropdown>
 
-                            <Button onClick={() => setReinstallModalVisible(true)}>重装系统</Button>
+                            <Button onClick={() => setReinstallModalVisible(true)} disabled={!hostEnabled || operationLocked}>重装系统</Button>
                             <Button icon={<ReloadOutlined/>} onClick={() => loadVMDetail(false)}/>
-                            <Dropdown menu={actionMenu}><Button icon={<MoreOutlined/>}/></Dropdown>
+                            <Dropdown menu={actionMenu}><Button icon={<MoreOutlined/>} disabled={!hostEnabled || operationLocked}/></Dropdown>
                         </Space>
                     </div>
                 </div>
@@ -2637,14 +2895,14 @@ function VMDetail() {
                             <Row gutter={8}>
                                 <Col span={8}>
                                     <div className="mb-2"><span
-                                        className="text-xs text-gray-500 block">网卡名称</span><Input value={nic.name}
+                                        className="text-xs  block">网卡名称</span><Input value={nic.name}
                                                                                                       onChange={e => updateEditNic(nic.id, 'name', e.target.value)}
                                                                                                       size="small"/>
                                     </div>
                                 </Col>
                                 <Col span={8}>
                                     <div className="mb-2"><span
-                                        className="text-xs text-gray-500 block">类型</span><Select value={nic.type}
+                                        className="text-xs  block">类型</span><Select value={nic.type}
                                                                                                    onChange={val => updateEditNic(nic.id, 'type', val)}
                                                                                                    size="small"
                                                                                                    style={{width: '100%'}}><Select.Option
@@ -2653,14 +2911,14 @@ function VMDetail() {
                                 </Col>
                                 <Col span={8}>
                                     <div className="mb-2"><span
-                                        className="text-xs text-gray-500 block">IPv4地址</span><Input value={nic.ip}
+                                        className="text-xs  block">IPv4地址</span><Input value={nic.ip}
                                                                                                       onChange={e => updateEditNic(nic.id, 'ip', e.target.value)}
                                                                                                       placeholder="自动分配"
                                                                                                       size="small"/>
                                     </div>
                                 </Col>
                                 <Col span={24}>
-                                    <div><span className="text-xs text-gray-500 block">IPv6地址 (可选)</span><Input
+                                    <div><span className="text-xs  block">IPv6地址 (可选)</span><Input
                                         value={nic.ip6} onChange={e => updateEditNic(nic.id, 'ip6', e.target.value)}
                                         placeholder="自动分配" size="small"/></div>
                                 </Col>
@@ -2678,15 +2936,31 @@ function VMDetail() {
                     <Space><input type="checkbox" id="saveConfirmCheck" checked={saveConfirmChecked}
                                   onChange={(e) => setSaveConfirmChecked(e.target.checked)}
                                   className="w-4 h-4 text-blue-600"/><label htmlFor="saveConfirmCheck"
-                                                                            className="cursor-pointer select-none text-sm text-gray-700">我已确认强制关闭虚拟机</label></Space>
+                                                                            className="cursor-pointer select-none text-sm ">我已确认强制关闭虚拟机</label></Space>
                 </div>
             </Modal>
 
             <Modal title={currentAction?.title} open={actionConfirmModalVisible}
                    onCancel={() => setActionConfirmModalVisible(false)} onOk={executeAction}
-                   okButtonProps={{disabled: currentAction?.requireShutdown && !currentAction?.confirmChecked}}
+                   okButtonProps={{
+                       disabled: (currentAction?.requireShutdown && !currentAction?.confirmChecked) ||
+                                 (currentAction?.requireInput && currentAction?.confirmInput !== currentAction?.expectedInput)
+                   }}
+                   mask={false}
                    width={400}>
                 <div className="mb-4"><p>{currentAction?.content}</p></div>
+                {currentAction?.requireInput && (
+                    <div className="mb-4">
+                        <Input
+                            placeholder="\u8bf7\u8f93\u5165\u865a\u62df\u673a\u540d\u79f0"
+                            value={currentAction.confirmInput}
+                            onChange={(e) => setCurrentAction({
+                                ...currentAction,
+                                confirmInput: e.target.value
+                            })}
+                        />
+                    </div>
+                )}
                 {currentAction?.requireShutdown && (
                     <div className="p-3 bg-gray-50 border border-gray-200 rounded flex items-center justify-center">
                         <Space><input type="checkbox" id="actionConfirmCheck" checked={currentAction.confirmChecked}
@@ -2694,7 +2968,7 @@ function VMDetail() {
                                           ...currentAction,
                                           confirmChecked: e.target.checked
                                       })} className="w-4 h-4 text-blue-600"/><label htmlFor="actionConfirmCheck"
-                                                                                    className="cursor-pointer select-none text-sm text-gray-700">我已确认强制关闭虚拟机</label></Space>
+                                                                                    className="cursor-pointer select-none text-sm ">我已确认强制关闭虚拟机</label></Space>
                     </div>
                 )}
             </Modal>
@@ -2808,12 +3082,12 @@ function VMDetail() {
                    onOk={handleMountHDD} okText="确认挂载" okButtonProps={{disabled: !mountHddConfirmChecked}}
                    confirmLoading={hddActionLoading}>
                 <p>确定要挂载数据盘 "<strong>{currentMountHdd?.hdd_path}</strong>" 吗？</p>
-                <p className="text-gray-500 text-sm mt-2 mb-4">挂载后需要在系统内进行配置才能使用。</p>
+                <p className=" text-sm mt-2 mb-4">挂载后需要在系统内进行配置才能使用。</p>
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded flex items-center">
                     <Space><input type="checkbox" id="mountHddCheck" checked={mountHddConfirmChecked}
                                   onChange={(e) => setMountHddConfirmChecked(e.target.checked)}
                                   className="w-4 h-4 text-blue-600"/><label htmlFor="mountHddCheck"
-                                                                            className="cursor-pointer select-none text-sm text-gray-700">我已同意强制关机此虚拟机</label></Space>
+                                                                            className="cursor-pointer select-none text-sm ">我已同意强制关机此虚拟机</label></Space>
                 </div>
             </Modal>
 
@@ -2826,7 +3100,7 @@ function VMDetail() {
                     <Space><input type="checkbox" id="unmountHddCheck" checked={unmountHddConfirmChecked}
                                   onChange={(e) => setUnmountHddConfirmChecked(e.target.checked)}
                                   className="w-4 h-4 text-blue-600"/><label htmlFor="unmountHddCheck"
-                                                                            className="cursor-pointer select-none text-sm text-gray-700">我已同意强制关机此虚拟机</label></Space>
+                                                                            className="cursor-pointer select-none text-sm ">我已同意强制关机此虚拟机</label></Space>
                 </div>
             </Modal>
 
@@ -2850,7 +3124,7 @@ function VMDetail() {
                     <Space><input type="checkbox" id="isoMountCheck" checked={isoMountConfirmChecked}
                                   onChange={(e) => setIsoMountConfirmChecked(e.target.checked)}
                                   className="w-4 h-4 text-purple-600"/><label htmlFor="isoMountCheck"
-                                                                              className="cursor-pointer select-none text-sm text-gray-700">我已同意强制关机此虚拟机</label></Space>
+                                                                              className="cursor-pointer select-none text-sm ">我已同意强制关机此虚拟机</label></Space>
                 </div>
             </Modal>
 
@@ -2863,7 +3137,7 @@ function VMDetail() {
                     <Space><input type="checkbox" id="unmountIsoCheck" checked={unmountIsoConfirmChecked}
                                   onChange={(e) => setUnmountIsoConfirmChecked(e.target.checked)}
                                   className="w-4 h-4 text-orange-600"/><label htmlFor="unmountIsoCheck"
-                                                                              className="cursor-pointer select-none text-sm text-gray-700">我已同意强制关机此虚拟机</label></Space>
+                                                                              className="cursor-pointer select-none text-sm ">我已同意强制关机此虚拟机</label></Space>
                 </div>
             </Modal>
 
@@ -2885,7 +3159,7 @@ function VMDetail() {
                     <Space><input type="checkbox" id="reinstallCheck" checked={reinstallConfirmChecked}
                                   onChange={(e) => setReinstallConfirmChecked(e.target.checked)}
                                   className="w-4 h-4 text-red-600"/><label htmlFor="reinstallCheck"
-                                                                           className="cursor-pointer select-none text-sm text-gray-700">我已备份数据，确认重装系统将清空系统盘数据</label></Space>
+                                                                           className="cursor-pointer select-none text-sm ">我已备份数据，确认重装系统将清空系统盘数据</label></Space>
                 </div>
             </Modal>
 
@@ -2902,7 +3176,7 @@ function VMDetail() {
                     <Space><input type="checkbox" id="backupCreateCheck" checked={backupCreateConfirmChecked}
                                   onChange={(e) => setBackupCreateConfirmChecked(e.target.checked)}
                                   className="w-4 h-4 text-purple-600"/><label htmlFor="backupCreateCheck"
-                                                                              className="cursor-pointer select-none text-sm text-gray-700">我已确认停止当前虚拟机进行备份操作（未保存的数据将丢失）</label></Space>
+                                                                              className="cursor-pointer select-none text-sm ">我已确认停止当前虚拟机进行备份操作（未保存的数据将丢失）</label></Space>
                 </div>
             </Modal>
 
@@ -2912,7 +3186,7 @@ function VMDetail() {
                    confirmLoading={backupActionLoading}>
                 <p className="mb-4">为虚拟机 "<strong>{uuid}</strong>" 还原备份</p>
                 <div className="mb-4 bg-blue-50 border border-blue-200 rounded p-3">
-                    <p className="text-sm text-gray-700 mb-1">备份名称：<span
+                    <p className="text-sm  mb-1">备份名称：<span
                         className="font-mono text-blue-700">{currentRestoreBackup}</span></p>
                 </div>
                 <div className="space-y-3 mb-6">
@@ -2920,13 +3194,13 @@ function VMDetail() {
                         <Space><input type="checkbox" id="restoreCheck1" checked={restoreConfirmChecked1}
                                       onChange={(e) => setRestoreConfirmChecked1(e.target.checked)}
                                       className="w-4 h-4 text-blue-600"/><label htmlFor="restoreCheck1"
-                                                                                className="cursor-pointer select-none text-sm text-gray-700">我已确认停止当前虚拟机进行还原操作</label></Space>
+                                                                                className="cursor-pointer select-none text-sm ">我已确认停止当前虚拟机进行还原操作</label></Space>
                     </div>
                     <div className="p-3 bg-red-50 border border-red-200 rounded flex items-center">
                         <Space><input type="checkbox" id="restoreCheck2" checked={restoreConfirmChecked2}
                                       onChange={(e) => setRestoreConfirmChecked2(e.target.checked)}
                                       className="w-4 h-4 text-red-600"/><label htmlFor="restoreCheck2"
-                                                                               className="cursor-pointer select-none text-sm text-gray-700">我已确认备份数据，将丢失系统盘数据</label></Space>
+                                                                               className="cursor-pointer select-none text-sm ">我已确认备份数据，将丢失系统盘数据</label></Space>
                     </div>
                 </div>
             </Modal>
@@ -2952,7 +3226,7 @@ function VMDetail() {
                 <div className="mb-4"><label className="block mb-2 text-sm font-medium">新所有者用户名</label><Input
                     value={transferOwnerUsername} onChange={(e) => setTransferOwnerUsername(e.target.value)}
                     placeholder="请输入用户名"/>
-                    <p className="text-xs text-gray-500 mt-1">移交后该用户将成为虚拟机的所有者，占用资源配额，您将不再占用此虚拟机资源配额</p>
+                    <p className="text-xs  mt-1">移交后该用户将成为虚拟机的所有者，占用资源配额，您将不再占用此虚拟机资源配额</p>
                 </div>
                 <div className="mb-4"><Space direction="vertical">
                     <Checkbox checked={keepAccessChecked} onChange={(e) => setKeepAccessChecked(e.target.checked)}>保留我的访问权限

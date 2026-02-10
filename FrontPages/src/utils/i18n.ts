@@ -427,7 +427,7 @@ function renderLanguageDropdown(): void {
 
   dropdown.innerHTML = i18nState.availableLanguages.map(lang => `
     <button onclick="window.i18n.changeLanguage('${lang.code}')" 
-            class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 ${lang.code === i18nState.currentLanguage ? 'bg-blue-50 text-blue-600' : 'text-gray-700'}">
+            class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 ${lang.code === i18nState.currentLanguage ? 'bg-blue-50 text-blue-600' : ''}">
         <span class="iconify" data-icon="${lang.code === i18nState.currentLanguage ? 'mdi:check' : 'mdi:translate'}" data-width="16"></span>
         <span>${lang.native}</span>
     </button>

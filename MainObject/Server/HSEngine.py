@@ -27,7 +27,7 @@ HEConfig = {
             "gpu_num"
         ],
         "Tab_Lock": [
-
+            "pci"
         ]
     },
     "LxContainer": {
