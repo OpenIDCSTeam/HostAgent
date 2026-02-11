@@ -13,3 +13,5 @@ start_wrapper.py
 BuildCache
 .idea/CopilotChatTabs.xml
 .idea/CopilotChatHistory.xml
+.trae
+.idea/OpenIDCS-Client.iml

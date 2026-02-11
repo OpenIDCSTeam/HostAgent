@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.13 (OpenIDCS-Client)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.13 (OpenIDCS-Client)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.13 OpenIDCS-Cli" project-jdk-type="Python SDK" />
 </project>
