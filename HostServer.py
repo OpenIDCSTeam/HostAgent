@@ -1929,7 +1929,11 @@ if __name__ == '__main__':
         
         # 初始化应用
         logger.info("正在初始化应用...")
-        init_app()
+        if is_frozen or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+            init_app()
+        else:
+            logger.info("检测到调试重载父进程，跳过初始化，等待子进程启动")
+
         
         logger.info(f"\n{'=' * 60}")
         logger.info(f"OpenIDCS Server 启动中...")

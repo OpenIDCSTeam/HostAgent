@@ -319,6 +319,10 @@ class HttpManager:
             print(f"停止Caddy时发生错误: {str(e)}")
             return False
 
+    # Caddy运行状态检查 ##########################################################################
+    def is_web_running(self):
+        return self.binary_proc is not None and self.binary_proc.poll() is None
+
     # 重载Caddy配置 ##############################################################################
     def reload_web(self):
         """重载Caddy配置"""
@@ -335,7 +339,8 @@ class HttpManager:
                     print(f"Caddy配置已重载（管理端口: {self.manage_port}）")
                     return True
                 else:
-                    print(f"重载失败，尝试启动服务: {result.stderr}")
+                    print(f"重载失败，尝试重新启动服务: {result.stderr}")
+                    self.closed_web()
                     return self.launch_web()
             else:
                 # Linux/Mac: 如果有进程引用则发送信号
