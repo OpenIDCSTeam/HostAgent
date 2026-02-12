@@ -2423,21 +2423,21 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                     <div className="space-y-4 flex flex-col" style={{padding: '0'}}>
                         {chartView === 'performance' && (
                             <>
-                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '268px', borderRadius: '20px'}}>
                                     <ReactECharts
                                         option={getChartOption('CPU使用率', monitorData.cpu, '#3b82f6', monitorData.labels)}
                                         style={{height: '100%', width: '100%'}}
                                         notMerge={true}
                                     />
                                 </div>
-                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '268px', borderRadius: '20px'}}>
                                     <ReactECharts
                                         option={getChartOption('RAM使用率', monitorData.memory, '#f59e0b', monitorData.labels)}
                                         style={{height: '100%', width: '100%'}}
                                         notMerge={true}
                                     />
                                 </div>
-                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '268px', borderRadius: '20px'}}>
                                     <ReactECharts
                                         option={getChartOption('GPU使用率', monitorData.gpu, '#8b5cf6', monitorData.labels, 'MB')}
                                         style={{height: '100%', width: '100%'}}
@@ -2448,21 +2448,21 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                         )}
                         {chartView === 'resource' && (
                             <>
-                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '268px', borderRadius: '20px'}}>
                                     <ReactECharts
                                         option={getChartOption('硬盘使用率', monitorData.disk, '#10b981', monitorData.labels)}
                                         style={{height: '100%', width: '100%'}}
                                         notMerge={true}
                                     />
                                 </div>
-                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '268px', borderRadius: '20px'}}>
                                     <ReactECharts
                                         option={getChartOption('流量使用率', monitorData.traffic, '#ef4444', monitorData.labels, 'GB')}
                                         style={{height: '100%', width: '100%'}}
                                         notMerge={true}
                                     />
                                 </div>
-                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '268px', borderRadius: '20px'}}>
                                     <ReactECharts
                                         option={getChartOption('端口使用数', monitorData.nat, '#6366f1', monitorData.labels, '个')}
                                         style={{height: '100%', width: '100%'}}
@@ -2473,21 +2473,21 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                         )}
                         {chartView === 'network' && (
                             <>
-                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '268px', borderRadius: '20px'}}>
                                     <ReactECharts
                                         option={getChartOption('上行带宽率', monitorData.netUp, '#06b6d4', monitorData.labels, 'Mbps')}
                                         style={{height: '100%', width: '100%'}}
                                         notMerge={true}
                                     />
                                 </div>
-                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '268px', borderRadius: '20px'}}>
                                     <ReactECharts
                                         option={getChartOption('下行带宽率', monitorData.netDown, '#0891b2', monitorData.labels, 'Mbps')}
                                         style={{height: '100%', width: '100%'}}
                                         notMerge={true}
                                     />
                                 </div>
-                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '220px'}}>
+                                <div className="backdrop-blur-md bg-white/10 dark:bg-black/10 rounded p-2 overflow-hidden flex-shrink-0" style={{height: '268px', borderRadius: '20px'}}>
                                     <ReactECharts
                                         option={getChartOption('反向代理数', monitorData.proxy, '#ec4899', monitorData.labels, '个')}
                                         style={{height: '100%', width: '100%'}}
@@ -2606,7 +2606,7 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                                             )}
                                         </Space>
                                     </div>
-                                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-2">
+                                    <div className="rounded-lg p-3 mb-2">
                                         <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>磁盘名称</p>
                                         <code className="text-sm font-mono break-all">{hddName}</code>
                                     </div>
@@ -2713,7 +2713,7 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                                             {rule.lan_port || '-'}
                                         </code>
                                     </div>
-                                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mt-2">
+                                    <div className="rounded-lg p-3 mt-2">
                                         <p className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>内网地址</p>
                                         <code className="text-sm font-mono break-all">
                                             {rule.lan_addr || '-'}
@@ -2759,7 +2759,7 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                                             disabled={!hasPermission(userPermissions, VM_PERMISSION.WEB_EDITS)}
                                             onClick={() => handleDeleteProxy(index)}>删除</Button>
                                 </div>
-                                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-2">
+                                <div className="rounded-lg p-3 mb-2">
                                     <p className="text-xs mb-1">域名</p>
                                     <code className="text-sm font-mono break-all">{proxy.domain}</code>
                                 </div>
@@ -2830,7 +2830,7 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                                     </span>
                                     <Button danger size="small" icon={<DeleteOutlined/>} onClick={() => handleDeleteUSB(usb.key)} loading={usbActionLoading}>删除</Button>
                                 </div>
-                                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-2">
+                                <div className="rounded-lg p-3 mb-2">
                                     <div className="flex justify-between mb-1">
                                         <span className="text-xs ">VID</span>
                                         <code className="text-sm font-mono">{usb.vid_uuid || '-'}</code>
@@ -2887,7 +2887,7 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                                                     onClick={() => handleDeleteBackup(backup.backup_name!)}>删除</Button>
                                         </Space>
                                     </div>
-                                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-2">
+                                    <div className="rounded-lg p-3 mb-2">
                                         <p className="text-xs mb-1">备份名称</p>
                                         <code
                                             className="text-sm font-mono break-all">{backup.backup_name || '-'}</code>
@@ -3274,7 +3274,7 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                     <Space><input type="checkbox" id="saveConfirmCheck" checked={saveConfirmChecked}
                                   onChange={(e) => setSaveConfirmChecked(e.target.checked)}
                                   className="w-4 h-4 text-blue-600"/><label htmlFor="saveConfirmCheck"
-                                                                            className="cursor-pointer select-none text-sm ">我已确认强制关闭虚拟机</label></Space>
+                                                                            className="cursor-pointer select-none text-sm ">我已确认关闭虚拟机</label></Space>
                 </div>
             </Modal>
 
@@ -3306,7 +3306,7 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                                           ...currentAction,
                                           confirmChecked: e.target.checked
                                       })} className="w-4 h-4 text-blue-600"/><label htmlFor="actionConfirmCheck"
-                                                                                    className="cursor-pointer select-none text-sm ">我已确认强制关闭虚拟机</label></Space>
+                                                                                    className="cursor-pointer select-none text-sm ">我已确认关闭虚拟机</label></Space>
                     </div>
                 )}
             </Modal>

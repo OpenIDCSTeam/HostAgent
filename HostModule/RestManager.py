@@ -2906,9 +2906,13 @@ class RestManager:
                             # 获取虚拟机密码
                             vm_pass = vm_config.os_pass
                             vm_flag = str(vm_config.vm_flag)
-                            if vm_flag == VMPowers.S_CLOSE or vm_flag == VMPowers.ON_STOP:
+                            if vm_flag == 'S_CLOSE' or vm_flag == 'ON_STOP':
                                 logger.info(f"[虚拟机上报] 虚拟机 {vm_uuid} 已关闭")
                                 vm_config.vm_flag = VMPowers.STOPPED
+                                server.data_set()
+                            if vm_flag == 'S_START' or vm_flag =='ON_OPEN':
+                                logger.info(f"[虚拟机上报] 虚拟机 {vm_uuid} 已开机")
+                                vm_config.vm_flag = VMPowers.STARTED
                                 server.data_set()
                             return self.api_response(200, f'虚拟机 {vm_uuid} 状态已更新', {
                                 'hs_name': hs_name,

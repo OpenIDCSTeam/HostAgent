@@ -338,13 +338,17 @@ class HostManage:
             
             # 启动HTTP实例 ======================================================
             try:
-                self.proxys = HttpManager()
-                self.proxys.config_all()
-                self.proxys.launch_web()
-                logger.debug('[加载配置] HTTP代理服务已启动')
+                if getattr(self, "proxys", None) and self.proxys.is_web_running():
+                    logger.debug('[加载配置] HTTP代理服务已存在，跳过重复启动')
+                else:
+                    self.proxys = HttpManager()
+                    self.proxys.config_all()
+                    self.proxys.launch_web()
+                    logger.debug('[加载配置] HTTP代理服务已启动')
             except Exception as e:
                 logger.error(f'[加载配置] 启动HTTP代理服务失败: {e}')
                 traceback.print_exc()
+
             
             # 加载所有主机配置 ==================================================
             try:

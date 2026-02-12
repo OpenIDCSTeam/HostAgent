@@ -169,7 +169,7 @@ export const getGPUList = (hsName: string): Promise<ApiResponse<Record<string, a
  * 获取主机可直通PCI设备列表
  */
 export const getPCIList = (hsName: string): Promise<ApiResponse<Record<string, { gpu_uuid: string; gpu_mdev: string; gpu_hint: string }>>> => {
-  return http.get(`/api/client/pci-list/${hsName}`);
+  return http.get(`/api/client/pci-list/${hsName}`, { timeout: 300000 });
 };
 
 /**

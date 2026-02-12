@@ -211,10 +211,10 @@ class HostServer(BasicServer):
             connect_result = self.hyperv_api.connect()
             if not connect_result.success:
                 return ""
-            
+
             vm_info = self.hyperv_api.get_vm_info(vm_name)
             self.hyperv_api.disconnect()
-            
+
             if vm_info:
                 state = vm_info.get('State', 0)
                 # 映射Hyper-V状态到中文状态
@@ -277,28 +277,28 @@ class HostServer(BasicServer):
                 # 转换为GB (Size是字节)
                 default_vm_config.hdd_num = total_hdd_size // (1024 * 1024 * 1024)
                 if default_vm_config.hdd_num == 0 and total_hdd_size > 0:
-                    default_vm_config.hdd_num = 1 # 至少1GB
+                    default_vm_config.hdd_num = 1  # 至少1GB
 
                 # 配置网络适配器 ===================================================
                 if 'NetworkAdapters' in vm_info:
                     for nic in vm_info['NetworkAdapters']:
                         nic_name = nic.get('Name', 'Network Adapter')
                         mac_addr = nic.get('MacAddress', '')
-                        
+
                         # 格式化MAC地址 XX:XX:XX:XX:XX:XX
                         if mac_addr and len(mac_addr) == 12 and ":" not in mac_addr:
-                            mac_addr = ":".join([mac_addr[i:i+2] for i in range(0, 12, 2)])
-                        
+                            mac_addr = ":".join([mac_addr[i:i + 2] for i in range(0, 12, 2)])
+
                         switch_name = nic.get('SwitchName', '')
                         ip_addresses = nic.get('IPAddresses', [])
-                        
+
                         # 确定网卡类型
-                        nic_type = "nat" # 默认
+                        nic_type = "nat"  # 默认
                         if self.hs_config.network_pub and switch_name == self.hs_config.network_pub:
-                             nic_type = "pub"
+                            nic_type = "pub"
                         elif self.hs_config.network_nat and switch_name == self.hs_config.network_nat:
-                             nic_type = "nat"
-                        
+                            nic_type = "nat"
+
                         nic_config = NCConfig(
                             mac_addr=mac_addr,
                             nic_type=nic_type,
@@ -361,7 +361,7 @@ class HostServer(BasicServer):
         logger.info(f"[{self.hs_config.server_name}] 开始创建虚拟机: {vm_conf.vm_uuid}")
         logger.info(f"  - CPU: {vm_conf.cpu_num}核, 内存: {vm_conf.mem_num}MB")
         logger.info(f"  - 网卡数量: {len(vm_conf.nic_all)}, 系统镜像: {vm_conf.os_name}")
-        
+
         # 网络检查和IP分配 =====================================================
         vm_conf, net_result = self.NetCheck(vm_conf)
         if not net_result.success:
@@ -485,7 +485,7 @@ class HostServer(BasicServer):
         logger.info(f"  - CPU: {vm_last.cpu_num} -> {vm_conf.cpu_num}核")
         logger.info(f"  - 内存: {vm_last.mem_num} -> {vm_conf.mem_num}MB")
         logger.info(f"  - 硬盘: {vm_last.hdd_num} -> {vm_conf.hdd_num}GB")
-        
+
         # 网络检查和IP分配 =====================================================
         vm_conf, net_result = self.NetCheck(vm_conf)
         if not net_result.success:
@@ -526,7 +526,8 @@ class HostServer(BasicServer):
 
             # 更新CPU和内存配置 ====================================================
             if vm_conf.cpu_num != vm_last.cpu_num or vm_conf.mem_num != vm_last.mem_num:
-                logger.info(f"[{self.hs_config.server_name}] 更新CPU/内存配置: CPU={vm_conf.cpu_num}, MEM={vm_conf.mem_num}MB")
+                logger.info(
+                    f"[{self.hs_config.server_name}] 更新CPU/内存配置: CPU={vm_conf.cpu_num}, MEM={vm_conf.mem_num}MB")
                 update_result = self.hyperv_api.update_vm_config(vm_conf.vm_uuid, vm_conf)
                 if not update_result.success:
                     logger.error(f"[{self.hs_config.server_name}] CPU/内存配置更新失败: {update_result.message}")
@@ -536,18 +537,19 @@ class HostServer(BasicServer):
 
             # 检查是否需要扩容硬盘 =================================================
             if vm_conf.hdd_num > vm_last.hdd_num:
-                logger.info(f"[{self.hs_config.server_name}] 开始扩容系统磁盘: {vm_last.hdd_num}GB -> {vm_conf.hdd_num}GB")
+                logger.info(
+                    f"[{self.hs_config.server_name}] 开始扩容系统磁盘: {vm_last.hdd_num}GB -> {vm_conf.hdd_num}GB")
                 try:
                     # 获取虚拟机主磁盘路径
                     vm_path = os.path.join(self.hs_config.system_path, vm_conf.vm_uuid)
                     vm_disk_path = os.path.join(vm_path, "Virtual Hard Disks", f"{vm_conf.vm_uuid}.vhdx")
-                    
+
                     if os.path.exists(vm_disk_path):
                         # 使用PowerShell扩容磁盘
                         expand_size = (vm_conf.hdd_num - vm_last.hdd_num) * 1024 * 1024 * 1024  # 转换为字节
                         expand_cmd = f"Resize-VHD -Path '{vm_disk_path}' -SizeBytes {vm_conf.hdd_num * 1024 * 1024 * 1024}"
                         expand_result = self.hyperv_api._run_powershell(expand_cmd)
-                        
+
                         if expand_result.success:
                             logger.info(f"[{self.hs_config.server_name}] 磁盘扩容成功: {vm_conf.hdd_num}GB")
                         else:
@@ -592,7 +594,7 @@ class HostServer(BasicServer):
     def VMDelete(self, vm_name: str, rm_back=True) -> ZMessage:
         """删除虚拟机"""
         logger.info(f"[{self.hs_config.server_name}] 开始删除虚拟机: {vm_name}")
-        
+
         # 专用操作 =============================================================
         try:
             # 查询虚拟机配置 =======================================================
@@ -624,7 +626,7 @@ class HostServer(BasicServer):
             if not delete_result.success:
                 logger.error(f"[{self.hs_config.server_name}] 虚拟机删除失败: {delete_result.message}")
                 return delete_result
-            
+
             logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 删除成功")
 
         except Exception as e:
@@ -645,42 +647,42 @@ class HostServer(BasicServer):
         """虚拟机电源管理"""
         # 先调用父类方法设置中间状态
         super().VMPowers(vm_name, power)
-        
         # 专用操作 =============================================================
         try:
             # 连接到Hyper-V服务器 =================================================
             connect_result = self.hyperv_api.connect()
             if not connect_result.success:
                 return connect_result
-
-            # 根据电源操作类型执行相应命令 =========================================
+            # 根据电源操作类型执行相应命令 =====================================
+            # 启动虚拟机 =======================================================
             if power == VMPowers.S_START:
-                # 启动虚拟机 =======================================================
                 hs_result = self.hyperv_api.power_on(vm_name)
+            # 强制关闭虚拟机 ===================================================
             elif power == VMPowers.H_CLOSE:
-                # 强制关闭虚拟机 ===================================================
                 hs_result = self.hyperv_api.power_off(vm_name, force=True)
+            # 暂停虚拟机 =======================================================
             elif power == VMPowers.A_PAUSE:
-                # 暂停虚拟机 =======================================================
                 hs_result = self.hyperv_api.suspend(vm_name)
+            # 恢复虚拟机 =======================================================
             elif power == VMPowers.A_WAKED:
-                # 恢复虚拟机 =======================================================
                 hs_result = self.hyperv_api.resume(vm_name)
-            elif power == VMPowers.H_RESET or power == VMPowers.S_RESET:
-                # 重启虚拟机 =======================================================
+            # 重启虚拟机 =======================================================
+            elif power == VMPowers.H_RESET:
                 hs_result = self.hyperv_api.reset(vm_name)
+            # 软关机重启 =======================================================
+            elif power == VMPowers.S_CLOSE or power == VMPowers.S_RESET:
+                hs_result = ZMessage(
+                    success=True, action="VMPowers",
+                    message=f"已发送VM电源指令: {power}")
+            # 不支持的电源操作 ================================================
             else:
-                # 不支持的电源操作 =================================================
                 hs_result = ZMessage(
                     success=False, action="VMPowers",
                     message=f"不支持的电源操作: {power}")
-
             # 断开Hyper-V连接 =====================================================
             self.hyperv_api.disconnect()
-
             # 记录操作日志 =========================================================
             self.logs_set(hs_result)
-
         except Exception as e:
             # 异常处理 =============================================================
             logger.error(f"虚拟机电源操作失败: {str(e)}")
@@ -711,7 +713,7 @@ class HostServer(BasicServer):
                 user=self.hs_config.hs_user,
                 password=self.hs_config.hs_pass
             )
-            
+
             conn_result = hyper_v.connect()
             if not conn_result.success:
                 logger.error(f"连接Hyper-V失败: {conn_result.message}")
@@ -720,23 +722,23 @@ class HostServer(BasicServer):
             # 获取虚拟机配置中的用户名 =============================================
             vm_config = self.vm_saving[vm_name]
             username = getattr(vm_config, 'os_user', 'Administrator')  # 默认Administrator
-            
+
             # 设置虚拟机密码 =======================================================
             result = hyper_v.set_vm_password(vm_name, username, os_pass)
-            
+
             # 断开Hyper-V连接 =====================================================
             hyper_v.disconnect()
-            
+
             # 检查设置结果 =========================================================
             if result.success:
                 logger.info(f"虚拟机 {vm_name} 密码设置成功")
-                
+
                 # 更新配置中的密码 =================================================
                 self.vm_saving[vm_name].os_pass = os_pass
-                
+
                 # 保存配置到数据库 =================================================
                 self.vm_saving.save()
-                
+
                 # 通用操作 =========================================================
                 return super().VMPasswd(vm_name, os_pass)
             else:
@@ -961,7 +963,7 @@ class HostServer(BasicServer):
         """挂载/卸载虚拟硬盘"""
         action_text = "挂载" if in_flag else "卸载"
         logger.info(f"[{self.hs_config.server_name}] 开始{action_text}虚拟硬盘: {vm_name} - {vm_imgs.hdd_name}")
-        
+
         # 专用操作 =============================================================
         try:
             # 检查虚拟机是否存在 ===================================================
@@ -983,7 +985,8 @@ class HostServer(BasicServer):
             # 执行挂载或卸载操作 ===================================================
             if in_flag:
                 # 挂载磁盘操作 =====================================================
-                logger.info(f"[{self.hs_config.server_name}] 正在添加磁盘: {vm_imgs.hdd_name}, 大小: {vm_imgs.hdd_size}GB")
+                logger.info(
+                    f"[{self.hs_config.server_name}] 正在添加磁盘: {vm_imgs.hdd_name}, 大小: {vm_imgs.hdd_size}GB")
                 add_result = self.hyperv_api.add_disk(
                     vm_name,
                     vm_imgs.hdd_size,
@@ -1050,7 +1053,7 @@ class HostServer(BasicServer):
         """挂载/卸载ISO镜像"""
         action_text = "挂载" if in_flag else "卸载"
         logger.info(f"[{self.hs_config.server_name}] 开始{action_text}ISO镜像: {vm_name} - {vm_imgs.iso_name}")
-        
+
         # 专用操作 ==================================================================
         try:
             # 检查虚拟机是否存在 ====================================================
@@ -1163,7 +1166,7 @@ class HostServer(BasicServer):
             if vm_name not in self.vm_saving:
                 return ZMessage(
                     success=False, action="RMMounts", message="虚拟机不存在")
-            
+
             # 检查磁盘是否存在 ======================================================
             if vm_imgs not in self.vm_saving[vm_name].hdd_all:
                 return ZMessage(
@@ -1171,7 +1174,7 @@ class HostServer(BasicServer):
 
             # 获取虚拟磁盘数据 ======================================================
             hd_data = self.vm_saving[vm_name].hdd_all[vm_imgs]
-            
+
             # 记录操作日志 ==========================================================
             logger.info(f"开始删除虚拟机 {vm_name} 的磁盘: {vm_imgs}")
 
@@ -1189,7 +1192,7 @@ class HostServer(BasicServer):
                 # 如果是相对路径，构建完整路径
                 vm_dir = os.path.join(self.hs_config.vm_path, vm_name)
                 disk_path = os.path.join(vm_dir, disk_path)
-            
+
             # 删除物理磁盘文件 ======================================================
             if os.path.exists(disk_path):
                 try:
@@ -1205,7 +1208,7 @@ class HostServer(BasicServer):
             # 从配置中移除磁盘 ======================================================
             self.vm_saving[vm_name].hdd_all.pop(vm_imgs)
             logger.info(f"从配置中移除磁盘: {vm_imgs}")
-            
+
             # 保存配置到数据库 ======================================================
             self.data_set()
 
@@ -1339,7 +1342,7 @@ class HostServer(BasicServer):
             vm_config = self.vm_saving[vm_name]
             # 检查关机状态
             from MainObject.Config.VMPowers import VMPowers
-            if vm_config.vm_flag not in [VMPowers.ON_STOP, VMPowers.UNKNOWN]:
+            if vm_config.vm_flag not in [VMPowers.STOPPED]:
                 return ZMessage(success=False, action="PCISetup", message="PCI直通需要先关闭虚拟机")
 
             connect_result = self.hyperv_api.connect()
@@ -1628,15 +1631,16 @@ class HostServer(BasicServer):
             if not screenshot_result.success:
                 # 只有在确实出错时才记录警告，如果是虚拟机未运行导致的空输出，则忽略
                 if "VM is not running" not in screenshot_result.message:
-                     logger.warning(f"[{self.hs_config.server_name}] 获取虚拟机 {vm_name} 截图失败: {screenshot_result.message}")
+                    logger.warning(
+                        f"[{self.hs_config.server_name}] 获取虚拟机 {vm_name} 截图失败: {screenshot_result.message}")
                 return ""
 
             output = screenshot_result.message.strip()
-            
+
             # 如果输出为空，可能是虚拟机未运行或截图失败
             if not output:
                 return ""
-            
+
             # 简单的Base64验证
             if len(output) < 100:
                 # 如果返回的是错误信息而不是Base64
