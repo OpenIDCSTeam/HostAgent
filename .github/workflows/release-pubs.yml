@@ -1,0 +1,48 @@
+name: Release Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '发布版本号 (例如 1.2.3)'
+        required: true
+        type: string
+      build_type:
+        description: '构建方式'
+        required: true
+        type: choice
+        options:
+          - cxfreeze
+          - nuitka
+        default: 'cxfreeze'
+      target_platform:
+        description: '目标平台'
+        required: true
+        type: choice
+        options:
+          - windows
+          - linux
+          - all
+        default: 'all'
+
+permissions:
+  contents: write
+
+jobs:
+  release-cxfreeze:
+    if: inputs.build_type == 'cxfreeze'
+    uses: ./.github/workflows/build-freeze.yml
+    with:
+      version: ${{ inputs.version }}
+      target_platform: ${{ inputs.target_platform }}
+      create_release: 'yes'
+    secrets: inherit
+
+  release-nuitka:
+    if: inputs.build_type == 'nuitka'
+    uses: ./.github/workflows/build-nuitka.yml
+    with:
+      version: ${{ inputs.version }}
+      target_platform: ${{ inputs.target_platform }}
+      create_release: 'yes'
+    secrets: inherit

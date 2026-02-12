@@ -1,0 +1,18 @@
+name: Release Beta (Freeze)
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    uses: ./.github/workflows/build-freeze.yml
+    with:
+      version: ''
+      target_platform: 'all'
+      create_release: 'yes'
+    secrets: inherit
