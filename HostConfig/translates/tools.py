@@ -256,8 +256,8 @@ def main():
             indices = [int(x.strip()) for x in choice.split(',')]
             lang_list = list(LANGUAGE_MAP.keys())
             selected_langs = [lang_list[i-1] for i in indices if 1 <= i <= len(lang_list)]
-        except:
-            print("✗ 无效的输入")
+        except Exception as e:
+            print(f"✗ 无效的输入: {e}")
             sys.exit(1)
     
     if not selected_langs:

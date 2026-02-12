@@ -353,9 +353,6 @@ function TaskManage() {
                   <div
                     key={index}
                     className="p-4 transition-colors duration-200 cursor-pointer"
-                    style={{
-                      ':hover': { background: 'var(--bg-hover)' }
-                    }}
                     onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     onClick={() => showTaskDetail(task)}

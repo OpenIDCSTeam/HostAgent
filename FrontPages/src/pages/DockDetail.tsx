@@ -54,7 +54,7 @@ import {
 } from '@ant-design/icons'
 import ReactECharts from 'echarts-for-react'
 import api from '@/utils/apis.ts'
-import {VM_PERMISSION, hasPermission, TAB_PERMISSION_MAP, VM_PERMISSION_LABELS, PERMISSION_FIELD_MASK, HIDDEN_TABS, READONLY_TABS, OWNER_ONLY_TABS} from '@/types'
+import {VM_PERMISSION, hasPermission, TAB_PERMISSION_MAP, VM_PERMISSION_LABELS, PERMISSION_FIELD_MASK, HIDDEN_TABS, OWNER_ONLY_TABS} from '@/types'
 
 interface VGConfig {
     gpu_uuid: string
@@ -273,7 +273,6 @@ function VMDetail() {
     const [form] = Form.useForm()
     const [ipForm] = Form.useForm()
     const [proxyForm] = Form.useForm()
-    const [gpuForm] = Form.useForm()
     const [hddForm] = Form.useForm()
     const [isoForm] = Form.useForm()
     const [ownerForm] = Form.useForm()
@@ -287,7 +286,6 @@ function VMDetail() {
     const [usbList, setUsbList] = useState<any[]>([])
     const [usbModalVisible, setUsbModalVisible] = useState(false)
     const [usbActionLoading, setUsbActionLoading] = useState(false)
-    const [usbForm] = Form.useForm()
 
     // PCI/USB 设备列表State（直通选择用）
     const [pciDeviceList, setPciDeviceList] = useState<Record<string, any>>({})
@@ -364,7 +362,7 @@ function VMDetail() {
     
     // 操作锁定状态 - 执行操作时禁用所有按钮
     const [operationLocked, setOperationLocked] = useState<boolean>(false)
-    const [operationTimeoutId, setOperationTimeoutId] = useState<NodeJS.Timeout | null>(null)
+const [operationTimeoutId, setOperationTimeoutId] = useState<ReturnType<typeof setTimeout> | null>(null)
 
     // 计算所有可用的IP地址
     const availableIPs = useMemo(() => {
@@ -1579,7 +1577,7 @@ function VMDetail() {
         // 先关机
         try {
             const hide = message.loading('正在关闭虚拟机...', 0)
-            await api.vmPower(hostName!, uuid!, 'shutdown')
+await api.vmPower(hostName!, uuid!, 'H_CLOSE')
             hide()
             message.success('虚拟机已关闭，正在执行PCI直通操作...')
             // 等待一小段时间让状态更新

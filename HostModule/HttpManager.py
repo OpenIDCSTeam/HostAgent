@@ -5,6 +5,7 @@ import random
 import traceback
 import subprocess
 from pathlib import Path
+from loguru import logger
 from HostModule.DataManager import DataManager
 
 
@@ -47,7 +48,7 @@ class HttpManager:
         self.db_manager = DataManager()
         # 生成初始的配置 ===================================
         self.config_all()
-        print(f"HttpManager初始化完成，"
+        logger.info(f"[HttpManager] 初始化完成，"
               f"管理端口: {self.manage_port}，"
               f"配置文件: {self.config_file}")
 
@@ -182,7 +183,7 @@ class HttpManager:
             # 检查是否已有相同token的配置 ======================
             for port, token_dict in self.proxys_sshd.items():
                 if token in token_dict:
-                    print(f"令牌 {token} 的SSH代理配置已存在")
+                    logger.warning(f"[HttpManager] 令牌 {token} 的SSH代理配置已存在")
                     return False
             # 如SSH未启动则启动 ================================
             if self.proxys_port == 0:
@@ -193,7 +194,7 @@ class HttpManager:
                 proxy_conf[1] += "/" + path
             proxy_port = str(self.proxys_port)
             self.proxys_sshd[proxy_port][token] = proxy_conf
-            print(f"SSH代理已添加: "
+            logger.info(f"[HttpManager] SSH代理已添加: "
                   f"/{token} -> {target_ip}:{target_port}"
                   f" (统一端口: {str(self.proxys_port)})")
             # 重新生成配置文件 =================================
@@ -202,8 +203,8 @@ class HttpManager:
             return self.reload_web()
 
         except Exception as e:
-            print(f"添加SSH代理配置时发生错误: {str(e)}")
-            traceback.print_exc()
+            logger.error(f"[HttpManager] 添加SSH代理配置时发生错误: {str(e)}")
+            logger.debug(traceback.format_exc())
             return False
 
     # 添加代理配置 ###############################################################################
@@ -212,7 +213,7 @@ class HttpManager:
         try:
             # 检查域名是否已存在
             if domain in self.proxys_list:
-                print(f"域名 {domain} 的配置已存在")
+                logger.warning(f"[HttpManager] 域名 {domain} 的配置已存在")
                 return False
 
             # 添加到内存配置
@@ -235,7 +236,7 @@ class HttpManager:
             return self.reload_web()
 
         except Exception as e:
-            print(f"添加代理配置时发生错误: {str(e)}")
+            logger.error(f"[HttpManager] 添加代理配置时发生错误: {str(e)}")
             # 回滚
             if domain in self.proxys_list:
                 del self.proxys_list[domain]
@@ -247,8 +248,8 @@ class HttpManager:
         try:
             # 检查域名是否存在
             if domain not in self.proxys_list:
-                print(f"未找到匹配的代理配置: {domain}")
-                print(f"当前已有的域名: {list(self.proxys_list.keys())}")
+                logger.warning(f"[HttpManager] 未找到匹配的代理配置: {domain}")
+                logger.debug(f"[HttpManager] 当前已有的域名: {list(self.proxys_list.keys())}")
                 return False
 
             # 备份配置（用于回滚）
@@ -275,7 +276,7 @@ class HttpManager:
             return result
 
         except Exception as e:
-            print(f"删除代理配置时发生错误: {str(e)}")
+            logger.error(f"[HttpManager] 删除代理配置时发生错误: {str(e)}")
             return False
 
     # 启动Caddy服务 ##############################################################################
@@ -284,21 +285,21 @@ class HttpManager:
         try:
             cmd = [self.binary_path, "run", "--config", str(self.config_file), "--adapter", "caddyfile"]
 
-            print(" ".join(cmd))
+            logger.info(f"[HttpManager] 启动Caddy命令: {' '.join(cmd)}")
             self.binary_proc = subprocess.Popen(cmd, shell=True)
             time.sleep(2)  # 等待进程启动
 
             if self.binary_proc.poll() is None:
-                print(f"Caddy进程已启动，PID: {self.binary_proc.pid}")
+                logger.info(f"[HttpManager] Caddy进程已启动，PID: {self.binary_proc.pid}")
                 return True
 
             return False
 
         except FileNotFoundError:
-            print("错误: 找不到caddy可执行文件")
+            logger.error("[HttpManager] 错误: 找不到caddy可执行文件")
             return False
         except Exception as e:
-            print(f"启动Caddy时发生错误: {str(e)}")
+            logger.error(f"[HttpManager] 启动Caddy时发生错误: {str(e)}")
             return False
 
     # 停止Caddy服务 ##############################################################################
@@ -312,11 +313,11 @@ class HttpManager:
                 except subprocess.TimeoutExpired:
                     self.binary_proc.kill()
                     self.binary_proc.wait()
-                print("Caddy进程已停止")
+                logger.info("[HttpManager] Caddy进程已停止")
                 return True
             return False
         except Exception as e:
-            print(f"停止Caddy时发生错误: {str(e)}")
+            logger.error(f"[HttpManager] 停止Caddy时发生错误: {str(e)}")
             return False
 
     # 重载Caddy配置 ##############################################################################
@@ -329,24 +330,24 @@ class HttpManager:
                 reload_cmd = [self.binary_path, "reload", "--config",
                               str(self.config_file), "--adapter", "caddyfile",
                               "--address", f"localhost:{self.manage_port}"]
-                print("重载服务命令:", " ".join(reload_cmd))
+                logger.debug(f"[HttpManager] 重载服务命令: {' '.join(reload_cmd)}")
                 result = subprocess.run(reload_cmd, capture_output=True, text=True)
                 if result.returncode == 0:
-                    print(f"Caddy配置已重载（管理端口: {self.manage_port}）")
+                    logger.info(f"[HttpManager] Caddy配置已重载（管理端口: {self.manage_port}）")
                     return True
                 else:
-                    print(f"重载失败，尝试启动服务: {result.stderr}")
+                    logger.warning(f"[HttpManager] 重载失败，尝试启动服务: {result.stderr}")
                     return self.launch_web()
             else:
                 # Linux/Mac: 如果有进程引用则发送信号
                 if self.binary_proc and self.binary_proc.poll() is None:
                     self.binary_proc.send_signal(signal.SIGUSR1)
-                    print(f"Caddy配置已重载（管理端口: {self.manage_port}）")
+                    logger.info(f"[HttpManager] Caddy配置已重载（管理端口: {self.manage_port}）")
                     return True
                 else:
                     return self.launch_web()
         except Exception as e:
-            print(f"重载Caddy配置时发生错误: {str(e)}")
+            logger.error(f"[HttpManager] 重载Caddy配置时发生错误: {str(e)}")
             return False
 
     # # 加载代理配置 ###############################################################################

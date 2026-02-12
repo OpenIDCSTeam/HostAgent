@@ -466,8 +466,8 @@ class RestManager:
                             min_hdd = int(match.group(1)) * 1024  # 转换为MB
                             if hdd_num < min_hdd:
                                 return self.api_response(400, f'硬盘大小不能少于镜像最低要求{match.group(0)}')
-                    except:
-                        pass  # 如果解析失败，跳过镜像要求检查
+                    except Exception as e:
+                        logger.warning(f"[创建虚拟机] 解析镜像磁盘要求失败: {e}")  # 如果解析失败，跳过镜像要求检查
 
         # NAT数量验证：最低1，默认10
         nat_num = int(data.get('nat_num', 10))

@@ -2,14 +2,33 @@
 用户认证和权限管理模块
 提供密码加密、用户认证、权限检查等功能
 """
-import hashlib
+import bcrypt
 import secrets
 import json
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Callable
 from functools import wraps
 from flask import session, request, redirect, url_for, jsonify
 from loguru import logger
 from MainObject.Config.WebUsers import WebUser
+
+# 全局Bearer Token验证器（由HostServer.py启动时注入）
+_bearer_token_getter: Callable[[], str] = lambda: ""
+
+
+def init_bearer_validator(getter: Callable[[], str]):
+    """初始化Bearer Token验证器，由HostServer.py启动时调用注入"""
+    global _bearer_token_getter
+    _bearer_token_getter = getter
+    logger.info("[UserManager] Bearer Token验证器已注入")
+
+
+def _verify_bearer_token(auth_header: str) -> bool:
+    """验证Bearer Token是否有效"""
+    if not auth_header.startswith('Bearer '):
+        return False
+    token = auth_header[7:]
+    expected = _bearer_token_getter()
+    return bool(token and expected and token == expected)
 
 
 class UserManager:
@@ -17,13 +36,22 @@ class UserManager:
 
     @staticmethod
     def hash_password(password: str) -> str:
-        """密码加密"""
-        return hashlib.sha256(password.encode()).hexdigest()
+        """密码加密（使用bcrypt）"""
+        return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     @staticmethod
     def verify_password(password: str, hashed: str) -> bool:
         """验证密码"""
-        return UserManager.hash_password(password) == hashed
+        try:
+            # 兼容旧的SHA256哈希（64位十六进制字符串）
+            if len(hashed) == 64 and all(c in '0123456789abcdef' for c in hashed):
+                import hashlib
+                return hashlib.sha256(password.encode()).hexdigest() == hashed
+            # bcrypt验证
+            return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+        except Exception as e:
+            logger.error(f"[UserManager] 密码验证异常: {e}")
+            return False
 
     @staticmethod
     def generate_token(length: int = 32) -> str:
@@ -57,7 +85,8 @@ class UserManager:
         if isinstance(assigned_hosts, str):
             try:
                 assigned_hosts = json.loads(assigned_hosts)
-            except:
+            except Exception as e:
+                logger.warning(f"[UserManager] 解析assigned_hosts失败: {e}")
                 assigned_hosts = []
         session['assigned_hosts'] = assigned_hosts
 
@@ -71,9 +100,9 @@ def require_login(f):
     """需要登录的装饰器（用户登录或Token登录）"""
     @wraps(f)
     def decorated(*args, **kwargs):
-        # 检查Bearer Token
+        # 检查Bearer Token（必须验证Token值）
         auth_header = request.headers.get('Authorization', '')
-        if auth_header.startswith('Bearer '):
+        if _verify_bearer_token(auth_header):
             # Token认证通过，继续执行
             return f(*args, **kwargs)
         
@@ -82,6 +111,7 @@ def require_login(f):
             return f(*args, **kwargs)
         
         # 未登录
+        logger.warning(f"[UserManager] 未授权访问: {request.path}")
         if request.is_json or request.path.startswith('/api/'):
             return jsonify({'code': 401, 'msg': '未授权访问', 'data': None}), 401
         return redirect(url_for('login'))
@@ -93,9 +123,9 @@ def require_admin(f):
     """需要管理员权限的装饰器"""
     @wraps(f)
     def decorated(*args, **kwargs):
-        # 检查Bearer Token（Token登录视为管理员）
+        # 检查Bearer Token（必须验证Token值）
         auth_header = request.headers.get('Authorization', '')
-        if auth_header.startswith('Bearer '):
+        if _verify_bearer_token(auth_header):
             return f(*args, **kwargs)
         
         # 检查用户是否为管理员
@@ -104,6 +134,7 @@ def require_admin(f):
             return f(*args, **kwargs)
         
         # 无权限
+        logger.warning(f"[UserManager] 权限不足，需要管理员权限: {request.path}, 用户: {session.get('username', '未知')}")
         if request.is_json or request.path.startswith('/api/'):
             return jsonify({'code': 403, 'msg': '需要管理员权限', 'data': None}), 403
         return redirect(url_for('dashboard'))
@@ -116,9 +147,9 @@ def require_permission(permission: str):
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            # Token登录或管理员拥有所有权限
+            # Token登录或管理员拥有所有权限（必须验证Token值）
             auth_header = request.headers.get('Authorization', '')
-            if auth_header.startswith('Bearer '):
+            if _verify_bearer_token(auth_header):
                 return f(*args, **kwargs)
             
             current_user = UserManager.get_current_user_from_session()
@@ -151,7 +182,8 @@ def check_host_access(hs_name: str, user_data: Dict[str, Any]) -> bool:
     if isinstance(assigned_hosts, str):
         try:
             assigned_hosts = json.loads(assigned_hosts)
-        except:
+        except Exception as e:
+            logger.warning(f"[UserManager] 解析assigned_hosts失败: {e}")
             assigned_hosts = []
     
     return hs_name in assigned_hosts

@@ -1,6 +1,6 @@
 import {useState, useEffect} from 'react'
 import {Outlet, useNavigate, useLocation} from 'react-router-dom'
-import {Layout, Menu, Avatar, Dropdown, Badge, Button, theme} from 'antd'
+import {Layout, Menu, Avatar, Dropdown, Badge, Button} from 'antd'
 import {
     DashboardOutlined,
     CloudServerOutlined,
@@ -19,6 +19,7 @@ import {
     BgColorsOutlined,
 } from '@ant-design/icons'
 import {useUserStore} from '@/utils/data.ts'
+import api from '@/utils/apis.ts'
 import { changeLanguage, getAvailableLanguages, getCurrentLanguage } from '@/utils/i18n.ts'
 import { useTheme } from '@/contexts/ThemeContext'
 import type {MenuProps} from 'antd'
@@ -32,12 +33,23 @@ const {Header, Sider, Content} = Layout
 function MainLayout() {
     const navigate = useNavigate()
     const location = useLocation()
-    const {user, logout} = useUserStore()
+    const {user, logout, setUser} = useUserStore()
     const { theme: currentTheme, toggleTheme, transparentMode, toggleTransparentMode } = useTheme() // 主题管理
     const [collapsed, setCollapsed] = useState(false) // 侧边栏折叠状态
     const [notifications, setNotifications] = useState(0) // 通知数量
     const [currentLang, setCurrentLang] = useState('zh-cn')
     const [languages, setLanguages] = useState<any[]>([])
+
+    // 兜底：如果用户信息缺失（如首次登录后端未返回user_info），主动获取
+    useEffect(() => {
+        if (!user || user.is_admin === undefined) {
+            api.getCurrentUser().then(res => {
+                if (res.code === 200 && res.data) {
+                    setUser(res.data)
+                }
+            }).catch(() => {})
+        }
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         // 初始化语言状态
@@ -64,10 +76,6 @@ function MainLayout() {
             clearInterval(interval)
         }
     }, [languages.length])
-
-    const {
-        token: {colorBgContainer},
-    } = theme.useToken()
 
     // 语言菜单项
     const languageMenuItems: MenuProps['items'] = (languages.length > 0 ? languages : [

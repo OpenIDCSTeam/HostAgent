@@ -1236,7 +1236,8 @@ class DataManager:
                 # 添加padding
                 email_bytes = base64.urlsafe_b64decode(email_base64 + '=' * (-len(email_base64) % 4))
                 email = email_bytes.decode()
-            except:
+            except Exception as e:
+                logger.warning(f"[DataManager] 解码邮箱base64失败: {e}")
                 return None
             
             # 根据邮箱查找用户

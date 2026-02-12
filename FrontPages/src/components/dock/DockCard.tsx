@@ -1,5 +1,5 @@
 import React from 'react'
-import { Card, Tag, Row, Col, Tooltip, Button, Progress, Badge } from 'antd'
+import { Card, Tag, Row, Col, Tooltip, Button, Progress } from 'antd'
 import {
     DesktopOutlined,
     PoweroffOutlined,
@@ -7,12 +7,10 @@ import {
     DeleteOutlined,
     GlobalOutlined,
     EyeOutlined,
-    ClockCircleOutlined,
     DatabaseOutlined,
     ThunderboltOutlined,
     CloudServerOutlined,
     ApiOutlined,
-    SafetyOutlined,
     PlayCircleOutlined,
     QuestionCircleOutlined,
     LoadingOutlined,
@@ -45,29 +43,6 @@ const formatDisk = (mb?: number): string => {
     if (!mb) return '0 MB'
     if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`
     return `${mb} MB`
-}
-
-const formatUptime = (seconds?: number): string => {
-    if (!seconds) return '未运行'
-    const days = Math.floor(seconds / 86400)
-    const hours = Math.floor((seconds % 86400) / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    
-    if (days > 0) return `${days}天${hours}小时`
-    if (hours > 0) return `${hours}小时${minutes}分钟`
-    return `${minutes}分钟`
-}
-
-const formatDate = (timestamp?: number): string => {
-    if (!timestamp) return '未知'
-    const date = new Date(timestamp * 1000)
-    return date.toLocaleDateString('zh-CN', { 
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    })
 }
 
 const DockCard: React.FC<DockCardProps> = ({
@@ -119,10 +94,6 @@ const DockCard: React.FC<DockCardProps> = ({
     const gpuUsageValue = Object.values(gpuUsageObj)[0] || 0
     const gpuPercent = gpuTotal > 0 ? Math.round((Number(gpuUsageValue) / gpuTotal) * 100) : 0
     
-    // 运行时长（秒）
-    const uptime = firstStatus.uptime || 0
-    const createTime = vm.create_time || 0
-
     // 根据电源状态获取图标和颜色
     const getStatusIcon = () => {
         switch (powerStatus) {

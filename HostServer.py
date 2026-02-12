@@ -8,13 +8,25 @@ import secrets
 import threading
 import traceback
 import json
+import mimetypes
 from functools import wraps
 from flask import Flask, request, jsonify, session, redirect, url_for, g, send_from_directory
+
+# 全局修复 Windows 上的 MIME 类型问题
+# Windows 注册表可能将 .js 映射为 text/plain，导致浏览器拒绝加载模块脚本
+mimetypes.add_type('application/javascript', '.js')
+mimetypes.add_type('application/javascript', '.mjs')
+mimetypes.add_type('text/css', '.css')
+mimetypes.add_type('application/json', '.json')
+mimetypes.add_type('font/woff2', '.woff2')
+mimetypes.add_type('font/woff', '.woff')
+mimetypes.add_type('font/ttf', '.ttf')
+mimetypes.add_type('image/svg+xml', '.svg')
 
 from loguru import logger
 from HostModule.HostManager import HostManage
 from HostModule.RestManager import RestManager
-from HostModule.UserManager import UserManager, require_login, require_admin, check_host_access, check_vm_permission, check_resource_quota, EmailService
+from HostModule.UserManager import UserManager, require_login, require_admin, check_host_access, check_vm_permission, check_resource_quota, EmailService, init_bearer_validator
 from HostModule.DataManager import DataManager
 
 # 获取项目根目录，兼容开发环境和打包后的环境
@@ -31,7 +43,7 @@ else:
 template_folder = os.path.join(project_root, 'WebDesigns')
 static_folder = os.path.join(project_root, 'static')
 
-app = Flask(__name__, template_folder=template_folder, static_folder=static_folder, static_url_path='')
+app = Flask(__name__, template_folder=template_folder, static_folder=None, static_url_path='')
 app.secret_key = secrets.token_hex(32)
 
 # 全局主机管理实例
@@ -42,6 +54,9 @@ db = DataManager()
 
 # 全局REST管理器实例
 rest_manager = RestManager(hs_manage, db)
+
+# 注入Bearer Token验证器（让UserManager的装饰器能验证Token值）
+init_bearer_validator(lambda: hs_manage.bearer)
 
 # 认证装饰器（保持向后兼容）###################################################
 # 需要登录或Bearer Token认证的装饰器
@@ -183,7 +198,17 @@ def login():
             # 更新最后登录时间
             db.update_user_last_login(user_data['id'])
             
-            return api_response_wrapper(200, '登录成功', {'redirect': '/admin'})
+            # 构建返回的用户信息（移除敏感字段）
+            user_info = dict(user_data)
+            user_info.pop('password', None)
+            user_info.pop('verify_token', None)
+            if isinstance(user_info.get('assigned_hosts'), str):
+                try:
+                    user_info['assigned_hosts'] = json.loads(user_info['assigned_hosts'])
+                except Exception:
+                    user_info['assigned_hosts'] = []
+            
+            return api_response_wrapper(200, '登录成功', {'redirect': '/admin', 'token': hs_manage.bearer, 'user_info': user_info})
         
         else:
             # Token登录
@@ -202,7 +227,17 @@ def login():
                     # 更新最后登录时间
                     db.update_user_last_login(admin_user_data['id'])
                     
-                    return api_response_wrapper(200, '登录成功', {'redirect': '/admin'})
+                    # 构建返回的用户信息（移除敏感字段）
+                    admin_info = dict(admin_user_data)
+                    admin_info.pop('password', None)
+                    admin_info.pop('verify_token', None)
+                    if isinstance(admin_info.get('assigned_hosts'), str):
+                        try:
+                            admin_info['assigned_hosts'] = json.loads(admin_info['assigned_hosts'])
+                        except Exception:
+                            admin_info['assigned_hosts'] = []
+                    
+                    return api_response_wrapper(200, '登录成功', {'redirect': '/admin', 'token': token, 'user_info': admin_info})
                 else:
                     # 如果admin用户不存在，创建临时的admin session（兼容原有逻辑）
                     temp_admin_data = {
@@ -213,7 +248,7 @@ def login():
                         'assigned_hosts': []
                     }
                     UserManager.set_user_session(temp_admin_data, is_token_login=True)
-                    return api_response_wrapper(200, '登录成功', {'redirect': '/admin'})
+                    return api_response_wrapper(200, '登录成功', {'redirect': '/admin', 'token': token, 'user_info': temp_admin_data})
             
             return api_response_wrapper(401, 'Token错误')
     except Exception as e:
@@ -358,7 +393,8 @@ def verify_email_change():
             # 解码base64邮箱
             email_bytes = base64.urlsafe_b64decode(email_base64 + '=' * (-len(email_base64) % 4))
             new_email = email_bytes.decode()
-        except:
+        except Exception as e:
+            logger.error(f"邮箱验证token解码失败: {e}")
             return redirect('/profile?email_changed=error&msg=decode_failed')
         
         # 直接根据verify_token字段查找用户
@@ -494,7 +530,6 @@ def change_email():
     except Exception as e:
         logger.error(f"邮箱修改失败: {e}")
         return jsonify({'code': 500, 'msg': '邮箱修改失败，请重试'})
-        return jsonify({'code': 500, 'msg': '邮箱修改失败'})
 
 
 @app.route('/api/system/forgot-password', methods=['POST'])
@@ -1439,7 +1474,8 @@ def api_get_current_user():
                 if isinstance(user_data.get('assigned_hosts'), str):
                     try:
                         user_data['assigned_hosts'] = json.loads(user_data['assigned_hosts'])
-                    except:
+                    except Exception as e:
+                        logger.warning(f"解析用户assigned_hosts失败: {e}")
                         user_data['assigned_hosts'] = []
                 
                 # 过滤掉未启用的主机（所有用户均生效）
@@ -1475,7 +1511,8 @@ def api_get_users():
             if isinstance(user.get('assigned_hosts'), str):
                 try:
                     user['assigned_hosts'] = json.loads(user['assigned_hosts'])
-                except:
+                except Exception as e:
+                    logger.warning(f"解析用户assigned_hosts失败: {e}")
                     user['assigned_hosts'] = []
         return api_response_wrapper(200, '获取成功', users)
     except Exception as e:
@@ -1580,7 +1617,8 @@ def api_get_user(user_id):
         if isinstance(user.get('assigned_hosts'), str):
             try:
                 user['assigned_hosts'] = json.loads(user['assigned_hosts'])
-            except:
+            except Exception as e:
+                logger.warning(f"解析用户assigned_hosts失败: {e}")
                 user['assigned_hosts'] = []
         
         return api_response_wrapper(200, '获取成功', user)
@@ -1909,7 +1947,7 @@ if __name__ == '__main__':
         )
         
         # 添加文件输出
-        log_file = os.path.join(log_dir, "log-main.log")
+        log_file = os.path.join(log_dir, "log-kernel.log")
         logger.add(
             log_file,
             rotation="10 MB",

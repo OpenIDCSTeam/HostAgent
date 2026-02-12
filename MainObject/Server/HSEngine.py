@@ -5,7 +5,7 @@ import HostServer.Workstation as WorkstationModule
 import HostServer.LXContainer as LXContainerModule
 import HostServer.OCInterface as OCInterfaceModule
 import HostServer.vSphereESXi as vSphereESXiModule
-from HostServer import ProxmoxQemu, Win64HyperV
+from HostServer import ProxmoxQemu, Win64HyperV, QingzhouYun
 
 HEConfig = {
     "VMWareSetup": {
@@ -122,6 +122,28 @@ HEConfig = {
         "Ban_Init": [],
         "Ban_Edit": [],
         "Tab_Lock": []
+    },
+    "QingzhouYun": {
+        "Imported": QingzhouYun.HostServer,
+        "Descript": "QingzhouYun Cloud",
+        "isEnable": True,
+        "isRemote": True,
+        "Platform": ["Linux", "Windows", "MacOS"],
+        "CPU_Arch": ["x86_64", "aarch64"],
+        "Optional": {},
+        "Messages": [
+            "1、云平台不支持PCI/USB设备直通",
+            "2、通过HTTP API远程管理虚拟机"
+        ],
+        "Ban_Init": [
+            "gpu_num", "gpu_mem",
+        ],
+        "Ban_Edit": [
+            "gpu_num", "gpu_mem",
+        ],
+        "Tab_Lock": [
+            "pci", "usb"
+        ]
     },
     # "VirtualBoxs": {
     #     "Descript": "PVE Runtime Platform",

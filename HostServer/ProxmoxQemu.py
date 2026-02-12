@@ -1672,8 +1672,8 @@ class HostServer(BasicServer):
                 logger.error(f"[{self.hs_config.server_name}] SSH连接或文件传输失败: {str(e)}")
                 try:
                     ssh.close()
-                except:
-                    pass
+                except Exception as e_close:
+                    logger.warning(f"[{self.hs_config.server_name}] 关闭SSH连接失败: {str(e_close)}")
                 return ""
                 
         except Exception as e:
@@ -1734,8 +1734,8 @@ class HostServer(BasicServer):
                 logger.error(f"[{self.hs_config.server_name}] SSH连接失败: {str(ssh_error)}")
                 try:
                     ssh.close()
-                except:
-                    pass
+                except Exception as e_close:
+                    logger.warning(f"[{self.hs_config.server_name}] 关闭SSH连接失败: {str(e_close)}")
                 return {}
 
         except Exception as e:
@@ -1771,8 +1771,8 @@ class HostServer(BasicServer):
                 nodes = client.nodes.get()
                 if nodes:
                     node = nodes[0]['node']
-            except:
-                pass
+            except Exception as e_node:
+                logger.warning(f"[{self.hs_config.server_name}] 获取PVE节点名失败，使用默认值: {str(e_node)}")
 
             pci_id = config.gpu_uuid
 
@@ -1854,8 +1854,8 @@ class HostServer(BasicServer):
                 logger.error(f"[{self.hs_config.server_name}] SSH获取USB设备失败: {str(ssh_error)}")
                 try:
                     ssh.close()
-                except:
-                    pass
+                except Exception as e_close:
+                    logger.warning(f"[{self.hs_config.server_name}] 关闭SSH连接失败: {str(e_close)}")
                 return {}
 
         except Exception as e:
@@ -1883,8 +1883,8 @@ class HostServer(BasicServer):
                 nodes = client.nodes.get()
                 if nodes:
                     node = nodes[0]['node']
-            except:
-                pass
+            except Exception as e_node:
+                logger.warning(f"[{self.hs_config.server_name}] 获取PVE节点名失败，使用默认值: {str(e_node)}")
 
             vid = usb_info.vid_uuid
             pid = usb_info.pid_uuid

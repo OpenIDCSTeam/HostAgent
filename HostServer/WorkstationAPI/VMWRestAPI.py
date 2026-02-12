@@ -77,7 +77,8 @@ class VRestAPI:
             try:
                 error_detail = e.response.json()
                 error_msg += f" - {error_detail}"
-            except:
+            except Exception as parse_err:
+                logger.debug(f"[VMWRestAPI] 解析错误响应JSON失败: {parse_err}")
                 error_msg += f" - {e.response.text}"
             return ZMessage(success=False, actions="vmrest_api",
                             message=error_msg, execute=e)
@@ -129,7 +130,8 @@ class VRestAPI:
             try:
                 error_detail = e.response.json()
                 error_msg += f" - {error_detail}"
-            except:
+            except Exception as parse_err:
+                logger.debug(f"[VMWRestAPI] 解析电源操作错误响应JSON失败: {parse_err}")
                 error_msg += f" - {e.response.text}"
             return ZMessage(
                 success=False,

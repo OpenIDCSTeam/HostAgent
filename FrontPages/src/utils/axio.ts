@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { message } from 'antd';
 import type { ApiResponse } from '@/types';
 

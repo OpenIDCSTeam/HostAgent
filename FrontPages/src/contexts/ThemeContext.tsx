@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ThemeConfig, ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
-import { lightTheme, darkTheme, Theme, lightTransparentTheme, darkTransparentTheme } from '../config/theme.config';
+import { lightTheme, darkTheme, lightTransparentTheme, darkTransparentTheme } from '../config/theme.config';
 
 type Theme = 'light' | 'dark';
 
@@ -95,7 +95,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         getPopupContainer={(node) => node?.parentElement || document.body}
         modal={{
           mask: false
-        }}
+        } as any}
       >
         {children}
       </ConfigProvider>

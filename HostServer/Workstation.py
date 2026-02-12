@@ -497,13 +497,13 @@ class HostServer(BasicServer):
                     action="VMPowers", message="正在等待系统软关机"
                 )
                 # 启动持续监控（5分钟内每5秒检查一次状态）
-                self._monitor_soft_power_operation(vm_name, VMPowers.S_CLOSE, VMPowers.ON_STOP)
+                self.soft_pwr(vm_name, VMPowers.S_CLOSE, VMPowers.ON_STOP)
             elif power == VMPowers.S_RESET:
                 # 软重启：发送重启命令后立即返回，启动监控线程
                 hs_result = self.vmrest_api.powers_set(vm_name, VMPowers.S_RESET)
                 if hs_result.success:
                     # 启动持续监控（5分钟内每5秒检查一次状态）
-                    self._monitor_soft_power_operation(vm_name, VMPowers.S_RESET, VMPowers.ON_STOP)
+                    self.soft_pwr(vm_name, VMPowers.S_RESET, VMPowers.ON_STOP)
             else:
                 # 其他电源操作 =================================================
                 hs_result = self.vmrest_api.powers_set(vm_name, power)
@@ -519,7 +519,7 @@ class HostServer(BasicServer):
                 def delayed_refresh():
                     import time
                     time.sleep(3)  # 等待3秒让虚拟机状态稳定
-                    self._refresh_vm_status(vm_name)
+                    self.vm_loads(vm_name)
                 
                 refresh_thread = threading.Thread(target=delayed_refresh, daemon=True)
                 refresh_thread.start()

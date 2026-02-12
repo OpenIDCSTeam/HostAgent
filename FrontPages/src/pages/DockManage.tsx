@@ -89,7 +89,6 @@ function DockManage() {
         try {
             setLoading(true)
             let allVMs: Record<string, any> = {}
-            const pathname = window.location.pathname
 
             if (hostName) {
                 // Single host view
@@ -102,8 +101,9 @@ function DockManage() {
                 const hostsRes = await getHosts()
                 if (hostsRes.code === 200 && hostsRes.data) {
                     // 过滤掉禁用的主机，不请求其虚拟机列表
-                    const hosts = Object.keys(hostsRes.data).filter(
-                        (host) => hostsRes.data[host].enable_host !== false
+                    const hostsData = hostsRes.data!
+                    const hosts = Object.keys(hostsData).filter(
+                        (host) => hostsData[host].enable_host !== false
                     )
                     await Promise.all(hosts.map(async (host) => {
                         try {

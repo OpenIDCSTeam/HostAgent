@@ -92,6 +92,160 @@ class BasicServer:
         except Exception as e:
             logger.error(f"日志系统初始化失败: {e}")
 
+    # 刷新虚拟机状态 ################################################################
+    def vm_loads(self, vm_name: str) -> None:
+        """
+        从API刷新虚拟机状态并更新vm_flag
+        在电源操作、配置修改、密码修改后调用
+        """
+        try:
+            if vm_name not in self.vm_saving:
+                return
+
+            # 获取当前状态
+            current_status = self.vm_saving[vm_name].vm_flag
+
+            # 调用子类实现的GetPower方法获取实际状态
+            actual_status = self.GetPower(vm_name)
+
+            # 将API返回的中文状态映射为VMPowers枚举
+            status_map = {
+                '运行中': VMPowers.STARTED,
+                '已关机': VMPowers.STOPPED,
+                '已停止': VMPowers.STOPPED,
+                '已暂停': VMPowers.SUSPEND,
+                '未知': VMPowers.UNKNOWN,
+                '': VMPowers.UNKNOWN
+            }
+
+            new_power_status = status_map.get(actual_status, VMPowers.UNKNOWN)
+
+            # 中间状态保护逻辑：防止中间状态被不匹配的最终状态覆盖
+            # 1. 如果当前是ON_STOP或ON_SAVE（正在关机/暂停），不允许用STARTED覆盖
+            if current_status in [VMPowers.ON_STOP, VMPowers.ON_SAVE]:
+                if new_power_status == VMPowers.STARTED:
+                    logger.debug(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 正在关机/暂停中，忽略STARTED状态")
+                    return
+
+            # 2. 如果当前是ON_OPEN或ON_WAKE（正在启动/唤醒），不允许用STOPPED或SUSPEND覆盖
+            if current_status in [VMPowers.ON_OPEN, VMPowers.ON_WAKE]:
+                if new_power_status in [VMPowers.STOPPED, VMPowers.SUSPEND]:
+                    logger.debug(
+                        f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 正在启动/唤醒中，忽略STOPPED/SUSPEND状态")
+                    return
+
+            # 更新VMConfig.vm_flag
+            if self.vm_saving[vm_name].vm_flag != new_power_status:
+                logger.info(
+                    f"[{self.hs_config.server_name}] 刷新虚拟机 {vm_name} 状态: {self.vm_saving[vm_name].vm_flag} -> {new_power_status}")
+                self.vm_saving[vm_name].vm_flag = new_power_status
+                # 保存配置到数据库
+                self.data_set()
+
+        except Exception as e:
+            logger.warning(f"[{self.hs_config.server_name}] 刷新虚拟机 {vm_name} 状态失败: {str(e)}")
+
+    # 软关机和软重启操作监控 ########################################################
+    def soft_pwr(self, vm_name: str, operation: VMPowers,
+                 expected_intermediate_state: VMPowers) -> None:
+        """
+        持续监控软关机和软重启操作，直到状态改变或超时
+
+        :param vm_name: 虚拟机名称
+        :param operation: 电源操作类型（S_CLOSE或S_RESET）
+        :param expected_intermediate_state: 预期的中间状态（ON_STOP）
+        """
+        import time
+        import threading
+
+        def monitor_task():
+            try:
+                logger.info(f"[{self.hs_config.server_name}] 开始监控虚拟机 {vm_name} 的软电源操作")
+
+                # 最大监控时间：5分钟（300秒）
+                max_duration = 300
+                # 检查间隔：5秒
+                check_interval = 5
+                # 已经过的时间
+                elapsed_time = 0
+
+                while elapsed_time < max_duration:
+                    # 等待一段时间再检查
+                    time.sleep(check_interval)
+                    elapsed_time += check_interval
+
+                    # 检查虚拟机是否还存在
+                    if vm_name not in self.vm_saving:
+                        logger.warning(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 已不存在，停止监控")
+                        return
+
+                    # 获取当前状态
+                    current_status = self.vm_saving[vm_name].vm_flag
+
+                    # 如果状态已经不是中间状态，说明操作已完成或被其他操作改变
+                    if current_status != expected_intermediate_state:
+                        logger.info(
+                            f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 状态已改变为 {current_status}，停止监控")
+                        return
+
+                    # 从API获取实际状态
+                    actual_status = self.GetPower(vm_name)
+
+                    # 将API返回的中文状态映射为VMPowers枚举
+                    status_map = {
+                        '运行中': VMPowers.STARTED,
+                        '已关机': VMPowers.STOPPED,
+                        '已停止': VMPowers.STOPPED,
+                        '已暂停': VMPowers.SUSPEND,
+                        '未知': VMPowers.UNKNOWN,
+                        '': VMPowers.UNKNOWN
+                    }
+
+                    new_power_status = status_map.get(actual_status, VMPowers.UNKNOWN)
+
+                    # 判断操作是否成功
+                    operation_success = False
+
+                    if operation == VMPowers.S_CLOSE:
+                        # 软关机：期望最终状态是STOPPED
+                        if new_power_status == VMPowers.STOPPED:
+                            operation_success = True
+                            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 软关机成功")
+                    elif operation == VMPowers.S_RESET:
+                        # 软重启：期望最终状态是STARTED（重启后应该是运行中）
+                        if new_power_status == VMPowers.STARTED:
+                            operation_success = True
+                            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 软重启成功")
+
+                    # 如果操作成功，更新状态并退出监控
+                    if operation_success:
+                        self.vm_saving[vm_name].vm_flag = new_power_status
+                        self.data_set()
+                        logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 状态更新为 {new_power_status}")
+                        return
+
+                    # 如果状态变为其他非预期状态，也更新并退出
+                    if new_power_status not in [VMPowers.UNKNOWN, expected_intermediate_state]:
+                        logger.warning(
+                            f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 状态变为非预期状态 {new_power_status}")
+                        self.vm_saving[vm_name].vm_flag = new_power_status
+                        self.data_set()
+                        return
+
+                # 超时处理
+                logger.warning(
+                    f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 软电源操作监控超时（5分钟），最后一次刷新状态")
+                # 最后一次尝试刷新状态
+                self.vm_loads(vm_name)
+
+            except Exception as e:
+                logger.error(f"[{self.hs_config.server_name}] 监控虚拟机 {vm_name} 软电源操作时出错: {str(e)}")
+                traceback.print_exc()
+
+        # 启动监控线程
+        monitor_thread = threading.Thread(target=monitor_task, daemon=True)
+        monitor_thread.start()
+
     # 清理过期日志 ##################################################################
     def cron_log(self, days: int = 7) -> int:
         if self.save_data and self.hs_config.server_name:
@@ -954,7 +1108,7 @@ class BasicServer:
         def delayed_refresh():
             import time
             time.sleep(5)  # 等待5秒让虚拟机配置更新完成
-            self._refresh_vm_status(vm_conf.vm_uuid)
+            self.vm_loads(vm_conf.vm_uuid)
 
         refresh_thread = threading.Thread(target=delayed_refresh, daemon=True)
         refresh_thread.start()
@@ -1039,159 +1193,6 @@ class BasicServer:
         返回值示例: "运行中", "已关机", "暂停", "未知" 等
         """
         return ""
-
-    # 刷新虚拟机状态 ################################################################
-    def _refresh_vm_status(self, vm_name: str) -> None:
-        """
-        从API刷新虚拟机状态并更新vm_flag
-        在电源操作、配置修改、密码修改后调用
-        """
-        try:
-            if vm_name not in self.vm_saving:
-                return
-
-            # 获取当前状态
-            current_status = self.vm_saving[vm_name].vm_flag
-
-            # 调用子类实现的GetPower方法获取实际状态
-            actual_status = self.GetPower(vm_name)
-
-            # 将API返回的中文状态映射为VMPowers枚举
-            status_map = {
-                '运行中': VMPowers.STARTED,
-                '已关机': VMPowers.STOPPED,
-                '已停止': VMPowers.STOPPED,
-                '已暂停': VMPowers.SUSPEND,
-                '未知': VMPowers.UNKNOWN,
-                '': VMPowers.UNKNOWN
-            }
-
-            new_power_status = status_map.get(actual_status, VMPowers.UNKNOWN)
-
-            # 中间状态保护逻辑：防止中间状态被不匹配的最终状态覆盖
-            # 1. 如果当前是ON_STOP或ON_SAVE（正在关机/暂停），不允许用STARTED覆盖
-            if current_status in [VMPowers.ON_STOP, VMPowers.ON_SAVE]:
-                if new_power_status == VMPowers.STARTED:
-                    logger.debug(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 正在关机/暂停中，忽略STARTED状态")
-                    return
-
-            # 2. 如果当前是ON_OPEN或ON_WAKE（正在启动/唤醒），不允许用STOPPED或SUSPEND覆盖
-            if current_status in [VMPowers.ON_OPEN, VMPowers.ON_WAKE]:
-                if new_power_status in [VMPowers.STOPPED, VMPowers.SUSPEND]:
-                    logger.debug(
-                        f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 正在启动/唤醒中，忽略STOPPED/SUSPEND状态")
-                    return
-
-            # 更新VMConfig.vm_flag
-            if self.vm_saving[vm_name].vm_flag != new_power_status:
-                logger.info(
-                    f"[{self.hs_config.server_name}] 刷新虚拟机 {vm_name} 状态: {self.vm_saving[vm_name].vm_flag} -> {new_power_status}")
-                self.vm_saving[vm_name].vm_flag = new_power_status
-                # 保存配置到数据库
-                self.data_set()
-
-        except Exception as e:
-            logger.warning(f"[{self.hs_config.server_name}] 刷新虚拟机 {vm_name} 状态失败: {str(e)}")
-
-    def _monitor_soft_power_operation(self, vm_name: str, operation: VMPowers,
-                                      expected_intermediate_state: VMPowers) -> None:
-        """
-        持续监控软关机和软重启操作，直到状态改变或超时
-        
-        :param vm_name: 虚拟机名称
-        :param operation: 电源操作类型（S_CLOSE或S_RESET）
-        :param expected_intermediate_state: 预期的中间状态（ON_STOP）
-        """
-        import time
-        import threading
-
-        def monitor_task():
-            try:
-                logger.info(f"[{self.hs_config.server_name}] 开始监控虚拟机 {vm_name} 的软电源操作")
-
-                # 最大监控时间：5分钟（300秒）
-                max_duration = 300
-                # 检查间隔：5秒
-                check_interval = 5
-                # 已经过的时间
-                elapsed_time = 0
-
-                while elapsed_time < max_duration:
-                    # 等待一段时间再检查
-                    time.sleep(check_interval)
-                    elapsed_time += check_interval
-
-                    # 检查虚拟机是否还存在
-                    if vm_name not in self.vm_saving:
-                        logger.warning(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 已不存在，停止监控")
-                        return
-
-                    # 获取当前状态
-                    current_status = self.vm_saving[vm_name].vm_flag
-
-                    # 如果状态已经不是中间状态，说明操作已完成或被其他操作改变
-                    if current_status != expected_intermediate_state:
-                        logger.info(
-                            f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 状态已改变为 {current_status}，停止监控")
-                        return
-
-                    # 从API获取实际状态
-                    actual_status = self.GetPower(vm_name)
-
-                    # 将API返回的中文状态映射为VMPowers枚举
-                    status_map = {
-                        '运行中': VMPowers.STARTED,
-                        '已关机': VMPowers.STOPPED,
-                        '已停止': VMPowers.STOPPED,
-                        '已暂停': VMPowers.SUSPEND,
-                        '未知': VMPowers.UNKNOWN,
-                        '': VMPowers.UNKNOWN
-                    }
-
-                    new_power_status = status_map.get(actual_status, VMPowers.UNKNOWN)
-
-                    # 判断操作是否成功
-                    operation_success = False
-
-                    if operation == VMPowers.S_CLOSE:
-                        # 软关机：期望最终状态是STOPPED
-                        if new_power_status == VMPowers.STOPPED:
-                            operation_success = True
-                            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 软关机成功")
-                    elif operation == VMPowers.S_RESET:
-                        # 软重启：期望最终状态是STARTED（重启后应该是运行中）
-                        if new_power_status == VMPowers.STARTED:
-                            operation_success = True
-                            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 软重启成功")
-
-                    # 如果操作成功，更新状态并退出监控
-                    if operation_success:
-                        self.vm_saving[vm_name].vm_flag = new_power_status
-                        self.data_set()
-                        logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 状态更新为 {new_power_status}")
-                        return
-
-                    # 如果状态变为其他非预期状态，也更新并退出
-                    if new_power_status not in [VMPowers.UNKNOWN, expected_intermediate_state]:
-                        logger.warning(
-                            f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 状态变为非预期状态 {new_power_status}")
-                        self.vm_saving[vm_name].vm_flag = new_power_status
-                        self.data_set()
-                        return
-
-                # 超时处理
-                logger.warning(
-                    f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 软电源操作监控超时（5分钟），最后一次刷新状态")
-                # 最后一次尝试刷新状态
-                self._refresh_vm_status(vm_name)
-
-            except Exception as e:
-                logger.error(f"[{self.hs_config.server_name}] 监控虚拟机 {vm_name} 软电源操作时出错: {str(e)}")
-                traceback.print_exc()
-
-        # 启动监控线程
-        monitor_thread = threading.Thread(target=monitor_task, daemon=True)
-        monitor_thread.start()
 
     # 删除虚拟机 ####################################################################
     def VMDelete(self, vm_name: str, rm_back=True) -> ZMessage:
@@ -1301,7 +1302,7 @@ class BasicServer:
             def delayed_refresh():
                 import time
                 time.sleep(5)  # 等待5秒让密码修改完成
-                self._refresh_vm_status(vm_name)
+                self.vm_loads(vm_name)
 
             refresh_thread = threading.Thread(target=delayed_refresh, daemon=True)
             refresh_thread.start()
@@ -1637,12 +1638,12 @@ class BasicServer:
             success=True, action="RMMounts",
             message="磁盘删除成功")
 
-    # 查找PCI ######################################################################
+    # 查找PCI #######################################################################
     def PCIShows(self) -> dict[str, VFConfig]:
         """获取主机可直通PCI设备列表，返回 {设备ID: VFConfig}"""
         return {}
 
-    # 直通PCI ######################################################################
+    # 直通PCI #######################################################################
     def PCISetup(self, vm_name: str, config: VFConfig, pci_key: str, in_flag=True) -> ZMessage:
         """PCI设备直通操作（需关机）
         Args:
@@ -1677,12 +1678,12 @@ class BasicServer:
         action_text = "添加" if in_flag else "移除"
         return ZMessage(success=True, action="PCISetup", message=f"PCI设备{action_text}成功")
 
-    # 查找USB ######################################################################
+    # 查找USB #######################################################################
     def USBShows(self) -> dict[str, USBInfos]:
         """获取主机可用USB设备列表，返回 {设备ID: USBInfos}"""
         return {}
 
-    # 直通USB ######################################################################
+    # 直通USB #######################################################################
     def USBSetup(self, vm_name: str, usb_info: USBInfos, usb_key: str, in_flag=True) -> ZMessage:
         """USB设备直通操作（无需关机）
         Args:
@@ -1694,14 +1695,14 @@ class BasicServer:
         # 默认实现：直接调用USBMount写入配置
         return self.USBMount(vm_name, usb_info, usb_key, in_flag)
 
-    # 启动项列出 ######################################################################
+    # 启动项列出 ####################################################################
     def EFIShows(self, vm_name: str) -> list['BootOpts']:
         """获取虚拟机启动项列表，写入 efi_all 并返回 list[BootOpts]"""
         if vm_name not in self.vm_saving:
             return []
         return self.vm_saving[vm_name].efi_all
 
-    # 启动项设置 ######################################################################
+    # 启动项设置 ####################################################################
     def EFISetup(self, vm_name: str, efi_list: list = None) -> ZMessage:
         """调整虚拟机启动项顺序
         Args:
@@ -1731,7 +1732,6 @@ class BasicServer:
         self.data_set()
 
         return ZMessage(success=True, action="EFISetup", message="启动顺序设置成功")
-
 
     # 转移用户 ######################################################################
     def Transfer(self, vm_name: str, new_owner: str,
@@ -1827,6 +1827,7 @@ class BasicServer:
                 message=str(e)
             )
 
+    # 权限校验 ######################################################################
     def Permission(self, vm_name: str, user: str, action: str) -> bool:
         """
         校验用户对虚拟机的细分权限

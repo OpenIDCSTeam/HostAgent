@@ -230,8 +230,8 @@ class HostServer(BasicServer):
             logger.warning(f"从API获取虚拟机 {vm_name} 状态失败: {str(e)}")
             try:
                 self.hyperv_api.disconnect()
-            except:
-                pass
+            except Exception as e:
+                logger.warning(f"断开Hyper-V连接时出错: {e}")
         return ""
 
     # 扫描虚拟机 ####################################################################
@@ -1404,8 +1404,8 @@ class HostServer(BasicServer):
             logger.error(traceback.format_exc())
             try:
                 self.hyperv_api.disconnect()
-            except:
-                pass
+            except Exception as e2:
+                logger.warning(f"断开Hyper-V连接时出错: {e2}")
             return ZMessage(success=False, action="PCISetup", message=str(e))
 
     # 启动项列出 ####################################################################
@@ -1476,8 +1476,8 @@ class HostServer(BasicServer):
             logger.error(traceback.format_exc())
             try:
                 self.hyperv_api.disconnect()
-            except:
-                pass
+            except Exception as e2:
+                logger.warning(f"断开Hyper-V连接时出错: {e2}")
             return super().EFIShows(vm_name)
 
     # 启动项设置 ####################################################################
@@ -1556,8 +1556,8 @@ class HostServer(BasicServer):
             logger.error(traceback.format_exc())
             try:
                 self.hyperv_api.disconnect()
-            except:
-                pass
+            except Exception as e2:
+                logger.warning(f"断开Hyper-V连接时出错: {e2}")
             return ZMessage(success=False, action="EFISetup", message=str(e))
 
     # 虚拟机截图 ####################################################################
@@ -1650,8 +1650,8 @@ class HostServer(BasicServer):
             logger.error(f"[{self.hs_config.server_name}] 获取虚拟机截图时出错: {str(e)}")
             try:
                 self.hyperv_api.disconnect()
-            except:
-                pass
+            except Exception as e2:
+                logger.warning(f"断开Hyper-V连接时出错: {e2}")
             return ""
 
     # 虚拟机控制台 ##################################################################

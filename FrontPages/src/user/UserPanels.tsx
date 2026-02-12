@@ -32,11 +32,9 @@ const UserPanels: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [vmsLoading, setVmsLoading] = useState(false);
   const [vms, setVMs] = useState<Record<string, any>>({});
-  const [availableHosts, setAvailableHosts] = useState<Record<string, any>>({});
 
   useEffect(() => {
     fetchUserData();
-    loadAvailableHosts();
     loadAllVMs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -56,24 +54,6 @@ const UserPanels: React.FC = () => {
     }
   };
 
-  const loadAvailableHosts = async () => {
-    try {
-      const result = await getHosts();
-      if (result.code === 200 && result.data) {
-        const hostsWithEnabled = Object.entries(result.data).reduce((acc, [key, host]: [string, any]) => {
-          acc[key] = {
-            ...host,
-            enabled: host.enable_host !== false
-          };
-          return acc;
-        }, {} as Record<string, any>);
-        setAvailableHosts(hostsWithEnabled);
-      }
-    } catch (error) {
-      console.error('加载主机列表失败:', error);
-    }
-  };
-
   const loadAllVMs = async () => {
     try {
       setVmsLoading(true);
@@ -81,8 +61,9 @@ const UserPanels: React.FC = () => {
       const hostsRes = await getHosts();
       if (hostsRes.code === 200 && hostsRes.data) {
         // 过滤掉未启用的主机，不请求其虚拟机列表
-        const hosts = Object.keys(hostsRes.data).filter(
-          (host) => hostsRes.data[host].enable_host !== false
+        const hostsData = hostsRes.data;
+        const hosts = Object.keys(hostsData).filter(
+          (host) => hostsData[host].enable_host !== false
         );
         await Promise.all(hosts.map(async (host) => {
           try {
@@ -149,12 +130,6 @@ const UserPanels: React.FC = () => {
       return `${k >= 10 ? Math.round(k) : (Math.round(k * 10) / 10)}k${unit}`;
     }
     return `${Math.round(count)} ${unit}`;
-  };
-
-  const formatMemory = (mb?: number): string => {
-    if (!mb) return '0 MB';
-    if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`;
-    return `${mb} MB`;
   };
 
   // CPU核心数量换算（支持万核），超过0.95则进位

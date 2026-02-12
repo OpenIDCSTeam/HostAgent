@@ -166,10 +166,11 @@ function HostManage() {
         try {
             const result = await api.getEngineTypes()
             if (result.code === 200) {
-                // 确保result.data是对象类型
-                const data = result.data || {}
-                if (typeof data === 'object' && !Array.isArray(data)) {
-                    setEngineTypes(data as Record<string, EngineTypeConfig>)
+                // 后端返回格式: { current_platform, current_arch, engine_types: {...} }
+                const data = result.data as any || {}
+                const engineData = data.engine_types || {}
+                if (typeof engineData === 'object' && !Array.isArray(engineData)) {
+                    setEngineTypes(engineData as Record<string, EngineTypeConfig>)
                 }
             }
         } catch (error) {
@@ -480,10 +481,10 @@ function HostManage() {
                     type: values.type,
                     config: config,
                     server_pass: values.server_pass
-                })
+                } as any)
                 message.success('主机添加成功')
             } else {
-                await api.updateHost(currentHost, { config })
+                await api.updateHost(currentHost, { config } as any)
                 message.success('主机更新成功')
             }
 

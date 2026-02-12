@@ -11,7 +11,6 @@ import {
     Button,
     Space,
     Slider,
-    Typography,
     Alert,
     Divider
 } from 'antd'
@@ -26,8 +25,6 @@ import {
 } from '@ant-design/icons'
 import api from '@/utils/apis.ts'
 import { VM_PERMISSION, hasPermission } from '@/types'
-
-const { Text } = Typography
 
 // Interfaces
 interface UserQuota {
@@ -206,7 +203,7 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
             const imagesResult = await api.getOSImages(host)
             if (imagesResult.code === 200 && imagesResult.data) {
                 setHostConfig(imagesResult.data as any)
-                setHostImages(imagesResult.data.system_maps || {})
+setHostImages((imagesResult.data.system_maps || {}) as unknown as Record<string, [string, number]>)
             }
 
             // Load GPU List
@@ -272,11 +269,11 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
 
             const result = await api.getVMDetail(targetHost, vmUuid)
             if (result.code === 200) {
-                const vm = result.data
-                const config = vm.config || {}
+                const vm = result.data as Record<string, any>
+                const config = vm?.config || {}
 
                 // 从API返回值更新用户权限
-                const apiPerms = typeof vm.user_permissions === 'number' ? vm.user_permissions : VM_PERMISSION.FULL_MASK
+                const apiPerms = typeof vm?.user_permissions === 'number' ? vm.user_permissions : VM_PERMISSION.FULL_MASK
                 setVmPerms(apiPerms)
                 // 用局部变量判断权限（避免React state异步更新时序问题）
                 const localCanEditSys = isAdmin || hasPermission(apiPerms, VM_PERMISSION.SYS_EDITS)
@@ -491,7 +488,7 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
             } else {
                 const hide = message.loading('创建中...', 0)
                 try {
-                    const result = await api.createVM(targetHost, vmData)
+                    const result = await api.createVM(targetHost, vmData as any)
                     hide()
                     if (result.code === 200) {
                         message.success('创建成功')
@@ -514,12 +511,8 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
             setPendingValues(values)
             setSaveConfirmVisible(true)
         } else {
-            await processSubmit(values)
+        await processSubmit(values)
         }
-    }
-
-    const sectionStyle: React.CSSProperties = {
-        // Styles moved to .modal-section class in index.css
     }
 
     const sectionTitleStyle: React.CSSProperties = {

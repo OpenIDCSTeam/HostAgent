@@ -79,8 +79,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             return ZMessage(
                 success=False, 
                 action=operation_name,
@@ -267,8 +267,8 @@ class HostServer(BasicServer):
             logger.warning(f"从API获取虚拟机 {vm_name} 状态失败: {str(e)}")
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
         return ""
 
     # 虚拟机扫描 ===============================================================
@@ -352,8 +352,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             return ZMessage(success=False, action="VScanner",
                             message=f"扫描虚拟机时出错: {str(e)}")
 
@@ -413,8 +413,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             hs_result = ZMessage(
                 success=False, action="VMCreate",
                 message=f"网络连接失败: {str(e)}")
@@ -427,8 +427,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             hs_result = ZMessage(
                 success=False, action="VMCreate",
                 message=f"权限不足: {str(e)}")
@@ -441,8 +441,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             hs_result = ZMessage(
                 success=False, action="VMCreate",
                 message=f"虚拟机创建失败: {str(e)}")
@@ -579,8 +579,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             return ZMessage(
                 success=False, action="VMUpdate",
                 message=f"虚拟机配置更新失败: {str(e)}")
@@ -637,8 +637,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             return ZMessage(
                 success=False, action="VMDelete",
                 message=f"删除虚拟机失败: {str(e)}")
@@ -674,7 +674,7 @@ class HostServer(BasicServer):
                 # 软关机：使用power_off但标记为软关机，启动监控线程
                 hs_result = ZMessage(success=True, action="VMPowers", message="正在等待系统软关机")
                 # 启动持续监控（5分钟内每5秒检查一次状态）
-                self._monitor_soft_power_operation(vm_name, VMPowers.S_CLOSE, VMPowers.ON_STOP)
+                self.soft_pwr(vm_name, VMPowers.S_CLOSE, VMPowers.ON_STOP)
             elif power == VMPowers.A_PAUSE:
                 hs_result = self.esxi_api.suspend(vm_name)
             elif power == VMPowers.S_RESET:
@@ -682,7 +682,7 @@ class HostServer(BasicServer):
                 hs_result = self.esxi_api.reset(vm_name)
                 if hs_result.success:
                     # 启动持续监控（5分钟内每5秒检查一次状态）
-                    self._monitor_soft_power_operation(vm_name, VMPowers.S_RESET, VMPowers.ON_STOP)
+                    self.soft_pwr(vm_name, VMPowers.S_RESET, VMPowers.ON_STOP)
             elif power == VMPowers.H_RESET:
                 hs_result = self.esxi_api.reset(vm_name)
             else:
@@ -704,7 +704,7 @@ class HostServer(BasicServer):
                 def delayed_refresh():
                     import time
                     time.sleep(3)  # 等待3秒让虚拟机状态稳定
-                    self._refresh_vm_status(vm_name)
+                    self.vm_loads(vm_name)
                 
                 refresh_thread = threading.Thread(target=delayed_refresh, daemon=True)
                 refresh_thread.start()
@@ -719,8 +719,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             
             # 回退状态
             if original_flag is not None:
@@ -789,8 +789,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             return ZMessage(success=False, action="VMBackup",
                             message=f"备份失败: {str(e)}")
 
@@ -825,8 +825,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             return ZMessage(success=False, action="Restores",
                             message=f"恢复失败: {str(e)}")
 
@@ -899,8 +899,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             return ZMessage(
                 success=False, action="HDDMount",
                 message=f"磁盘操作失败: {str(e)}")
@@ -994,8 +994,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             return ZMessage(
                 success=False, action="ISOMount",
                 message=f"ISO操作失败: {str(e)}")
@@ -1063,8 +1063,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             return ZMessage(
                 success=False, action="LDBackup",
                 message=f"加载备份失败: {str(e)}")
@@ -1128,8 +1128,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             return ZMessage(
                 success=False, action="RMBackup",
                 message=f"删除备份失败: {str(e)}")
@@ -1244,8 +1244,8 @@ class HostServer(BasicServer):
                 traceback.print_exc()
                 try:
                     self.esxi_api.disconnect()
-                except:
-                    pass
+                except Exception as disc_err:
+                    logger.warning(f"断开ESXi连接时出错: {disc_err}")
                 return {}
 
         except Exception as e:
@@ -1312,8 +1312,8 @@ class HostServer(BasicServer):
             except Exception as api_err:
                 try:
                     self.esxi_api.disconnect()
-                except:
-                    pass
+                except Exception as disc_err:
+                    logger.warning(f"断开ESXi连接时出错: {disc_err}")
                 return ZMessage(success=False, action="PCISetup", message=str(api_err))
 
             # 调用基类写入配置
@@ -1357,8 +1357,8 @@ class HostServer(BasicServer):
                 logger.error(f"[{self.hs_config.server_name}] 获取USB设备失败: {str(api_err)}")
                 try:
                     self.esxi_api.disconnect()
-                except:
-                    pass
+                except Exception as disc_err:
+                    logger.warning(f"断开ESXi连接时出错: {disc_err}")
                 return {}
 
         except Exception as e:
@@ -1421,8 +1421,8 @@ class HostServer(BasicServer):
             except Exception as api_err:
                 try:
                     self.esxi_api.disconnect()
-                except:
-                    pass
+                except Exception as disc_err:
+                    logger.warning(f"断开ESXi连接时出错: {disc_err}")
                 return ZMessage(success=False, action="USBSetup", message=str(api_err))
 
             # 更新虚拟机配置中的USB设备列表（不触发VMUpdate）
@@ -1518,8 +1518,8 @@ class HostServer(BasicServer):
             traceback.print_exc()
             try:
                 self.esxi_api.disconnect()
-            except:
-                pass
+            except Exception as disc_err:
+                logger.warning(f"断开ESXi连接时出错: {disc_err}")
             return ""
 
     # WebMKS远程访问 ###########################################################

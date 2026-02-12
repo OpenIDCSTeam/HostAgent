@@ -159,7 +159,7 @@ function LogsManage() {
             })
             message.success('日志清空成功')
           } else {
-            message.error(result?.message || '清空日志失败')
+            message.error(result?.msg || '清空日志失败')
           }
         } catch (error) {
           console.error('清空日志失败:', error)
