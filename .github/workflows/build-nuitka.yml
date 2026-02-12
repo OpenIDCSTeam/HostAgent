@@ -144,9 +144,9 @@ jobs:
 
     - name: Package build folders
       run: |
-        tar -czf OpenIDCS-Client-nuitka-Windows.tar.gz -C OpenIDCS-Client-nuitka-Windows BuildCache/nuitka
-        tar -czf OpenIDCS-Client-nuitka-Linux.tar.gz -C OpenIDCS-Client-nuitka-Linux BuildCache/nuitka
-        tar -czf OpenIDCS-Client-nuitka-macOS.tar.gz -C OpenIDCS-Client-nuitka-macOS BuildCache/nuitka
+        tar -czf OpenIDCS-Client-nuitka-Windows.tar.gz OpenIDCS-Client-nuitka-Windows
+        tar -czf OpenIDCS-Client-nuitka-Linux.tar.gz OpenIDCS-Client-nuitka-Linux
+        tar -czf OpenIDCS-Client-nuitka-macOS.tar.gz OpenIDCS-Client-nuitka-macOS
 
     - name: Create Release
       uses: softprops/action-gh-release@v1

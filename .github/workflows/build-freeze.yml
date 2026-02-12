@@ -165,9 +165,9 @@ jobs:
 
     - name: Package build folders
       run: |
-        tar -czf OpenIDCS-Client-cxfreeze-Windows.tar.gz -C OpenIDCS-Client-cxfreeze-Windows BuildCache/cxfreeze
-        tar -czf OpenIDCS-Client-cxfreeze-Linux.tar.gz -C OpenIDCS-Client-cxfreeze-Linux BuildCache/cxfreeze
-        tar -czf OpenIDCS-Client-cxfreeze-macOS.tar.gz -C OpenIDCS-Client-cxfreeze-macOS BuildCache/cxfreeze
+        tar -czf OpenIDCS-Client-cxfreeze-Windows.tar.gz OpenIDCS-Client-cxfreeze-Windows
+        tar -czf OpenIDCS-Client-cxfreeze-Linux.tar.gz OpenIDCS-Client-cxfreeze-Linux
+        tar -czf OpenIDCS-Client-cxfreeze-macOS.tar.gz OpenIDCS-Client-cxfreeze-macOS
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
