@@ -1198,7 +1198,7 @@ const [operationTimeoutId, setOperationTimeoutId] = useState<ReturnType<typeof s
                 <div>
                     <p className="mb-3">确定要添加网卡吗？</p>
                     <Alert message="添加网卡后需要重启虚拟机才能生效" type="warning" showIcon className="mb-3"/>
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded">
+                <div className="p-3 rounded">
                         <p className="text-sm mb-1">网卡类型：{_values.nic_type === 'pub' ? '公网' : '内网'}</p>
                         {_values.ip4_addr && <p className="text-sm mb-1">IPv4地址：{_values.ip4_addr}</p>}
                         {_values.ip6_addr && <p className="text-sm">IPv6地址：{_values.ip6_addr}</p>}
@@ -2661,7 +2661,7 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                                             className="text-sm font-mono break-all">{iso.iso_file || '-'}</code>
                                     </div>
                                     {iso.iso_hint && (
-                                        <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3">
+                                        <div className=" rounded-lg p-3">
                                             <p className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>备注</p>
                                             <p className="text-sm">{iso.iso_hint}</p>
                                         </div>
@@ -2700,7 +2700,7 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between text-sm">
                                         <span style={{ color: 'var(--text-secondary)' }}>外网端口</span>
-                                        <code className="px-2 py-1 font-medium font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded">
+                                        <code className="px-2 py-1 font-medium font-mono text-blue-600 dark:text-blue-400  rounded">
                                             {rule.wan_port || '-'}
                                         </code>
                                     </div>
@@ -3225,7 +3225,7 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                         </div>
                     </Divider>
                     {editNicList.map((nic) => (
-                <div key={nic.id} className="mb-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded border border-gray-200 dark:border-gray-700 relative">
+                <div key={nic.id} className="mb-4 p-3  rounded border border-gray-200 dark:border-gray-700 relative">
                             <div className="absolute top-2 right-2"><Button type="text" danger size="small"
                                                                             icon={<DeleteOutlined/>}
                                                                             onClick={() => removeEditNic(nic.id)}/>
@@ -3270,7 +3270,7 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                    onOk={handleConfirmUpdateVM} okText="确认保存" okButtonProps={{disabled: !saveConfirmChecked}}
                    width={400}>
                 <div className="mb-4"><p>确定要保存对虚拟机 "<strong>{uuid}</strong>" 的配置修改吗？</p></div>
-                <div className="p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded flex items-center justify-center">
+                <div className="p-3  border border-gray-200 dark:border-gray-700 rounded flex items-center justify-center">
                     <Space><input type="checkbox" id="saveConfirmCheck" checked={saveConfirmChecked}
                                   onChange={(e) => setSaveConfirmChecked(e.target.checked)}
                                   className="w-4 h-4 text-blue-600"/><label htmlFor="saveConfirmCheck"
@@ -3349,7 +3349,7 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
 
             <Modal title="添加IP地址" open={ipModalVisible} onCancel={() => setIpModalVisible(false)}
                    onOk={() => ipForm.submit()}>
-                {ipQuota && (<div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded text-sm">
+                {ipQuota && (<div className="mb-4 p-3  rounded text-sm">
                     <div className="flex justify-between mb-1"><span>内网IP配额:</span><span
                         className="font-mono">{ipQuota.ip_used}/{ipQuota.ip_num}</span></div>
                     <div className="flex justify-between"><span>公网IP配额:</span><span

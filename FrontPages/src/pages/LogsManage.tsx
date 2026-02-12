@@ -403,7 +403,7 @@ function LogsManage() {
                       key={index} 
                       className={`p-4 cursor-pointer transition-colors ${
                         isSelected 
-                          ? 'bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500' 
+                          ? ' border-l-4 border-blue-500'
                           : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
                       }`}
                       onClick={() => setSelectedLog(log)}
@@ -415,7 +415,7 @@ function LogsManage() {
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-xs font-semibold">{host}</span>
                               <span className={`text-xs ${getLevelTextColor(level)} font-medium uppercase`}>{level}</span>
-                              <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">{actions}</span>
+                              <span className="text-xs font-medium text-blue-600 dark:text-blue-400  px-2 py-1 rounded">{actions}</span>
                               <span className={`text-xs ${successColor} dark:brightness-125 font-medium`}>{success}</span>
                             </div>
                             <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{time}</span>
@@ -443,7 +443,7 @@ function LogsManage() {
             {selectedLog ? (
               <div className="space-y-4">
                 {/* 基本信息 */}
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                <div className=" rounded-lg p-4">
                   <h3 className="text-sm font-semibold mb-3">基本信息</h3>
                   <div className="space-y-2">
                     <div className="flex items-start">
@@ -479,7 +479,7 @@ function LogsManage() {
                 </div>
 
                 {/* 消息内容 */}
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                <div className=" rounded-lg p-4">
                   <h3 className="text-sm font-semibold mb-3">消息内容</h3>
                   <p className="text-sm whitespace-pre-wrap break-words">
                     {selectedLog.message || selectedLog.content || '无消息内容'}
