@@ -172,10 +172,10 @@ pip install -r HostConfig/requirements.txt
 #### 3. 启动服务
 ```bash
 # 开发模式启动
-python HostServer.py
+python MainServer.py
 
 # 或使用生产模式（推荐）
-python HostServer.py --production
+python MainServer.py --production
 ```
 
 #### 4. 访问管理界面
@@ -232,7 +232,7 @@ pip install -r HostConfig/requirements.txt
 pip install pytest pytest-flask black flake8
 
 # 启动开发服务器
-python HostServer.py
+python MainServer.py
 ```
 
 ### 项目结构

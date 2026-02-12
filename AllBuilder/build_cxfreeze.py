@@ -100,7 +100,7 @@ if PROJECT_BASE_DIR not in sys.path:
     sys.path.insert(0, PROJECT_BASE_DIR)
 
 # 主脚本
-MAIN_SCRIPT = os.path.join(PROJECT_BASE_DIR, "HostServer.py")
+MAIN_SCRIPT = os.path.join(PROJECT_BASE_DIR, "MainServer.py")
 
 # 图标文件
 ICON_FILE = os.path.join(PROJECT_BASE_DIR, "HostConfig/HostManage.ico")

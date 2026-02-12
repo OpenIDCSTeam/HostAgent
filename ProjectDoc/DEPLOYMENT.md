@@ -95,7 +95,7 @@ mkdir -p DataSaving logs
 
 # 6. 启动服务
 echo "启动服务..."
-python HostServer.py --production
+python MainServer.py --production
 
 # 7. 验证服务
 echo "服务已启动，访问 http://$(hostname -I | awk '{print $1}'):1880"
@@ -130,7 +130,7 @@ mkdir -p DataSaving logs
 
 # 6. 启动服务
 echo "启动服务..."
-python HostServer.py --production
+python MainServer.py --production
 ```
 
 ### 方式二：Docker 部署（推荐生产环境）
@@ -643,7 +643,7 @@ pip install --force-reinstall -r HostConfig/requirements.txt
 
 # 重置配置文件
 rm -rf DataSaving/*.json
-python HostServer.py  # 重新生成配置
+python MainServer.py  # 重新生成配置
 ```
 
 #### 2. 虚拟机无法连接
@@ -687,7 +687,7 @@ journalctl -u openidc-client -f
 ```bash
 # 检查服务状态
 systemctl status openidc-client
-ps aux | grep HostServer.py
+ps aux | grep MainServer.py
 
 # 检查端口监听
 netstat -tlnp | grep 1880

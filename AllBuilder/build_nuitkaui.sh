@@ -94,7 +94,7 @@ python3 -m nuitka \
     --include-data-dir=VNCConsole/Sources=VNCConsole/Sources \
     --include-data-dir=HostConfig=HostConfig \
     --include-data-file=HostConfig/HostManage.sql=HostConfig/HostManage.sql \
-    HostServer.py
+    MainServer.py
 
 if [ $? -ne 0 ]; then
     echo ""

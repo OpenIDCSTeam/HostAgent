@@ -34,7 +34,7 @@ Authorization: Bearer <your-token>
 #### 获取初始Token
 首次启动服务时会自动生成Token，可在控制台输出或数据库中查看：
 ```bash
-python HostServer.py
+python MainServer.py
 # 控制台会显示: 访问Token: abc123def456...
 ```
 

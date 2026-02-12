@@ -58,7 +58,7 @@ npm run dev
 在项目根目录：
 
 ```bash
-python HostServer.py
+python MainServer.py
 ```
 
 后端将运行在 `http://localhost:1880`
@@ -232,7 +232,7 @@ npm run lint
 确保Flask后端已启动在端口1880：
 
 ```bash
-python HostServer.py
+python MainServer.py
 ```
 
 ### 2. 依赖安装失败
