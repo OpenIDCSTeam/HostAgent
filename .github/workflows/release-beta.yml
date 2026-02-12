@@ -1,4 +1,4 @@
-name: Release Beta (Freeze)
+name: Release Tests
 
 on:
   push:

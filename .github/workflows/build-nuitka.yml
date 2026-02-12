@@ -14,6 +14,7 @@ on:
         options:
           - windows
           - linux
+          - macos
           - all
         default: 'all'
       create_release:
@@ -57,7 +58,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r HostConfig/requirements.txt
+        pip install -r HostConfig/pipinstall.txt
+        pip install nuitka
 
     - name: Build with Nuitka
       run: |
@@ -68,7 +70,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: OpenIDCS-Client-nuitka-Windows
-        path: BuildCache/nuitka/OpenIDCS-Client.exe
+        path: BuildCache/nuitka
         retention-days: 30
 
   build-linux:
@@ -90,7 +92,8 @@ jobs:
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r HostConfig/requirements.txt
+        pip install -r HostConfig/pipinstall.txt
+        pip install nuitka
 
     - name: Build with Nuitka
       run: |
@@ -101,16 +104,52 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: OpenIDCS-Client-nuitka-Linux
-        path: BuildCache/nuitka/OpenIDCS-Client
+        path: BuildCache/nuitka
+        retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+    if: inputs.target_platform == 'macos' || inputs.target_platform == 'all'
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r HostConfig/pipinstall.txt
+        pip install nuitka
+        pip install nuitka
+
+    - name: Build with Nuitka
+      run: |
+        cd AllBuilder
+        python build_nuitkaui.py
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: OpenIDCS-Client-nuitka-macOS
+        path: BuildCache/nuitka
         retention-days: 30
 
   release:
-    needs: [build-windows, build-linux]
+    needs: [build-windows, build-linux, build-macos]
     runs-on: ubuntu-latest
     if: inputs.create_release == 'yes'
     steps:
     - name: Download all artifacts
       uses: actions/download-artifact@v4
+
+    - name: Package build folders
+      run: |
+        tar -czf OpenIDCS-Client-nuitka-Windows.tar.gz -C OpenIDCS-Client-nuitka-Windows BuildCache/nuitka
+        tar -czf OpenIDCS-Client-nuitka-Linux.tar.gz -C OpenIDCS-Client-nuitka-Linux BuildCache/nuitka
+        tar -czf OpenIDCS-Client-nuitka-macOS.tar.gz -C OpenIDCS-Client-nuitka-macOS BuildCache/nuitka
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
@@ -118,8 +157,9 @@ jobs:
         tag_name: ${{ inputs.version != '' && format('v{0}', inputs.version) || 'beta' }}
         name: ${{ inputs.version != '' && format('Release v{0}', inputs.version) || 'Beta Release' }}
         files: |
-          OpenIDCS-Client-nuitka-Windows/OpenIDCS-Client.exe
-          OpenIDCS-Client-nuitka-Linux/OpenIDCS-Client
+          OpenIDCS-Client-nuitka-Windows.tar.gz
+          OpenIDCS-Client-nuitka-Linux.tar.gz
+          OpenIDCS-Client-nuitka-macOS.tar.gz
         draft: false
         prerelease: ${{ inputs.version == '' }}
       env:

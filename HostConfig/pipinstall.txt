@@ -18,9 +18,10 @@ pylxd
 docker
 Jinja2
 Click
-nuitka
 pycryptodomex
 pyzstd
 bcj-cffi
 paramiko
+# cx-freeze
+# nuitka
 # hypy
