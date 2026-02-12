@@ -14,7 +14,15 @@
 
 <p align="center"><a href="ProjectDoc/APIDOC_ALL.md">📚 API文档</a> | <a href="ProjectDoc/DEPLOYMENT.md">🚀 部署指南</a> | <a href="ProjectDoc/PROJECT_OVERVIEW.md">🏗️ 项目架构</a></p>
 
-![OpenIDC-Client Dashboard](Screenshot/QQ20251210-165038.jpg)
+### 资源概览
+![QQ20260212-163554.jpg](Screenshot/QQ20260212-163554.jpg)
+
+### 虚拟机管理
+![QQ20260212-163705.jpg](Screenshot/QQ20260212-163705.jpg)
+
+### 日志管理
+![QQ20260212-163842.jpg](Screenshot/QQ20260212-163842.jpg)
+
 
 ---
 
