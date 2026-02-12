@@ -64,8 +64,7 @@ jobs:
 
     - name: Build with Nuitka
       run: |
-        cd AllBuilder
-        python build_nuitkaui.py
+        python .\AllBuilder\build_nuitkaui.py
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -98,8 +97,7 @@ jobs:
 
     - name: Build with Nuitka
       run: |
-        cd AllBuilder
-        python build_nuitkaui.py
+        python ./AllBuilder/build_nuitkaui.py
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -127,8 +125,7 @@ jobs:
 
     - name: Build with Nuitka
       run: |
-        cd AllBuilder
-        python build_nuitkaui.py
+        python ./AllBuilder/build_nuitkaui.py
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4

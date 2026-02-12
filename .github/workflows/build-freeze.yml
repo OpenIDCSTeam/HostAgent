@@ -71,8 +71,7 @@ jobs:
 
     - name: Build with cx-Freeze (包含前端构建)
       run: |
-        cd AllBuilder
-        python build_cxfreeze.py build
+        python .AllBuilder\build_cxfreeze.py build
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -112,8 +111,7 @@ jobs:
 
     - name: Build with cx-Freeze (包含前端构建)
       run: |
-        cd AllBuilder
-        python build_cxfreeze.py build
+        python ./AllBuilder/build_cxfreeze.py build
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -148,8 +146,7 @@ jobs:
 
     - name: Build with cx-Freeze (包含前端构建)
       run: |
-        cd AllBuilder
-        python build_cxfreeze.py build
+        python ./AllBuilder/build_cxfreeze.py build
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
