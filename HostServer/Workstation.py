@@ -1,5 +1,5 @@
-# Workstation - VMware Workstation虚拟化平台管理 ###############################
-# 提供VMware Workstation虚拟机的创建、管理和监控功能
+# Workstation - VMWare Workstation虚拟化平台管理 ###############################
+# 提供VMWare Workstation虚拟机的创建、管理和监控功能
 ################################################################################
 import shutil
 import string
@@ -13,10 +13,12 @@ from HostServer.BasicServer import BasicServer
 from MainObject.Config.HSConfig import HSConfig
 from MainObject.Config.IMConfig import IMConfig
 from MainObject.Config.SDConfig import SDConfig
+from MainObject.Config.VFConfig import VFConfig
 from MainObject.Config.VMPowers import VMPowers
 from MainObject.Public.HWStatus import HWStatus
 from MainObject.Public.ZMessage import ZMessage
 from MainObject.Config.VMConfig import VMConfig
+from MainObject.Config.USBInfos import USBInfos
 from HostServer.WorkstationAPI.VMWRestAPI import VRestAPI
 
 
@@ -39,12 +41,12 @@ class HostServer(BasicServer):
         return os.path.join(self.hs_config.system_path, vm_uuid)
 
     # 公共函数 - 获取VMX文件路径 ===============================================
-    def _get_vmx_file(self, vm_uuid: str) -> str:
+    def _get_vm_file(self, vm_uuid: str) -> str:
         """获取VMX文件完整路径"""
         return os.path.join(self._get_vm_path(vm_uuid), f"{vm_uuid}.vmx")
 
     # 公共函数 - 检查虚拟机是否存在 ============================================
-    def _check_vm_exists(self, vm_name: str) -> tuple:
+    def _get_vm_flag(self, vm_name: str) -> tuple:
         """检查虚拟机是否存在，返回(是否存在, 虚拟机配置或None)"""
         if vm_name not in self.vm_saving:
             return False, None
@@ -268,11 +270,15 @@ class HostServer(BasicServer):
             register_result = self.vmrest_api.loader_vmx(f"{vm_file}.vmx")
             if not register_result.success:
                 raise Exception(f"注册虚拟机失败: {register_result.message}")
-            logger.info(f"[Workstation] 虚拟机已注册到VMware")
+            logger.info(f"[Workstation] 虚拟机已注册到VMWare")
 
             # 启动虚拟机 =======================================================
             self.VMPowers(vm_conf.vm_uuid, VMPowers.S_START)
             logger.info(f"[Workstation] 虚拟机创建成功: {vm_conf.vm_uuid}")
+
+            # 填充efi_all默认启动项顺序 ========================================
+            if not vm_conf.efi_all:
+                vm_conf.efi_all = self.efi_build(vm_conf)
 
             # 通用操作 =========================================================
             return super().VMCreate(vm_conf)
@@ -349,7 +355,7 @@ class HostServer(BasicServer):
 
             # 专用操作 =========================================================
             # 检查虚拟机是否存在 ===============================================
-            exists, _ = self._check_vm_exists(vm_conf.vm_uuid)
+            exists, _ = self._get_vm_flag(vm_conf.vm_uuid)
             if not exists:
                 return ZMessage(
                     success=False, action="VMUpdate",
@@ -392,7 +398,7 @@ class HostServer(BasicServer):
                             f"网络配置更新失败: {network_result.message}")
 
             # 更新VMX文件 ======================================================
-            vm_save_name = self._get_vmx_file(vm_conf.vm_uuid)
+            vm_save_name = self._get_vm_file(vm_conf.vm_uuid)
             if os.path.exists(vm_save_name):
                 with open(vm_save_name, "r", encoding="utf-8") as vm_file:
                     existing_vmx_content = vm_file.read()
@@ -430,7 +436,7 @@ class HostServer(BasicServer):
             logger.info(f"[Workstation] 开始删除虚拟机: {vm_name}")
             # 专用操作 =========================================================
             # 检查虚拟机是否存在 ===============================================
-            exists, vm_conf = self._check_vm_exists(vm_name)
+            exists, vm_conf = self._get_vm_flag(vm_name)
             if not exists:
                 logger.warning(f"[Workstation] 虚拟机不存在: {vm_name}")
                 return ZMessage(
@@ -570,12 +576,11 @@ class HostServer(BasicServer):
         return super().RMMounts(vm_name, vm_imgs)
 
     # 查找PCI设备 =============================================================
-    def PCIShows(self) -> dict[str, 'VFConfig']:
-        """VMware Workstation不支持PCI直通，返回空"""
+    def PCIShows(self) -> dict[str, VFConfig]:
         return {}
 
     # 查找USB设备 =============================================================
-    def USBShows(self) -> dict[str, 'USBInfos']:
+    def USBShows(self) -> dict[str, USBInfos]:
         """获取宿主机可用USB设备列表"""
         from MainObject.Config.USBInfos import USBInfos
         try:
@@ -634,7 +639,7 @@ class HostServer(BasicServer):
             return {}
 
     # USB设备直通 =============================================================
-    def USBSetup(self, vm_name: str, usb_info, usb_key: str, in_flag=True):
+    def USBSetup(self, vm_name: str, ud_info, ud_keys: str, in_flag=True):
         """USB设备直通 - 使用vmrun命令进行热插拔，无需关机"""
         from MainObject.Public.ZMessage import ZMessage
         try:
@@ -644,7 +649,7 @@ class HostServer(BasicServer):
                               message=f"虚拟机 {vm_name} 不存在")
 
             # 获取VMX文件路径
-            vmx_file = self._get_vmx_file(vm_name)
+            vmx_file = self._get_vm_file(vm_name)
             if not os.path.exists(vmx_file):
                 return ZMessage(success=False, action="USBSetup",
                               message=f"虚拟机配置文件不存在: {vmx_file}")
@@ -653,29 +658,29 @@ class HostServer(BasicServer):
             vm_conf = self.vm_saving[vm_name]
             if in_flag:
                 # 添加USB设备到配置
-                if usb_key not in vm_conf.usb_all:
-                    vm_conf.usb_all[usb_key] = usb_info
-                    logger.info(f"[Workstation] 添加USB设备到配置: {usb_key}")
+                if ud_keys not in vm_conf.usb_all:
+                    vm_conf.usb_all[ud_keys] = ud_info
+                    logger.info(f"[Workstation] 添加USB设备到配置: {ud_keys}")
             else:
                 # 从配置中移除USB设备
-                if usb_key in vm_conf.usb_all:
-                    del vm_conf.usb_all[usb_key]
-                    logger.info(f"[Workstation] 从配置中移除USB设备: {usb_key}")
+                if ud_keys in vm_conf.usb_all:
+                    del vm_conf.usb_all[ud_keys]
+                    logger.info(f"[Workstation] 从配置中移除USB设备: {ud_keys}")
 
             # 构建USB设备名称 (格式: vid:pid)
-            usb_device_name = f"{usb_info.vid_uuid}:{usb_info.pid_uuid}"
+            usb_device_name = f"{ud_info.vid_uuid}:{ud_info.pid_uuid}"
             
             # 使用vmrun命令进行USB设备热插拔
             if in_flag:
                 # 连接USB设备
                 command = "connectNamedDevice"
                 args = [usb_device_name]
-                logger.info(f"[Workstation] 连接USB设备: {usb_device_name} ({usb_info.usb_hint})")
+                logger.info(f"[Workstation] 连接USB设备: {usb_device_name} ({ud_info.usb_hint})")
             else:
                 # 断开USB设备
                 command = "disconnectNamedDevice"
                 args = [usb_device_name]
-                logger.info(f"[Workstation] 断开USB设备: {usb_device_name} ({usb_info.usb_hint})")
+                logger.info(f"[Workstation] 断开USB设备: {usb_device_name} ({ud_info.usb_hint})")
 
             # 执行vmrun命令
             vmrun_result = self.vmrest_api.execute_vmrun(
@@ -703,22 +708,11 @@ class HostServer(BasicServer):
             traceback.print_exc()
             return ZMessage(success=False, action="USBSetup", message=str(e))
 
-    # 启动项列出 ===============================================================
-    def EFIShows(self, vm_name: str) -> list:
-        """VMware Workstation不支持EFI启动项管理，返回基类默认值"""
-        return super().EFIShows(vm_name)
-
-    # 启动项设置 ===============================================================
-    def EFISetup(self, vm_name: str, efi_list: list = None):
-        """VMware Workstation不支持EFI启动项管理"""
-        from MainObject.Public.ZMessage import ZMessage
-        return ZMessage(success=False, action="EFISetup", message="Workstation不支持EFI启动项管理")
-
     # 虚拟机截图 ===============================================================
     def VMScreen(self, vm_name: str = "") -> str:
         try:
             # 检查虚拟机配置 ===================================================
-            exists, vm_conf = self._check_vm_exists(vm_name)
+            exists, vm_conf = self._get_vm_flag(vm_name)
             if not exists:
                 logger.error(f"未找到虚拟机 {vm_name} 的配置")
                 return ""

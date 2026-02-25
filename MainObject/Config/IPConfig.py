@@ -14,14 +14,14 @@ class IPStatus:
 class IPConfig:
     """IP地址分配管理类"""
 
-    def __init__(self, ipaddr_maps: dict, ipaddr_dnss: list):
+    def __init__(self, ipaddr_maps: dict, ipaddr_ddns: list):
         """
         初始化IP配置管理器
         :param ipaddr_maps: IP地址池配置
-        :param ipaddr_dnss: DNS服务器列表
+        :param ipaddr_ddns: DNS服务器列表
         """
         self.ipaddr_maps = ipaddr_maps or {}
-        self.ipaddr_dnss = ipaddr_dnss or []
+        self.ipaddr_ddns = ipaddr_ddns or []
 
     def allocate_ip(self, ip_version: str, nic_type: str, allocated_ips: set) -> Optional[dict]:
         """
@@ -89,8 +89,8 @@ class IPConfig:
                     nic_config.gateway = ipv4_result["gate"]
                 if ipv4_result.get("mask"):
                     nic_config.netmask = ipv4_result["mask"]
-                if self.ipaddr_dnss:
-                    nic_config.dns_addr = self.ipaddr_dnss
+                if self.ipaddr_ddns:
+                    nic_config.dns_addr = self.ipaddr_ddns
                     nic_config.send_mac()
 
 

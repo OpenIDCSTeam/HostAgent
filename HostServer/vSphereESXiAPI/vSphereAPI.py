@@ -944,6 +944,63 @@ class vSphereAPI:
             return ZMessage(success=False, action="update_vm_config",
                             message=f"更新配置失败: {str(e)}")
 
+    def set_boot_order(self, vm_name: str, efi_all: list) -> ZMessage:
+        """
+        根据efi_all设置虚拟机启动顺序
+        efi_type=False -> 硬盘，efi_type=True -> 光盘
+        :param vm_name: 虚拟机名称
+        :param efi_all: list[BootOpts]，启动项顺序列表
+        :return: 操作结果
+        """
+        try:
+            vm = self.get_vm(vm_name)
+            if not vm:
+                return ZMessage(success=False, action="set_boot_order",
+                                message=f"虚拟机 {vm_name} 不存在")
+            if not efi_all:
+                return ZMessage(success=True, action="set_boot_order",
+                                message="启动项列表为空，跳过设置")
+            # 收集虚拟机设备
+            disks = []
+            cdroms = []
+            for device in vm.config.hardware.device:
+                if isinstance(device, vim.vm.device.VirtualDisk):
+                    disks.append(device)
+                elif isinstance(device, vim.vm.device.VirtualCdrom):
+                    cdroms.append(device)
+            # 按efi_all顺序构建启动项列表
+            boot_order = []
+            disk_idx = 0
+            cdrom_idx = 0
+            for efi_item in efi_all:
+                if not efi_item.efi_type:  # HDD
+                    if disk_idx < len(disks):
+                        boot_disk = vim.vm.BootOptions.BootableDiskDevice()
+                        boot_disk.deviceKey = disks[disk_idx].key
+                        boot_order.append(boot_disk)
+                        disk_idx += 1
+                else:  # ISO/CDROM
+                    if cdrom_idx < len(cdroms):
+                        boot_cdrom = vim.vm.BootOptions.BootableCdromDevice()
+                        boot_order.append(boot_cdrom)
+                        cdrom_idx += 1
+            if not boot_order:
+                return ZMessage(success=True, action="set_boot_order",
+                                message="无有效启动设备，跳过设置")
+            boot_opts = vim.vm.BootOptions()
+            boot_opts.bootOrder = boot_order
+            config_spec = vim.vm.ConfigSpec()
+            config_spec.bootOptions = boot_opts
+            task = vm.Reconfigure(config_spec)
+            result = self._wait_for_task(task)
+            if result.success:
+                logger.info(f"虚拟机 {vm_name} 启动顺序设置成功")
+            return result
+        except Exception as e:
+            logger.error(f"设置启动顺序失败: {str(e)}")
+            return ZMessage(success=False, action="set_boot_order",
+                            message=f"设置启动顺序失败: {str(e)}")
+
     def update_network_adapters(self, vm_name: str, vm_conf: VMConfig, vm_last: VMConfig, hs_config: HSConfig) -> ZMessage:
         """
         更新虚拟机网卡配置

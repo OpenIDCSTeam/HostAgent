@@ -13,6 +13,8 @@ from HostServer.BasicServer import BasicServer
 from MainObject.Config.HSConfig import HSConfig
 from MainObject.Config.IMConfig import IMConfig
 from MainObject.Config.SDConfig import SDConfig
+from MainObject.Config.USBInfos import USBInfos
+from MainObject.Config.VFConfig import VFConfig
 from MainObject.Config.VMPowers import VMPowers
 from MainObject.Config.VMBackup import VMBackup
 from MainObject.Config.PortData import PortData
@@ -439,7 +441,7 @@ class HostServer(BasicServer):
             return vm_conf, result
         try:
             # 获取所有已分配的IP地址（包括其他虚拟机）
-            allocated_ips = self.IPCollect()
+            allocated_ips = self.ip_check()
             # 检查是否有重复的网卡类型（禁止同一容器分配多个相同类型的网卡）
             nic_types = {}
             for nic_name, nic_conf in vm_conf.nic_all.items():
@@ -529,8 +531,8 @@ class HostServer(BasicServer):
                         if ip_mask:
                             nic_conf.nic_mask = ip_mask
                         # 设置DNS
-                        if self.hs_config.ipaddr_dnss:
-                            nic_conf.dns_addr = self.hs_config.ipaddr_dnss
+                        if self.hs_config.ipaddr_ddns:
+                            nic_conf.dns_addr = self.hs_config.ipaddr_ddns
                         # 更新MAC地址
                         nic_conf.send_mac()
 
@@ -915,7 +917,7 @@ class HostServer(BasicServer):
             return result
 
         try:
-            vm_conf = self.VMSelect(vm_name)
+            vm_conf = self.vm_finds(vm_name)
             if vm_conf is None:
                 logger.error(f"[{self.hs_config.server_name}] 容器配置不存在: {vm_name}")
                 return ZMessage(
@@ -1123,7 +1125,7 @@ class HostServer(BasicServer):
         if not result.success:
             return result
 
-        vm_conf = self.VMSelect(vm_name)
+        vm_conf = self.vm_finds(vm_name)
         if not vm_conf:
             return ZMessage(
                 success=False,
@@ -1238,7 +1240,7 @@ class HostServer(BasicServer):
             return result
 
         # 获取VM配置
-        vm_conf = self.VMSelect(vm_name)
+        vm_conf = self.vm_finds(vm_name)
         if not vm_conf:
             return ZMessage(
                 success=False, action="Restores",
@@ -1543,3 +1545,52 @@ class HostServer(BasicServer):
     # 端口映射 #################################################################
     def PortsMap(self, map_info: PortData, flag=True) -> ZMessage:
         return self.PortsMap_TTY(map_info, flag)
+
+    # 虚拟机截图 ################################################################
+    def VMScreen(self, vm_name: str = "") -> str:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().VMScreen(vm_name)
+
+    # 磁盘移交检查 ################################################################
+    def HDDCheck(self, vm_name: str, vm_imgs: SDConfig, ex_name: str) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().HDDCheck(vm_name, vm_imgs, ex_name)
+
+    # 移交所有权 ################################################################
+    def HDDTrans(self, vm_name: str, vm_imgs: SDConfig, ex_name: str) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().HDDTrans(vm_name, vm_imgs, ex_name)
+
+    # 查找显卡 #################################################################
+    def PCIShows(self) -> dict[str, VFConfig]:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().PCIShows()
+
+    # 直通PCI ###################################################################
+    def PCISetup(self, vm_name: str, config: VFConfig, pci_key: str, in_flag=True) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().PCISetup(vm_name, config, pci_key, in_flag)
+
+    # 查找USB ###################################################################
+    def USBShows(self) -> dict[str, USBInfos]:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().USBShows()
+
+    # 直通USB ###################################################################
+    def USBSetup(self, vm_name: str, ud_info: USBInfos, ud_keys: str, in_flag=True) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().USBSetup(vm_name, ud_info, ud_keys, in_flag)

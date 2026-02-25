@@ -69,7 +69,7 @@ class VMConfig:
                 pci_edits=True,  # 是否允许编辑PCIe
                 usb_edits=True,  # 是否允许编辑USBs
                 vm_backup=True,  # 是否允许备份还原
-                efi_edits=True,  # 是否允许管理启动顺序
+                efi_edits=True,  # 是否允许管理启动
                 vm_modify=True,  # 是否允许修改配置
                 vm_delete=True,  # 是否允许删除实例
                 firewalls=True,  # 是否可编辑防火墙

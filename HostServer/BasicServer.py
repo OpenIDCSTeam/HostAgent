@@ -1,5 +1,5 @@
 ################################################################################
-#                          BasicServer - 基础服务器类
+# BasicServer - 基础服务器类
 ################################################################################
 import os
 import shutil
@@ -12,9 +12,10 @@ from loguru import logger
 from random import randint
 from HostModule.HttpManager import HttpManager
 from HostModule.NetsManager import NetsManager
-from MainObject.Config.VFConfig import VFConfig
 from VNCConsole.VNCSManager import WebsocketUI
 from VNCConsole.VNCSManager import VNCSManager
+from MainObject.Config.BootOpts import BootOpts
+from MainObject.Config.VFConfig import VFConfig
 from MainObject.Config.HSConfig import HSConfig
 from MainObject.Config.IMConfig import IMConfig
 from MainObject.Config.PortData import PortData
@@ -68,11 +69,7 @@ class BasicServer:
             if hasattr(self, key):
                 setattr(self, key, value)
 
-    # ###############################################################################
-    # 内置的方法 ####################################################################
-    # ###############################################################################
-
-    # 配置日志系统 ##################################################################
+    # 配置日志 ######################################################################
     def init_log(self) -> None:
         try:
             if self.hs_config.server_name:
@@ -91,6 +88,247 @@ class BasicServer:
                 )
         except Exception as e:
             logger.error(f"日志系统初始化失败: {e}")
+
+    # 电源监控 ######################################################################
+    def soft_pwr(self, vm_name: str, ac_flag: VMPowers, on_flag: VMPowers) -> None:
+        """
+        持续监控软关机和软重启操作，直到状态改变或超时
+
+        :param vm_name: 虚拟机名称
+        :param ac_flag: 电源操作类型（S_CLOSE或S_RESET）
+        :param on_flag: 预期的中间状态（ON_STOP）
+        """
+        import time
+        import threading
+
+        def monitor_task():
+            try:
+                logger.info(f"[{self.hs_config.server_name}] 开始监控虚拟机 {vm_name} 的软电源操作")
+
+                # 最大监控时间：5分钟（300秒）
+                max_duration = 300
+                # 检查间隔：5秒
+                check_interval = 5
+                # 已经过的时间
+                elapsed_time = 0
+
+                while elapsed_time < max_duration:
+                    # 等待一段时间再检查
+                    time.sleep(check_interval)
+                    elapsed_time += check_interval
+
+                    # 检查虚拟机是否还存在
+                    if vm_name not in self.vm_saving:
+                        logger.warning(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 已不存在，停止监控")
+                        return
+
+                    # 获取当前状态
+                    current_status = self.vm_saving[vm_name].vm_flag
+
+                    # 如果状态已经不是中间状态，说明操作已完成或被其他操作改变
+                    if current_status != on_flag:
+                        logger.info(
+                            f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 状态已改变为 {current_status}，停止监控")
+                        return
+
+                    # 从API获取实际状态
+                    actual_status = self.GetPower(vm_name)
+
+                    # 将API返回的中文状态映射为VMPowers枚举
+                    status_map = {
+                        '运行中': VMPowers.STARTED,
+                        '已关机': VMPowers.STOPPED,
+                        '已停止': VMPowers.STOPPED,
+                        '已暂停': VMPowers.SUSPEND,
+                        '未知': VMPowers.UNKNOWN,
+                        '': VMPowers.UNKNOWN
+                    }
+
+                    new_power_status = status_map.get(actual_status, VMPowers.UNKNOWN)
+
+                    # 判断操作是否成功
+                    operation_success = False
+
+                    if ac_flag == VMPowers.S_CLOSE:
+                        # 软关机：期望最终状态是STOPPED
+                        if new_power_status == VMPowers.STOPPED:
+                            operation_success = True
+                            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 软关机成功")
+                    elif ac_flag == VMPowers.S_RESET:
+                        # 软重启：期望最终状态是STARTED（重启后应该是运行中）
+                        if new_power_status == VMPowers.STARTED:
+                            operation_success = True
+                            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 软重启成功")
+
+                    # 如果操作成功，更新状态并退出监控
+                    if operation_success:
+                        self.vm_saving[vm_name].vm_flag = new_power_status
+                        self.data_set()
+                        logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 状态更新为 {new_power_status}")
+                        return
+
+                    # 如果状态变为其他非预期状态，也更新并退出
+                    if new_power_status not in [VMPowers.UNKNOWN, on_flag]:
+                        logger.warning(
+                            f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 状态变为非预期状态 {new_power_status}")
+                        self.vm_saving[vm_name].vm_flag = new_power_status
+                        self.data_set()
+                        return
+
+                # 超时处理
+                logger.warning(
+                    f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 软电源操作监控超时（5分钟），最后一次刷新状态")
+                # 最后一次尝试刷新状态
+                self.vm_loads(vm_name)
+
+            except Exception as e:
+                logger.error(f"[{self.hs_config.server_name}] 监控虚拟机 {vm_name} 软电源操作时出错: {str(e)}")
+                traceback.print_exc()
+
+        # 启动监控线程
+        monitor_thread = threading.Thread(target=monitor_task, daemon=True)
+        monitor_thread.start()
+
+    # 清理日志 ######################################################################
+    def cron_log(self, on_days: int = 7) -> int:
+        if self.save_data and self.hs_config.server_name:
+            return self.save_data.del_hs_logger(self.hs_config.server_name, on_days)
+        return 0
+
+    # 添加日志 ######################################################################
+    def push_log(self, hs_logs: ZMessage):
+        try:
+            # 使用loguru记录日志
+            log_level = "ERROR" if not hs_logs.success else "INFO"
+            log_msg = (
+                f"[{self.hs_config.server_name}] "
+                f"{hs_logs.actions}: {hs_logs.message}"
+            )
+
+            if log_level == "ERROR":
+                logger.error(log_msg)
+            else:
+                logger.info(log_msg)
+
+            # 立即保存到数据库
+            if self.save_data and self.hs_config.server_name:
+                self.save_data.add_hs_logger(
+                    self.hs_config.server_name, hs_logs
+                )
+        except Exception as e:
+            logger.error(f"添加日志失败: {e}")
+
+    # 压缩路径 ######################################################################
+    def path_zip(self) -> str:
+        if "zip_exec" in self.hs_config.extend_data:
+            return self.hs_config.extend_data["zip_exec"]
+        system = platform.system().lower()
+        if system == "windows":
+            return os.path.join("HostConfig", "7zipwinx64", "7z.exe")
+        elif system == "linux":
+            return os.path.join("HostConfig", "7ziplinx64", "7zz")
+        elif system == "darwin":  # macOS
+            return os.path.join("HostConfig", "7zipmacu2b", "7zz")
+        else:
+            raise OSError(f"不支持的操作系统: {system}")
+
+    # 保存主机状态 ##################################################################
+    def host_get(self) -> list[HSStatus]:
+        if self.save_data and self.hs_config.server_name:
+            return self.save_data.get_hs_status(self.hs_config.server_name)
+        return []
+
+    # 保存主机状态 ##################################################################
+    def host_set(self, hs_info: HSStatus | HWStatus) -> bool:
+        if self.save_data and self.hs_config.server_name:
+            try:
+                success = self.save_data.add_hs_status(
+                    self.hs_config.server_name,
+                    hs_info.__save__() \
+                        if isinstance(hs_info, HSStatus) \
+                        else hs_info
+                )
+                if success:
+                    logger.debug(
+                        f"[{self.hs_config.server_name}] 主机状态已保存"
+                    )
+                return success
+            except Exception as e:
+                logger.error(
+                    f"[{self.hs_config.server_name}] 保存数据失败: {e}"
+                )
+                return False
+        return False
+
+    # 保存日志数据 ##################################################################
+    def logs_set(self, in_logs) -> bool:
+        if self.save_data and self.hs_config.server_name:
+            try:
+                # 保存VM配置数据
+                success = self.save_data.add_hs_logger(
+                    self.hs_config.server_name, in_logs)
+                if success:
+                    logger.debug(f"[{self.hs_config.server_name}] 主机日志已保存")
+                return success
+            except Exception as e:
+                logger.error(f"[{self.hs_config.server_name}] 保存数据失败: {e}")
+                return False
+        return False
+
+    # 保存全局数据 ##################################################################
+    def data_set(self) -> bool:
+        if self.save_data and self.hs_config.server_name:
+            try:
+                # 保存VM配置数据
+                success = self.save_data.set_vm_saving(
+                    self.hs_config.server_name, self.vm_saving)
+                if success:
+                    logger.debug(f"[{self.hs_config.server_name}] 虚拟机配置已保存")
+                return success
+            except Exception as e:
+                logger.error(f"[{self.hs_config.server_name}] 保存数据失败: {e}")
+                return False
+        return False
+
+    # 从数据库重新加载数据 ##########################################################
+    def data_get(self) -> bool:
+        if self.save_data and self.hs_config.server_name:
+            try:
+                # 从数据库获取虚拟机配置
+                vm_saving_data = self.save_data.get_vm_saving(
+                    self.hs_config.server_name
+                )
+                if vm_saving_data:
+                    self.vm_saving = {}
+                    for vm_uuid, vm_config in vm_saving_data.items():
+                        if isinstance(vm_config, dict):
+                            self.vm_saving[vm_uuid] = VMConfig(**vm_config)
+                        else:
+                            self.vm_saving[vm_uuid] = vm_config
+                return True
+            except Exception as e:
+                logger.error(
+                    f"[{self.hs_config.server_name}] "
+                    f"从数据库加载数据失败: {e}"
+                )
+                return False
+        return False
+
+    # 判断是否为远程宿主机 ##########################################################
+    def flag_web(self) -> bool:
+        """判断是否为远程主机"""
+        return self.hs_config.server_addr not in ["localhost", "127.0.0.1", ""]
+
+    # 已分配的IP地址 ################################################################
+    def ip_check(self) -> set:
+        allocated = set()
+        for vm_uuid, vm_config in self.vm_saving.items():
+            for nic_name, nic_config in vm_config.nic_all.items():
+                if nic_config.ip4_addr:
+                    allocated.add(nic_config.ip4_addr.strip())
+                if nic_config.ip6_addr:
+                    allocated.add(nic_config.ip6_addr.strip())
+        return allocated
 
     # 刷新虚拟机状态 ################################################################
     def vm_loads(self, vm_name: str) -> None:
@@ -145,195 +383,8 @@ class BasicServer:
         except Exception as e:
             logger.warning(f"[{self.hs_config.server_name}] 刷新虚拟机 {vm_name} 状态失败: {str(e)}")
 
-    # 软关机和软重启操作监控 ########################################################
-    def soft_pwr(self, vm_name: str, operation: VMPowers,
-                 expected_intermediate_state: VMPowers) -> None:
-        """
-        持续监控软关机和软重启操作，直到状态改变或超时
-
-        :param vm_name: 虚拟机名称
-        :param operation: 电源操作类型（S_CLOSE或S_RESET）
-        :param expected_intermediate_state: 预期的中间状态（ON_STOP）
-        """
-        import time
-        import threading
-
-        def monitor_task():
-            try:
-                logger.info(f"[{self.hs_config.server_name}] 开始监控虚拟机 {vm_name} 的软电源操作")
-
-                # 最大监控时间：5分钟（300秒）
-                max_duration = 300
-                # 检查间隔：5秒
-                check_interval = 5
-                # 已经过的时间
-                elapsed_time = 0
-
-                while elapsed_time < max_duration:
-                    # 等待一段时间再检查
-                    time.sleep(check_interval)
-                    elapsed_time += check_interval
-
-                    # 检查虚拟机是否还存在
-                    if vm_name not in self.vm_saving:
-                        logger.warning(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 已不存在，停止监控")
-                        return
-
-                    # 获取当前状态
-                    current_status = self.vm_saving[vm_name].vm_flag
-
-                    # 如果状态已经不是中间状态，说明操作已完成或被其他操作改变
-                    if current_status != expected_intermediate_state:
-                        logger.info(
-                            f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 状态已改变为 {current_status}，停止监控")
-                        return
-
-                    # 从API获取实际状态
-                    actual_status = self.GetPower(vm_name)
-
-                    # 将API返回的中文状态映射为VMPowers枚举
-                    status_map = {
-                        '运行中': VMPowers.STARTED,
-                        '已关机': VMPowers.STOPPED,
-                        '已停止': VMPowers.STOPPED,
-                        '已暂停': VMPowers.SUSPEND,
-                        '未知': VMPowers.UNKNOWN,
-                        '': VMPowers.UNKNOWN
-                    }
-
-                    new_power_status = status_map.get(actual_status, VMPowers.UNKNOWN)
-
-                    # 判断操作是否成功
-                    operation_success = False
-
-                    if operation == VMPowers.S_CLOSE:
-                        # 软关机：期望最终状态是STOPPED
-                        if new_power_status == VMPowers.STOPPED:
-                            operation_success = True
-                            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 软关机成功")
-                    elif operation == VMPowers.S_RESET:
-                        # 软重启：期望最终状态是STARTED（重启后应该是运行中）
-                        if new_power_status == VMPowers.STARTED:
-                            operation_success = True
-                            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 软重启成功")
-
-                    # 如果操作成功，更新状态并退出监控
-                    if operation_success:
-                        self.vm_saving[vm_name].vm_flag = new_power_status
-                        self.data_set()
-                        logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 状态更新为 {new_power_status}")
-                        return
-
-                    # 如果状态变为其他非预期状态，也更新并退出
-                    if new_power_status not in [VMPowers.UNKNOWN, expected_intermediate_state]:
-                        logger.warning(
-                            f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 状态变为非预期状态 {new_power_status}")
-                        self.vm_saving[vm_name].vm_flag = new_power_status
-                        self.data_set()
-                        return
-
-                # 超时处理
-                logger.warning(
-                    f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 软电源操作监控超时（5分钟），最后一次刷新状态")
-                # 最后一次尝试刷新状态
-                self.vm_loads(vm_name)
-
-            except Exception as e:
-                logger.error(f"[{self.hs_config.server_name}] 监控虚拟机 {vm_name} 软电源操作时出错: {str(e)}")
-                traceback.print_exc()
-
-        # 启动监控线程
-        monitor_thread = threading.Thread(target=monitor_task, daemon=True)
-        monitor_thread.start()
-
-    # 清理过期日志 ##################################################################
-    def cron_log(self, days: int = 7) -> int:
-        if self.save_data and self.hs_config.server_name:
-            return self.save_data.del_hs_logger(self.hs_config.server_name, days)
-        return 0
-
-    # 添加日志记录 ##################################################################
-    def push_log(self, log: ZMessage):
-        try:
-            # 使用loguru记录日志
-            log_level = "ERROR" if not log.success else "INFO"
-            log_msg = (
-                f"[{self.hs_config.server_name}] "
-                f"{log.actions}: {log.message}"
-            )
-
-            if log_level == "ERROR":
-                logger.error(log_msg)
-            else:
-                logger.info(log_msg)
-
-            # 立即保存到数据库
-            if self.save_data and self.hs_config.server_name:
-                self.save_data.add_hs_logger(
-                    self.hs_config.server_name, log
-                )
-        except Exception as e:
-            logger.error(f"添加日志失败: {e}")
-
-    # 获取7z文件路径 ################################################################
-    def path_zip(self) -> str:
-        if "zip_exec" in self.hs_config.extend_data:
-            return self.hs_config.extend_data["zip_exec"]
-        system = platform.system().lower()
-        if system == "windows":
-            return os.path.join("HostConfig", "7zipwinx64", "7z.exe")
-        elif system == "linux":
-            return os.path.join("HostConfig", "7ziplinx64", "7zz")
-        elif system == "darwin":  # macOS
-            return os.path.join("HostConfig", "7zipmacu2b", "7zz")
-        else:
-            raise OSError(f"不支持的操作系统: {system}")
-
-    # 保存主机状态数据 ##############################################################
-    def host_get(self) -> list[HSStatus]:
-        if self.save_data and self.hs_config.server_name:
-            return self.save_data.get_hs_status(self.hs_config.server_name)
-        return []
-
-    # 保存主机状态数据 ##############################################################
-    def host_set(self, hs_status: HSStatus | HWStatus) -> bool:
-        if self.save_data and self.hs_config.server_name:
-            try:
-                success = self.save_data.add_hs_status(
-                    self.hs_config.server_name,
-                    hs_status.__save__() \
-                        if isinstance(hs_status, HSStatus) \
-                        else hs_status
-                )
-                if success:
-                    logger.debug(
-                        f"[{self.hs_config.server_name}] 主机状态已保存"
-                    )
-                return success
-            except Exception as e:
-                logger.error(
-                    f"[{self.hs_config.server_name}] 保存数据失败: {e}"
-                )
-                return False
-        return False
-
-    # 保存日志到数据库 ##############################################################
-    def logs_set(self, in_logs) -> bool:
-        if self.save_data and self.hs_config.server_name:
-            try:
-                # 保存VM配置数据
-                success = self.save_data.add_hs_logger(
-                    self.hs_config.server_name, in_logs)
-                if success:
-                    logger.debug(f"[{self.hs_config.server_name}] 主机日志已保存")
-                return success
-            except Exception as e:
-                logger.error(f"[{self.hs_config.server_name}] 保存数据失败: {e}")
-                return False
-        return False
-
-    # 保存虚拟机状态到数据库 ########################################################
-    def vm_status_set(self, vm_uuid: str, status_name: str) -> bool:
+    # 保状态到数据库 ################################################################
+    def vm_saves(self, vm_uuid: str, status_name: str) -> bool:
         """保存虚拟机操作状态到数据库
         :param vm_uuid: 虚拟机UUID
         :param status_name: 状态名称（启动/关机/强制关机/强制重启/暂停/恢复/重装/改密/修改配置）
@@ -366,74 +417,171 @@ class BasicServer:
                 return False
         return False
 
-    # 保存数据到数据库 ##############################################################
-    def data_set(self) -> bool:
-        if self.save_data and self.hs_config.server_name:
-            try:
-                # 保存VM配置数据
-                success = self.save_data.set_vm_saving(
-                    self.hs_config.server_name, self.vm_saving)
-                if success:
-                    logger.debug(f"[{self.hs_config.server_name}] 虚拟机配置已保存")
-                return success
-            except Exception as e:
-                logger.error(f"[{self.hs_config.server_name}] 保存数据失败: {e}")
-                return False
-        return False
-
-    # 从数据库重新加载数据 ##########################################################
-    def data_get(self) -> bool:
-        if self.save_data and self.hs_config.server_name:
-            try:
-                # 从数据库获取虚拟机配置
-                vm_saving_data = self.save_data.get_vm_saving(
-                    self.hs_config.server_name
-                )
-                if vm_saving_data:
-                    self.vm_saving = {}
-                    for vm_uuid, vm_config in vm_saving_data.items():
-                        if isinstance(vm_config, dict):
-                            self.vm_saving[vm_uuid] = VMConfig(**vm_config)
-                        else:
-                            self.vm_saving[vm_uuid] = vm_config
-                return True
-            except Exception as e:
-                logger.error(
-                    f"[{self.hs_config.server_name}] "
-                    f"从数据库加载数据失败: {e}"
-                )
-                return False
-        return False
-
-    # 判断是否为远程宿主机 ##########################################################
-    def web_flag(self) -> bool:
-        """判断是否为远程主机"""
-        return self.hs_config.server_addr not in ["localhost", "127.0.0.1", ""]
-
-    # ###############################################################################
-    # 可重载方法 ####################################################################
-    # ###############################################################################
-
     # 获取虚拟机配置 ################################################################
-    def VMSelect(self, select: str) -> VMConfig | None:
-        if select in self.vm_saving:
-            return self.vm_saving[select]
+    def vm_finds(self, vm_name: str) -> VMConfig | None:
+        if vm_name in self.vm_saving:
+            return self.vm_saving[vm_name]
         return None
 
-    # 获取当前主机所有虚拟机已分配的IP地址 ##########################################
-    def IPCollect(self) -> set:
-        allocated = set()
-        for vm_uuid, vm_config in self.vm_saving.items():
-            for nic_name, nic_config in vm_config.nic_all.items():
-                if nic_config.ip4_addr:
-                    allocated.add(nic_config.ip4_addr.strip())
-                if nic_config.ip6_addr:
-                    allocated.add(nic_config.ip6_addr.strip())
-        return allocated
+    # 转移虚拟机用户 ################################################################
+    def vm_trans(self, vm_name: str, vm_owns: str, on_user: bool = False) -> ZMessage:
+        # 检查虚拟机是否存在
+        if vm_name not in self.vm_saving:
+            return ZMessage(
+                success=False,
+                action="Transfer",
+                message="虚拟机不存在"
+            )
+
+        vm_config = self.vm_saving[vm_name]
+        owners = vm_config.own_all  # dict[str, UserMask]
+
+        # 获取当前主所有者（dict第一个key）
+        owner_keys = list(owners.keys())
+        current_primary_owner = owner_keys[0] if owner_keys else None
+
+        # 检查新所有者是否已经是主所有者
+        if vm_owns == current_primary_owner:
+            return ZMessage(
+                success=False,
+                action="Transfer",
+                message="用户已经是虚拟机所有者"
+            )
+
+        # 获取新所有者原有权限（如存在），否则给全权限
+        new_owner_mask = owners.pop(vm_owns, UserMask.full())
+
+        # 重建dict，将新所有者放在第一位
+        new_owners = {vm_owns: new_owner_mask}
+
+        # 如果保留原主所有者权限，将其加入
+        if on_user and current_primary_owner:
+            new_owners[current_primary_owner] = owners.pop(current_primary_owner, UserMask.full())
+        elif current_primary_owner:
+            owners.pop(current_primary_owner, None)
+
+        # 加入其余所有者
+        new_owners.update(owners)
+
+        # 更新所有者dict
+        vm_config.own_all = new_owners
+
+        # 保存配置
+        self.data_set()
+
+        logger.info(
+            f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 所有权从 {current_primary_owner} 移交给 {vm_owns}，保留权限: {on_user}")
+
+        return ZMessage(
+            success=True,
+            action="Transfer",
+            message=f"虚拟机所有权已成功移交给 {vm_owns}"
+        )
+
+    # 权限虚拟机校验 ################################################################
+    def vm_agent(self, vm_name: str, user: str, action: str) -> bool:
+        """
+        校验用户对虚拟机的细分权限
+        :param vm_name: 虚拟机UUID
+        :param user: 用户名
+        :param action: 权限名称，如 'pwr_edits', 'vm_delete' 等
+        :return: 是否拥有该权限
+        """
+        if vm_name not in self.vm_saving:
+            return False
+
+        vm_config = self.vm_saving[vm_name]
+        owners = getattr(vm_config, 'own_all', {})
+
+        # 所有者（dict第一个key）永远拥有所有权限
+        owner_keys = list(owners.keys())
+        if owner_keys and owner_keys[0] == user:
+            return True
+
+        # 非所有者，查找用户的虚拟机权限
+        if user not in owners:
+            return False
+
+        vm_mask = owners[user]  # 虚拟机级别的权限
+        return vm_mask.has_permission(action)
+
+    # 构建默认启动项列表 ############################################################
+    # 默认顺序：系统盘 -> 数据盘 -> 光盘（有光盘时）
+    # :param vm_conf: 虚拟机配置
+    # :return: list[BootOpts]
+    # ###############################################################################
+    @staticmethod
+    def efi_build(vm_conf: VMConfig) -> list[BootOpts]:
+        efi_list = []
+        # 系统盘（第一个，efi_type=False，名称为 vm_uuid）
+        efi_list.append(BootOpts(efi_type=False, efi_name=vm_conf.vm_uuid))
+        # 数据盘（efi_type=False，名称为 vm_uuid-hdd_name）
+        for hdd_name, hdd_data in vm_conf.hdd_all.items():
+            if hdd_data.hdd_flag == 0:
+                continue
+            efi_list.append(BootOpts(
+                efi_type=False,
+                efi_name=f"{vm_conf.vm_uuid}-{hdd_name}"
+            ))
+        # 光盘（efi_type=True，名称为 iso_name）
+        for iso_name in vm_conf.iso_all:
+            efi_list.append(BootOpts(efi_type=True, efi_name=iso_name))
+        return efi_list
+
+    # 启动项列出 ####################################################################
+    # 获取虚拟机启动项列表，如果 efi_all 为空则自动填充默认顺序
+    # :param vm_name: 虚拟机名称
+    # :return: list[BootOpts]
+    # ###############################################################################
+    def bl_lists(self, vm_name: str) -> list[BootOpts]:
+        if vm_name not in self.vm_saving:
+            return []
+        vm_conf = self.vm_saving[vm_name]
+        # 如果 efi_all 为空，自动填充默认顺序
+        if not vm_conf.efi_all:
+            vm_conf.efi_all = self.efi_build(vm_conf)
+            self.data_set()
+        return vm_conf.efi_all
+
+    # 启动项设置 ####################################################################
+    # 设置虚拟机启动项顺序，保存后调用 VMUpdate 应用到虚拟机
+    # :param vm_name: 虚拟机名称
+    # :param efi_list: 新的启动项列表 list[dict|BootOpts]
+    # :return: ZMessage
+    # ###############################################################################
+    def bl_setup(self, vm_name: str, efi_list: list = None) -> ZMessage:
+        if efi_list is None:
+            efi_list = []
+        if vm_name not in self.vm_saving:
+            return ZMessage(success=False, action="EFISetup", message="虚拟机不存在")
+
+        vm_config = self.vm_saving[vm_name]
+        old_conf = deepcopy(vm_config)
+
+        # 构建新的启动项列表
+        new_efi_all = []
+        for item in efi_list:
+            if isinstance(item, dict):
+                new_efi_all.append(BootOpts(**item))
+            elif isinstance(item, BootOpts):
+                new_efi_all.append(item)
+        vm_config.efi_all = new_efi_all
+
+        # 保存配置并应用到虚拟机
+        self.data_set()
+        result = self.VMUpdate(vm_config, old_conf)
+        if result.success:
+            return ZMessage(success=True, action="EFISetup", message="启动顺序设置成功")
+        return ZMessage(success=False, action="EFISetup",
+                        message=f"启动顺序设置失败: {result.message}")
+
+    # ###############################################################################
+    # 分支的方法 ####################################################################
+    # ###############################################################################
 
     # 查找端口 ######################################################################
     def PortsGet(self, vm_uuid: str, vm_port: int) -> int:
-        vm_conf = self.VMSelect(vm_uuid)
+        vm_conf = self.vm_finds(vm_uuid)
         if vm_conf is None:
             return 0
         try:
@@ -514,7 +662,9 @@ class BasicServer:
         return hs_result
 
     # 反向代理 ######################################################################
-    def ProxyMap(self, pm_info: WebProxy, vm_uuid: str,
+    def ProxyMap(self,
+                 pm_info: WebProxy,
+                 vm_uuid: str,
                  in_apis: HttpManager, in_flag=True) -> ZMessage:
         try:
             logger.info(
@@ -574,9 +724,9 @@ class BasicServer:
             logger.info(f"[{self.hs_config.server_name}] 开始网络配置检查: {vm_conf.vm_uuid}")
             ip_config = IPConfig(
                 self.hs_config.ipaddr_maps,
-                self.hs_config.ipaddr_dnss
+                self.hs_config.ipaddr_ddns
             )
-            allocated_ips = self.IPCollect()
+            allocated_ips = self.ip_check()
             logger.debug(f"[{self.hs_config.server_name}] 已分配IP列表: {allocated_ips}")
             result = ip_config.check_and_allocate(vm_conf, allocated_ips)
             logger.info(f"[{self.hs_config.server_name}] 网络配置检查完成")
@@ -688,8 +838,8 @@ class BasicServer:
                     nic_conf.mac_addr,
                     vm_conf.vm_uuid,
                     flag=flag,
-                    dns1=self.hs_config.ipaddr_dnss[0],
-                    dns2=self.hs_config.ipaddr_dnss[1]
+                    dns1=self.hs_config.ipaddr_ddns[0],
+                    dns2=self.hs_config.ipaddr_ddns[1]
                 )
                 if nc_result.success:
                     logger.success(f"[API] 静态IP绑定成功: {nic_conf.ip4_addr}")
@@ -761,7 +911,7 @@ class BasicServer:
     def syn_port_TTY(self):
         try:
             # 判断是否为远程主机
-            is_remote = self.web_flag()
+            is_remote = self.flag_web()
 
             # 如果是远程主机，先建立SSH连接
             if is_remote:
@@ -865,7 +1015,7 @@ class BasicServer:
         return ZMessage(success=True, action="VMUpdate")
 
     # 端口映射管理（TTY容器专用）####################################################
-    def PortsMap_TTY(self, map_info: PortData, flag=True) -> ZMessage:
+    def PortsMap_TTY(self, vm_port: PortData, vm_flag=True) -> ZMessage:
         """端口映射管理（TTY容器专用）"""
         # 判断是否为远程主机（排除 SSH 转发模式）
         is_remote = (self.hs_config.server_addr not in ["localhost", "127.0.0.1", ""] and
@@ -880,26 +1030,26 @@ class BasicServer:
                     message=f"SSH 连接失败: {message}")
 
         # 如果wan_port为0，自动分配一个未使用的端口
-        if map_info.wan_port == 0:
-            map_info.wan_port = self.port_forward.allocate_port(is_remote)
+        if vm_port.wan_port == 0:
+            vm_port.wan_port = self.port_forward.allocate_port(is_remote)
         else:
             # 检查端口是否已被占用
             existing_ports = self.port_forward.get_host_ports(is_remote)
-            if map_info.wan_port in existing_ports:
+            if vm_port.wan_port in existing_ports:
                 if is_remote:
                     self.port_forward.close_ssh()
                 return ZMessage(
                     success=False, action="PortsMap",
-                    message=f"端口 {map_info.wan_port} 已被占用")
+                    message=f"端口 {vm_port.wan_port} 已被占用")
 
         # 执行端口映射操作
-        if flag:
+        if vm_flag:
             success, error = self.port_forward.add_port_forward(
-                map_info.lan_addr, map_info.lan_port, map_info.wan_port,
-                "TCP", is_remote, map_info.nat_tips)
+                vm_port.lan_addr, vm_port.lan_port, vm_port.wan_port,
+                "TCP", is_remote, vm_port.nat_tips)
 
             if success:
-                hs_message = f"端口 {map_info.wan_port} 成功映射到 {map_info.lan_addr}:{map_info.lan_port}"
+                hs_message = f"端口 {vm_port.wan_port} 成功映射到 {vm_port.lan_addr}:{vm_port.lan_port}"
                 hs_success = True
             else:
                 if is_remote:
@@ -909,8 +1059,8 @@ class BasicServer:
                     message=f"端口映射失败: {error}")
         else:
             self.port_forward.remove_port_forward(
-                map_info.wan_port, "TCP", is_remote)
-            hs_message = f"端口 {map_info.wan_port} 映射已删除"
+                vm_port.wan_port, "TCP", is_remote)
+            hs_message = f"端口 {vm_port.wan_port} 映射已删除"
             hs_success = True
 
         hs_result = ZMessage(
@@ -1075,7 +1225,7 @@ class BasicServer:
     def VMCreate(self, vm_conf: VMConfig) -> ZMessage:
         try:
             logger.info(f"[{self.hs_config.server_name}] 开始创建虚拟机: {vm_conf.vm_uuid}")
-            logger.info(f"  - 虚拟机名称: {vm_conf.vm_name}")
+            logger.info(f"  - 虚拟机名称: {vm_conf.vm_uuid}")
             logger.info(f"  - CPU核心数: {vm_conf.cpu_num}")
             logger.info(f"  - 内存大小: {vm_conf.mem_num}MB")
             logger.info(f"  - 网卡数量: {len(vm_conf.nic_all)}")
@@ -1101,7 +1251,7 @@ class BasicServer:
         self.data_set()
 
         # 保存虚拟机状态
-        self.vm_status_set(vm_conf.vm_uuid, "修改配置")
+        self.vm_saves(vm_conf.vm_uuid, "修改配置")
 
         # 刷新虚拟机状态（异步，延迟5秒）
         import threading
@@ -1121,8 +1271,10 @@ class BasicServer:
         return hs_result
 
     # 虚拟机状态 ####################################################################
-    def VMStatus(self, vm_name: str = "",
-                 s_t: int = None, e_t: int = None) -> dict[str, list[HWStatus]]:
+    def VMStatus(self,
+                 vm_name: str = "",
+                 s_t: int = None,
+                 e_t: int = None) -> dict[str, list[HWStatus]]:
         if self.save_data and self.hs_config.server_name:
             all_status = self.save_data.get_vm_status(
                 self.hs_config.server_name, start_timestamp=s_t,
@@ -1262,7 +1414,7 @@ class BasicServer:
         self.vm_saving[vm_name].vm_flag = power_return_map.get(p, VMPowers.UNKNOWN)
 
         # 保存虚拟机状态到vm_status表
-        self.vm_status_set(vm_name, status_name)
+        self.vm_saves(vm_name, status_name)
 
         # 保存配置到数据库
         self.data_set()
@@ -1275,13 +1427,12 @@ class BasicServer:
 
     # 安装虚拟机 ####################################################################
     def VMSetups(self, vm_conf: VMConfig) -> ZMessage:
-        # 保存虚拟机状态
-        self.vm_status_set(vm_conf.vm_uuid, "重装")
-        pass
+        self.vm_saves(vm_conf.vm_uuid, "重装")
+        return ZMessage(success=True, action="VMSetup", message="虚拟机重装已执行")
 
     # 设置虚拟机密码 ################################################################
     def VMPasswd(self, vm_name: str, os_pass: str) -> ZMessage:
-        vm_config = self.VMSelect(vm_name)
+        vm_config = self.vm_finds(vm_name)
         if vm_config is None:
             return ZMessage(
                 success=False, action="Password",
@@ -1292,7 +1443,7 @@ class BasicServer:
         ap_config.os_pass = os_pass
 
         # 保存虚拟机状态
-        self.vm_status_set(vm_name, "改密")
+        self.vm_saves(vm_name, "改密")
 
         result = self.VMUpdate(ap_config, vm_config)
 
@@ -1469,44 +1620,6 @@ class BasicServer:
             action="ISOMount",
             message=f"ISO镜像{action_text}成功")
 
-    # USB设备挂载 ###################################################################
-    def USBMount(self, vm_name: str, usb_info: USBInfos, usb_key: str, in_flag=True) -> ZMessage:
-        if vm_name not in self.vm_saving:
-            return ZMessage(
-                success=False, action="USBMount", message="虚拟机不存在")
-
-        old_conf = deepcopy(self.vm_saving[vm_name])
-
-        # 记录操作
-        action_text = "挂载" if in_flag else "卸载"
-        logger.info(f"[{self.hs_config.server_name}] 准备{action_text}USB设备: {vm_name} - {usb_key}")
-
-        if in_flag:  # 挂载USB =================================================
-            # 检查KEY是否已存在
-            if usb_key in self.vm_saving[vm_name].usb_all:
-                return ZMessage(
-                    success=False, action="USBMount", message="USB设备KEY已存在")
-
-            # 添加到字典
-            self.vm_saving[vm_name].usb_all[usb_key] = usb_info
-        else:
-            # 卸载USB ==========================================================
-            if usb_key not in self.vm_saving[vm_name].usb_all:
-                return ZMessage(
-                    success=False, action="USBMount", message="USB设备不存在")
-
-            # 从字典中移除
-            del self.vm_saving[vm_name].usb_all[usb_key]
-
-        # 保存配置 =============================================================
-        self.VMUpdate(self.vm_saving[vm_name], old_conf)
-        self.data_set()
-
-        return ZMessage(
-            success=True,
-            action="USBMount",
-            message=f"USB设备{action_text}成功")
-
     # 磁盘移交检查 ##################################################################
     def HDDCheck(self, vm_name: str, vm_imgs: SDConfig, ex_name: str) -> ZMessage:
         # 原始设备是否存在===========================================================
@@ -1640,7 +1753,6 @@ class BasicServer:
 
     # 查找PCI #######################################################################
     def PCIShows(self) -> dict[str, VFConfig]:
-        """获取主机可直通PCI设备列表，返回 {设备ID: VFConfig}"""
         return {}
 
     # 直通PCI #######################################################################
@@ -1680,114 +1792,53 @@ class BasicServer:
 
     # 查找USB #######################################################################
     def USBShows(self) -> dict[str, USBInfos]:
-        """获取主机可用USB设备列表，返回 {设备ID: USBInfos}"""
         return {}
 
     # 直通USB #######################################################################
-    def USBSetup(self, vm_name: str, usb_info: USBInfos, usb_key: str, in_flag=True) -> ZMessage:
+    def USBSetup(self, vm_name: str, ud_info: USBInfos, ud_keys: str, in_flag=True) -> ZMessage:
         """USB设备直通操作（无需关机）
         Args:
             vm_name: 虚拟机名称
-            usb_info: USB设备信息
-            usb_key: 设备唯一Key
+            ud_info: USB设备信息
+            ud_keys: 设备唯一Key
             in_flag: True=添加直通, False=移除直通
         """
         # 默认实现：直接调用USBMount写入配置
-        return self.USBMount(vm_name, usb_info, usb_key, in_flag)
-
-    # 启动项列出 ####################################################################
-    def EFIShows(self, vm_name: str) -> list['BootOpts']:
-        """获取虚拟机启动项列表，写入 efi_all 并返回 list[BootOpts]"""
-        if vm_name not in self.vm_saving:
-            return []
-        return self.vm_saving[vm_name].efi_all
-
-    # 启动项设置 ####################################################################
-    def EFISetup(self, vm_name: str, efi_list: list = None) -> ZMessage:
-        """调整虚拟机启动项顺序
-        Args:
-            vm_name: 虚拟机名称
-            efi_list: 新的启动项列表 list[dict]，每项包含 efi_type 和 efi_name
-        """
-        if efi_list is None:
-            efi_list = []
-        if vm_name not in self.vm_saving:
-            return ZMessage(success=False, action="EFISetup", message="虚拟机不存在")
-
-        from MainObject.Config.BootOpts import BootOpts
-        vm_config = self.vm_saving[vm_name]
-        old_conf = deepcopy(vm_config)
-
-        # 构建新的启动项列表
-        new_efi_all = []
-        for item in efi_list:
-            if isinstance(item, dict):
-                new_efi_all.append(BootOpts(**item))
-            elif isinstance(item, BootOpts):
-                new_efi_all.append(item)
-        vm_config.efi_all = new_efi_all
-
-        # 保存配置
-        self.VMUpdate(vm_config, old_conf)
-        self.data_set()
-
-        return ZMessage(success=True, action="EFISetup", message="启动顺序设置成功")
-
-    # 转移用户 ######################################################################
-    def Transfer(self, vm_name: str, new_owner: str,
-                 keep_access: bool = False) -> ZMessage:
-        # 检查虚拟机是否存在
         if vm_name not in self.vm_saving:
             return ZMessage(
-                success=False,
-                action="Transfer",
-                message="虚拟机不存在"
-            )
+                success=False, action="USBMount", message="虚拟机不存在")
 
-        vm_config = self.vm_saving[vm_name]
-        owners = vm_config.own_all  # dict[str, UserMask]
+        old_conf = deepcopy(self.vm_saving[vm_name])
 
-        # 获取当前主所有者（dict第一个key）
-        owner_keys = list(owners.keys())
-        current_primary_owner = owner_keys[0] if owner_keys else None
+        # 记录操作
+        action_text = "挂载" if in_flag else "卸载"
+        logger.info(f"[{self.hs_config.server_name}] 准备{action_text}USB设备: {vm_name} - {ud_keys}")
 
-        # 检查新所有者是否已经是主所有者
-        if new_owner == current_primary_owner:
-            return ZMessage(
-                success=False,
-                action="Transfer",
-                message="用户已经是虚拟机所有者"
-            )
+        if in_flag:  # 挂载USB =================================================
+            # 检查KEY是否已存在
+            if ud_keys in self.vm_saving[vm_name].usb_all:
+                return ZMessage(
+                    success=False, action="USBMount", message="USB设备KEY已存在")
 
-        # 获取新所有者原有权限（如存在），否则给全权限
-        new_owner_mask = owners.pop(new_owner, UserMask.full())
+            # 添加到字典
+            self.vm_saving[vm_name].usb_all[ud_keys] = ud_info
+        else:
+            # 卸载USB ==========================================================
+            if ud_keys not in self.vm_saving[vm_name].usb_all:
+                return ZMessage(
+                    success=False, action="USBMount", message="USB设备不存在")
 
-        # 重建dict，将新所有者放在第一位
-        new_owners = {new_owner: new_owner_mask}
+            # 从字典中移除
+            del self.vm_saving[vm_name].usb_all[ud_keys]
 
-        # 如果保留原主所有者权限，将其加入
-        if keep_access and current_primary_owner:
-            new_owners[current_primary_owner] = owners.pop(current_primary_owner, UserMask.full())
-        elif current_primary_owner:
-            owners.pop(current_primary_owner, None)
-
-        # 加入其余所有者
-        new_owners.update(owners)
-
-        # 更新所有者dict
-        vm_config.own_all = new_owners
-
-        # 保存配置
+        # 保存配置 =============================================================
+        self.VMUpdate(self.vm_saving[vm_name], old_conf)
         self.data_set()
-
-        logger.info(
-            f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 所有权从 {current_primary_owner} 移交给 {new_owner}，保留权限: {keep_access}")
 
         return ZMessage(
             success=True,
-            action="Transfer",
-            message=f"虚拟机所有权已成功移交给 {new_owner}"
-        )
+            action="USBMount",
+            message=f"USB设备{action_text}成功")
 
     # 虚拟机控制台 ##################################################################
     def VMRemote(self, vm_uuid: str, ip_addr: str = "127.0.0.1") -> ZMessage:
@@ -1826,30 +1877,3 @@ class BasicServer:
                 action="VCRemote",
                 message=str(e)
             )
-
-    # 权限校验 ######################################################################
-    def Permission(self, vm_name: str, user: str, action: str) -> bool:
-        """
-        校验用户对虚拟机的细分权限
-        :param vm_name: 虚拟机UUID
-        :param user: 用户名
-        :param action: 权限名称，如 'pwr_edits', 'vm_delete' 等
-        :return: 是否拥有该权限
-        """
-        if vm_name not in self.vm_saving:
-            return False
-
-        vm_config = self.vm_saving[vm_name]
-        owners = getattr(vm_config, 'own_all', {})
-
-        # 所有者（dict第一个key）永远拥有所有权限
-        owner_keys = list(owners.keys())
-        if owner_keys and owner_keys[0] == user:
-            return True
-
-        # 非所有者，查找用户的虚拟机权限
-        if user not in owners:
-            return False
-
-        vm_mask = owners[user]  # 虚拟机级别的权限
-        return vm_mask.has_permission(action)

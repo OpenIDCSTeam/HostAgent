@@ -12,6 +12,7 @@ from copy import deepcopy
 from loguru import logger
 
 from HostServer.BasicServer import BasicServer
+from MainObject.Config.USBInfos import USBInfos
 from VNCConsole.VNCSManager import VNCSManager
 from HostServer.Win64HyperVAPI.HyperVAPI import HyperVAPI
 from MainObject.Config.HSConfig import HSConfig
@@ -598,7 +599,7 @@ class HostServer(BasicServer):
         # 专用操作 =============================================================
         try:
             # 查询虚拟机配置 =======================================================
-            vm_conf = self.VMSelect(vm_name)
+            vm_conf = self.vm_finds(vm_name)
             if vm_conf is None:
                 logger.error(f"[{self.hs_config.server_name}] 虚拟机不存在: {vm_name}")
                 return ZMessage(
@@ -1410,158 +1411,158 @@ class HostServer(BasicServer):
             except Exception as e2:
                 logger.warning(f"断开Hyper-V连接时出错: {e2}")
             return ZMessage(success=False, action="PCISetup", message=str(e))
-
-    # 启动项列出 ####################################################################
-    def EFIShows(self, vm_name: str) -> list:
-        """
-        查询Hyper-V虚拟机的启动项列表（固件引导顺序）
-        通过Get-VMFirmware读取启动设备，写入efi_all并返回
-        """
-        from MainObject.Config.BootOpts import BootOpts
-        try:
-            if vm_name not in self.vm_saving:
-                return []
-
-            connect_result = self.hyperv_api.connect()
-            if not connect_result.success:
-                logger.error(f"[{self.hs_config.server_name}] 无法连接到Hyper-V查询启动项: {connect_result.message}")
-                return super().EFIShows(vm_name)
-
-            # 通过PowerShell读取固件启动顺序
-            ps_cmd = f"""
-            $firmware = Get-VMFirmware -VMName '{vm_name}' -ErrorAction Stop
-            foreach ($entry in $firmware.BootOrder) {{
-                $type = $entry.BootType.ToString()
-                $device = $entry.Device
-                if ($type -eq 'Drive') {{
-                    $path = ''
-                    if ($device -and $device.Path) {{ $path = $device.Path }}
-                    elseif ($device -and $device.Name) {{ $path = $device.Name }}
-                    # 判断是HDD还是ISO
-                    if ($path -like '*.iso') {{
-                        Write-Output "ISO|||$path"
-                    }} else {{
-                        Write-Output "HDD|||$path"
-                    }}
-                }} elseif ($type -eq 'Network') {{
-                    $name = if ($device -and $device.Name) {{ $device.Name }} else {{ 'NetworkAdapter' }}
-                    Write-Output "NET|||$name"
-                }} else {{
-                    Write-Output "OTH|||$type"
-                }}
-            }}
-            """
-            result = self.hyperv_api._run_powershell(ps_cmd)
-            self.hyperv_api.disconnect()
-
-            efi_list = []
-            if result.success and result.message.strip():
-                for line in result.message.strip().split('\n'):
-                    line = line.strip()
-                    if '|||' in line:
-                        parts = line.split('|||', 1)
-                        efi_type_str = parts[0].strip()
-                        efi_name = parts[1].strip() if len(parts) > 1 else ''
-                        # efi_type: False=HDD, True=ISO（扩展：NET等也归为True）
-                        is_iso = (efi_type_str != 'HDD')
-                        efi_list.append(BootOpts(efi_type=is_iso, efi_name=efi_name))
-
-            # 写入vm_config.efi_all
-            vm_config = self.vm_saving[vm_name]
-            vm_config.efi_all = efi_list
-            self.data_set()
-
-            logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 共有 {len(efi_list)} 个启动项")
-            return efi_list
-
-        except Exception as e:
-            logger.error(f"[{self.hs_config.server_name}] 查询启动项失败: {str(e)}")
-            logger.error(traceback.format_exc())
-            try:
-                self.hyperv_api.disconnect()
-            except Exception as e2:
-                logger.warning(f"断开Hyper-V连接时出错: {e2}")
-            return super().EFIShows(vm_name)
-
-    # 启动项设置 ####################################################################
-    def EFISetup(self, vm_name: str, efi_list: list = None) -> 'ZMessage':
-        """
-        调整Hyper-V虚拟机启动项顺序
-        通过Set-VMFirmware -BootOrder重新排列启动设备
-        """
-        from MainObject.Public.ZMessage import ZMessage
-        from MainObject.Config.BootOpts import BootOpts
-        try:
-            if efi_list is None:
-                efi_list = []
-            if vm_name not in self.vm_saving:
-                return ZMessage(success=False, action="EFISetup", message="虚拟机不存在")
-
-            connect_result = self.hyperv_api.connect()
-            if not connect_result.success:
-                return ZMessage(success=False, action="EFISetup", message=f"连接Hyper-V失败: {connect_result.message}")
-
-            # 构建PowerShell脚本：按照用户指定顺序重新排列启动项
-            # 先获取当前所有启动设备，再按新顺序排列
-            order_lines = []
-            for i, item in enumerate(efi_list):
-                efi_name = item.get('efi_name', '') if isinstance(item, dict) else getattr(item, 'efi_name', '')
-                efi_type = item.get('efi_type', False) if isinstance(item, dict) else getattr(item, 'efi_type', False)
-                order_lines.append(f"'{efi_name}'")
-
-            names_array = ','.join(order_lines)
-            ps_cmd = f"""
-            $firmware = Get-VMFirmware -VMName '{vm_name}' -ErrorAction Stop
-            $bootOrder = $firmware.BootOrder
-            $orderedNames = @({names_array})
-            $newOrder = @()
-            # 按指定名称顺序排列
-            foreach ($name in $orderedNames) {{
-                foreach ($entry in $bootOrder) {{
-                    $devPath = ''
-                    if ($entry.Device -and $entry.Device.Path) {{ $devPath = $entry.Device.Path }}
-                    elseif ($entry.Device -and $entry.Device.Name) {{ $devPath = $entry.Device.Name }}
-                    if ($devPath -eq $name) {{
-                        $newOrder += $entry
-                        break
-                    }}
-                }}
-            }}
-            # 将未在指定列表中的启动项追加到末尾
-            foreach ($entry in $bootOrder) {{
-                $devPath = ''
-                if ($entry.Device -and $entry.Device.Path) {{ $devPath = $entry.Device.Path }}
-                elseif ($entry.Device -and $entry.Device.Name) {{ $devPath = $entry.Device.Name }}
-                $found = $false
-                foreach ($name in $orderedNames) {{
-                    if ($devPath -eq $name) {{ $found = $true; break }}
-                }}
-                if (-not $found) {{ $newOrder += $entry }}
-            }}
-            if ($newOrder.Count -gt 0) {{
-                Set-VMFirmware -VMName '{vm_name}' -BootOrder $newOrder -ErrorAction Stop
-                Write-Output 'SUCCESS'
-            }} else {{
-                Write-Output 'EMPTY'
-            }}
-            """
-            result = self.hyperv_api._run_powershell(ps_cmd)
-            self.hyperv_api.disconnect()
-
-            if not result.success:
-                return ZMessage(success=False, action="EFISetup", message=f"设置启动顺序失败: {result.message}")
-
-            # 调用基类保存配置到efi_all
-            return super().EFISetup(vm_name, efi_list)
-
-        except Exception as e:
-            logger.error(f"[{self.hs_config.server_name}] 设置启动顺序失败: {str(e)}")
-            logger.error(traceback.format_exc())
-            try:
-                self.hyperv_api.disconnect()
-            except Exception as e2:
-                logger.warning(f"断开Hyper-V连接时出错: {e2}")
-            return ZMessage(success=False, action="EFISetup", message=str(e))
+    #
+    # # 启动项列出 ####################################################################
+    # def EFIShows(self, vm_name: str) -> list:
+    #     """
+    #     查询Hyper-V虚拟机的启动项列表（固件引导顺序）
+    #     通过Get-VMFirmware读取启动设备，写入efi_all并返回
+    #     """
+    #     from MainObject.Config.BootOpts import BootOpts
+    #     try:
+    #         if vm_name not in self.vm_saving:
+    #             return []
+    #
+    #         connect_result = self.hyperv_api.connect()
+    #         if not connect_result.success:
+    #             logger.error(f"[{self.hs_config.server_name}] 无法连接到Hyper-V查询启动项: {connect_result.message}")
+    #             return super().EFIShows(vm_name)
+    #
+    #         # 通过PowerShell读取固件启动顺序
+    #         ps_cmd = f"""
+    #         $firmware = Get-VMFirmware -VMName '{vm_name}' -ErrorAction Stop
+    #         foreach ($entry in $firmware.BootOrder) {{
+    #             $type = $entry.BootType.ToString()
+    #             $device = $entry.Device
+    #             if ($type -eq 'Drive') {{
+    #                 $path = ''
+    #                 if ($device -and $device.Path) {{ $path = $device.Path }}
+    #                 elseif ($device -and $device.Name) {{ $path = $device.Name }}
+    #                 # 判断是HDD还是ISO
+    #                 if ($path -like '*.iso') {{
+    #                     Write-Output "ISO|||$path"
+    #                 }} else {{
+    #                     Write-Output "HDD|||$path"
+    #                 }}
+    #             }} elseif ($type -eq 'Network') {{
+    #                 $name = if ($device -and $device.Name) {{ $device.Name }} else {{ 'NetworkAdapter' }}
+    #                 Write-Output "NET|||$name"
+    #             }} else {{
+    #                 Write-Output "OTH|||$type"
+    #             }}
+    #         }}
+    #         """
+    #         result = self.hyperv_api._run_powershell(ps_cmd)
+    #         self.hyperv_api.disconnect()
+    #
+    #         efi_list = []
+    #         if result.success and result.message.strip():
+    #             for line in result.message.strip().split('\n'):
+    #                 line = line.strip()
+    #                 if '|||' in line:
+    #                     parts = line.split('|||', 1)
+    #                     efi_type_str = parts[0].strip()
+    #                     efi_name = parts[1].strip() if len(parts) > 1 else ''
+    #                     # efi_type: False=HDD, True=ISO（扩展：NET等也归为True）
+    #                     is_iso = (efi_type_str != 'HDD')
+    #                     efi_list.append(BootOpts(efi_type=is_iso, efi_name=efi_name))
+    #
+    #         # 写入vm_config.efi_all
+    #         vm_config = self.vm_saving[vm_name]
+    #         vm_config.efi_all = efi_list
+    #         self.data_set()
+    #
+    #         logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 共有 {len(efi_list)} 个启动项")
+    #         return efi_list
+    #
+    #     except Exception as e:
+    #         logger.error(f"[{self.hs_config.server_name}] 查询启动项失败: {str(e)}")
+    #         logger.error(traceback.format_exc())
+    #         try:
+    #             self.hyperv_api.disconnect()
+    #         except Exception as e2:
+    #             logger.warning(f"断开Hyper-V连接时出错: {e2}")
+    #         return super().EFIShows(vm_name)
+    #
+    # # 启动项设置 ####################################################################
+    # def EFISetup(self, vm_name: str, efi_list: list = None) -> 'ZMessage':
+    #     """
+    #     调整Hyper-V虚拟机启动项顺序
+    #     通过Set-VMFirmware -BootOrder重新排列启动设备
+    #     """
+    #     from MainObject.Public.ZMessage import ZMessage
+    #     from MainObject.Config.BootOpts import BootOpts
+    #     try:
+    #         if efi_list is None:
+    #             efi_list = []
+    #         if vm_name not in self.vm_saving:
+    #             return ZMessage(success=False, action="EFISetup", message="虚拟机不存在")
+    #
+    #         connect_result = self.hyperv_api.connect()
+    #         if not connect_result.success:
+    #             return ZMessage(success=False, action="EFISetup", message=f"连接Hyper-V失败: {connect_result.message}")
+    #
+    #         # 构建PowerShell脚本：按照用户指定顺序重新排列启动项
+    #         # 先获取当前所有启动设备，再按新顺序排列
+    #         order_lines = []
+    #         for i, item in enumerate(efi_list):
+    #             efi_name = item.get('efi_name', '') if isinstance(item, dict) else getattr(item, 'efi_name', '')
+    #             efi_type = item.get('efi_type', False) if isinstance(item, dict) else getattr(item, 'efi_type', False)
+    #             order_lines.append(f"'{efi_name}'")
+    #
+    #         names_array = ','.join(order_lines)
+    #         ps_cmd = f"""
+    #         $firmware = Get-VMFirmware -VMName '{vm_name}' -ErrorAction Stop
+    #         $bootOrder = $firmware.BootOrder
+    #         $orderedNames = @({names_array})
+    #         $newOrder = @()
+    #         # 按指定名称顺序排列
+    #         foreach ($name in $orderedNames) {{
+    #             foreach ($entry in $bootOrder) {{
+    #                 $devPath = ''
+    #                 if ($entry.Device -and $entry.Device.Path) {{ $devPath = $entry.Device.Path }}
+    #                 elseif ($entry.Device -and $entry.Device.Name) {{ $devPath = $entry.Device.Name }}
+    #                 if ($devPath -eq $name) {{
+    #                     $newOrder += $entry
+    #                     break
+    #                 }}
+    #             }}
+    #         }}
+    #         # 将未在指定列表中的启动项追加到末尾
+    #         foreach ($entry in $bootOrder) {{
+    #             $devPath = ''
+    #             if ($entry.Device -and $entry.Device.Path) {{ $devPath = $entry.Device.Path }}
+    #             elseif ($entry.Device -and $entry.Device.Name) {{ $devPath = $entry.Device.Name }}
+    #             $found = $false
+    #             foreach ($name in $orderedNames) {{
+    #                 if ($devPath -eq $name) {{ $found = $true; break }}
+    #             }}
+    #             if (-not $found) {{ $newOrder += $entry }}
+    #         }}
+    #         if ($newOrder.Count -gt 0) {{
+    #             Set-VMFirmware -VMName '{vm_name}' -BootOrder $newOrder -ErrorAction Stop
+    #             Write-Output 'SUCCESS'
+    #         }} else {{
+    #             Write-Output 'EMPTY'
+    #         }}
+    #         """
+    #         result = self.hyperv_api._run_powershell(ps_cmd)
+    #         self.hyperv_api.disconnect()
+    #
+    #         if not result.success:
+    #             return ZMessage(success=False, action="EFISetup", message=f"设置启动顺序失败: {result.message}")
+    #
+    #         # 调用基类保存配置到efi_all
+    #         return super().EFISetup(vm_name, efi_list)
+    #
+    #     except Exception as e:
+    #         logger.error(f"[{self.hs_config.server_name}] 设置启动顺序失败: {str(e)}")
+    #         logger.error(traceback.format_exc())
+    #         try:
+    #             self.hyperv_api.disconnect()
+    #         except Exception as e2:
+    #             logger.warning(f"断开Hyper-V连接时出错: {e2}")
+    #         return ZMessage(success=False, action="EFISetup", message=str(e))
 
     # 虚拟机截图 ####################################################################
     def VMScreen(self, vm_name: str = "") -> str:
@@ -1848,8 +1849,36 @@ class HostServer(BasicServer):
                 return ZMessage(success=True, action="IPUpdate", message="网络配置更新成功")
             else:
                 return ZMessage(success=False, action="IPUpdate", message=f"网络配置更新失败: {error_message}")
-
         except Exception as e:
-            logger.error(f"更新网络配置失败: {str(e)}")
-            traceback.print_exc()
-            return ZMessage(success=False, action="IPUpdate", message=f"网络配置更新失败: {str(e)}")
+            logger.error(f"网络配置更新失败: {e}")
+            return ZMessage(success=False, action="IPUpdate", message=f"网络配置更新失败: {e}")
+
+
+    # 磁盘移交检查 ################################################################
+    def HDDCheck(self, vm_name: str, vm_imgs: SDConfig, ex_name: str) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().HDDCheck(vm_name, vm_imgs, ex_name)
+
+    # 移交所有权 ################################################################
+    def HDDTrans(self, vm_name: str, vm_imgs: SDConfig, ex_name: str) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().HDDTrans(vm_name, vm_imgs, ex_name)
+
+    # 查找USB ###################################################################
+    def USBShows(self) -> dict[str, USBInfos]:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().USBShows()
+
+    # 直通USB ###################################################################
+    def USBSetup(self, vm_name: str, ud_info: USBInfos, ud_keys: str, in_flag=True) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().USBSetup(vm_name, ud_info, ud_keys, in_flag)
+

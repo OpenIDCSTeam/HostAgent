@@ -1,8 +1,11 @@
 import json
 
+DNS_SERVER_LIST = ["119.29.29.29", "223.5.5.5"]
+
 
 class HSConfig:
     def __init__(self, config=None, /, **kwargs):
+        # 基本信息 =============================
         self.server_name: str = ""  # 服务器名称
         self.server_type: str = ""  # 服务器类型
         self.server_addr: str = ""  # 服务器地址
@@ -10,29 +13,34 @@ class HSConfig:
         self.server_pass: str = ""  # 服务器密码
         self.server_port: int = 22  # 服务器端口
         self.filter_name: str = ""  # 过滤器名称
+        self.extend_data: dict = {}  # API可选项
+        self.enable_host: bool = False  # 已启用
+        # 存储信息 =============================
         self.images_path: str = ""  # 系统存储池
         self.dvdrom_path: str = ""  # 光盘存储池
         self.system_path: str = ""  # 系统存储池
         self.backup_path: str = ""  # 备份存储池
         self.extern_path: str = ""  # 数据存储池
         self.launch_path: str = ""  # 二进制路径
+        # 本机网络 =============================
         self.network_nat: str = ""  # NAT网络NIC
         self.network_pub: str = ""  # PUB网络NIC
-        self.i_kuai_addr: str = ""  # 爱快OS地址
-        self.i_kuai_user: str = ""  # 爱快OS用户
-        self.i_kuai_pass: str = ""  # 爱快OS密码
         self.ports_start: int = 0  # TCP端口起始
         self.ports_close: int = 0  # TCP端口结束
         self.remote_port: int = 0  # VNC服务端口
         self.limits_nums: int = 0  # VMS虚拟数量
         self.public_addr: list = []  # 公共IPV46
-        self.server_dnss: list = []  # DNS服务器
-        self.extend_data: dict = {}  # API可选项
-        self.system_maps: dict[str, list] = {}  # 系统映射: 显示名称->[文件名(xxx.iso),最低大小]
-        self.images_maps: dict[str, str] = {}  # 镜像映射: 显示名称->文件名(xxx.iso)
+        # 系统映射 =============================
+        # 系统映射: 显示名称->[xxx.iso,最低大小]
+        self.system_maps: dict[str, list] = {}
+        # 镜像映射: 显示名称->[xxx.iso,镜像类型]
+        self.images_maps: dict[str, str] = {}
+        # 区域网络 =============================
+        self.i_kuai_addr: str = ""  # 爱快OS地址
+        self.i_kuai_user: str = ""  # 爱快OS用户
+        self.i_kuai_pass: str = ""  # 爱快OS密码
+        self.ipaddr_ddns: list = DNS_SERVER_LIST
         self.ipaddr_maps: dict[str, dict] = {}
-        self.ipaddr_dnss: list = ["119.29.29.29", "223.5.5.5"]
-        self.enable_host: bool = True  # 主机是否启用（True=启用，False=禁用）
         # 加载传入的参数 =======================
         if config is not None:
             self.__read__(config)
@@ -78,10 +86,9 @@ class HSConfig:
             "system_maps": self.system_maps,
             "images_maps": self.images_maps,
             "ipaddr_maps": self.ipaddr_maps,
-            "ipaddr_dnss": self.ipaddr_dnss,
+            "ipaddr_ddns": self.ipaddr_ddns,
             "public_addr": self.public_addr,
             "extend_data": self.extend_data,
-            "server_dnss": self.server_dnss,
             "enable_host": self.enable_host,
         }
 

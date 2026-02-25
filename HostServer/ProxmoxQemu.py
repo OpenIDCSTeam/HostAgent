@@ -189,6 +189,43 @@ class HostServer(BasicServer):
                 nic_index += 1
         return network_config
 
+    # 生成Proxmox启动顺序字符串 ################################################
+    # 根据efi_all生成Proxmox boot order字符串，格式如 order=scsi0;scsi1;ide2
+    # 设备映射：vm_uuid->scsi0，vm_uuid-hdd_name->scsi1/2...，iso->ide2
+    # #########################################################################
+    def _proxmox_boot_order(self, vm_conf: VMConfig) -> str:
+        if not vm_conf.efi_all:
+            return 'order=scsi0;ide2'
+        # 构建 efi_name -> proxmox设备名 的映射
+        device_map = {}
+        device_map[vm_conf.vm_uuid] = 'scsi0'  # 系统盘
+        scsi_idx = 1
+        for hdd_name, hdd_data in vm_conf.hdd_all.items():
+            if hdd_data.hdd_flag == 0:
+                continue
+            device_map[f"{vm_conf.vm_uuid}-{hdd_name}"] = f"scsi{scsi_idx}"
+            scsi_idx += 1
+        ide_idx = 2
+        for iso_name in vm_conf.iso_all:
+            device_map[iso_name] = f"ide{ide_idx}"
+            ide_idx += 1
+        # 按efi_all顺序生成设备列表
+        ordered = []
+        seen = set()
+        for efi_item in vm_conf.efi_all:
+            dev = device_map.get(efi_item.efi_name)
+            if dev and dev not in seen:
+                ordered.append(dev)
+                seen.add(dev)
+        # 将未在efi_all中的设备追加到末尾
+        for dev in device_map.values():
+            if dev not in seen:
+                ordered.append(dev)
+                seen.add(dev)
+        if not ordered:
+            return 'order=scsi0;ide2'
+        return 'order=' + ';'.join(ordered)
+
     # 宿主机任务 ###############################################################
     def Crontabs(self) -> bool:
         """定时任务"""
@@ -394,6 +431,11 @@ class HostServer(BasicServer):
         vm_conf.vm_data['vmid'] = vm_vmid
         # 创建虚拟机 ================================================
         try:  # 构建虚拟机配置 --------------------------------------
+            # 填充efi_all默认启动项顺序 ============================
+            if not vm_conf.efi_all:
+                vm_conf.efi_all = self.efi_build(vm_conf)
+            # 生成Proxmox启动顺序 ==================================
+            boot_order = self._proxmox_boot_order(vm_conf)
             config = {
                 'vmid': vm_vmid,
                 'name': vm_conf.vm_uuid,
@@ -402,7 +444,7 @@ class HostServer(BasicServer):
                 'sockets': 1,
                 'ostype': 'l26',  # Linux 2.6+
                 'bios': 'ovmf',  # 使用 UEFI 模式
-                'boot': 'order=scsi0;ide2',
+                'boot': boot_order,
                 'scsihw': 'virtio-scsi-pci',
                 'efidisk0': 'local:1,efitype=4m,pre-enrolled-keys=1',  # EFI 磁盘
             }
@@ -490,7 +532,7 @@ class HostServer(BasicServer):
             disk_name = f"vm-{vm_vmid}-disk-0{src_ext}"
             dest_image = f"{vm_disk_dir}/{disk_name}"
             # 远程复制 =========================================================
-            if self.web_flag():
+            if self.flag_web():
                 # 远程模式：src_file 是远程服务器上的路径，使用 posixpath.join
                 src_file = posixpath.join(self.hs_config.images_path, vm_conf.os_name)
                 ssh = paramiko.SSHClient()
@@ -595,6 +637,12 @@ class HostServer(BasicServer):
             # 配置网卡 =========================================================
             config_updates.update(self.net_conf(vm_conf))
             
+            # 更新启动项顺序 ===================================================
+            if vm_conf.efi_all:
+                boot_order = self._proxmox_boot_order(vm_conf)
+                config_updates['boot'] = boot_order
+                logger.info(f"[{self.hs_config.server_name}] 更新启动顺序: {boot_order}")
+            
             # 配置GPU直通 =======================================================
             if vm_conf.gpu_num > 0 and vm_conf.gpu_id:
                 # 检查GPU配置是否变更
@@ -665,7 +713,7 @@ class HostServer(BasicServer):
                 return result
             
             # 获取虚拟机配置 ===================================================
-            vm_conf = self.VMSelect(vm_name)
+            vm_conf = self.vm_finds(vm_name)
             if vm_conf is None:
                 logger.error(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 不存在")
                 return ZMessage(
@@ -719,7 +767,7 @@ class HostServer(BasicServer):
             return result
 
         try:
-            vm_conf = self.VMSelect(vm_name)
+            vm_conf = self.vm_finds(vm_name)
             if vm_conf is None:
                 return ZMessage(
                     success=False, action="VMPowers",
@@ -800,7 +848,7 @@ class HostServer(BasicServer):
             if not result.success:
                 return ""
             
-            vm_conf = self.VMSelect(vm_name)
+            vm_conf = self.vm_finds(vm_name)
             if vm_conf is None:
                 return ""
             
@@ -864,7 +912,7 @@ class HostServer(BasicServer):
             logger.error(f"[{self.hs_config.server_name}] Proxmox连接失败: {result.message}")
             return result
         # 获取虚拟机配置 =======================================================
-        vm_conf = self.VMSelect(vm_name)
+        vm_conf = self.vm_finds(vm_name)
         if not vm_conf:
             logger.error(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 不存在")
             return ZMessage(
@@ -965,7 +1013,7 @@ class HostServer(BasicServer):
         if not result.success:
             return result
 
-        vm_conf = self.VMSelect(vm_name)
+        vm_conf = self.vm_finds(vm_name)
         if not vm_conf:
             return ZMessage(
                 success=False, action="Restores",
@@ -1075,7 +1123,7 @@ class HostServer(BasicServer):
             disk_dir = f"/var/lib/vz/images/{vm_vmid}"
 
             # 远程模式 =========================================================
-            if self.web_flag():
+            if self.flag_web():
                 # 远程模式：通过SSH创建qcow2文件
                 ssh = paramiko.SSHClient()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -1863,7 +1911,7 @@ class HostServer(BasicServer):
             return {}
 
     # USB设备直通 ##################################################################
-    def USBSetup(self, vm_name: str, usb_info, usb_key: str, in_flag=True):
+    def USBSetup(self, vm_name: str, ud_info, ud_keys: str, in_flag=True):
         """PVE USB直通 - 通过API设置usb参数（支持热插拔）"""
         from MainObject.Public.ZMessage import ZMessage
         try:
@@ -1886,8 +1934,8 @@ class HostServer(BasicServer):
             except Exception as e_node:
                 logger.warning(f"[{self.hs_config.server_name}] 获取PVE节点名失败，使用默认值: {str(e_node)}")
 
-            vid = usb_info.vid_uuid
-            pid = usb_info.pid_uuid
+            vid = ud_info.vid_uuid
+            pid = ud_info.pid_uuid
 
             if in_flag:
                 # 找空闲usb槽位
@@ -1920,18 +1968,28 @@ class HostServer(BasicServer):
             vm_conf = self.vm_saving[vm_name]
             if in_flag:
                 # 添加USB设备到配置
-                if usb_key not in vm_conf.usb_all:
-                    vm_conf.usb_all[usb_key] = usb_info
-                    logger.info(f"[{self.hs_config.server_name}] 添加USB设备到配置: {usb_key}")
+                if ud_keys not in vm_conf.usb_all:
+                    vm_conf.usb_all[ud_keys] = ud_info
+                    logger.info(f"[{self.hs_config.server_name}] 添加USB设备到配置: {ud_keys}")
             else:
                 # 从配置中移除USB设备
-                if usb_key in vm_conf.usb_all:
-                    del vm_conf.usb_all[usb_key]
-                    logger.info(f"[{self.hs_config.server_name}] 从配置中移除USB设备: {usb_key}")
+                if ud_keys in vm_conf.usb_all:
+                    del vm_conf.usb_all[ud_keys]
+                    logger.info(f"[{self.hs_config.server_name}] 从配置中移除USB设备: {ud_keys}")
 
-            logger.info(f"[{self.hs_config.server_name}] USB设备{'添加' if in_flag else '移除'}成功: {usb_key}")
+            logger.info(f"[{self.hs_config.server_name}] USB设备{'添加' if in_flag else '移除'}成功: {ud_keys}")
             return ZMessage(success=True, action="USBSetup", message="USB设备操作成功")
 
         except Exception as e:
             logger.error(f"[{self.hs_config.server_name}] USB直通操作失败: {str(e)}")
             return ZMessage(success=False, action="USBSetup", message=str(e))
+
+    # 虚拟机状态 ################################################################
+    def VMStatus(self,
+                 vm_name: str = "",
+                 s_t: int = None,
+                 e_t: int = None) -> dict[str, list[HWStatus]]:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().VMStatus(vm_name, s_t, e_t)

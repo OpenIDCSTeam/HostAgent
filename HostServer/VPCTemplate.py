@@ -2,6 +2,8 @@ from HostServer.BasicServer import BasicServer
 from MainObject.Config.HSConfig import HSConfig
 from MainObject.Config.IMConfig import IMConfig
 from MainObject.Config.SDConfig import SDConfig
+from MainObject.Config.VFConfig import VFConfig
+from MainObject.Config.USBInfos import USBInfos
 from MainObject.Config.VMPowers import VMPowers
 from MainObject.Public.HWStatus import HWStatus
 from MainObject.Public.ZMessage import ZMessage
@@ -59,11 +61,14 @@ class HostServer(BasicServer):
         return super().HSUnload()
 
     # 虚拟机列出 ###############################################################
-    def VMStatus(self, vm_name: str = "") -> dict[str, list[HWStatus]]:
+    def VMStatus(self,
+                 vm_name: str = "",
+                 s_t: int = None,
+                 e_t: int = None) -> dict[str, list[HWStatus]]:
         # 专用操作 =============================================================
         # TODO: 增加此主机需要执行的任务
         # 通用操作 =============================================================
-        return super().VMStatus(vm_name)
+        return super().VMStatus(vm_name, s_t, e_t)
 
     # 虚拟机扫描 ###############################################################
     def VMDetect(self) -> ZMessage:
@@ -169,3 +174,59 @@ class HostServer(BasicServer):
         # TODO: 增加此主机需要执行的任务
         # 通用操作 =============================================================
         return {}
+
+    # 获取虚拟机实际状态（从API）################################################
+    def GetPower(self, vm_name: str) -> str:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().GetPower(vm_name)
+
+    # 虚拟机截图 ################################################################
+    def VMScreen(self, vm_name: str = "") -> str:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().VMScreen(vm_name)
+
+    # 磁盘移交检查 ################################################################
+    def HDDCheck(self, vm_name: str, vm_imgs: SDConfig, ex_name: str) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().HDDCheck(vm_name, vm_imgs, ex_name)
+
+    # 移交所有权 ################################################################
+    def HDDTrans(self, vm_name: str, vm_imgs: SDConfig, ex_name: str) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().HDDTrans(vm_name, vm_imgs, ex_name)
+
+    # 直通PCI ###################################################################
+    def PCISetup(self, vm_name: str, config: VFConfig, pci_key: str, in_flag=True) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().PCISetup(vm_name, config, pci_key, in_flag)
+
+    # 查找USB ###################################################################
+    def USBShows(self) -> dict[str, USBInfos]:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().USBShows()
+
+    # 直通USB ###################################################################
+    def USBSetup(self, vm_name: str, ud_info: USBInfos, ud_keys: str, in_flag=True) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().USBSetup(vm_name, ud_info, ud_keys, in_flag)
+
+    # 虚拟机控制台 ################################################################
+    def VMRemote(self, vm_uuid: str, ip_addr: str = "127.0.0.1") -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().VMRemote(vm_uuid, ip_addr)

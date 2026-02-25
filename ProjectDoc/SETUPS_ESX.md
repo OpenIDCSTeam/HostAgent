@@ -73,7 +73,6 @@ pip install -r pipinstall-esx.txt
     "remote_port": 6080,                     # VNC远程端口
     "limits_nums": 100,                      # 虚拟机数量限制
     "public_addr": ["192.168.1.100"],       # 公网IP地址
-    "server_dnss": ["8.8.8.8", "8.8.4.4"],  # DNS服务器
     
     # IP地址池配置
     "ipaddr_maps": {
@@ -96,7 +95,7 @@ pip install -r pipinstall-esx.txt
     },
     
     # DNS配置
-    "ipaddr_dnss": ["8.8.8.8", "8.8.4.4"],
+    "ipaddr_ddns": ["8.8.8.8", "8.8.4.4"],
     
     # 镜像映射（显示名称 -> 文件名）
     "images_maps": {

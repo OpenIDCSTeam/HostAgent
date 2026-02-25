@@ -63,7 +63,7 @@ interface HostConfig {
     system_maps?: Record<string, [string, string]>
     images_maps?: Record<string, string>
     ipaddr_maps?: Record<string, any>
-    ipaddr_dnss?: string[]
+    ipaddr_ddns?: string[]
     public_addr?: string[]
     extend_data?: any
 }
@@ -325,7 +325,7 @@ function HostManage() {
                     ports_close: config.ports_close,
                     remote_port: config.remote_port,
                     limits_nums: config.limits_nums,
-                    ipaddr_dnss: (config.ipaddr_dnss || []).join(', '),
+                    ipaddr_ddns: (config.ipaddr_ddns || []).join(', '),
                     public_addr: (config.public_addr || []).join(', '),
                     extend_data: config.extend_data ? JSON.stringify(config.extend_data, null, 2) : ''
                 })
@@ -470,7 +470,7 @@ function HostManage() {
                 system_maps,
                 images_maps,
                 ipaddr_maps,
-                ipaddr_dnss: values.ipaddr_dnss ? values.ipaddr_dnss.split(',').map((s: string) => s.trim()).filter((s: string) => s) : [],
+                ipaddr_ddns: values.ipaddr_ddns ? values.ipaddr_ddns.split(',').map((s: string) => s.trim()).filter((s: string) => s) : [],
                 public_addr: values.public_addr ? values.public_addr.split(',').map((s: string) => s.trim()).filter((s: string) => s) : [],
                 extend_data
             }
@@ -1151,7 +1151,7 @@ function HostManage() {
                                         </Row>
 
                                         <h4 className="font-medium mb-3 mt-4">DNS服务器配置</h4>
-                                        <Form.Item name="ipaddr_dnss" label="DNS服务器（多个用逗号分隔）">
+                                        <Form.Item name="ipaddr_ddns" label="DNS服务器（多个用逗号分隔）">
                                             <Input placeholder="例如: 8.8.8.8, 8.8.4.4"/>
                                         </Form.Item>
                                     </div>

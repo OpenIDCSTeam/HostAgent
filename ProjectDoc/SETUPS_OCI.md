@@ -213,7 +213,7 @@ result = server.VMSetups(vm_conf)
 
 ```python
 # 更新容器配置（需要重建容器）
-vm_conf = server.VMSelect("container-name")
+vm_conf = server.vm_finds("container-name")
 vm_conf.cpu_num = 4  # 修改为 4 核
 vm_conf.mem_num = 8  # 修改为 8 GB
 

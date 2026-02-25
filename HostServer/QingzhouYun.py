@@ -10,6 +10,8 @@ from HostServer.BasicServer import BasicServer
 from MainObject.Config.HSConfig import HSConfig
 from MainObject.Config.IMConfig import IMConfig
 from MainObject.Config.SDConfig import SDConfig
+from MainObject.Config.USBInfos import USBInfos
+from MainObject.Config.VFConfig import VFConfig
 from MainObject.Config.VMBackup import VMBackup
 from MainObject.Config.VMPowers import VMPowers
 from MainObject.Config.PortData import PortData
@@ -155,7 +157,7 @@ class HostServer(BasicServer):
 
     def _vm_id(self, vm_name: str) -> str:
         """获取虚拟机在平台上的ID"""
-        vm_conf = self.VMSelect(vm_name)
+        vm_conf = self.vm_finds(vm_name)
         if vm_conf and hasattr(vm_conf, 'vm_data') and isinstance(
                 getattr(vm_conf, 'vm_data', None), dict):
             return vm_conf.vm_data.get("platform_id", vm_name)
@@ -226,7 +228,7 @@ class HostServer(BasicServer):
                         vm_hw.flu_usage = int(
                             vm_info.get("traffic_used", 0))
                         vm_hw.flu_total = vm_conf.flu_num
-                        self.vm_status_set(vm_name, vm_hw)
+                        self.vm_saves(vm_name, vm_hw)
                 except Exception as e:
                     logger.warning(
                         f"[{self.hs_config.server_name}] "
@@ -509,7 +511,7 @@ class HostServer(BasicServer):
             f"[{self.hs_config.server_name}] 删除虚拟机: {vm_name}")
         try:
             pid = self._vm_id(vm_name)
-            vm_conf = self.VMSelect(vm_name)
+            vm_conf = self.vm_finds(vm_name)
             if vm_conf:
                 super().IPBinder(vm_conf, False)
             data = self._api_delete(f"vm/{pid}")
@@ -573,7 +575,7 @@ class HostServer(BasicServer):
                 return ZMessage(
                     success=False, action="Password",
                     message=f"修改密码失败: {self._msg(data)}")
-            vm_conf = self.VMSelect(vm_name)
+            vm_conf = self.vm_finds(vm_name)
             if vm_conf:
                 vm_conf.os_pass = os_pass
                 self.data_set()
@@ -679,7 +681,7 @@ class HostServer(BasicServer):
     def VMBackup(self, vm_name: str, vm_tips: str) -> ZMessage:
         try:
             pid = self._vm_id(vm_name)
-            vm_conf = self.VMSelect(vm_name)
+            vm_conf = self.vm_finds(vm_name)
             if not vm_conf:
                 return ZMessage(
                     success=False, action="VMBackup",
@@ -715,7 +717,7 @@ class HostServer(BasicServer):
     def Restores(self, vm_name: str, vm_back: str) -> ZMessage:
         try:
             pid = self._vm_id(vm_name)
-            vm_conf = self.VMSelect(vm_name)
+            vm_conf = self.vm_finds(vm_name)
             if not vm_conf:
                 return ZMessage(
                     success=False, action="Restores",
@@ -781,7 +783,7 @@ class HostServer(BasicServer):
                 return ZMessage(
                     success=False, action="RMBackup",
                     message=f"删除备份失败: {self._msg(data)}")
-            vm_conf = self.VMSelect(vm_name)
+            vm_conf = self.vm_finds(vm_name)
             if vm_conf:
                 vm_conf.backups = [
                     b for b in vm_conf.backups
@@ -908,7 +910,7 @@ class HostServer(BasicServer):
         """网站反向代理：通过青洲云API创建/删除Web代理"""
         act = "添加" if in_flag else "删除"
         try:
-            vm_conf = self.VMSelect(vm_uuid)
+            vm_conf = self.vm_finds(vm_uuid)
             if not vm_conf:
                 return ZMessage(
                     success=False, action="ProxyMap",
@@ -994,3 +996,38 @@ class HostServer(BasicServer):
     # 查找显卡(云平台不适用) ###################################################
     def PCIShows(self) -> dict[str, str]:
         return {}
+
+    # 直通PCI ###################################################################
+    def PCISetup(self, vm_name: str, config: VFConfig, pci_key: str, in_flag=True) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().PCISetup(vm_name, config, pci_key, in_flag)
+
+    # 查找USB ###################################################################
+    def USBShows(self) -> dict[str, USBInfos]:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().USBShows()
+
+    # 直通USB ###################################################################
+    def USBSetup(self, vm_name: str, ud_info: USBInfos, ud_keys: str, in_flag=True) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().USBSetup(vm_name, ud_info, ud_keys, in_flag)
+
+    # 磁盘移交检查 ################################################################
+    def HDDCheck(self, vm_name: str, vm_imgs: SDConfig, ex_name: str) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().HDDCheck(vm_name, vm_imgs, ex_name)
+
+    # 移交所有权 ################################################################
+    def HDDTrans(self, vm_name: str, vm_imgs: SDConfig, ex_name: str) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().HDDTrans(vm_name, vm_imgs, ex_name)

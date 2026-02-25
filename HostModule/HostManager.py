@@ -368,9 +368,8 @@ class HostManage:
                         hs_conf_data["system_maps"] = json.loads(host_config["system_maps"]) if host_config.get("system_maps") else {}
                         hs_conf_data["images_maps"] = json.loads(host_config["images_maps"]) if host_config.get("images_maps") else {}
                         hs_conf_data["public_addr"] = json.loads(host_config["public_addr"]) if host_config.get("public_addr") else []
-                        hs_conf_data["server_dnss"] = json.loads(host_config["server_dnss"]) if host_config.get("server_dnss") else []
                         hs_conf_data["ipaddr_maps"] = json.loads(host_config["ipaddr_maps"]) if host_config.get("ipaddr_maps") else {}
-                        hs_conf_data["ipaddr_dnss"] = json.loads(host_config["ipaddr_dnss"]) if host_config.get("ipaddr_dnss") else ["119.29.29.29", "223.5.5.5"]
+                        hs_conf_data["ipaddr_ddns"] = json.loads(host_config["ipaddr_ddns"]) if host_config.get("ipaddr_ddns") else ["119.29.29.29", "223.5.5.5"]
                         
                         # 加载enable_host字段 ========================================
                         hs_conf_data["enable_host"] = bool(host_config.get("enable_host", 1))

@@ -22,7 +22,7 @@ local_config = HSConfig(
     i_kuai_pass="admin",
     # IP地址池
     ipaddr_maps=["192.168.1.100", "114.193.206.253", "114.193.206.254"],
-    ipaddr_dnss=["119.29.29.29", "223.5.5.5"],
+    ipaddr_ddns=["119.29.29.29", "223.5.5.5"],
     # 端口范围
     ports_start=10000,
     ports_close=20000,
@@ -49,7 +49,7 @@ remote_http_config = HSConfig(
     i_kuai_user="admin",
     i_kuai_pass="admin",
     ipaddr_maps=["192.168.100.10", "56.92.28.254", "56.92.28.255"],
-    ipaddr_dnss=["119.29.29.29", "223.5.5.5"],
+    ipaddr_ddns=["119.29.29.29", "223.5.5.5"],
     ports_start=10000,
     ports_close=20000,
     filter_name="PROD-"
@@ -74,7 +74,7 @@ remote_https_config = HSConfig(
     i_kuai_user="admin",
     i_kuai_pass="admin",
     ipaddr_maps=["192.168.1.100", "114.193.206.253"],
-    ipaddr_dnss=["119.29.29.29", "223.5.5.5"],
+    ipaddr_ddns=["119.29.29.29", "223.5.5.5"],
     ports_start=20000,
     ports_close=30000,
     filter_name="DEV-"
@@ -249,7 +249,7 @@ host_config = HSConfig(
     i_kuai_user="admin",
     i_kuai_pass="admin",
     ipaddr_maps=["192.168.1.100", "114.193.206.253", "114.193.206.254"],
-    ipaddr_dnss=["119.29.29.29", "223.5.5.5"],
+    ipaddr_ddns=["119.29.29.29", "223.5.5.5"],
     ports_start=10000,
     ports_close=20000,
     filter_name="PROD-"
@@ -339,7 +339,7 @@ set HYPERV_BACKUP_PATH=D:\Backups
     "114.193.206.253",
     "114.193.206.254"
   ],
-  "ipaddr_dnss": [
+  "ipaddr_ddns": [
     "119.29.29.29",
     "223.5.5.5"
   ],

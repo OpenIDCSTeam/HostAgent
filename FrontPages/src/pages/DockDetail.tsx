@@ -193,7 +193,7 @@ interface HostConfig {
     server_type?: string
     enable_host?: boolean
     ipaddr_maps?: Record<string, any>
-    ipaddr_dnss?: string[]
+    ipaddr_ddns?: string[]
 }
 
 function VMDetail() {

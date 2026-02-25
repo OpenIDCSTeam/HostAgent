@@ -2,6 +2,8 @@
 # 提供ESXi虚拟机的创建、管理和监控功能
 ################################################################################
 import datetime
+import traceback
+
 from loguru import logger
 from HostServer.BasicServer import BasicServer
 from HostServer.vSphereESXiAPI.vSphereAPI import vSphereAPI
@@ -401,6 +403,15 @@ class HostServer(BasicServer):
             logger.info(f"[{self.hs_config.server_name}] 启动虚拟机 {vm_conf.vm_uuid}")
             self.esxi_api.power_on(vm_conf.vm_uuid)
 
+            # 填充efi_all默认启动项顺序并设置 ==================================
+            if not vm_conf.efi_all:
+                vm_conf.efi_all = self.efi_build(vm_conf)
+            if vm_conf.efi_all:
+                boot_result = self.esxi_api.set_boot_order(
+                    vm_conf.vm_uuid, vm_conf.efi_all)
+                if not boot_result.success:
+                    logger.warning(f"[{self.hs_config.server_name}] 设置启动顺序失败: {boot_result.message}")
+
             # 断开连接 =========================================================
             self.esxi_api.disconnect()
 
@@ -569,6 +580,13 @@ class HostServer(BasicServer):
                     success=False, action="VMUpdate",
                     message=f"虚拟机 {vm_conf.vm_uuid} 启动失败: {start_result.message}")
 
+            # 根据efi_all更新启动顺序 ==========================================
+            if vm_conf.efi_all:
+                boot_result = self.esxi_api.set_boot_order(
+                    vm_conf.vm_uuid, vm_conf.efi_all)
+                if not boot_result.success:
+                    logger.warning(f"[{self.hs_config.server_name}] 更新启动顺序失败: {boot_result.message}")
+
             # 断开连接 =========================================================
             self.esxi_api.disconnect()
 
@@ -595,7 +613,7 @@ class HostServer(BasicServer):
             logger.info(f"[{self.hs_config.server_name}] 开始删除虚拟机: {vm_name}")
             
             # 检查虚拟机是否存在 ===============================================
-            vm_conf = self.VMSelect(vm_name)
+            vm_conf = self.vm_finds(vm_name)
             if vm_conf is None:
                 logger.warning(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 不存在")
                 return ZMessage(
@@ -1366,7 +1384,7 @@ class HostServer(BasicServer):
             return {}
 
     # USB设备直通 ==============================================================
-    def USBSetup(self, vm_name: str, usb_info, usb_key: str, in_flag=True):
+    def USBSetup(self, vm_name: str, ud_info, ud_keys: str, in_flag=True):
         """ESXi USB设备直通 - 通过pyVmomi添加/移除VirtualUSB"""
         from MainObject.Public.ZMessage import ZMessage
         try:
@@ -1389,8 +1407,8 @@ class HostServer(BasicServer):
                 if in_flag:
                     # 添加USB设备
                     backing = vim.vm.device.VirtualUSB.USBBackingInfo()
-                    backing.vendor = int(usb_info.vid_uuid, 16)
-                    backing.product = int(usb_info.pid_uuid, 16)
+                    backing.vendor = int(ud_info.vid_uuid, 16)
+                    backing.product = int(ud_info.pid_uuid, 16)
 
                     usb_device = vim.vm.device.VirtualUSB()
                     usb_device.backing = backing
@@ -1402,8 +1420,8 @@ class HostServer(BasicServer):
                     config_spec.deviceChange = [device_change]
                 else:
                     # 移除USB设备
-                    vid = int(usb_info.vid_uuid, 16)
-                    pid = int(usb_info.pid_uuid, 16)
+                    vid = int(ud_info.vid_uuid, 16)
+                    pid = int(ud_info.pid_uuid, 16)
                     for device in vm.config.hardware.device:
                         if isinstance(device, vim.vm.device.VirtualUSB):
                             if hasattr(device.backing, 'vendor') and \
@@ -1429,16 +1447,16 @@ class HostServer(BasicServer):
             vm_conf = self.vm_saving[vm_name]
             if in_flag:
                 # 添加USB设备到配置
-                if usb_key not in vm_conf.usb_all:
-                    vm_conf.usb_all[usb_key] = usb_info
-                    logger.info(f"[{self.hs_config.server_name}] 添加USB设备到配置: {usb_key}")
+                if ud_keys not in vm_conf.usb_all:
+                    vm_conf.usb_all[ud_keys] = ud_info
+                    logger.info(f"[{self.hs_config.server_name}] 添加USB设备到配置: {ud_keys}")
             else:
                 # 从配置中移除USB设备
-                if usb_key in vm_conf.usb_all:
-                    del vm_conf.usb_all[usb_key]
-                    logger.info(f"[{self.hs_config.server_name}] 从配置中移除USB设备: {usb_key}")
+                if ud_keys in vm_conf.usb_all:
+                    del vm_conf.usb_all[ud_keys]
+                    logger.info(f"[{self.hs_config.server_name}] 从配置中移除USB设备: {ud_keys}")
 
-            logger.info(f"[{self.hs_config.server_name}] USB设备{'添加' if in_flag else '移除'}成功: {usb_key}")
+            logger.info(f"[{self.hs_config.server_name}] USB设备{'添加' if in_flag else '移除'}成功: {ud_keys}")
             return ZMessage(success=True, action="USBSetup", message="USB设备操作成功")
 
         except Exception as e:

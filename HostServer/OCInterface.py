@@ -12,6 +12,8 @@ from HostServer.BasicServer import BasicServer
 from MainObject.Config.HSConfig import HSConfig
 from MainObject.Config.IMConfig import IMConfig
 from MainObject.Config.SDConfig import SDConfig
+from MainObject.Config.USBInfos import USBInfos
+from MainObject.Config.VFConfig import VFConfig
 from MainObject.Config.VMBackup import VMBackup
 from MainObject.Config.VMPowers import VMPowers
 from MainObject.Public.ZMessage import ZMessage
@@ -339,7 +341,7 @@ class HostServer(BasicServer):
 
         try:
             # 获取所有已分配的IP地址（包括其他虚拟机）
-            allocated_ips = self.IPCollect()
+            allocated_ips = self.ip_check()
 
             # 检查是否有重复的网卡类型（禁止同一容器分配多个相同类型的网卡）
             nic_types = {}
@@ -479,8 +481,8 @@ class HostServer(BasicServer):
                         if ip_mask:
                             nic_conf.nic_mask = ip_mask
                         # 设置DNS
-                        if self.hs_config.ipaddr_dnss:
-                            nic_conf.dns_addr = self.hs_config.ipaddr_dnss
+                        if self.hs_config.ipaddr_ddns:
+                            nic_conf.dns_addr = self.hs_config.ipaddr_ddns
                         # 更新MAC地址
                         nic_conf.send_mac()
 
@@ -836,7 +838,7 @@ class HostServer(BasicServer):
             logger.error(f"[{self.hs_config.server_name}] 容器删除失败: Docker连接失败")
             return result
         # 获取虚拟机配置 =======================================================
-        vm_conf = self.VMSelect(vm_name)
+        vm_conf = self.vm_finds(vm_name)
         if vm_conf is None:
             logger.warning(f"[{self.hs_config.server_name}] 容器配置不存在: {vm_name}")
             return ZMessage(
@@ -1122,7 +1124,7 @@ class HostServer(BasicServer):
         if not result.success:
             logger.error(f"[{self.hs_config.server_name}] 备份失败: Docker连接失败")
             return result
-        vm_conf = self.VMSelect(vm_name)
+        vm_conf = self.vm_finds(vm_name)
         if not vm_conf:
             logger.error(f"[{self.hs_config.server_name}] 备份失败: 容器配置不存在 - {vm_name}")
             return ZMessage(
@@ -1144,7 +1146,7 @@ class HostServer(BasicServer):
             cmd_exec = f"docker export {vm_name} | gzip > \"{bak_path}\""
             bak_flag = False
             # 远程主机：使用SSH连接执行docker export命令 =================
-            if self.web_flag():
+            if self.flag_web():
                 logger.info(f"检测到远程主机，使用SSH连接进行备份")
                 # 建立SSH连接 --------------------------------------------
                 bak_flag, message = self.port_forward.connect_ssh()
@@ -1221,7 +1223,7 @@ class HostServer(BasicServer):
             logger.error(f"[{self.hs_config.server_name}] 恢复失败: Docker连接失败")
             return result
         # 获取VM配置 ===========================================================
-        vm_conf = self.VMSelect(vm_name)
+        vm_conf = self.vm_finds(vm_name)
         if not vm_conf:
             return ZMessage(
                 success=False, action="Restores",
@@ -1241,7 +1243,7 @@ class HostServer(BasicServer):
         # 检查备份文件是否存在 =================================================
         file_exists = False
         # 远程主机：使用SSH检查文件是否存在 ====================================
-        if self.web_flag():
+        if self.flag_web():
             success, message = self.port_forward.connect_ssh()
             if not success:
                 return ZMessage(
@@ -1278,7 +1280,7 @@ class HostServer(BasicServer):
             logger.info(f"开始恢复容器 {vm_name}，"
                         f"备份文件: {backup_file}")
             # 选择恢复方式 =====================================================
-            if self.web_flag():
+            if self.flag_web():
                 logger.info(f"从远程主机恢复备份")
                 # Docker镜像名称必须是小写
                 image_tag = vm_back.split('.')[0].lower()
@@ -1476,3 +1478,69 @@ class HostServer(BasicServer):
     # 删除容器挂载路径 #########################################################
     def RMMounts(self, vm_name: str, vm_imgs: str = "") -> ZMessage:
         return self.RMMounts_TTY(vm_name, vm_imgs)
+
+    # 初始宿主机 ################################################################
+    def HSCreate(self) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().HSCreate()
+
+    # 还原宿主机 ################################################################
+    def HSDelete(self) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().HSDelete()
+
+    # 虚拟机状态 ################################################################
+    def VMStatus(self,
+                 vm_name: str = "",
+                 s_t: int = None,
+                 e_t: int = None) -> dict[str, list[HWStatus]]:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().VMStatus(vm_name, s_t, e_t)
+
+    # 虚拟机截图 ################################################################
+    def VMScreen(self, vm_name: str = "") -> str:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().VMScreen(vm_name)
+
+    # 磁盘移交检查 ################################################################
+    def HDDCheck(self, vm_name: str, vm_imgs: SDConfig, ex_name: str) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().HDDCheck(vm_name, vm_imgs, ex_name)
+
+    # 移交所有权 ################################################################
+    def HDDTrans(self, vm_name: str, vm_imgs: SDConfig, ex_name: str) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().HDDTrans(vm_name, vm_imgs, ex_name)
+
+    # 直通PCI ###################################################################
+    def PCISetup(self, vm_name: str, config: VFConfig, pci_key: str, in_flag=True) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().PCISetup(vm_name, config, pci_key, in_flag)
+
+    # 查找USB ###################################################################
+    def USBShows(self) -> dict[str, USBInfos]:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().USBShows()
+
+    # 直通USB ###################################################################
+    def USBSetup(self, vm_name: str, ud_info: USBInfos, ud_keys: str, in_flag=True) -> ZMessage:
+        # 专用操作 =============================================================
+        # TODO: 增加此主机需要执行的任务
+        # 通用操作 =============================================================
+        return super().USBSetup(vm_name, ud_info, ud_keys, in_flag)

@@ -330,7 +330,7 @@ class DataManager:
              filter_name, images_path, dvdrom_path, system_path, backup_path, extern_path,
              launch_path, network_nat, network_pub, i_kuai_addr, i_kuai_user, 
              i_kuai_pass, ports_start, ports_close, remote_port, system_maps, images_maps,
-             public_addr, extend_data, server_dnss, limits_nums, ipaddr_maps, ipaddr_dnss, enable_host, updated_at)
+             public_addr, extend_data, limits_nums, ipaddr_maps, ipaddr_ddns, enable_host, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             """
             params = (
@@ -360,10 +360,9 @@ class DataManager:
                 images_maps_json,
                 json.dumps(hs_config.public_addr) if hs_config.public_addr else "[]",
                 json.dumps(hs_config.extend_data) if hs_config.extend_data else "{}",
-                json.dumps(hs_config.server_dnss) if hs_config.server_dnss else "[]",
                 hs_config.limits_nums,
                 json.dumps(hs_config.ipaddr_maps) if hs_config.ipaddr_maps else "{}",
-                json.dumps(hs_config.ipaddr_dnss) if hs_config.ipaddr_dnss else '["119.29.29.29", "223.5.5.5"]',
+                json.dumps(hs_config.ipaddr_ddns) if hs_config.ipaddr_ddns else '["119.29.29.29", "223.5.5.5"]',
                 1 if getattr(hs_config, 'enable_host', True) else 0  # 主机启用状态
             )
             conn.execute(sql, params)

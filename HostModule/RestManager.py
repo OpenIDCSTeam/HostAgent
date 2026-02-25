@@ -1003,11 +1003,11 @@ class RestManager:
         # 获取虚拟机用户态必要的主机字段（最小原则）
         enable_host = True
         ipaddr_maps = {}
-        ipaddr_dnss = []
+        ipaddr_ddns = []
         if server.hs_config:
             enable_host = getattr(server.hs_config, 'enable_host', True)
             ipaddr_maps = getattr(server.hs_config, 'ipaddr_maps', {}) or {}
-            ipaddr_dnss = getattr(server.hs_config, 'ipaddr_dnss', []) or []
+            ipaddr_ddns = getattr(server.hs_config, 'ipaddr_ddns', []) or []
 
         return self.api_response(200, 'success', {
             'host_name': hs_name,
@@ -1021,7 +1021,7 @@ class RestManager:
             'tab_lock': tab_lock,
             'enable_host': enable_host,
             'ipaddr_maps': ipaddr_maps,
-            'ipaddr_dnss': ipaddr_dnss,
+            'ipaddr_ddns': ipaddr_ddns,
         })
 
     def get_gpu_list(self, hs_name):
@@ -1197,7 +1197,7 @@ class RestManager:
             return self.api_response(404, '虚拟机不存在')
 
         try:
-            efi_list = server.EFIShows(vm_uuid)
+            efi_list = server.bl_lists(vm_uuid)
             # 将BootOpts对象序列化为字典列表
             result = []
             for efi in efi_list:
@@ -1234,7 +1234,7 @@ class RestManager:
             return self.api_response(400, '启动项列表格式错误')
 
         try:
-            result = server.EFISetup(vm_uuid, efi_list)
+            result = server.bl_setup(vm_uuid, efi_list)
             if not result.success:
                 return self.api_response(500, result.message)
 
@@ -2439,7 +2439,7 @@ class RestManager:
                 return self.api_response(400, f'移交失败：新所有者资源配额不足 - {quota_error_msg}')
 
         # 调用Transfer函数移交所有权
-        result = server.Transfer(vm_uuid, new_owner, keep_access)
+        result = server.vm_trans(vm_uuid, new_owner, keep_access)
         if not result.success:
             return self.api_response(500, f'移交失败: {result.message}')
 
@@ -2751,7 +2751,7 @@ class RestManager:
             return self.api_response(404, '主机不存在')
 
         # 检查虚拟机是否存在
-        vm_conf = server.VMSelect(vm_uuid)
+        vm_conf = server.vm_finds(vm_uuid)
         if not vm_conf:
             return self.api_response(404, '虚拟机不存在')
 
@@ -3198,7 +3198,7 @@ class RestManager:
             nic_gate=data.get('nic_gate', ''),
             nic_mask=data.get('nic_mask', '255.255.255.0'),
             dns_addr=data.get('dns_addr',
-                              server.hs_config.ipaddr_dnss if hasattr(server.hs_config, 'ipaddr_dnss') else [])
+                              server.hs_config.ipaddr_ddns if hasattr(server.hs_config, 'ipaddr_ddns') else [])
         )
 
         # 如果没有填写IP地址，则自动分配
