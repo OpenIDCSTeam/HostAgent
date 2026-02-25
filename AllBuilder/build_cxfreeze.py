@@ -99,8 +99,18 @@ PROJECT_AUTHOR = "OpenIDCS Team"
 if PROJECT_BASE_DIR not in sys.path:
     sys.path.insert(0, PROJECT_BASE_DIR)
 
+# 调试导入：检查能否正常导入 HostServer.ProxmoxQemu
+try:
+    print(f"[INFO] 尝试导入 HostServer.ProxmoxQemu (sys.path: {sys.path})")
+    import HostServer.ProxmoxQemu
+    print("[INFO] 成功导入 HostServer.ProxmoxQemu")
+except ImportError as e:
+    print(f"[ERROR] 导入 HostServer.ProxmoxQemu 失败: {e}")
+    # 不抛出异常，让 cx_Freeze 继续尝试，或者根据需要决定是否终止
+    # raise e
+
 # 主脚本
-MAIN_SCRIPT = os.path.join(PROJECT_BASE_DIR, "HostServer.py")
+MAIN_SCRIPT = os.path.join(PROJECT_BASE_DIR, "MainServer.py")
 
 # 图标文件
 ICON_FILE = os.path.join(PROJECT_BASE_DIR, "HostConfig/HostManage.ico")
@@ -143,6 +153,10 @@ PACKAGES = [
     # 邮件
     "email",
     "smtplib",
+
+    # 远程连接
+    "proxmoxer",
+    "paramiko",
     
     # 标准库（这些通常会自动包含，但显式列出以确保）
     "encodings",  # 必需：Python 编码支持

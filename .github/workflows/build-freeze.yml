@@ -14,6 +14,7 @@ on:
         options:
           - windows
           - linux
+          - macos
           - all
         default: 'all'
       create_release:
@@ -24,6 +25,23 @@ on:
           - yes
           - no
         default: 'yes'
+  workflow_call:
+    inputs:
+      version:
+        description: '发布版本号 (留空则发布到 Beta)'
+        required: false
+        type: string
+        default: ''
+      target_platform:
+        description: '目标平台'
+        required: true
+        type: string
+        default: 'all'
+      create_release:
+        description: '是否创建 Release'
+        required: true
+        type: string
+        default: 'yes'
 
 jobs:
   build-windows:
@@ -31,28 +49,35 @@ jobs:
     if: inputs.target_platform == 'windows' || inputs.target_platform == 'all'
     steps:
     - uses: actions/checkout@v4
-    
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: FrontPages/package-lock.json
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
-    
+        python-version: '3.13'
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r HostConfig/requirements.txt
+        pip install -r HostConfig/pipinstall.txt
+        pip install pywin32 pythonnet
         pip install cx_Freeze
-    
-    - name: Build with cx-Freeze
+
+    - name: Build with cx-Freeze (包含前端构建)
       run: |
-        cd AllBuilder
-        python build_cxfreeze.py build_exe
-    
+        python AllBuilder\build_cxfreeze.py build
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: OpenIDCS-Client-cxfreeze-Windows
-        path: BuildCache/cxfreeze/OpenIDCS-Client.exe
+        path: BuildCache/cxfreeze
         retention-days: 30
 
   build-linux:
@@ -60,52 +85,100 @@ jobs:
     if: inputs.target_platform == 'linux' || inputs.target_platform == 'all'
     steps:
     - uses: actions/checkout@v4
-    
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: FrontPages/package-lock.json
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
-    
+        python-version: '3.13'
+
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential
-    
+
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r HostConfig/requirements.txt
+        pip install -r HostConfig/pipinstall.txt
         pip install cx_Freeze
-    
-    - name: Build with cx-Freeze
+
+    - name: Build with cx-Freeze (包含前端构建)
       run: |
-        cd AllBuilder
-        python build_cxfreeze.py build_exe
-    
+        python ./AllBuilder/build_cxfreeze.py build
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: OpenIDCS-Client-cxfreeze-Linux
-        path: BuildCache/cxfreeze/OpenIDCS-Client
+        path: BuildCache/cxfreeze
+        retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+    if: inputs.target_platform == 'macos' || inputs.target_platform == 'all'
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: FrontPages/package-lock.json
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r HostConfig/pipinstall.txt
+        pip install cx_Freeze
+
+    - name: Build with cx-Freeze (包含前端构建)
+      run: |
+        python ./AllBuilder/build_cxfreeze.py build
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: OpenIDCS-Client-cxfreeze-macOS
+        path: BuildCache/cxfreeze
         retention-days: 30
 
   release:
-    needs: [build-windows, build-linux]
+    needs: [build-windows, build-linux, build-macos]
     runs-on: ubuntu-latest
     if: inputs.create_release == 'yes'
     steps:
     - name: Download all artifacts
       uses: actions/download-artifact@v4
-    
+
+    - name: Package build folders
+      run: |
+        tar -czf OpenIDCS-Client-cxfreeze-Windows.tar.gz OpenIDCS-Client-cxfreeze-Windows
+        tar -czf OpenIDCS-Client-cxfreeze-Linux.tar.gz OpenIDCS-Client-cxfreeze-Linux
+        tar -czf OpenIDCS-Client-cxfreeze-macOS.tar.gz OpenIDCS-Client-cxfreeze-macOS
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ github.event.inputs.version != '' && format('v{0}', github.event.inputs.version) || 'beta' }}
-        name: ${{ github.event.inputs.version != '' && format('Release v{0}', github.event.inputs.version) || 'Beta Release' }}
+        tag_name: ${{ inputs.version != '' && format('v{0}', inputs.version) || 'beta' }}
+        name: ${{ inputs.version != '' && format('Release v{0}', inputs.version) || 'Beta Release' }}
         files: |
-          OpenIDCS-Client-cxfreeze-Windows/OpenIDCS-Client.exe
-          OpenIDCS-Client-cxfreeze-Linux/OpenIDCS-Client
+          OpenIDCS-Client-cxfreeze-Windows.tar.gz
+          OpenIDCS-Client-cxfreeze-Linux.tar.gz
+          OpenIDCS-Client-cxfreeze-macOS.tar.gz
         draft: false
-        prerelease: ${{ github.event.inputs.version == '' }}
+        prerelease: ${{ inputs.version == '' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,7 +1,6 @@
 GPUtil
 psutil
 py-cpuinfo
-pywin32
 setuptools
 pythonnet
 requests
@@ -18,9 +17,12 @@ pylxd
 docker
 Jinja2
 Click
-nuitka
 pycryptodomex
 pyzstd
 bcj-cffi
 paramiko
+# pythonnet
+# pywin32
+# cx-freeze
+# nuitka
 # hypy

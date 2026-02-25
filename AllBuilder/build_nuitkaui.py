@@ -20,7 +20,7 @@ if sys.platform == "win32":
 # 项目配置
 PROJECT_NAME = "OpenIDCS-Client"
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-MAIN_SCRIPT = os.path.join(PROJECT_ROOT, "HostServer.py")
+MAIN_SCRIPT = os.path.join(PROJECT_ROOT, "MainServer.py")
 OUTPUT_DIR = os.path.join(PROJECT_ROOT, "BuildCache", "nuitka")
 ICON_FILE = os.path.join(PROJECT_ROOT, "HostConfig/HostManage.ico")
 

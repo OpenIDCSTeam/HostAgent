@@ -5,7 +5,7 @@ program_name = "Open IDC Service Client"
 program_version = "1.0"
 
 # 指定你的主程序文件
-main_script = "HostServer.py"
+main_script = "MainServer.py"
 
 # 配置 cx_Freeze
 setup(
