@@ -19,36 +19,11 @@
 
 OpenIDC-Client是一个开源的IDC（Internet Data Center）虚拟化统一管理平台，旨在简化多虚拟化环境下的虚拟机管理工作。它提供了一个统一的Web管理界面和完整的RESTful API，让运维人员可以轻松地管理分布在多个虚拟化平台上的虚拟机集群。
 
-<div align="center">
-
-<style>
-.tab-group { display:flex; gap:8px; justify-content:center; margin-bottom:12px; flex-wrap:wrap; }
-.tab-btn { padding:6px 18px; border:1.5px solid #d0d7de; border-radius:20px; background:#f6f8fa; cursor:pointer; font-size:13px; color:#57606a; transition:all .2s; }
-.tab-btn.active, .tab-btn:hover { background:#0969da; color:#fff; border-color:#0969da; }
-.tab-panel { display:none; }
-.tab-panel.active { display:block; }
-</style>
-
-<div class="tab-group">
-  <button class="tab-btn active" onclick="showTab('t1',this)">🖥️ 资源概览（默认主题）</button>
-  <button class="tab-btn" onclick="showTab('t2',this)">🌐 实例管理（透明主题）</button>
-  <button class="tab-btn" onclick="showTab('t3',this)">🌙 日志管理（暗黑主题）</button>
-</div>
-
-<div id="t1" class="tab-panel active"><img src="Screenshot/QQ20260212-163554.jpg" alt="资源概览" width="90%"></div>
-<div id="t2" class="tab-panel"><img src="Screenshot/QQ20260212-163705.jpg" alt="实例管理" width="90%"></div>
-<div id="t3" class="tab-panel"><img src="Screenshot/QQ20260212-163842.jpg" alt="日志管理" width="90%"></div>
-
-<script>
-function showTab(id, btn) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  btn.classList.add('active');
-}
-</script>
-
-</div>
+<p align="center">
+  <img src="Screenshot/QQ20260212-163554.jpg" alt="资源概览（默认主题）" width="300" height="200" style="object-fit:cover;">
+  <img src="Screenshot/QQ20260212-163705.jpg" alt="实例管理（透明主题）" width="300" height="200" style="object-fit:cover;">
+  <img src="Screenshot/QQ20260212-163842.jpg" alt="日志管理（暗黑主题）" width="300" height="200" style="object-fit:cover;">
+</p>
 
 ---
 
@@ -83,21 +58,21 @@ function showTab(id, btn) {
 
 | 方法名 | 功能描述 | Workstation | LXContainer | OCInterface | ProxmoxQemu | Win64HyperV | vSphereESXi | QingzhouYun |
 |--------|----------|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
-| `VMPasswd` | 虚拟机内改密 | ❌ 仅改配置 | ✅ | ✅ | ✅ | ⚠️ 代码有误 | ❌ 仅改配置 | ✅ |
-| `VMScreen` | 虚拟机截图 | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| `VMBackup` | 虚拟机备份 | ⚠️ 未用平台快照 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `Restores` | 虚拟机还原 | ⚠️ 未用平台快照 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `LDBackup` | 列出备份快照 | ⚠️ 未扫平台快照 | ✅ | ✅ | ⚠️ 未扫平台快照 | ✅ | ✅ | ✅ |
-| `RMBackup` | 删除备份快照 | ⚠️ 未调平台API | ✅ | ✅ | ⚠️ 未调平台API | ✅ | ✅ | ✅ |
-| `HDDMount` | 挂载磁盘 | ⚠️ 仅改配置 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ISOMount` | 挂载ISO | ⚠️ 仅改配置 | ⚠️ 假成功 | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `RMMounts` | 卸载磁盘 | ⚠️ 仅删文件 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `HDDCheck` | 磁盘健康检查 | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
-| `HDDTrans` | 磁盘迁移 | ✅ | ❌ 路径不适用 | ❌ 路径不适用 | ✅ | ❌ 路径不适用 | ❌ 无此方法 | ❌ 不适用 |
-| `PCIShows` | 列出PCI设备 | ❌ 返回`{}` | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `PCISetup` | 配置PCI直通 | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ 不适用 |
-| `USBShows` | 列出USB设备 | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
-| `USBSetup` | 配置USB直通 | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ 不适用 |
+| `VMPasswd` | 改密 | ✅ | ✅外部 | ✅外部 | ✅ | ✅ | ✅ | ✅ |
+| `VMScreen` | 截图 | ✅ | ❌ 不支持 | ❌ 不支持 | ✅ | ✅ | ✅ | ✅ |
+| `VMBackup` | 备份 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `Restores` | 还原 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `LDBackup` | 列出备份 | ✅ | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ |
+| `RMBackup` | 删除备份 | ✅ | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ |
+| `HDDMount` | 挂载磁盘 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ISOMount` | 挂载ISO | ✅ | ❌  不支持 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `RMMounts` | 卸载磁盘 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `HDDCheck` | 磁盘检查 | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| `HDDTrans` | 磁盘迁移 | ✅ | ❌  不支持 | ❌  不支持 | ✅ | ❌ 不适用 | ❌ 无方法 | ❌ 不适用 |
+| `PCIShows` | 列出PCI | ❌ 不支持 | ❌ 不支持 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `PCISetup` | 配置PCI | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ 不适用 |
+| `USBShows` | 列出USB | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| `USBSetup` | 配置USB | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ 不适用 |
 
 
 
@@ -137,7 +112,7 @@ function showTab(id, btn) {
 
 
 
-## 🛠️ 开发与贡献
+## 🛠️ 开发贡献
 
 ### 环境要求
 
@@ -354,7 +329,7 @@ OpenIDC-Client/
 
 ## 📄 开源许可
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+本项目采用**GNU AFFERO GENERAL PUBLIC v3** 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
 ---
 
