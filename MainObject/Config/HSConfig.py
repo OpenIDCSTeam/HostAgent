@@ -1,5 +1,7 @@
 import json
 
+from MainObject.Config.VMConfig import VMConfig
+
 DNS_SERVER_LIST = ["119.29.29.29", "223.5.5.5"]
 
 
@@ -12,6 +14,7 @@ class HSConfig:
         self.server_user: str = ""  # 服务器用户
         self.server_pass: str = ""  # 服务器密码
         self.server_port: int = 22  # 服务器端口
+        self.server_area: str = ""  # 服务器区域
         self.filter_name: str = ""  # 过滤器名称
         self.extend_data: dict = {}  # API可选项
         self.enable_host: bool = False  # 已启用
@@ -41,6 +44,8 @@ class HSConfig:
         self.i_kuai_pass: str = ""  # 爱快OS密码
         self.ipaddr_ddns: list = DNS_SERVER_LIST
         self.ipaddr_maps: dict[str, dict] = {}
+        # 套餐划分 =============================
+        self.server_plan: dict[str, VMConfig] = {}
         # 加载传入的参数 =======================
         if config is not None:
             self.__read__(config)
@@ -51,11 +56,19 @@ class HSConfig:
         for key, value in kwargs.items():
             if hasattr(self, key):
                 setattr(self, key, value)
+        # 将server_plan中的dict转换为VMConfig对象
+        plan_data = self.server_plan
+        self.server_plan = {}
+        for plan_name, plan_conf in plan_data.items():
+            if isinstance(plan_conf, dict):
+                self.server_plan[plan_name] = VMConfig(**plan_conf)
+            elif isinstance(plan_conf, VMConfig):
+                self.server_plan[plan_name] = plan_conf
 
     # 读取数据 =================================
     def __read__(self, data: dict):
         for key, value in data.items():
-            if key in self.__save__:
+            if hasattr(self, key):
                 setattr(self, key, value)
 
     # 转换为字典 ===============================
@@ -90,6 +103,11 @@ class HSConfig:
             "public_addr": self.public_addr,
             "extend_data": self.extend_data,
             "enable_host": self.enable_host,
+            "server_area": self.server_area,
+            "server_plan": {
+                k: v.__save__() if hasattr(v, '__save__') and callable(getattr(v, '__save__')) else v
+                for k, v in self.server_plan.items()
+            },
         }
 
     # 转换为字符串 ===========================

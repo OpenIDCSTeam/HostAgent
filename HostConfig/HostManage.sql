@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS hs_config
     ipaddr_maps TEXT      DEFAULT '{}', -- IP地址的字典
     ipaddr_ddns TEXT      DEFAULT '["119.29.29.29", "223.5.5.5"]', -- DNS服务器列表
     enable_host  INTEGER   DEFAULT 1,    -- 主机是否启用 (1=启用, 0=禁用)
+    server_area  TEXT      DEFAULT '',   -- 服务器区域 (格式: 代码,名称)
+    server_plan  TEXT      DEFAULT '{}', -- 套餐配置 (JSON: 套餐名称->VMConfig)
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -187,4 +189,5 @@ CREATE INDEX IF NOT EXISTS idx_hs_logger_name ON hs_logger (hs_name);
 CREATE INDEX IF NOT EXISTS idx_hs_logger_time ON hs_logger (created_at);
 CREATE INDEX IF NOT EXISTS idx_web_users_username ON web_users (username);
 CREATE INDEX IF NOT EXISTS idx_web_users_email ON web_users (email);
-
+ALTER TABLE hs_config ADD COLUMN server_area TEXT DEFAULT '';   -- 服务器区域 (格式: 代码,名称)
+ALTER TABLE hs_config ADD COLUMN server_plan TEXT DEFAULT '{}'; -- 套餐配置 (JSON: 套餐名称->VMConfig)

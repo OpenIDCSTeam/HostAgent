@@ -229,10 +229,14 @@ class HostManage:
             # 恢复虚拟机配置（状态数据已在数据库中）============================
             self.engine[hs_name].vm_saving = old_vm_saving
             
-            # 卸载并重新加载主机 ================================================
+            # 卸载并重新加载主机（根据 enable_host 决定是否加载）================
             try:
                 self.engine[hs_name].HSUnload()
-                self.engine[hs_name].HSLoader()
+                if getattr(hs_conf, 'enable_host', True):
+                    self.engine[hs_name].HSLoader()
+                    logger.info(f'[修改主机] 主机 {hs_name} 已重新加载')
+                else:
+                    logger.info(f'[修改主机] 主机 {hs_name} 已禁用，跳过加载')
             except Exception as e:
                 logger.error(f'[修改主机] 重新加载主机失败: {e}')
                 traceback.print_exc()
@@ -373,7 +377,21 @@ class HostManage:
                         
                         # 加载enable_host字段 ========================================
                         hs_conf_data["enable_host"] = bool(host_config.get("enable_host", 1))
-                        
+
+                        # 加载server_area字段 ========================================
+                        hs_conf_data["server_area"] = host_config.get("server_area", "")
+
+                        # 加载server_plan字段 (JSON -> dict[str, VMConfig]) ===========
+                        server_plan_raw = host_config.get("server_plan", "{}")
+                        server_plan_dict = json.loads(server_plan_raw) if server_plan_raw else {}
+                        server_plan_converted = {}
+                        for plan_name, plan_cfg in server_plan_dict.items():
+                            if isinstance(plan_cfg, dict):
+                                server_plan_converted[plan_name] = VMConfig(**plan_cfg)
+                            else:
+                                server_plan_converted[plan_name] = plan_cfg
+                        hs_conf_data["server_plan"] = server_plan_converted
+
                         # 移除数据库字段，只保留配置字段 ============================
                         for field in ["id", "hs_name", "created_at", "updated_at"]:
                             hs_conf_data.pop(field, None)

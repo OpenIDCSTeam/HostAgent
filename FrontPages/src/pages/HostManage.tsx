@@ -66,6 +66,22 @@ interface HostConfig {
     ipaddr_ddns?: string[]
     public_addr?: string[]
     extend_data?: any
+    server_area?: string
+    server_plan?: Record<string, any>
+}
+
+// 套餐配置行接口
+interface ServerPlanRow {
+    id: string
+    planName: string
+    cpu_num: number
+    mem_num: number
+    hdd_num: number
+    speed_u: number
+    speed_d: number
+    nat_num: number
+    web_num: number
+    flu_num: number
 }
 
 // 主机数据接口
@@ -159,6 +175,7 @@ function HostManage() {
     const [systemMaps, setSystemMaps] = useState<SystemMapRow[]>([])
     const [imageMaps, setImageMaps] = useState<ImageMapRow[]>([])
     const [ipaddrMaps, setIpaddrMaps] = useState<IpaddrMapRow[]>([])
+    const [serverPlans, setServerPlans] = useState<ServerPlanRow[]>([])
     const [selectedHostType, setSelectedHostType] = useState<string>('')
 
     // 加载引擎类型
@@ -286,6 +303,7 @@ function HostManage() {
             fromIp: '',
             nums: 0
         }])
+        setServerPlans([])
         setModalVisible(true)
     }
 
@@ -393,6 +411,29 @@ function HostManage() {
                     nums: 0
                 }])
 
+                // 加载套餐配置
+                const serverPlansData: ServerPlanRow[] = []
+                if (config.server_plan) {
+                    Object.entries(config.server_plan).forEach(([planName, planCfg]: [string, any]) => {
+                        serverPlansData.push({
+                            id: Date.now().toString() + Math.random(),
+                            planName,
+                            cpu_num: planCfg.cpu_num ?? 2,
+                            mem_num: planCfg.mem_num ?? 2048,
+                            hdd_num: planCfg.hdd_num ?? 8192,
+                            speed_u: planCfg.speed_u ?? 100,
+                            speed_d: planCfg.speed_d ?? 100,
+                            nat_num: planCfg.nat_num ?? 100,
+                            web_num: planCfg.web_num ?? 100,
+                            flu_num: planCfg.flu_num ?? 102400,
+                        })
+                    })
+                }
+                setServerPlans(serverPlansData)
+
+                // 加载区域配置
+                form.setFieldsValue({ server_area: config.server_area || '' })
+
                 setModalVisible(true)
             }
         } catch (error) {
@@ -445,6 +486,23 @@ function HostManage() {
                 }
             }
 
+            // 构建套餐配置
+            const server_plan: Record<string, any> = {}
+            serverPlans.forEach(row => {
+                if (row.planName) {
+                    server_plan[row.planName] = {
+                        cpu_num: row.cpu_num,
+                        mem_num: row.mem_num,
+                        hdd_num: row.hdd_num,
+                        speed_u: row.speed_u,
+                        speed_d: row.speed_d,
+                        nat_num: row.nat_num,
+                        web_num: row.web_num,
+                        flu_num: row.flu_num,
+                    }
+                }
+            })
+
             const config: HostConfig = {
                 server_type: values.type,
                 server_addr: values.server_addr,
@@ -472,7 +530,9 @@ function HostManage() {
                 ipaddr_maps,
                 ipaddr_ddns: values.ipaddr_ddns ? values.ipaddr_ddns.split(',').map((s: string) => s.trim()).filter((s: string) => s) : [],
                 public_addr: values.public_addr ? values.public_addr.split(',').map((s: string) => s.trim()).filter((s: string) => s) : [],
-                extend_data
+                extend_data,
+                server_area: values.server_area || '',
+                server_plan,
             }
 
             if (editMode === 'add') {
@@ -1050,6 +1110,14 @@ function HostManage() {
                                                 </Form.Item>
                                             </Col>
                                         </Row>
+
+                                        <Row gutter={16}>
+                                            <Col span={24}>
+                                                <Form.Item name="server_area" label="服务器区域" extra="格式：区域代码,区域名称，例如：CN,华南区">
+                                                    <Input placeholder="例如: CN,华南区"/>
+                                                </Form.Item>
+                                            </Col>
+                                        </Row>
                                     </div>
                                 )
                             },
@@ -1401,6 +1469,171 @@ function HostManage() {
                                         <Form.Item name="extend_data" label="扩展数据 (JSON格式)">
                                             <Input.TextArea rows={4} placeholder='{"key": "value"}'/>
                                         </Form.Item>
+                                    </div>
+                                )
+                            },
+                            {
+                                key: 'plan',
+                                label: <span><DatabaseOutlined/> 套餐配置</span>,
+                                children: (
+                                    <div className="max-h-[500px] overflow-y-auto pr-2">
+                                        <h4 className="font-medium mb-3">套餐列表（套餐名称 → 虚拟机资源配置）</h4>
+                                        <div className="space-y-3 mb-4">
+                                            {serverPlans.map((row, index) => (
+                                                <div key={row.id} className="border border-gray-200 rounded-lg p-3">
+                                                    <Row gutter={8} className="mb-2">
+                                                        <Col span={22}>
+                                                            <Input
+                                                                placeholder="套餐名称（例如：基础套餐）"
+                                                                value={row.planName}
+                                                                onChange={(e) => {
+                                                                    const newPlans = [...serverPlans]
+                                                                    newPlans[index].planName = e.target.value
+                                                                    setServerPlans(newPlans)
+                                                                }}
+                                                            />
+                                                        </Col>
+                                                        <Col span={2}>
+                                                            <Button
+                                                                danger
+                                                                icon={<DeleteOutlined/>}
+                                                                onClick={() => setServerPlans(serverPlans.filter(p => p.id !== row.id))}
+                                                            />
+                                                        </Col>
+                                                    </Row>
+                                                    <Row gutter={8}>
+                                                        <Col span={6}>
+                                                            <div className="text-xs text-gray-500 mb-1">CPU核心数</div>
+                                                            <InputNumber
+                                                                value={row.cpu_num}
+                                                                min={1}
+                                                                className="w-full"
+                                                                onChange={(v) => {
+                                                                    const newPlans = [...serverPlans]
+                                                                    newPlans[index].cpu_num = v ?? 2
+                                                                    setServerPlans(newPlans)
+                                                                }}
+                                                            />
+                                                        </Col>
+                                                        <Col span={6}>
+                                                            <div className="text-xs text-gray-500 mb-1">内存(MB)</div>
+                                                            <InputNumber
+                                                                value={row.mem_num}
+                                                                min={512}
+                                                                step={512}
+                                                                className="w-full"
+                                                                onChange={(v) => {
+                                                                    const newPlans = [...serverPlans]
+                                                                    newPlans[index].mem_num = v ?? 2048
+                                                                    setServerPlans(newPlans)
+                                                                }}
+                                                            />
+                                                        </Col>
+                                                        <Col span={6}>
+                                                            <div className="text-xs text-gray-500 mb-1">硬盘(MB)</div>
+                                                            <InputNumber
+                                                                value={row.hdd_num}
+                                                                min={1024}
+                                                                step={1024}
+                                                                className="w-full"
+                                                                onChange={(v) => {
+                                                                    const newPlans = [...serverPlans]
+                                                                    newPlans[index].hdd_num = v ?? 8192
+                                                                    setServerPlans(newPlans)
+                                                                }}
+                                                            />
+                                                        </Col>
+                                                        <Col span={6}>
+                                                            <div className="text-xs text-gray-500 mb-1">流量(MB)</div>
+                                                            <InputNumber
+                                                                value={row.flu_num}
+                                                                min={0}
+                                                                step={1024}
+                                                                className="w-full"
+                                                                onChange={(v) => {
+                                                                    const newPlans = [...serverPlans]
+                                                                    newPlans[index].flu_num = v ?? 102400
+                                                                    setServerPlans(newPlans)
+                                                                }}
+                                                            />
+                                                        </Col>
+                                                    </Row>
+                                                    <Row gutter={8} className="mt-2">
+                                                        <Col span={6}>
+                                                            <div className="text-xs text-gray-500 mb-1">上行带宽(Mbps)</div>
+                                                            <InputNumber
+                                                                value={row.speed_u}
+                                                                min={1}
+                                                                className="w-full"
+                                                                onChange={(v) => {
+                                                                    const newPlans = [...serverPlans]
+                                                                    newPlans[index].speed_u = v ?? 100
+                                                                    setServerPlans(newPlans)
+                                                                }}
+                                                            />
+                                                        </Col>
+                                                        <Col span={6}>
+                                                            <div className="text-xs text-gray-500 mb-1">下行带宽(Mbps)</div>
+                                                            <InputNumber
+                                                                value={row.speed_d}
+                                                                min={1}
+                                                                className="w-full"
+                                                                onChange={(v) => {
+                                                                    const newPlans = [...serverPlans]
+                                                                    newPlans[index].speed_d = v ?? 100
+                                                                    setServerPlans(newPlans)
+                                                                }}
+                                                            />
+                                                        </Col>
+                                                        <Col span={6}>
+                                                            <div className="text-xs text-gray-500 mb-1">NAT端口数</div>
+                                                            <InputNumber
+                                                                value={row.nat_num}
+                                                                min={0}
+                                                                className="w-full"
+                                                                onChange={(v) => {
+                                                                    const newPlans = [...serverPlans]
+                                                                    newPlans[index].nat_num = v ?? 100
+                                                                    setServerPlans(newPlans)
+                                                                }}
+                                                            />
+                                                        </Col>
+                                                        <Col span={6}>
+                                                            <div className="text-xs text-gray-500 mb-1">代理数量</div>
+                                                            <InputNumber
+                                                                value={row.web_num}
+                                                                min={0}
+                                                                className="w-full"
+                                                                onChange={(v) => {
+                                                                    const newPlans = [...serverPlans]
+                                                                    newPlans[index].web_num = v ?? 100
+                                                                    setServerPlans(newPlans)
+                                                                }}
+                                                            />
+                                                        </Col>
+                                                    </Row>
+                                                </div>
+                                            ))}
+                                            <Button
+                                                type="dashed"
+                                                icon={<PlusOutlined/>}
+                                                onClick={() => setServerPlans([...serverPlans, {
+                                                    id: Date.now().toString(),
+                                                    planName: '',
+                                                    cpu_num: 2,
+                                                    mem_num: 2048,
+                                                    hdd_num: 8192,
+                                                    speed_u: 100,
+                                                    speed_d: 100,
+                                                    nat_num: 100,
+                                                    web_num: 100,
+                                                    flu_num: 102400,
+                                                }])}
+                                                block
+                                            >
+                                                添加套餐
+                                            </Button>
+                                        </div>
                                     </div>
                                 )
                             }

@@ -887,14 +887,23 @@ class RestManager:
         for hs_name, server in self.hs_manage.engine.items():
             # 获取主机启用状态
             enable_host = getattr(server.hs_config, 'enable_host', True) if server.hs_config else True
+            server_type = server.hs_config.server_type if server.hs_config else ''
+            server_addr = server.hs_config.server_addr if server.hs_config else ''
+            server_area = getattr(server.hs_config, 'server_area', '') if server.hs_config else ''
             hosts_data[hs_name] = {
                 'name': hs_name,
-                'type': server.hs_config.server_type if server.hs_config else '',
-                'addr': server.hs_config.server_addr if server.hs_config else '',
+                'type': server_type,
+                'addr': server_addr,
+                # 财务系统插件兼容字段
+                'server_name': hs_name,
+                'server_type': server_type,
+                'server_addr': server_addr,
+                'server_area': server_area,
+                'status': 'active' if enable_host else 'inactive',
                 'config': server.hs_config.__save__() if server.hs_config else {},
                 'vm_count': len(server.vm_saving),
-                'status': 'active' if enable_host else 'disabled',  # 根据enable_host返回状态
-                'enable_host': enable_host  # 添加enable_host字段
+                'vms_count': len(server.vm_saving),
+                'enable_host': enable_host
             }
         return self.api_response(200, 'success', hosts_data)
 
@@ -1313,6 +1322,12 @@ class RestManager:
         if not config_data:
             return self.api_response(400, '配置不能为空')
 
+        # 保留原有的 enable_host，防止保存时意外禁用主机
+        if 'enable_host' not in config_data:
+            existing = self.hs_manage.get_host(hs_name)
+            if existing and existing.hs_config:
+                config_data['enable_host'] = getattr(existing.hs_config, 'enable_host', True)
+
         hs_conf = HSConfig(**config_data)
         result = self.hs_manage.set_host(hs_name, hs_conf)
 
@@ -1353,6 +1368,80 @@ class RestManager:
             )
             return self.api_response(200, '主机已删除')
         return self.api_response(404, '主机不存在')
+
+    # 获取套餐列表 ########################################################################
+    # :param hs_name: 主机名称
+    # :return: 套餐列表的API响应
+    # ####################################################################################
+    def get_server_plan(self, hs_name):
+        """获取主机套餐列表"""
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return self.api_response(404, '主机不存在')
+        plan_data = {}
+        for plan_name, vm_cfg in (server.hs_config.server_plan or {}).items():
+            if hasattr(vm_cfg, '__save__') and callable(getattr(vm_cfg, '__save__')):
+                plan_data[plan_name] = vm_cfg.__save__()
+            elif isinstance(vm_cfg, dict):
+                plan_data[plan_name] = vm_cfg
+        return self.api_response(200, 'success', plan_data)
+
+    # 新增/更新套餐 ########################################################################
+    # :param hs_name: 主机名称
+    # :return: 操作结果的API响应
+    # ####################################################################################
+    def set_server_plan(self, hs_name):
+        """新增或更新主机套餐"""
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return self.api_response(404, '主机不存在')
+        data = request.get_json() or {}
+        plan_name = data.get('plan_name', '').strip()
+        plan_config = data.get('plan_config', {})
+        if not plan_name:
+            return self.api_response(400, '套餐名称不能为空')
+        if not isinstance(plan_config, dict):
+            return self.api_response(400, '套餐配置格式错误')
+        from MainObject.Config.VMConfig import VMConfig
+        server.hs_config.server_plan[plan_name] = VMConfig(**plan_config)
+        self.hs_manage.saving.set_hs_config(hs_name, server.hs_config)
+        user_data = self._get_current_user()
+        username = user_data.get('username', '') if user_data else ''
+        self.hs_manage.saving.add_operation_log(
+            hs_name=hs_name,
+            operation="设置套餐",
+            target="主机",
+            details=f"套餐名称: {plan_name}",
+            level="INFO",
+            username=username
+        )
+        return self.api_response(200, '套餐保存成功')
+
+    # 删除套餐 ########################################################################
+    # :param hs_name: 主机名称
+    # :param plan_name: 套餐名称
+    # :return: 操作结果的API响应
+    # ####################################################################################
+    def del_server_plan(self, hs_name, plan_name):
+        """删除主机套餐"""
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return self.api_response(404, '主机不存在')
+        if plan_name not in server.hs_config.server_plan:
+            return self.api_response(404, '套餐不存在')
+        del server.hs_config.server_plan[plan_name]
+        self.hs_manage.saving.set_hs_config(hs_name, server.hs_config)
+        user_data = self._get_current_user()
+        username = user_data.get('username', '') if user_data else ''
+        self.hs_manage.saving.add_operation_log(
+            hs_name=hs_name,
+            operation="删除套餐",
+            target="主机",
+            details=f"套餐名称: {plan_name}",
+            level="WARNING",
+            username=username
+        )
+        return self.api_response(200, '套餐已删除')
 
     # ========================================================================
     # 主机启用控制（启用/禁用）
@@ -4553,6 +4642,151 @@ class RestManager:
             traceback.print_exc()
             return self.api_response(500, f'删除全局代理配置失败: {str(e)}')
 
+    # ========================================================================
+    # 财务系统对接API - 区域/套餐/端口候选
+    # ========================================================================
+
+    # 获取所有区域列表 ########################################################################
+    # 用于财务系统 ListAreas 接口
+    # :return: 包含区域列表的API响应
+    # ####################################################################################
+    def get_areas(self):
+        """获取所有区域列表（用于财务系统对接）"""
+        try:
+            areas = {}
+            area_set = set()
+            
+            # 从所有主机的 server_area 字段收集区域
+            for hs_name, server in self.hs_manage.engine.items():
+                if server.hs_config and hasattr(server.hs_config, 'server_area'):
+                    area = server.hs_config.server_area
+                    if area and area not in area_set:
+                        area_set.add(area)
+                        # 使用 md5 哈希生成 ID
+                        import hashlib
+                        area_id = int(hashlib.md5(area.encode()).hexdigest()[:8], 16)
+                        areas[area] = {
+                            'id': area_id,
+                            'name': area,
+                            'state': 1  # 1=正常
+                        }
+            
+            # 如果没有配置区域，返回默认区域
+            if not areas:
+                areas['default'] = {
+                    'id': 1,
+                    'name': '默认区域',
+                    'state': 1
+                }
+            
+            return self.api_response(200, 'success', list(areas.values()))
+        except Exception as e:
+            logger.error(f"获取区域列表失败: {e}")
+            return self.api_response(500, f'获取区域列表失败: {str(e)}')
+
+    # 获取主机套餐列表 ########################################################################
+    # 用于财务系统 ListPackages 接口
+    # :param hs_name: 主机名称
+    # :return: 包含套餐列表的API响应
+    # ####################################################################################
+    def get_plans(self, hs_name):
+        """获取指定主机的套餐列表（用于财务系统对接）"""
+        try:
+            server = self.hs_manage.get_host(hs_name)
+            if not server:
+                return self.api_response(404, '主机不存在')
+
+            plans = []
+            
+            if server.hs_config and hasattr(server.hs_config, 'server_plan'):
+                server_plan = server.hs_config.server_plan or {}
+                
+                for plan_name, vm_config in server_plan.items():
+                    # 从 VMConfig 提取套餐规格
+                    plan_data = {
+                        'id': plan_name,
+                        'name': plan_name,
+                        'cpu': getattr(vm_config, 'cpu_num', 0),
+                        'memory_gb': getattr(vm_config, 'mem_num', 0) // 1024,  # MB -> GB
+                        'disk_gb': getattr(vm_config, 'hdd_num', 0) // 1024,  # MB -> GB
+                        'gpu_mem_gb': getattr(vm_config, 'gpu_mem', 0) // 1024,  # MB -> GB
+                        'bandwidth_mbps': getattr(vm_config, 'speed_d', 0),
+                        'traffic_gb': getattr(vm_config, 'flu_num', 0) // 1024,  # MB -> GB
+                    }
+                    plans.append(plan_data)
+            
+            return self.api_response(200, 'success', plans)
+        except Exception as e:
+            logger.error(f"获取套餐列表失败: {e}")
+            return self.api_response(500, f'获取套餐列表失败: {str(e)}')
+
+    # 获取主机可分配端口列表 ########################################################################
+    # 用于财务系统 FindPortCandidates 接口
+    # :param hs_name: 主机名称
+    # :return: 包含可用端口列表的API响应
+    # ####################################################################################
+    def get_available_ports(self, hs_name):
+        """获取主机可分配的端口范围（用于财务系统对接）"""
+        try:
+            server = self.hs_manage.get_host(hs_name)
+            if not server:
+                return self.api_response(404, '主机不存在')
+
+            ports = []
+            ports_start = 0
+            ports_close = 0
+            
+            if server.hs_config:
+                ports_start = getattr(server.hs_config, 'ports_start', 0)
+                ports_close = getattr(server.hs_config, 'ports_close', 0)
+                
+                if ports_start > 0 and ports_close > 0:
+                    # 获取已使用的端口
+                    used_ports = set()
+                    for vm_uuid, vm_config in server.vm_saving.items():
+                        if hasattr(vm_config, 'nat_all') and vm_config.nat_all:
+                            for nat in vm_config.nat_all:
+                                host_port = getattr(nat, 'host_port', 0)
+                                if host_port > 0:
+                                    used_ports.add(host_port)
+                    
+                    # 生成可用端口列表（排除已使用的）
+                    for port in range(ports_start, ports_close + 1):
+                        if port not in used_ports:
+                            ports.append(port)
+            
+            return self.api_response(200, 'success', {
+                'host_name': hs_name,
+                'ports_start': ports_start,
+                'ports_close': ports_close,
+                'available_count': len(ports),
+                'available_ports': ports[:100]  # 最多返回100个
+            })
+        except Exception as e:
+            logger.error(f"获取可用端口失败: {e}")
+            return self.api_response(500, f'获取可用端口失败: {str(e)}')
+
     # 获取系统网卡IPv4地址列表 ########################################################################
     # :return: 包含网卡IPv4地址列表的API响应
     # ####################################################################################
+    def get_system_ipv4(self):
+        """获取当前主机所有网卡的IPv4地址列表（用于财务系统 FindPortCandidates 接口）"""
+        try:
+            import socket
+            import psutil
+            ip_list = []
+            for iface, addrs in psutil.net_if_addrs().items():
+                for addr in addrs:
+                    if addr.family == socket.AF_INET:
+                        ip = addr.address
+                        # 排除回环地址
+                        if not ip.startswith('127.'):
+                            ip_list.append({
+                                'interface': iface,
+                                'ip': ip,
+                                'netmask': addr.netmask or ''
+                            })
+            return self.api_response(200, 'success', ip_list)
+        except Exception as e:
+            logger.error(f"获取系统IPv4地址失败: {e}")
+            return self.api_response(500, f'获取系统IPv4地址失败: {str(e)}')

@@ -69,6 +69,14 @@ def require_auth(f):
         if auth_header.startswith('Bearer '):
             token = auth_header[7:]
             if token and token == hs_manage.bearer:
+                # Token登录，注入管理员用户信息到请求上下文
+                g.current_user = {
+                    'id': 1,
+                    'username': 'admin',
+                    'is_admin': True,
+                    'is_token_login': True,
+                    'assigned_hosts': []
+                }
                 return f(*args, **kwargs)
         # 检查Session登录
         if session.get('logged_in'):
@@ -79,6 +87,13 @@ def require_auth(f):
         # 页面请求重定向到登录页
         return redirect(url_for('login'))
     return decorated
+
+
+def get_current_user():
+    """获取当前用户信息，优先从请求上下文(Bearer Token)取，再从Session取"""
+    if hasattr(g, 'current_user') and g.current_user:
+        return g.current_user
+    return UserManager.get_current_user_from_session()
 
 
 # 统一API响应格式包装器 #######################################################
@@ -766,8 +781,8 @@ def api_get_tasks():
 @require_auth
 def api_get_hosts():
     """获取主机列表（管理员看所有，普通用户看assigned_hosts）"""
-    # 获取当前用户信息
-    current_user = UserManager.get_current_user_from_session()
+    # 获取当前用户信息（Bearer Token或Session）
+    current_user = get_current_user()
     if not current_user:
         return api_response_wrapper(401, '未授权访问')
     
@@ -807,7 +822,7 @@ def api_get_host(hs_name):
 def api_get_os_images(hs_name):
     """获取主机的操作系统镜像列表（普通用户可访问）"""
     # 获取当前用户信息
-    current_user = UserManager.get_current_user_from_session()
+    current_user = get_current_user()
     if not current_user:
         return api_response_wrapper(401, '未授权访问')
     
@@ -824,7 +839,7 @@ def api_get_os_images(hs_name):
 def api_get_gpu_list(hs_name):
     """获取主机的GPU设备列表（普通用户可访问）"""
     # 获取当前用户信息
-    current_user = UserManager.get_current_user_from_session()
+    current_user = get_current_user()
     if not current_user:
         return api_response_wrapper(401, '未授权访问')
     
@@ -840,7 +855,7 @@ def api_get_gpu_list(hs_name):
 @require_auth
 def api_get_pci_list(hs_name):
     """获取主机可直通PCI设备列表"""
-    current_user = UserManager.get_current_user_from_session()
+    current_user = get_current_user()
     if not current_user:
         return api_response_wrapper(401, '未授权访问')
     if not check_host_access(hs_name, current_user):
@@ -853,7 +868,7 @@ def api_get_pci_list(hs_name):
 @require_auth
 def api_setup_pci(hs_name, vm_uuid):
     """PCI设备直通操作（需要关机）"""
-    current_user = UserManager.get_current_user_from_session()
+    current_user = get_current_user()
     if not current_user:
         return api_response_wrapper(401, '未授权访问')
     if not check_host_access(hs_name, current_user):
@@ -870,7 +885,7 @@ def api_setup_pci(hs_name, vm_uuid):
 @require_auth
 def api_get_usb_list(hs_name):
     """获取主机可用USB设备列表"""
-    current_user = UserManager.get_current_user_from_session()
+    current_user = get_current_user()
     if not current_user:
         return api_response_wrapper(401, '未授权访问')
     if not check_host_access(hs_name, current_user):
@@ -883,7 +898,7 @@ def api_get_usb_list(hs_name):
 @require_auth
 def api_setup_usb(hs_name, vm_uuid):
     """USB设备直通操作（无需关机）"""
-    current_user = UserManager.get_current_user_from_session()
+    current_user = get_current_user()
     if not current_user:
         return api_response_wrapper(401, '未授权访问')
     if not check_host_access(hs_name, current_user):
@@ -900,7 +915,7 @@ def api_setup_usb(hs_name, vm_uuid):
 @require_auth
 def api_get_efi_list(hs_name, vm_uuid):
     """获取虚拟机启动项列表"""
-    current_user = UserManager.get_current_user_from_session()
+    current_user = get_current_user()
     if not current_user:
         return api_response_wrapper(401, '未授权访问')
     if not check_host_access(hs_name, current_user):
@@ -914,7 +929,7 @@ def api_get_efi_list(hs_name, vm_uuid):
 @require_auth
 def api_setup_efi(hs_name, vm_uuid):
     """调整虚拟机启动项顺序"""
-    current_user = UserManager.get_current_user_from_session()
+    current_user = get_current_user()
     if not current_user:
         return api_response_wrapper(401, '未授权访问')
     if not check_host_access(hs_name, current_user):
@@ -963,6 +978,58 @@ def api_get_host_status(hs_name):
     return rest_manager.get_host_status(hs_name)
 
 
+# 获取套餐列表 ####################################################################
+@app.route('/api/server/plan/<hs_name>', methods=['GET'])
+@require_admin
+def api_get_server_plan(hs_name):
+    """获取主机套餐列表"""
+    return rest_manager.get_server_plan(hs_name)
+
+
+# 设置套餐（新增/更新） ############################################################
+@app.route('/api/server/plan/<hs_name>', methods=['POST'])
+@require_admin
+def api_set_server_plan(hs_name):
+    """新增或更新主机套餐"""
+    return rest_manager.set_server_plan(hs_name)
+
+
+# 删除套餐 ########################################################################
+@app.route('/api/server/plan/<hs_name>/<plan_name>', methods=['DELETE'])
+@require_admin
+def api_del_server_plan(hs_name, plan_name):
+    """删除主机套餐"""
+    return rest_manager.del_server_plan(hs_name, plan_name)
+
+
+# ============================================================================
+# 财务系统对接API - /api/server/areas | /api/server/plans | /api/server/ports
+# ============================================================================
+
+# 获取区域列表（财务系统 ListAreas 接口）##########################################
+@app.route('/api/server/areas', methods=['GET'])
+@require_auth
+def api_get_server_areas():
+    """获取所有主机的区域列表（去重），用于财务系统 ListAreas 对接"""
+    return rest_manager.get_areas()
+
+
+# 获取套餐规格列表（财务系统 ListPackages 接口）####################################
+@app.route('/api/server/plans/<hs_name>', methods=['GET'])
+@require_auth
+def api_get_server_plans(hs_name):
+    """获取指定主机的套餐规格列表，用于财务系统 ListPackages 对接"""
+    return rest_manager.get_plans(hs_name)
+
+
+# 获取可分配端口列表（财务系统 FindPortCandidates 接口）############################
+@app.route('/api/server/ports/<hs_name>', methods=['GET'])
+@require_auth
+def api_get_available_ports(hs_name):
+    """获取指定主机的可分配端口列表，用于财务系统 FindPortCandidates 对接"""
+    return rest_manager.get_available_ports(hs_name)
+
+
 # ============================================================================
 # 虚拟机管理API - /api/client/<option>/<key?>
 # ============================================================================
@@ -973,7 +1040,7 @@ def api_get_host_status(hs_name):
 def api_get_vms(hs_name):
     """获取主机下所有虚拟机"""
     # 检查主机访问权限
-    current_user = UserManager.get_current_user_from_session()
+    current_user = get_current_user()
     if not current_user:
         return api_response_wrapper(401, '未授权访问')
     
@@ -1420,40 +1487,26 @@ def api_recalculate_quotas():
 def api_get_current_user():
     """获取当前用户信息"""
     try:
-        # # 检查Bearer Token
-        # auth_header = axio.headers.get('Authorization', '')
-        # if auth_header.startswith('Bearer '):
-        #     # Token登录，返回管理员用户信息
-        #     return api_response_wrapper(200, '获取成功', {
-        #         'id': 1,
-        #         'username': 'admin',
-        #         'is_admin': True,
-        #         'is_token_login': True,
-        #         'used_cpu': 0,
-        #         'used_ram': 0,
-        #         'used_ssd': 0,
-        #         'quota_cpu': 999999,
-        #         'quota_ram': 999999,
-        #         'quota_ssd': 999999,
-        #         # 添加流量、带宽、NAT、WEB配额
-        #         'used_traffic': 0,
-        #         'quota_traffic': 999999,
-        #         'used_upload_bw': 0,
-        #         'quota_upload_bw': 1000,
-        #         'used_download_bw': 0,
-        #         'quota_download_bw': 1000,
-        #         'used_nat': 0,
-        #         'quota_nat': 100,
-        #         'used_web': 0,
-        #         'quota_web': 50,
-        #         # 添加IP配额
-        #         'used_nat_ips': 0,
-        #         'quota_nat_ips': 10,
-        #         'used_pub_ips': 0,
-        #         'quota_pub_ips': 10,
-        #         'assigned_hosts': []
-        #     })
-        
+        # 检查Bearer Token（Token登录视为管理员）
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer ') and auth_header[7:] == hs_manage.bearer:
+            return api_response_wrapper(200, '获取成功', {
+                'id': 0,
+                'username': 'admin',
+                'is_admin': True,
+                'is_token_login': True,
+                'used_cpu': 0, 'used_ram': 0, 'used_ssd': 0, 'used_gpu': 0,
+                'quota_cpu': 999999, 'quota_ram': 999999, 'quota_ssd': 999999, 'quota_gpu': 999999,
+                'used_traffic': 0, 'quota_traffic': 999999,
+                'used_bandwidth_up': 0, 'quota_bandwidth_up': 999999,
+                'used_bandwidth_down': 0, 'quota_bandwidth_down': 999999,
+                'used_nat_ports': 0, 'quota_nat_ports': 999999,
+                'used_web_proxy': 0, 'quota_web_proxy': 999999,
+                'used_nat_ips': 0, 'quota_nat_ips': 999999,
+                'used_pub_ips': 0, 'quota_pub_ips': 999999,
+                'assigned_hosts': list(hs_manage.engine.keys())
+            })
+
         # 检查Session登录
         if session.get('logged_in'):
             user_id = session.get('user_id')
@@ -1736,6 +1789,14 @@ def api_update_system_settings():
     except Exception as e:
         logger.error(f"更新系统设置失败: {e}")
         return api_response_wrapper(500, f'更新失败: {str(e)}')
+
+
+# 获取系统网卡IPv4地址列表 ##############################################################
+@app.route('/api/system/ipv4', methods=['GET'])
+@require_auth
+def api_get_system_ipv4():
+    """获取当前主机所有网卡的IPv4地址列表（用于财务系统 FindPortCandidates 接口）"""
+    return rest_manager.get_system_ipv4()
 
 
 # ============================================================================

@@ -10,6 +10,7 @@ from MainObject.Config.HSConfig import HSConfig
 from MainObject.Config.VMConfig import VMConfig
 from MainObject.Public.ZMessage import ZMessage
 from MainObject.Config.VMPowers import VMPowers
+from MainObject.Config.BootOpts import BootOpts
 
 
 class VRestAPI:
@@ -545,7 +546,8 @@ class VRestAPI:
                 "rxbw.limit": str(vm_conf.speed_d * 1024),
             }
             nic_uuid += 1
-        hdd_nums = 1  # 数据磁盘 ==========================================
+        # 先创建所有数据盘文件（不写入vmx_config，后面按顺序写）==========
+        hdd_configs = {}  # hdd_name -> vmx entry dict
         for hdd_name, hdd_data in vm_conf.hdd_all.items():
             if hdd_data.hdd_flag == 0:
                 continue
@@ -553,90 +555,39 @@ class VRestAPI:
             vmx_name = os.path.join(
                 hs_config.system_path, vm_conf.vm_uuid,
                 f"{vm_conf.vm_uuid}-{hdd_name}.vmdk")
-            if os.path.exists(vmx_name):
-                continue
-            vmd_cmds = [vmx_disk, "-c", "-s", f"{hdd_data.hdd_size}MB",
-                        "-a", "lsilogic", "-t", "0", vmx_name]
-            subprocess.run(vmd_cmds, shell=True)
-            vmx_config[f"{hdd_system}:{hdd_nums}"] = {
-                "fileName": vm_conf.vm_uuid + f"-{hdd_name}.vmdk",
-                "present": "TRUE"
-            }
-            hdd_nums += 1
-        # 如果是NVME则重置ID ==============================================
-        # if hdd_system == "nvme0":
-        #     hdd_nums = 1
-        # 光盘镜像 ========================================================
-        for iso_name in vm_conf.iso_all:
-            iso_data = vm_conf.iso_all[iso_name]
-            iso_full = os.path.join(hs_config.dvdrom_path, iso_data.iso_file)  # 使用dvdrom_path存储光盘镜像
-            vmx_config[f"scsi0:{str(hdd_nums)}"] = {
-                "fileName": iso_full,
-                "present": "TRUE",
-                "deviceType": "cdrom-image"
-            }
-            hdd_nums += 1
-        # 按efi_all顺序重新排列磁盘配置 ====================================
-        vmx_config = self._apply_efi_order(vmx_config, vm_conf, hdd_system)
-        return VRestAPI.create_txt(vmx_config)
-
-    # 按efi_all顺序重新排列VMX磁盘配置 ####################################
-    # :param vmx_config: 当前VMX配置字典
-    # :param vm_conf: VMConfig对象
-    # :param hdd_system: 磁盘控制器前缀（如scsi0）
-    # :return: 重新排列后的VMX配置字典
-    # #####################################################################
-    def _apply_efi_order(self, vmx_config: dict, vm_conf: VMConfig,
-                         hdd_system: str = "scsi0") -> dict:
-        if not vm_conf.efi_all:
-            return vmx_config
-        # 收集所有磁盘/光盘条目（key -> 配置）
-        disk_entries = {}  # efi_name -> (key, value)
-        # 系统盘：vm_uuid.vmdk -> hdd_system:0
-        sys_key = f"{hdd_system}:0"
-        if sys_key in vmx_config:
-            disk_entries[vm_conf.vm_uuid] = (sys_key, vmx_config[sys_key])
-        # 数据盘：vm_uuid-hdd_name.vmdk -> hdd_system:N
-        for hdd_name in vm_conf.hdd_all:
-            for k, v in vmx_config.items():
-                if isinstance(v, dict) and v.get("fileName", "").endswith(
-                        f"{vm_conf.vm_uuid}-{hdd_name}.vmdk"):
-                    disk_entries[f"{vm_conf.vm_uuid}-{hdd_name}"] = (k, v)
-                    break
-        # 光盘：iso_name -> scsi0:N
-        for iso_name in vm_conf.iso_all:
-            for k, v in vmx_config.items():
-                if isinstance(v, dict) and v.get("deviceType") == "cdrom-image":
-                    iso_data = vm_conf.iso_all[iso_name]
-                    if iso_data.iso_file in v.get("fileName", ""):
-                        disk_entries[iso_name] = (k, v)
-                        break
-        # 按efi_all顺序重新分配磁盘槽位
-        ordered_entries = []
-        for efi_item in vm_conf.efi_all:
-            efi_name = efi_item.efi_name
-            if efi_name in disk_entries:
-                ordered_entries.append(disk_entries[efi_name])
-        # 将未在efi_all中的磁盘追加到末尾
-        efi_names = {e.efi_name for e in vm_conf.efi_all}
-        for name, entry in disk_entries.items():
-            if name not in efi_names:
-                ordered_entries.append(entry)
-        if not ordered_entries:
-            return vmx_config
-        # 移除旧的磁盘配置，按新顺序重新写入
-        old_keys = {entry[0] for entry in disk_entries.values()}
-        new_config = {k: v for k, v in vmx_config.items() if k not in old_keys}
+            if not os.path.exists(vmx_name):
+                subprocess.run([vmx_disk, "-c", "-s", f"{hdd_data.hdd_size}MB",
+                                "-a", "lsilogic", "-t", "0", vmx_name], shell=True)
+            hdd_configs[f"{vm_conf.vm_uuid}-{hdd_name}"] = {
+                "fileName": f"{vm_conf.vm_uuid}-{hdd_name}.vmdk", "present": "TRUE"}
+        # 光盘配置 ========================================================
+        iso_configs = {}  # iso_name -> vmx entry dict
+        for iso_name, iso_data in vm_conf.iso_all.items():
+            iso_full = os.path.join(hs_config.dvdrom_path, iso_data.iso_file)
+            iso_configs[iso_name] = {
+                "fileName": iso_full, "present": "TRUE", "deviceType": "cdrom-image"}
+        # 按efi_all顺序（或默认顺序）写入磁盘槽位 =========================
+        # VMX中槽位顺序即为启动顺序：scsi0:0 > scsi0:1 > scsi0:2 ...
+        efi_order = vm_conf.efi_all or [
+            BootOpts(efi_type=False, efi_name=vm_conf.vm_uuid),
+            *[BootOpts(efi_type=False, efi_name=n) for n in hdd_configs],
+            *[BootOpts(efi_type=True, efi_name=n) for n in iso_configs],
+        ]
+        # 移除vmx_config中已写入的系统盘占位（将按顺序重新写入）
+        vmx_config.pop(f"{hdd_system}:0", None)
+        sys_entry = {"fileName": vm_conf.vm_uuid + ".vmdk", "present": "TRUE"}
         slot = 0
-        for _, entry_val in ordered_entries:
-            is_cdrom = isinstance(entry_val, dict) and \
-                       entry_val.get("deviceType") == "cdrom-image"
-            if is_cdrom:
-                new_config[f"scsi0:{slot}"] = entry_val
+        for efi in efi_order:
+            if not efi.efi_type and efi.efi_name == vm_conf.vm_uuid:
+                vmx_config[f"{hdd_system}:{slot}"] = sys_entry
+            elif not efi.efi_type and efi.efi_name in hdd_configs:
+                vmx_config[f"{hdd_system}:{slot}"] = hdd_configs[efi.efi_name]
+            elif efi.efi_type and efi.efi_name in iso_configs:
+                vmx_config[f"scsi0:{slot}"] = iso_configs[efi.efi_name]
             else:
-                new_config[f"{hdd_system}:{slot}"] = entry_val
+                continue
             slot += 1
-        return new_config
+        return VRestAPI.create_txt(vmx_config)
 
     # 扩展VM磁盘 ##########################################################
     # :param vm_vmdk: VM磁盘文件路径

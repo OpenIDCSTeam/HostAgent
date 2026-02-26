@@ -418,6 +418,9 @@ class HostServer(BasicServer):
             if vm_id:
                 self._set_vm_id(vm_conf, vm_id)
             logger.info(f"  虚拟机创建成功, 平台ID: {vm_id}")
+            # 填充efi_all默认启动项顺序 ========================================
+            if not vm_conf.efi_all:
+                vm_conf.efi_all = self.efi_build(vm_conf)
             # 路由器IP绑定 ====================================================
             ikuai = super().IPBinder(vm_conf, True)
             if not ikuai.success:

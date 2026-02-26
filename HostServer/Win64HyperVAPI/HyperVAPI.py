@@ -518,6 +518,83 @@ class HyperVAPI:
             logger.error(f"更新虚拟机配置失败: {str(e)}")
             return ZMessage(success=False, action="UpdateConfig", message=str(e))
 
+    # 设置虚拟机启动顺序 ##########################################################
+    # 根据efi_all列表，通过Set-VMFirmware -BootOrder设置Hyper-V启动顺序
+    # efi_type=False -> 硬盘，efi_type=True -> 光盘/ISO
+    # #############################################################################
+    def set_boot_order(self, vm_name: str, efi_all: list) -> ZMessage:
+        if not efi_all:
+            return ZMessage(success=True, action="SetBootOrder", message="启动项列表为空，跳过设置")
+        try:
+            # 获取当前固件启动设备列表
+            get_cmd = f"""
+            $fw = Get-VMFirmware -VMName '{vm_name}' -ErrorAction Stop
+            foreach ($e in $fw.BootOrder) {{
+                $path = ''
+                if ($e.Device -and $e.Device.Path) {{ $path = $e.Device.Path }}
+                elseif ($e.Device -and $e.Device.Name) {{ $path = $e.Device.Name }}
+                Write-Output "$($e.BootType)|||$path"
+            }}
+            """
+            result = self._run_powershell(get_cmd)
+            if not result.success:
+                return ZMessage(success=False, action="SetBootOrder",
+                                message=f"获取启动设备失败: {result.message}")
+            # 解析当前启动设备：path -> 设备类型
+            current_devices = {}  # path -> BootType
+            for line in result.message.strip().split('\n'):
+                line = line.strip()
+                if '|||' in line:
+                    parts = line.split('|||', 1)
+                    current_devices[parts[1].strip()] = parts[0].strip()
+            # 按efi_all顺序构建新的启动顺序（通过路径名匹配）
+            # efi_name对应磁盘文件名（不含路径），用于模糊匹配
+            ordered_paths = []
+            seen = set()
+            for efi_item in efi_all:
+                efi_name = efi_item.efi_name
+                for path in current_devices:
+                    if efi_name in path and path not in seen:
+                        ordered_paths.append(path)
+                        seen.add(path)
+                        break
+            # 未匹配的设备追加到末尾
+            for path in current_devices:
+                if path not in seen:
+                    ordered_paths.append(path)
+                    seen.add(path)
+            if not ordered_paths:
+                return ZMessage(success=True, action="SetBootOrder", message="无有效启动设备，跳过设置")
+            # 构建PowerShell设置命令
+            path_array = ', '.join(f"'{p}'" for p in ordered_paths)
+            set_cmd = f"""
+            $fw = Get-VMFirmware -VMName '{vm_name}' -ErrorAction Stop
+            $bootOrder = $fw.BootOrder
+            $orderedPaths = @({path_array})
+            $newOrder = @()
+            foreach ($p in $orderedPaths) {{
+                foreach ($e in $bootOrder) {{
+                    $devPath = ''
+                    if ($e.Device -and $e.Device.Path) {{ $devPath = $e.Device.Path }}
+                    elseif ($e.Device -and $e.Device.Name) {{ $devPath = $e.Device.Name }}
+                    if ($devPath -eq $p) {{ $newOrder += $e; break }}
+                }}
+            }}
+            if ($newOrder.Count -gt 0) {{
+                Set-VMFirmware -VMName '{vm_name}' -BootOrder $newOrder -ErrorAction Stop
+                Write-Output 'SUCCESS'
+            }}
+            """
+            set_result = self._run_powershell(set_cmd)
+            if set_result.success:
+                logger.info(f"虚拟机 {vm_name} 启动顺序设置成功")
+                return ZMessage(success=True, action="SetBootOrder", message="启动顺序设置成功")
+            return ZMessage(success=False, action="SetBootOrder",
+                            message=f"设置启动顺序失败: {set_result.message}")
+        except Exception as e:
+            logger.error(f"设置启动顺序失败: {str(e)}")
+            return ZMessage(success=False, action="SetBootOrder", message=str(e))
+
     # 创建快照 ####################################################################
     def create_snapshot(self, vm_name: str, snapshot_name: str, description: str = "") -> ZMessage:
         try:

@@ -405,6 +405,15 @@ class HostServer(BasicServer):
             logger.info(f"[{self.hs_config.server_name}] 正在启动虚拟机: {vm_conf.vm_uuid}")
             self.hyperv_api.power_on(vm_conf.vm_uuid)
 
+            # 填充efi_all默认启动项顺序并设置 =====================================
+            if not vm_conf.efi_all:
+                vm_conf.efi_all = self.efi_build(vm_conf)
+            if vm_conf.efi_all:
+                boot_result = self.hyperv_api.set_boot_order(
+                    vm_conf.vm_uuid, vm_conf.efi_all)
+                if not boot_result.success:
+                    logger.warning(f"[{self.hs_config.server_name}] 设置启动顺序失败: {boot_result.message}")
+
             # 断开Hyper-V连接 =====================================================
             self.hyperv_api.disconnect()
 
@@ -575,6 +584,13 @@ class HostServer(BasicServer):
                 return ZMessage(
                     success=False, action="VMUpdate",
                     message=f"虚拟机 {vm_conf.vm_uuid} 启动失败: {start_result.message}")
+
+            # 根据efi_all更新启动顺序 =============================================
+            if vm_conf.efi_all:
+                boot_result = self.hyperv_api.set_boot_order(
+                    vm_conf.vm_uuid, vm_conf.efi_all)
+                if not boot_result.success:
+                    logger.warning(f"[{self.hs_config.server_name}] 更新启动顺序失败: {boot_result.message}")
 
             # 断开Hyper-V连接 =====================================================
             self.hyperv_api.disconnect()

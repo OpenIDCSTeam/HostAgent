@@ -512,20 +512,28 @@ class BasicServer:
     # ###############################################################################
     @staticmethod
     def efi_build(vm_conf: VMConfig) -> list[BootOpts]:
-        efi_list = []
-        # 系统盘（第一个，efi_type=False，名称为 vm_uuid）
-        efi_list.append(BootOpts(efi_type=False, efi_name=vm_conf.vm_uuid))
-        # 数据盘（efi_type=False，名称为 vm_uuid-hdd_name）
+        # 构建当前所有有效启动项名称集合
+        valid_hdds = {vm_conf.vm_uuid}  # 系统盘
         for hdd_name, hdd_data in vm_conf.hdd_all.items():
-            if hdd_data.hdd_flag == 0:
-                continue
-            efi_list.append(BootOpts(
-                efi_type=False,
-                efi_name=f"{vm_conf.vm_uuid}-{hdd_name}"
-            ))
-        # 光盘（efi_type=True，名称为 iso_name）
-        for iso_name in vm_conf.iso_all:
-            efi_list.append(BootOpts(efi_type=True, efi_name=iso_name))
+            if hdd_data.hdd_flag != 0:
+                valid_hdds.add(f"{vm_conf.vm_uuid}-{hdd_name}")
+        valid_isos = set(vm_conf.iso_all.keys())
+
+        # 保留已有顺序，移除已不存在的项
+        existing_names = {e.efi_name for e in vm_conf.efi_all}
+        efi_list = [e for e in vm_conf.efi_all
+                    if (not e.efi_type and e.efi_name in valid_hdds)
+                    or (e.efi_type and e.efi_name in valid_isos)]
+
+        # 把新增的盘追加到末尾（系统盘优先，若不存在则插到最前）
+        if vm_conf.vm_uuid not in existing_names:
+            efi_list.insert(0, BootOpts(efi_type=False, efi_name=vm_conf.vm_uuid))
+        for hdd_name in valid_hdds - {vm_conf.vm_uuid}:
+            if hdd_name not in existing_names:
+                efi_list.append(BootOpts(efi_type=False, efi_name=hdd_name))
+        for iso_name in valid_isos:
+            if iso_name not in existing_names:
+                efi_list.append(BootOpts(efi_type=True, efi_name=iso_name))
         return efi_list
 
     # 启动项列出 ####################################################################
@@ -537,10 +545,9 @@ class BasicServer:
         if vm_name not in self.vm_saving:
             return []
         vm_conf = self.vm_saving[vm_name]
-        # 如果 efi_all 为空，自动填充默认顺序
-        if not vm_conf.efi_all:
-            vm_conf.efi_all = self.efi_build(vm_conf)
-            self.data_set()
+        # 每次都同步：保留已有顺序，新增的追加到末尾，已删除的移除
+        vm_conf.efi_all = self.efi_build(vm_conf)
+        self.data_set()
         return vm_conf.efi_all
 
     # 启动项设置 ####################################################################
