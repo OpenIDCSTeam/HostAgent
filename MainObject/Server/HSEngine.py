@@ -5,6 +5,9 @@ import HostServer.Workstation as WorkstationModule
 import HostServer.LXContainer as LXContainerModule
 import HostServer.OCInterface as OCInterfaceModule
 import HostServer.vSphereESXi as vSphereESXiModule
+import HostServer.VirtualBoxs as VirtualBoxsModule
+import HostServer.QEMUService as QEMUServerModule
+import HostServer.MemuAndroid as MemuAndroidModule
 from HostServer import ProxmoxQemu, Win64HyperV, QingzhouYun
 
 HEConfig = {
@@ -145,22 +148,76 @@ HEConfig = {
             "pci", "usb"
         ]
     },
-    # "VirtualBoxs": {
-    #     "Descript": "PVE Runtime Platform",
-    #     "isEnable": False,
-    #     "Platform": ["Linux", "Windows"],
-    #     "CPU_Arch": ["x86_64", "aarch64"],
-    # },
-    # "MemuAndroid": {
-    #     "Descript": "XYAndroid Simulator",
-    #     "isEnable": False,
-    #     "Platform": ["Windows"],
-    #     "CPU_Arch": ["x86_64"],
-    #     "Optional": {
-    #         "graphics_render_mode": "图形渲染模式(1:DirectX, 0:OpenGL)",
-    #         "enable_su": "是否以超级用户权限启动",
-    #         "enable_audio": "是否启用音频",
-    #         "fps": "帧率"
-    #     }
-    # }
+    "VirtualBoxs": {
+        "Imported": VirtualBoxsModule.HostServer,
+        "Descript": "Oracle VirtualBox",
+        "isEnable": True,
+        "isRemote": False,
+        "Platform": ["Linux", "Windows", "MacOS"],
+        "CPU_Arch": ["x86_64", "aarch64"],
+        "Optional": {},
+        "Messages": [
+            "1、通过VBoxManage命令行管理虚拟机",
+            "2、支持USB设备直通（需要VirtualBox扩展包）",
+            "3、远程桌面通过VRDE（RDP协议）实现"
+        ],
+        "Ban_Init": [
+            "gpu_num"
+        ],
+        "Ban_Edit": [
+            "gpu_num"
+        ],
+        "Tab_Lock": [
+            "pci"
+        ]
+    },
+    "QEMUServer": {
+        "Imported": QEMUServerModule.HostServer,
+        "Descript": "QEMU/KVM Platform",
+        "isEnable": True,
+        "isRemote": True,
+        "Platform": ["Linux"],
+        "CPU_Arch": ["x86_64", "aarch64"],
+        "Optional": {},
+        "Messages": [
+            "1、通过virsh/libvirt管理QEMU/KVM虚拟机",
+            "2、支持PCI/USB设备直通",
+            "3、VNC远程桌面（自动分配端口）",
+            "4、修改密码需要虚拟机安装qemu-guest-agent"
+        ],
+        "Ban_Init": [],
+        "Ban_Edit": [],
+        "Tab_Lock": []
+    },
+    "MemuAndroid": {
+        "Imported": MemuAndroidModule.HostServer,
+        "Descript": "MEmu Game Emulator",
+        "isEnable": True,
+        "isRemote": False,
+        "Platform": ["Windows"],
+        "CPU_Arch": ["x86_64"],
+        "Optional": {
+            "graphics_render_mode": "图形渲染模式(1:DirectX, 0:OpenGL)",
+            "enable_su": "是否以超级用户权限启动(1:是, 0:否)",
+            "enable_audio": "是否启用音频(1:是, 0:否)",
+            "fps": "帧率(如30, 60)"
+        },
+        "Messages": [
+            "1、通过memuc命令行管理逍遥安卓模拟器",
+            "2、不支持额外硬盘挂载，ISO挂载替换为APK安装",
+            "3、不支持暂停/恢复操作",
+            "4、VNC替换为ADB连接信息"
+        ],
+        "Ban_Init": [
+            "gpu_num", "gpu_mem", "hdd_num",
+            "speed_u", "speed_d"
+        ],
+        "Ban_Edit": [
+            "gpu_num", "gpu_mem", "hdd_num",
+            "speed_u", "speed_d"
+        ],
+        "Tab_Lock": [
+            "hdd", "pci", "usb"
+        ]
+    }
 }

@@ -779,7 +779,8 @@ class BasicServer:
     # 分支的方法 ####################################################################
     # ###############################################################################
 
-    vnc_type = ["VMWareSetup", "vSphereESXi", "HyperVSetup", "PromoxSetup"]
+    vnc_type = ["VMWareSetup", "vSphereESXi", "HyperVSetup", "PromoxSetup",
+                "VirtualBoxs", "QEMUServer", "MemuAndroid"]
     tty_type = ["OCInterface", "LxContainer"]
 
     # 远程桌面初始化[禁止重载] ######################################################
