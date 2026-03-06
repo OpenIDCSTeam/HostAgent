@@ -611,8 +611,8 @@ class HostManage:
         if not enable_host:
             return ZMessage(success=False, message=f"主机 {hs_name} 已禁用，无法扫描虚拟机")
 
-        # 检查是否支持VScanner方法
-        if not hasattr(server, 'VScanner'):
+        # 检查是否支持VMDetect方法
+        if not hasattr(server, 'VMDetect'):
             return ZMessage(success=False, message="Host does not support VM scanning")
 
         # 如果指定了prefix参数，临时修改主机配置的filter_name
@@ -623,7 +623,7 @@ class HostManage:
                 server.hs_config.filter_name = prefix
 
         try:
-            # 调用服务器的VScanner方法
+            # 调用服务器的VMDetect方法
             result = server.VMDetect()
             return result
         finally:

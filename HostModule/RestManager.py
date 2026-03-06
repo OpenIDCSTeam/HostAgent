@@ -8,7 +8,7 @@ import random
 import string
 import traceback
 from functools import wraps
-from flask import request, jsonify, session, redirect, url_for
+from flask import request, jsonify, session, redirect, url_for, g
 from loguru import logger
 import psutil
 
@@ -82,6 +82,12 @@ class RestManager:
 
         return filtered_data
 
+    def _get_current_user(self):
+        """获取当前用户信息，优先从请求上下文(Bearer Token)取，再从Session取"""
+        if hasattr(g, 'current_user') and g.current_user:
+            return g.current_user
+        return UserManager.get_current_user_from_session()
+
     @staticmethod
     # 认证装饰器，检查Bearer Token或Session登录 ########################################
     # :param f: 被装饰的函数
@@ -96,6 +102,14 @@ class RestManager:
             if auth_header.startswith('Bearer '):
                 token = auth_header[7:]
                 if token and token == self.hs_manage.bearer:
+                    # Token登录，注入管理员用户信息到请求上下文
+                    g.current_user = {
+                        'id': 1,
+                        'username': 'admin',
+                        'is_admin': True,
+                        'is_token_login': True,
+                        'assigned_hosts': []
+                    }
                     return f(*args, **kwargs)
             # 检查Session登录
             if session.get('logged_in'):
@@ -1585,7 +1599,7 @@ class RestManager:
         server.data_get()
 
         # 获取当前用户信息
-        user_data = UserManager.get_current_user_from_session()
+        user_data = self._get_current_user()
         is_admin = user_data.get('is_admin', False) if user_data else False
         is_token_login = user_data.get('is_token_login', False) if user_data else False
         current_username = user_data.get('username', '') if user_data else ''
@@ -1673,7 +1687,7 @@ class RestManager:
             return self.api_response(404, '虚拟机不存在')
 
         # 权限验证：普通用户只能访问自己拥有的虚拟机
-        user_data = UserManager.get_current_user_from_session()
+        user_data = self._get_current_user()
         is_admin = user_data.get('is_admin', False) if user_data else False
         is_token_login = user_data.get('is_token_login', False) if user_data else False
         current_username = user_data.get('username', '') if user_data else ''
@@ -2906,7 +2920,7 @@ class RestManager:
             # 扫描前先从数据库重新加载数据
             server.data_get()
 
-        data = request.get_json() or {}
+        data = request.get_json(silent=True) or {}
         prefix = data.get('prefix', '')  # 前缀过滤，为空则使用主机配置的filter_name
 
         result = self.hs_manage.vms_scan(hs_name, prefix)

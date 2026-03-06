@@ -83,7 +83,6 @@ class HostServer(BasicServer):
             # 启动VM Rest Server ===============================================
             vmrest_path = os.path.join(
                 self.hs_config.launch_path, "vmrest.exe")
-
             # 检查文件是否存在 =================================================
             if not os.path.exists(vmrest_path):
                 return ZMessage(success=False, action="HSLoader",
@@ -516,7 +515,7 @@ class HostServer(BasicServer):
 
             # 如果操作失败，回退状态
             if not hs_result.success and original_flag is not None:
-                logger.error(f"[Workstation] 虚拟机电源操作失败，回退状态: {vm_name}")
+                logger.error(f"[Workstation] 虚拟机电源操作失败: {vm_name}")
                 self.vm_saving[vm_name].vm_flag = original_flag
                 self.data_set()
             elif hs_result.success and power not in [VMPowers.S_CLOSE, VMPowers.S_RESET]:

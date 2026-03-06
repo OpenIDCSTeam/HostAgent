@@ -53,7 +53,7 @@ class VRestAPI:
     # :param method: HTTP方法 (GET, POST, PUT, DELETE)
     # :return: ZMessage对象
     # #####################################################################
-    def vmrest_api(self, url: str, data=None, m: str = "GET") -> ZMessage:
+    def vmrest_api(self, url: str, data=None, m: str = "GET", timeout: int = 5) -> ZMessage:
         full_url = f"http://{self.host_addr}/api{url}"
         auth = HTTPBasicAuth(self.host_user, self.host_pass)
         # 设置请求头 ======================================================
@@ -66,7 +66,7 @@ class VRestAPI:
                                 message=f"不支持的HTTP方法: {m}")
             # 发送请求 ====================================================
             response = methods[m.upper()](
-                full_url, auth=auth, headers=head, json=data, timeout=30)
+                full_url, auth=auth, headers=head, json=data, timeout=timeout)
             response.raise_for_status()
             # 返回成功消息 ================================================
             return ZMessage(
@@ -216,7 +216,7 @@ class VRestAPI:
                 actions="get_powers",
                 message=f"未找到虚拟机: {vm_name}"
             )
-        return self.vmrest_api(f"/vms/{vm_id}/power")
+        return self.vmrest_api(f"/vms/{vm_id}/power", timeout=5)
 
     # 设置虚拟机电源状态 ##################################################
     # :param vm_name: 虚拟机名称
@@ -590,11 +590,43 @@ class VRestAPI:
         return VRestAPI.create_txt(vmx_config)
 
     # 扩展VM磁盘 ##########################################################
-    # :param vm_vmdk: VM磁盘文件路径
-    # :param vm_size: VM磁盘大小
+    # :param vm_vmdk: VM磁盘文件路径（支持 .vmdk 和 .vhd）
+    # :param vm_size: VM磁盘大小（MB）
     # :return: ZMessage
     # #####################################################################
     def extend_hdd(self, vm_vmdk, vm_size) -> ZMessage:
+        # VHD 硬盘使用 PowerShell Resize-VHD 命令扩展（无需管理员权限）=====
+        if vm_vmdk.lower().endswith(".vhd") or vm_vmdk.lower().endswith(".vhdx"):
+            logger.info(f"[VMCreate] 开始扩展VHD硬盘: {vm_size}MB")
+            # Resize-VHD 单位为字节，MB * 1024 * 1024
+            size_bytes = int(vm_size) * 1024 * 1024
+            ps_script = (
+                f"Resize-VHD -Path '{vm_vmdk}' -SizeBytes {size_bytes}"
+            )
+            try:
+                vm_exec = subprocess.Popen(
+                    ["powershell", "-NonInteractive", "-NoProfile",
+                     "-Command", ps_script],
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                stdout, stderr = vm_exec.communicate(timeout=60)
+                logger.debug(f"[VMCreate] PowerShell输出: {stdout}")
+                if vm_exec.returncode != 0:
+                    error_msg = f"VHD硬盘扩展失败: {stderr.strip() or stdout.strip()}"
+                    logger.error(f"[VMCreate] {error_msg}")
+                    return ZMessage(
+                        success=False, actions="extend_hdd", message=error_msg)
+                logger.info(f"[VMCreate] VHD硬盘扩展完成: {vm_size}MB")
+                return ZMessage(
+                    success=True, actions="extend_hdd", message="VHD硬盘扩展成功")
+            except subprocess.TimeoutExpired:
+                vm_exec.kill()
+                return ZMessage(
+                    success=False, actions="extend_hdd", message="VHD硬盘扩展超时")
+            except Exception as e:
+                return ZMessage(
+                    success=False, actions="extend_hdd",
+                    message=f"VHD硬盘扩展异常: {type(e).__name__} - {str(e)}", execute=e)
+        # VMDK 硬盘使用 vmware-vdiskmanager 扩展 ========================
         vm_disk = os.path.join(self.host_path, "vmware-vdiskmanager.exe")
         logger.info(f"[VMCreate] 开始扩展硬盘: {vm_size}MB")
         logger.debug(f"[VMCreate] 执行命令: {vm_disk} -x {vm_size}MB {vm_vmdk}")
@@ -638,28 +670,28 @@ class VRestAPI:
                     actions="find_vmx_path",
                     message=f"获取虚拟机列表失败: {vm_info_result.message}"
                 )
-            
+
             # 查找匹配的虚拟机路径
             vm_path = ""
             for vm_info in vm_info_result.results:
                 if vm_info.get("path", "").find(vm_name) > 0:
                     vm_path = vm_info.get("path", "")
                     break
-            
+
             if not vm_path:
                 return ZMessage(
                     success=False,
                     actions="find_vmx_path",
                     message=f"未找到虚拟机 {vm_name} 的VMX路径"
                 )
-            
+
             return ZMessage(
                 success=True,
                 actions="find_vmx_path",
                 message="成功找到VMX路径",
                 results={"vm_path": vm_path}
             )
-            
+
         except Exception as e:
             error_msg = f"查找VMX路径时出错: {str(e)}"
             logger.error(f"[find_vmx_path] {error_msg}")
@@ -672,7 +704,7 @@ class VRestAPI:
 
     # 执行vmrun命令 #######################################################
     def execute_vmrun(self, command: str, vm_path: str, args: list = None,
-                     vc_user: str = None, vc_pass: str = None) -> ZMessage:
+                      vc_user: str = None, vc_pass: str = None) -> ZMessage:
         try:
             vmrun_path = os.path.join(self.host_path, "vmrun.exe")
             if not os.path.exists(vmrun_path):
@@ -688,21 +720,21 @@ class VRestAPI:
             # 如果提供了客户机凭据，添加认证参数
             if vc_user and vc_pass:
                 cmd.extend(["-gu", vc_user, "-gp", vc_pass])
-            
+
             # 添加命令和VMX路径
             cmd.append(command)
             cmd.append(vm_path)
-            
+
             # 添加其他参数
             if args:
                 cmd.extend(args)
-            
+
             # 执行命令
             result = subprocess.run(
-                cmd, 
-                capture_output=True, 
-                text=True, 
-                encoding='utf-8', 
+                cmd,
+                capture_output=True,
+                text=True,
+                encoding='utf-8',
                 errors='replace'
             )
             logger.info(f"[execute_vmrun] 成功执行vmrun命令: {command}")
@@ -712,7 +744,7 @@ class VRestAPI:
                 message="命令执行成功",
                 results={"stdout": result.stdout, "stderr": result.stderr}
             )
-            
+
         except Exception as e:
             error_msg = f"执行vmrun命令时出错: {str(e)}"
             logger.error(f"[execute_vmrun] {error_msg}")
@@ -734,15 +766,15 @@ class VRestAPI:
     # :return: ZMessage对象
     # #####################################################################
     def capture_screen(self, vm_name: str, screenshot_path: str,
-                      guest_user: str = None, guest_pass: str = None) -> ZMessage:
+                       guest_user: str = None, guest_pass: str = None) -> ZMessage:
         try:
             # 查找VMX路径
             vmx_result = self.find_vmx_path(vm_name)
             if not vmx_result.success:
                 return vmx_result
-            
+
             vm_path = vmx_result.results.get("vm_path", "")
-            
+
             # 执行vmrun截图命令
             capture_result = self.execute_vmrun(
                 "captureScreen",
@@ -751,10 +783,10 @@ class VRestAPI:
                 guest_user,
                 guest_pass
             )
-            
+
             if not capture_result.success:
                 return capture_result
-            
+
             # 检查截图文件是否存在
             if not os.path.exists(screenshot_path):
                 return ZMessage(
@@ -762,7 +794,7 @@ class VRestAPI:
                     actions="capture_screen",
                     message=f"截图文件不存在: {screenshot_path}"
                 )
-            
+
             logger.info(f"[capture_screen] 成功获取虚拟机截图: {screenshot_path}")
             return ZMessage(
                 success=True,
@@ -770,7 +802,7 @@ class VRestAPI:
                 message="截图成功",
                 results={"screenshot_path": screenshot_path}
             )
-            
+
         except Exception as e:
             error_msg = f"获取虚拟机截图时出错: {str(e)}"
             logger.error(f"[capture_screen] {error_msg}")
