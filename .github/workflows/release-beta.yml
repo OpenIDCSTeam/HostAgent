@@ -1,4 +1,4 @@
-name: Release Tests
+name: Release Alpha
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
   build-and-release:
     uses: ./.github/workflows/build-freeze.yml
     with:
-      version: ''
+      version: 'alpha'
       target_platform: 'all'
       create_release: 'yes'
     secrets: inherit

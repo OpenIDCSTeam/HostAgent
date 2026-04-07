@@ -172,13 +172,13 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ inputs.version != '' && format('v{0}', inputs.version) || 'beta' }}
-        name: ${{ inputs.version != '' && format('Release v{0}', inputs.version) || 'Beta Release' }}
+        tag_name: ${{ inputs.version == 'alpha' && 'alpha' || (inputs.version != '' && format('v{0}', inputs.version) || 'beta') }}
+        name: ${{ inputs.version == 'alpha' && 'Alpha Release' || (inputs.version != '' && format('Release v{0}', inputs.version) || 'Beta Release') }}
         files: |
           OpenIDCS-Client-cxfreeze-Windows.tar.gz
           OpenIDCS-Client-cxfreeze-Linux.tar.gz
           OpenIDCS-Client-cxfreeze-macOS.tar.gz
         draft: false
-        prerelease: ${{ inputs.version == '' }}
+        prerelease: ${{ inputs.version == '' || inputs.version == 'alpha' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
