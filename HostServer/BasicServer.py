@@ -928,8 +928,13 @@ class BasicServer:
                     logger.error(f"SSH连接失败，无法同步端口转发: {message}")
                     return
 
+            # Docker主机：使用socat方案同步端口转发；lxc/lxd：使用iptables/nft方案
+            is_docker = self.hs_config.server_type == "OCInterface"
             # 获取系统中已有的端口转发
-            existing_forwards = self.port_forward.list_ports(is_remote)
+            existing_forwards = (
+                self.port_forward.list_ports(is_remote) if is_docker
+                else self.port_forward.list_ports_firewall(is_remote)
+            )
             existing_map = {}  # {(lan_addr, lan_port): forward_info}
             for forward in existing_forwards:
                 key = (forward.lan_addr, forward.lan_port)
@@ -949,13 +954,13 @@ class BasicServer:
             removed_count = 0
             for key, forward in existing_map.items():
                 if key not in required_forwards:
-                    # 这个转发不在配置中，删除它
-                    if self.port_forward.remove_port_forward(
-                            forward.wan_port, forward.protocol, is_remote
-                    ):
+                    remove_ok = self.port_forward.remove_port_forward_firewall(
+                        forward.lan_addr, forward.lan_port, forward.wan_port, is_remote
+                    )
+                    if remove_ok:
                         removed_count += 1
                         logger.info(
-                            f"删除多余的端口转发: {forward.protocol} "
+                            f"删除多余的端口转发: TCP "
                             f"{forward.wan_port} -> "
                             f"{forward.lan_addr}:{forward.lan_port}"
                         )
@@ -970,14 +975,14 @@ class BasicServer:
                     existing_forward = existing_map[key]
                     # 如果wan_port不同，需要先删除旧的再添加新的
                     if existing_forward.wan_port != wan_port:
-                        self.port_forward.remove_port_forward(
+                        self.port_forward.remove_port_forward_firewall(
+                            existing_forward.lan_addr,
+                            existing_forward.lan_port,
                             existing_forward.wan_port,
-                            existing_forward.protocol,
                             is_remote
                         )
                         logger.info(
-                            f"端口映射变更，删除旧转发: "
-                            f"{existing_forward.protocol} "
+                            f"端口映射变更，删除旧转发: TCP "
                             f"{existing_forward.wan_port} -> "
                             f"{lan_addr}:{lan_port}"
                         )
@@ -986,7 +991,7 @@ class BasicServer:
                         continue
 
                 # 添加新的端口转发
-                success, error = self.port_forward.add_port_forward(
+                success, error = self.port_forward.add_port_forward_firewall(
                     lan_addr, lan_port, wan_port, "TCP", is_remote, vm_name
                 )
 
@@ -1026,6 +1031,7 @@ class BasicServer:
     def PortsMap_TTY(self, vm_port: PortData, vm_flag=True) -> ZMessage:
         """端口映射管理（TTY容器专用）"""
         # 判断是否为远程主机（排除 SSH 转发模式）
+        is_docker = self.hs_config.server_type == "OCInterface"
         is_remote = (self.hs_config.server_addr not in ["localhost", "127.0.0.1", ""] and
                      not self.hs_config.server_addr.startswith("ssh://"))
 
@@ -1037,12 +1043,16 @@ class BasicServer:
                     success=False, action="PortsMap",
                     message=f"SSH 连接失败: {message}")
 
-        # 如果wan_port为0，自动分配一个未使用的端口
-        if vm_port.wan_port == 0:
+        # wan_port 为空字符串或 0 时，自动分配一个未使用的端口
+        try:
+            vm_port.wan_port = int(vm_port.wan_port) if vm_port.wan_port != "" else 0
+        except (TypeError, ValueError):
+            vm_port.wan_port = 0
+        if vm_port.wan_port <= 0:
             vm_port.wan_port = self.port_forward.allocate_port(is_remote)
         else:
             # 检查端口是否已被占用
-            existing_ports = self.port_forward.get_host_ports(is_remote)
+            existing_ports = self.port_forward.get_host_ports_firewall(is_remote)
             if vm_port.wan_port in existing_ports:
                 if is_remote:
                     self.port_forward.close_ssh()
@@ -1052,7 +1062,7 @@ class BasicServer:
 
         # 执行端口映射操作
         if vm_flag:
-            success, error = self.port_forward.add_port_forward(
+            success, error = self.port_forward.add_port_forward_firewall(
                 vm_port.lan_addr, vm_port.lan_port, vm_port.wan_port,
                 "TCP", is_remote, vm_port.nat_tips)
 
@@ -1066,8 +1076,8 @@ class BasicServer:
                     success=False, action="PortsMap",
                     message=f"端口映射失败: {error}")
         else:
-            self.port_forward.remove_port_forward(
-                vm_port.wan_port, "TCP", is_remote)
+            self.port_forward.remove_port_forward_firewall(
+                vm_port.lan_addr, vm_port.lan_port, vm_port.wan_port, is_remote)
             hs_message = f"端口 {vm_port.wan_port} 映射已删除"
             hs_success = True
 
@@ -1137,9 +1147,20 @@ class BasicServer:
 
     # 执行定时任务 ##################################################################
     def Crontabs(self) -> bool:
-        # 保存主机状态
-        hs_status = HSStatus()
-        self.host_set(hs_status)
+        # 保存主机状态（调用子类覆盖的 HSStatus 方法采集实时数据）
+        try:
+            import time
+            hw_status = self.HSStatus()
+            # 只有采集到有效数据才写入，避免全0覆盖历史数据
+            if hw_status and (hw_status.cpu_total > 0 or hw_status.mem_total > 0):
+                self.host_set(hw_status)
+                # 同步更新内存缓存，供 RestManager.get_host_status 直接读取
+                self._status_cache = hw_status.__save__()
+                self._status_cache_time = int(time.time())
+            elif hw_status:
+                logger.warning(f"[{self.hs_config.server_name}] 采集到的宿主机状态无效（全0），跳过写入")
+        except Exception as e:
+            logger.warning(f"[{self.hs_config.server_name}] 采集宿主机状态失败: {e}")
 
         # 同步所有虚拟机的电源状态
         from MainObject.Config.VMPowers import VMPowers
@@ -1175,23 +1196,153 @@ class BasicServer:
 
         return True
 
+    # 本地采集宿主机状态（psutil）##################################################
+    def local_get_hw_status(self) -> HWStatus:
+        """用 psutil 采集本机 CPU/内存/磁盘/网络状态，供本地类型宿主机调用"""
+        try:
+            import psutil
+            from shutil import disk_usage as _disk_usage
+            hw = HWStatus()
+            # CPU 信息 =========================================================
+            try:
+                import cpuinfo
+                hw.cpu_model = cpuinfo.get_cpu_info().get('brand_raw', '')
+            except Exception:
+                hw.cpu_model = ''
+            hw.cpu_total = psutil.cpu_count(logical=True) or 0
+            hw.cpu_usage = int(psutil.cpu_percent(interval=1))
+            # 内存信息 =========================================================
+            mem = psutil.virtual_memory()
+            hw.mem_total = int(mem.total / (1024 * 1024))
+            hw.mem_usage = int(mem.used / (1024 * 1024))
+            # 磁盘信息 =========================================================
+            try:
+                disk_total, disk_used, _ = _disk_usage('/')
+                hw.hdd_total = int(disk_total / (1024 * 1024))
+                hw.hdd_usage = int(disk_used / (1024 * 1024))
+            except Exception:
+                pass
+            # 网络信息 =========================================================
+            try:
+                nic_list = psutil.net_io_counters(True)
+                max_tx = max_rx = 0
+                for nic_data in nic_list.values():
+                    tx = nic_data.bytes_sent / (1024 * 1024)
+                    rx = nic_data.bytes_recv / (1024 * 1024)
+                    if tx > max_tx:
+                        max_tx, max_rx = tx, rx
+                hw.flu_usage = int(max_tx + max_rx)
+                hw.network_u = int(max_tx / 60 * 8)
+                hw.network_d = int(max_rx / 60 * 8)
+                psutil.net_io_counters.cache_clear()
+            except Exception:
+                pass
+            return hw
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] 本地采集宿主机状态失败: {e}")
+            return HWStatus()
+
     # 宿主机状态 ####################################################################
     def HSStatus(self) -> HWStatus:
-        status_list = self.host_get()
-        if len(status_list) > 0:
-            # 将 dict 重新构造成 HWStatus 对象
-            raw = status_list[-1]
-            hw = HWStatus()
-            # 如果 raw 是字典，则遍历设置属性
-            if isinstance(raw, dict):
-                for k, v in raw.items():
-                    setattr(hw, k, v)
-            # 如果 raw 已经是 HWStatus 对象，直接返回
-            elif isinstance(raw, HWStatus):
-                return raw
-            return hw
-        # 如果没有记录，返回空状态
-        return HWStatus()
+        """默认实现：本地类型直接调用 local_get_hw_status()"""
+        return self.local_get_hw_status()
+
+    # 通过SSH采集远程宿主机状态 ######################################################
+    def ssh_get_hw_status(self) -> HWStatus:
+        """通过 SSH 执行命令采集远程宿主机的 CPU/内存/磁盘/网络状态"""
+        from HostModule.SSHDManager import SSHDManager
+        hw = HWStatus()
+        ssh = SSHDManager()
+        try:
+            addr = self.hs_config.server_addr or ""
+            user = self.hs_config.server_user or "root"
+            passwd = self.hs_config.server_pass or ""
+            port = int(getattr(self.hs_config, 'server_port', 22) or 22)
+
+            ok, msg = ssh.connect(addr, user, passwd, port)
+            if not ok:
+                logger.warning(f"[{self.hs_config.server_name}] SSH连接失败: {msg}")
+                return hw
+
+            # CPU 核心数
+            ok, out, _ = ssh.execute_command("nproc")
+            if ok and out.strip().isdigit():
+                hw.cpu_total = int(out.strip())
+
+            # CPU 使用率：读取两次 /proc/stat 间隔计算，兼容所有 Linux 发行版
+            ok, out1, _ = ssh.execute_command(
+                "head -1 /proc/stat")
+            import time as _time
+            _time.sleep(1)
+            ok2, out2, _ = ssh.execute_command(
+                "head -1 /proc/stat")
+            if ok and ok2 and out1.strip() and out2.strip():
+                try:
+                    def _parse_stat(line):
+                        vals = list(map(int, line.split()[1:]))
+                        idle = vals[3]
+                        total = sum(vals)
+                        return idle, total
+                    idle1, total1 = _parse_stat(out1)
+                    idle2, total2 = _parse_stat(out2)
+                    d_total = total2 - total1
+                    d_idle = idle2 - idle1
+                    if d_total > 0:
+                        hw.cpu_usage = int((1 - d_idle / d_total) * 100)
+                except Exception:
+                    pass
+
+            # CPU 型号
+            ok, out, _ = ssh.execute_command(
+                "grep 'model name' /proc/cpuinfo | head -1 | cut -d':' -f2")
+            if ok and out.strip():
+                hw.cpu_model = out.strip()
+
+            # 内存（KB -> MB）
+            ok, out, _ = ssh.execute_command(
+                "grep -E '^(MemTotal|MemAvailable):' /proc/meminfo")
+            if ok and out.strip():
+                mem_total = mem_avail = 0
+                for line in out.splitlines():
+                    parts = line.split()
+                    if len(parts) >= 2 and parts[1].isdigit():
+                        val = int(parts[1]) // 1024
+                        if 'MemTotal' in line:
+                            mem_total = val
+                        elif 'MemAvailable' in line:
+                            mem_avail = val
+                hw.mem_total = mem_total
+                hw.mem_usage = mem_total - mem_avail
+
+            # 磁盘（根分区，1K-blocks -> MB）
+            ok, out, _ = ssh.execute_command(
+                "df -k / | awk 'NR==2{print $2, $3}'")
+            if ok and out.strip():
+                parts = out.strip().split()
+                if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+                    hw.hdd_total = int(parts[0]) // 1024
+                    hw.hdd_usage = int(parts[1]) // 1024
+
+            # 网络（取 rx/tx 累计最大的网卡，bytes -> MB）
+            ok, out, _ = ssh.execute_command(
+                "awk 'NR>2{gsub(\":\",\" \",$1); print $1,$2,$10}' /proc/net/dev | "
+                "sort -k2 -rn | head -1")
+            if ok and out.strip():
+                parts = out.strip().split()
+                if len(parts) == 3 and parts[1].isdigit() and parts[2].isdigit():
+                    rx_mb = int(parts[1]) / (1024 * 1024)
+                    tx_mb = int(parts[2]) / (1024 * 1024)
+                    hw.flu_usage = int(rx_mb + tx_mb)
+                    hw.network_d = int(rx_mb / 60 * 8)
+                    hw.network_u = int(tx_mb / 60 * 8)
+
+        except Exception as e:
+            logger.error(f"[{self.hs_config.server_name}] SSH采集宿主机状态失败: {e}")
+        finally:
+            ssh.close()
+        if hw.cpu_total == 0 and hw.mem_total == 0:
+            logger.warning(f"[{self.hs_config.server_name}] SSH采集结果无效（cpu/mem均为0），跳过写入")
+        return hw
 
     # 初始宿主机 ####################################################################
     def HSCreate(self) -> ZMessage:

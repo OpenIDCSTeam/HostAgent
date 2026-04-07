@@ -137,17 +137,9 @@ class HostServer(BasicServer):
 
     # 宿主机状态 ===============================================================
     def HSStatus(self) -> HWStatus:
-        try:
-            hw = HWStatus()
-            hw.vm_nums = len(self.vm_saving)
-            hw.vm_runs = sum(
-                1 for v in self.vm_saving.values()
-                if v.vm_flag == VMPowers.STARTED)
-            self.host_set(hw)
-            return hw
-        except Exception as e:
-            logger.error(f"[MEmu] 获取宿主机状态失败: {e}")
-            return super().HSStatus()
+        # 调用父类获取本地 psutil 数据
+        hw = super().HSStatus()
+        return hw
 
     # 初始宿主机 ===============================================================
     def HSCreate(self) -> ZMessage:

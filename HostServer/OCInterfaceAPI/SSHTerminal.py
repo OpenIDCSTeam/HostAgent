@@ -105,6 +105,7 @@ class SSHTerminal:
             # 启动ttyd进程 ================================================================
             tty_cmd = [self.ttyd_path, "--writable", "-w",
                        "C:\\" if platform.system().lower() == "windows" else "/",
+                       "-t", "titleFixed=Terminal-"+vm_uuid,
                        "-p", str(rand_port), ssh_cmd]
             tty_cmd = " ".join(tty_cmd)  # 重要！！否则无法正常启动
             logger.info(f"TTY-启动命令: {' '.join(tty_cmd)}")

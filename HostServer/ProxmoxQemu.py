@@ -229,31 +229,6 @@ class HostServer(BasicServer):
     # 宿主机任务 ###############################################################
     def Crontabs(self) -> bool:
         """定时任务"""
-        try:
-            # 连接到 Proxmox ===================================================
-            client, result = self.api_conn()
-            if not result.success or not client:
-                logger.warning(f"Proxmox连接失败，使用本地状态")
-                return super().Crontabs()
-            
-            # 获取主机状态 =====================================================
-            node_status = client.nodes(self.hs_config.launch_path).status.get()
-            if node_status:
-                hw_status = HWStatus()
-                # CPU 使用率 ===================================================
-                hw_status.cpu_usage = int(node_status.get('cpu', 0) * 100)
-                # 内存使用率（已用/总量）=======================================
-                mem_total = node_status.get('memory', {}).get('total', 1)
-                mem_used = node_status.get('memory', {}).get('used', 0)
-                hw_status.ram_usage = int((mem_used / mem_total) * 100) if mem_total > 0 else 0
-                # 保存状态 =====================================================
-                self.host_set(hw_status)
-                logger.debug(f"[{self.hs_config.server_name}] Proxmox主机状态已更新")
-                
-        except Exception as e:
-            logger.error(f"Crontabs执行失败: {str(e)}")
-            traceback.print_exc()
-            
         # 通用操作 =============================================================
         return super().Crontabs()
 

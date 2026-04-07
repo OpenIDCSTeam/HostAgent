@@ -241,62 +241,74 @@ class HostServer(BasicServer):
 
     # 宿主机状态 ###############################################################
     def HSStatus(self) -> HWStatus:
-        """获取宿主机状态"""
+        """获取宿主机状态：优先通过 SSH 采集完整数据，Docker API 作为补充"""
         # 专用操作 =============================================================
+        # 判断是否为远程主机（ssh:// 前缀或非本地地址）
+        addr = self.hs_config.server_addr or ""
+        is_remote = addr.startswith("ssh://") or (
+            addr not in ["", "localhost", "127.0.0.1"])
+
+        if is_remote:
+            # 远程主机：通过 SSH 采集完整宿主机状态
+            ssh_addr = addr.replace("ssh://", "")
+            # 临时替换 server_addr 供 ssh_get_hw_status 使用
+            orig_addr = self.hs_config.server_addr
+            self.hs_config.server_addr = ssh_addr
+            hw_status = self.ssh_get_hw_status()
+            self.hs_config.server_addr = orig_addr
+            if hw_status.cpu_total > 0 or hw_status.mem_total > 0:
+                return hw_status
+            logger.warning(f"[{self.hs_config.server_name}] SSH采集失败，降级到Docker API")
+
+        # 降级：通过 Docker API 获取基础信息 ====================================
         try:
-            # 连接到 Docker 服务器
             client, result = self.api_conn()
             if not result.success:
                 logger.error(f"无法连接到Docker获取状态: {result.message}")
                 return super().HSStatus()
-            
-            # 获取 Docker 主机信息
+
             try:
                 info = client.info()
-                
-                # 创建 HWStatus 对象
                 hw_status = HWStatus()
-                
-                # CPU 信息
+
+                # CPU 核心数
                 if 'NCPU' in info:
                     hw_status.cpu_total = info['NCPU']
-                
-                # 内存信息
+
+                # 内存总量
                 if 'MemTotal' in info:
-                    hw_status.mem_total = int(info['MemTotal'] / (1024 * 1024))  # 转换为MB
-                
-                # 获取系统信息（如果可用）
+                    hw_status.mem_total = int(info['MemTotal'] / (1024 * 1024))
+
+                # 从 SystemStatus 解析使用率（部分 Docker 版本提供）
                 if 'SystemStatus' in info and info['SystemStatus']:
                     for item in info['SystemStatus']:
                         if len(item) >= 2:
                             key, value = item[0], item[1]
-                            # 解析 CPU 使用率
                             if 'CPU' in key and '%' in value:
                                 try:
-                                    hw_status.cpu_usage = int(float(value.replace('%', '').strip()))
-                                except Exception as e:
-                                    traceback.print_exc()
+                                    hw_status.cpu_usage = int(float(
+                                        value.replace('%', '').strip()))
+                                except ValueError:
                                     pass
-                            # 解析内存使用
                             elif 'Memory' in key and 'GiB' in value:
                                 try:
-                                    mem_used = float(value.split('/')[0].replace('GiB', '').strip())
-                                    hw_status.mem_usage = int(mem_used * 1024)  # 转换为MB
-                                except Exception as e:
-                                    traceback.print_exc()
+                                    mem_used = float(
+                                        value.split('/')[0].replace('GiB', '').strip())
+                                    hw_status.mem_usage = int(mem_used * 1024)
+                                except ValueError:
                                     pass
-                
+
                 return hw_status
-                
+
             except Exception as e:
                 logger.error(f"获取Docker主机状态失败: {str(e)}")
                 traceback.print_exc()
                 return super().HSStatus()
-                
+
         except Exception as e:
             logger.error(f"获取Docker主机状态失败: {str(e)}")
             traceback.print_exc()
-        
+
         # 通用操作 =============================================================
         return super().HSStatus()
 
@@ -1411,6 +1423,9 @@ class HostServer(BasicServer):
         public_ip = self.hs_config.public_addr[0]
         if public_ip in ["localhost", "127.0.0.1", ""]:
             public_ip = "127.0.0.1"  # 默认使用本地
+        # 确保web_terminal已初始化
+        self.VMLoader_TTY()
+
         # 3. 启动tty会话web ====================================================
         tty_port, token = self.web_terminal.open_tty(
             self.hs_config, wan_port, vm_uuid)

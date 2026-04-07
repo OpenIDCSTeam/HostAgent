@@ -60,16 +60,18 @@ class HostServer(BasicServer):
             # 获取远程主机状态 =====================================================
             hw_status = self.HSStatus()
 
-            # 保存主机状态到数据库 =================================================
-            if hw_status:
-                from MainObject.Server.HSStatus import HSStatus
-                hs_status = HSStatus()
-                hs_status.hw_status = hw_status
-                self.host_set(hs_status)
+            # 保存主机状态到数据库并更新内存缓存 ===================================
+            if hw_status and (hw_status.cpu_total > 0 or hw_status.mem_total > 0):
+                import time
+                self.host_set(hw_status)
+                self._status_cache = hw_status.__save__()
+                self._status_cache_time = int(time.time())
                 logger.debug(f"[{self.hs_config.server_name}] 远程主机状态已保存")
+            elif hw_status:
+                logger.warning(f"[{self.hs_config.server_name}] 采集到的宿主机状态无效（全0），跳过写入")
 
             # 通用操作 =============================================================
-            return True
+            return super().Crontabs()
         except Exception as e:
             logger.error(f"[{self.hs_config.server_name}] 定时任务执行失败: {str(e)}")
             traceback.print_exc()
@@ -77,44 +79,34 @@ class HostServer(BasicServer):
 
     # 获取宿主机状态 ################################################################
     def HSStatus(self) -> HWStatus:
+        # 先用本地 psutil 采集完整基础数据（磁盘、网络等）
+        hw_status = self.local_get_hw_status()
         try:
-            # 连接到Hyper-V服务器 =====================================================
+            # 连接到Hyper-V服务器，覆盖 CPU/内存（更准确）========================
             connect_result = self.hyperv_api.connect()
             if not connect_result.success:
-                logger.error(f"无法连接到Hyper-V获取状态: {connect_result.message}")
-                return super().HSStatus()
+                logger.warning(f"[{self.hs_config.server_name}] Hyper-V连接失败，使用本地数据: {connect_result.message}")
+                return hw_status
 
-            # 获取远程主机状态信息 =====================================================
             host_status = self.hyperv_api.get_host_status()
-
-            # 断开Hyper-V连接 ==========================================================
             self.hyperv_api.disconnect()
 
-            # 解析并构建状态对象 =======================================================
             if host_status:
-                hw_status = HWStatus()
-                hw_status.cpu_usage = host_status.get("cpu_usage_percent", 0)
-                hw_status.mem_usage = int(host_status.get("memory_used_mb", 0))
-                hw_status.mem_total = int(host_status.get("memory_total_mb", 0))
-                hw_status.hdd_usage = 0  # Hyper-V需要额外查询存储使用率
-                hw_status.hdd_total = 0
+                hw_status.cpu_usage = host_status.get("cpu_usage_percent", hw_status.cpu_usage)
+                hw_status.mem_usage = int(host_status.get("memory_used_mb", hw_status.mem_usage))
+                hw_status.mem_total = int(host_status.get("memory_total_mb", hw_status.mem_total))
                 logger.debug(
-                    f"[{self.hs_config.server_name}] 远程主机状态: "
+                    f"[{self.hs_config.server_name}] 主机状态: "
                     f"CPU={hw_status.cpu_usage}%, "
                     f"MEM={hw_status.mem_usage}MB/{hw_status.mem_total}MB"
                 )
-                return hw_status
-            else:
-                # 未获取到状态数据处理 =================================================
-                logger.warning(f"[{self.hs_config.server_name}] 未能获取到主机状态数据")
-                return HWStatus()
+            return hw_status
 
-        # 异常处理 =================================================================
         except Exception as e:
-            logger.error(f"获取Hyper-V主机状态失败: {str(e)}")
+            logger.error(f"[{self.hs_config.server_name}] 获取Hyper-V主机状态失败: {str(e)}")
             traceback.print_exc()
 
-        # 通用操作 =================================================================
+        return hw_status
         return super().HSStatus()
 
     # 初始化宿主机 ##################################################################

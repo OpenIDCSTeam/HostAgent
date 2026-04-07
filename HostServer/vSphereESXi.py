@@ -127,14 +127,14 @@ class HostServer(BasicServer):
         try:
             # 获取主机状态 =====================================================
             hw_status = self.HSStatus()
-            if hw_status:
-                from MainObject.Server.HSStatus import HSStatus
-                hs_status = HSStatus()
-                hs_status.hw_status = hw_status
-                
-                # 保存状态 =====================================================
-                self.host_set(hs_status)
+            if hw_status and (hw_status.cpu_total > 0 or hw_status.mem_total > 0):
+                import time
+                self.host_set(hw_status)
+                self._status_cache = hw_status.__save__()
+                self._status_cache_time = int(time.time())
                 logger.debug(f"[{self.hs_config.server_name}] ESXi远程主机状态已更新")
+            elif hw_status:
+                logger.warning(f"[{self.hs_config.server_name}] 采集到的宿主机状态无效（全0），跳过写入")
                 
         except Exception as e:
             # 异常处理 =========================================================

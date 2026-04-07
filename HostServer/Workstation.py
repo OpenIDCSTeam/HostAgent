@@ -474,6 +474,7 @@ class HostServer(BasicServer):
 
     # 虚拟机电源 ===============================================================
     def VMPowers(self, vm_name: str, power: VMPowers) -> ZMessage:
+        original_flag = None  # 提前初始化，防止异常发生在赋值前导致 UnboundLocalError
         try:
             power_map = {
                 VMPowers.S_START: "启动",

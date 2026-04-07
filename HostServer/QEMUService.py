@@ -187,30 +187,63 @@ class HostServer(BasicServer):
 
     # 宿主机状态 ===============================================================
     def HSStatus(self) -> HWStatus:
+        addr = self.hs_config.server_addr or ""
+        if addr in ["", "localhost", "127.0.0.1"]:
+            # 本地：直接用父类 psutil 采集
+            return super().HSStatus()
+        # 远程：通过 SSH 执行命令获取宿主机状态
         try:
             hw = HWStatus()
+            # CPU 核心数 =======================================================
             ok, stdout, _ = self._virsh("nodeinfo")
             if ok:
                 for line in stdout.splitlines():
                     if "CPU(s):" in line:
                         try:
-                            hw.cpu_num = int(line.split(":")[-1].strip())
+                            hw.cpu_total = int(line.split(":")[-1].strip())
                         except ValueError:
                             pass
                     elif "Memory size:" in line:
                         try:
                             val = line.split(":")[-1].strip()
-                            hw.mem_all = int(val.replace("KiB", "").strip()) // 1024
+                            hw.mem_total = int(
+                                val.replace("KiB", "").strip()) // 1024
                         except ValueError:
                             pass
-            hw.vm_nums = len(self.vm_saving)
-            hw.vm_runs = sum(
-                1 for v in self.vm_saving.values()
-                if v.vm_flag == VMPowers.STARTED)
-            self.host_set(hw)
+            # CPU 使用率（通过 SSH 执行 top 命令）==============================
+            try:
+                user = self.hs_config.server_user or "root"
+                import subprocess
+                result = subprocess.run(
+                    ["ssh", "-o", "StrictHostKeyChecking=no",
+                     "-o", "ConnectTimeout=5",
+                     f"{user}@{addr}",
+                     "top -bn1 | grep 'Cpu(s)' | awk '{print $2}'"],
+                    capture_output=True, text=True, timeout=10)
+                if result.returncode == 0 and result.stdout.strip():
+                    hw.cpu_usage = int(float(result.stdout.strip()))
+            except Exception:
+                pass
+            # 内存使用（通过 SSH 执行 free 命令）================================
+            try:
+                user = self.hs_config.server_user or "root"
+                import subprocess
+                result = subprocess.run(
+                    ["ssh", "-o", "StrictHostKeyChecking=no",
+                     "-o", "ConnectTimeout=5",
+                     f"{user}@{addr}",
+                     "free -m | awk 'NR==2{print $2,$3}'"],
+                    capture_output=True, text=True, timeout=10)
+                if result.returncode == 0 and result.stdout.strip():
+                    parts = result.stdout.strip().split()
+                    if len(parts) == 2:
+                        hw.mem_total = int(parts[0])
+                        hw.mem_usage = int(parts[1])
+            except Exception:
+                pass
             return hw
         except Exception as e:
-            logger.error(f"[QEMU] 获取宿主机状态失败: {e}")
+            logger.error(f"[QEMU] 获取远程宿主机状态失败: {e}")
             return super().HSStatus()
 
     # 初始宿主机 ===============================================================

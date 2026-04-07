@@ -195,123 +195,58 @@ class HostServer(BasicServer):
 
     # 宿主机任务 ###############################################################
     def Crontabs(self) -> bool:
-        # 专用操作 =============================================================
+        # 专用操作：通过 SSH 采集远程宿主机状态 ==================================
         try:
-            # 连接到 LXD 服务器
-            client, result = self.lxd_conn()
-            if not result.success:
-                logger.warning(f"[{self.hs_config.server_name}] Crontabs: LXD连接失败，使用本地状态")
-                return super().Crontabs()
-
-            # 获取远程主机状态
-            try:
-                # 通过 LXD API 获取主机信息
-                host_info = client.host_info
-
-                # 创建 HWStatus 对象
-                hw_status = HWStatus()
-
-                # 解析主机信息
-                if 'environment' in host_info:
-                    env = host_info['environment']
-
-                    # CPU 信息
-                    if 'cpu' in env:
-                        hw_status.cpu_total = env.get('cpu', 0)
-
-                    # 内存信息
-                    if 'memory' in env:
-                        memory_total = env.get('memory', 0)
-                        hw_status.mem_total = int(memory_total / (1024 * 1024))  # 转换为MB
-
-                # 获取资源使用情况
-                if 'resources' in host_info:
-                    resources = host_info['resources']
-
-                    # CPU 使用率
-                    if 'cpu' in resources:
-                        cpu_info = resources['cpu']
-                        if 'usage' in cpu_info:
-                            hw_status.cpu_usage = int(cpu_info['usage'])
-
-                    # 内存使用情况
-                    if 'memory' in resources:
-                        mem_info = resources['memory']
-                        if 'used' in mem_info:
-                            hw_status.mem_usage = int(mem_info['used'] / (1024 * 1024))  # 转换为MB
-
-                # 保存主机状态
+            import time
+            hw_status = self.HSStatus()
+            if hw_status and (hw_status.cpu_total > 0 or hw_status.mem_total > 0):
                 self.host_set(hw_status)
+                self._status_cache = hw_status.__save__()
+                self._status_cache_time = int(time.time())
                 logger.debug(f"[{self.hs_config.server_name}] 远程主机状态已保存")
-
-            except Exception as e:
-                logger.warning(f"[{self.hs_config.server_name}] 获取远程主机状态失败: {e}，使用本地状态")
-                return super().Crontabs()
-
+            else:
+                logger.warning(f"[{self.hs_config.server_name}] 采集到的宿主机状态无效，跳过写入")
         except Exception as e:
             logger.error(f"[{self.hs_config.server_name}] Crontabs 执行失败: {e}")
-            return super().Crontabs()
 
         # 通用操作 =============================================================
         return super().Crontabs()
 
     # 宿主机状态 ###############################################################
     def HSStatus(self) -> HWStatus:
-        # 专用操作 =============================================================
+        # 通过 SSH 采集远程宿主机实时状态 =========================================
+        addr = self.hs_config.server_addr or ""
+        if addr and addr not in ["localhost", "127.0.0.1"]:
+            hw = self.ssh_get_hw_status()
+            if hw.cpu_total > 0 or hw.mem_total > 0:
+                return hw
+            logger.warning(f"[{self.hs_config.server_name}] SSH采集失败，尝试LXD API")
+
+        # 降级：通过 LXD API 获取 ===============================================
         try:
-            # 连接到 LXD 服务器
             client, result = self.lxd_conn()
             if not result.success:
-                logger.error(f"无法连接到LXD获取状态: {result.message}")
-                return super().HSStatus()
-
-            # 获取主机状态
-            try:
-                host_info = client.host_info
-
-                # 创建 HWStatus 对象
-                hw_status = HWStatus()
-
-                # 解析主机信息
-                if 'environment' in host_info:
-                    env = host_info['environment']
-
-                    # CPU 信息
-                    if 'cpu' in env:
-                        hw_status.cpu_total = env.get('cpu', 0)
-
-                    # 内存信息
-                    if 'memory' in env:
-                        memory_total = env.get('memory', 0)
-                        hw_status.mem_total = int(memory_total / (1024 * 1024))  # 转换为MB
-
-                # 获取资源使用情况
-                if 'resources' in host_info:
-                    resources = host_info['resources']
-
-                    # CPU 使用率
-                    if 'cpu' in resources:
-                        cpu_info = resources['cpu']
-                        if 'usage' in cpu_info:
-                            hw_status.cpu_usage = int(cpu_info['usage'])
-
-                    # 内存使用情况
-                    if 'memory' in resources:
-                        mem_info = resources['memory']
-                        if 'used' in mem_info:
-                            hw_status.mem_usage = int(mem_info['used'] / (1024 * 1024))  # 转换为MB
-
-                return hw_status
-
-            except Exception as e:
-                logger.error(f"获取LXD主机状态失败: {str(e)}")
-                return super().HSStatus()
-
+                logger.error(f"[{self.hs_config.server_name}] LXD连接失败: {result.message}")
+                return HWStatus()
+            host_info = client.host_info
+            hw_status = HWStatus()
+            if 'environment' in host_info:
+                env = host_info['environment']
+                hw_status.cpu_total = env.get('cpu', 0)
+                memory_total = env.get('memory', 0)
+                hw_status.mem_total = int(memory_total / (1024 * 1024))
+            if 'resources' in host_info:
+                resources = host_info['resources']
+                cpu_info = resources.get('cpu', {})
+                if 'usage' in cpu_info:
+                    hw_status.cpu_usage = int(cpu_info['usage'])
+                mem_info = resources.get('memory', {})
+                if 'used' in mem_info:
+                    hw_status.mem_usage = int(mem_info['used'] / (1024 * 1024))
+            return hw_status
         except Exception as e:
-            logger.error(f"获取LXD主机状态失败: {str(e)}")
-
-        # 通用操作 =============================================================
-        return super().HSStatus()
+            logger.error(f"[{self.hs_config.server_name}] LXD API获取状态失败: {e}")
+        return HWStatus()
 
     # 初始宿主机 ###############################################################
     def HSCreate(self) -> ZMessage:
@@ -1475,6 +1410,9 @@ class HostServer(BasicServer):
         public_ip = self.hs_config.public_addr[0]
         if public_ip in ["localhost", "127.0.0.1", ""]:
             public_ip = "127.0.0.1"  # 默认使用本地
+
+        # 确保web_terminal已初始化
+        self.VMLoader_TTY()
 
         # 启动tty会话web
         tty_port, token = self.web_terminal.open_tty(
