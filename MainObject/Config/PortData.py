@@ -11,6 +11,12 @@ class PortData:
     def __load__(self, **kwargs):
         for key, value in kwargs.items():
             if hasattr(self, key):
+                # lan_port / wan_port 强制转为 int，防止前端传入空字符串
+                if key in ("lan_port", "wan_port"):
+                    try:
+                        value = int(value) if value != "" else 0
+                    except (TypeError, ValueError):
+                        value = 0
                 setattr(self, key, value)
 
     def __save__(self):

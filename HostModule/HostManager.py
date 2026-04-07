@@ -44,7 +44,7 @@ class HostManage:
         self.bearer = global_config.get("bearer", "")
         # 如果Token为空，自动生成一个新的Token
         if not self.bearer:
-            self.bearer = secrets.token_hex(8)
+            self.bearer = secrets.token_hex(32)
             # 保存到数据库
             self.saving.set_ap_config(bearer=self.bearer)
             logger.info(f"[HostManage] 自动生成新Token: {self.bearer}")
@@ -54,8 +54,8 @@ class HostManage:
         if bearer:
             self.bearer = bearer
         else:
-            # 生成16位随机Token（包含字母和数字）
-            self.bearer = secrets.token_hex(8)
+            # 生成64位随机Token（256位熵，安全强度足够）
+            self.bearer = secrets.token_hex(32)
         # 保存到数据库
         self.saving.set_ap_config(bearer=self.bearer)
         return self.bearer

@@ -17,6 +17,9 @@ import {
     SunOutlined,
     MoonOutlined,
     BgColorsOutlined,
+    RadiusSettingOutlined,
+    FormatPainterOutlined,
+    CheckOutlined,
 } from '@ant-design/icons'
 import {useUserStore} from '@/utils/data.ts'
 import api from '@/utils/apis.ts'
@@ -34,7 +37,7 @@ function MainLayout() {
     const navigate = useNavigate()
     const location = useLocation()
     const {user, logout, setUser} = useUserStore()
-    const { theme: currentTheme, toggleTheme, transparentMode, toggleTransparentMode } = useTheme() // 主题管理
+    const { theme: currentTheme, toggleTheme, transparentMode, toggleTransparentMode, roundedMode, toggleRoundedMode } = useTheme() // 主题管理
     const [collapsed, setCollapsed] = useState(false) // 侧边栏折叠状态
     const [notifications, setNotifications] = useState(0) // 通知数量
     const [currentLang, setCurrentLang] = useState('zh-cn')
@@ -62,20 +65,18 @@ function MainLayout() {
         }
         window.addEventListener('languageChanged', handleLangChange)
         
-        // 轮询检查语言列表是否加载完成
-        const interval = setInterval(() => {
-            const langs = getAvailableLanguages()
-            if (langs.length > 0 && languages.length === 0) {
-                setLanguages(langs)
-                setCurrentLang(getCurrentLanguage())
-            }
-        }, 1000)
+        // 监听语言列表加载完成事件（替代轮询）
+        const handleLangsLoaded = (e: any) => {
+            setLanguages(e.detail.languages)
+            setCurrentLang(getCurrentLanguage())
+        }
+        window.addEventListener('languagesLoaded', handleLangsLoaded)
         
         return () => {
             window.removeEventListener('languageChanged', handleLangChange)
-            clearInterval(interval)
+            window.removeEventListener('languagesLoaded', handleLangsLoaded)
         }
-    }, [languages.length])
+    }, [])
 
     // 语言菜单项
     const languageMenuItems: MenuProps['items'] = (languages.length > 0 ? languages : [
@@ -295,28 +296,101 @@ function MainLayout() {
 
                     {/* 右侧操作区 */}
                     <div style={{display: 'flex', alignItems: 'center', gap: 16}}>
-                        {/* 主题切换 */}
-                        <Button
-                            className="theme-toggle"
-                            type="text"
-                            icon={currentTheme === 'dark' ? <SunOutlined style={{fontSize: 18}} /> : <MoonOutlined style={{fontSize: 18}} />}
-                            onClick={toggleTheme}
-                            title={currentTheme === 'dark' ? '切换到浅色模式' : '切换到深色模式'}
-                            style={{
-                                color: currentTheme === 'dark' ? 'var(--accent-primary)' : undefined,
-                            }}
-                        />
-
-                        {/* 透明模式切换 */}
-                        <Button
-                            type="text"
-                            icon={<BgColorsOutlined style={{fontSize: 18}} />}
-                            onClick={toggleTransparentMode}
-                            title={transparentMode ? '关闭透明模式' : '开启透明模式'}
-                            style={{
-                                color: transparentMode ? 'var(--accent-primary)' : (currentTheme === 'dark' ? 'var(--text-primary)' : undefined),
-                            }}
-                        />
+                        {/* 主题下拉菜单 */}
+                        <Dropdown
+                            placement="bottomRight"
+                            overlayStyle={{ zIndex: 20000 }}
+                            getPopupContainer={() => document.body}
+                            dropdownRender={() => (
+                                <div style={{
+                                    background: currentTheme === 'dark' ? 'var(--bg-secondary, #1f1f1f)' : '#fff',
+                                    border: currentTheme === 'dark' ? '1px solid var(--border-primary, #303030)' : '1px solid #f0f0f0',
+                                    borderRadius: 12,
+                                    boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+                                    padding: '8px',
+                                    minWidth: 180,
+                                }}>
+                                    <div style={{
+                                        padding: '4px 8px 8px',
+                                        fontSize: 11,
+                                        fontWeight: 600,
+                                        letterSpacing: '0.08em',
+                                        color: currentTheme === 'dark' ? 'var(--text-secondary, #888)' : '#999',
+                                        textTransform: 'uppercase',
+                                    }}>主题设置</div>
+                                    {/* 暗黑模式 */}
+                                    <div
+                                        onClick={toggleTheme}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 10,
+                                            padding: '8px 10px',
+                                            borderRadius: 8,
+                                            cursor: 'pointer',
+                                            transition: 'background 0.2s',
+                                            color: currentTheme === 'dark' ? 'var(--accent-primary, #1677ff)' : '#333',
+                                        }}
+                                        className="theme-menu-item"
+                                    >
+                                        {currentTheme === 'dark'
+                                            ? <SunOutlined style={{ fontSize: 16, color: '#faad14' }} />
+                                            : <MoonOutlined style={{ fontSize: 16, color: '#595959' }} />}
+                                        <span style={{ flex: 1, fontSize: 14, color: currentTheme === 'dark' ? 'var(--text-primary, #fff)' : '#333' }}>
+                                            {currentTheme === 'dark' ? '浅色模式' : '深色模式'}
+                                        </span>
+                                        {currentTheme === 'dark' && <CheckOutlined style={{ fontSize: 12, color: '#faad14' }} />}
+                                    </div>
+                                    {/* 透明模式 */}
+                                    <div
+                                        onClick={toggleTransparentMode}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 10,
+                                            padding: '8px 10px',
+                                            borderRadius: 8,
+                                            cursor: 'pointer',
+                                            transition: 'background 0.2s',
+                                        }}
+                                        className="theme-menu-item"
+                                    >
+                                        <BgColorsOutlined style={{ fontSize: 16, color: transparentMode ? '#1677ff' : (currentTheme === 'dark' ? '#888' : '#595959') }} />
+                                        <span style={{ flex: 1, fontSize: 14, color: currentTheme === 'dark' ? 'var(--text-primary, #fff)' : '#333' }}>透明模式</span>
+                                        {transparentMode && <CheckOutlined style={{ fontSize: 12, color: '#1677ff' }} />}
+                                    </div>
+                                    {/* 圆角模式 */}
+                                    <div
+                                        onClick={toggleRoundedMode}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 10,
+                                            padding: '8px 10px',
+                                            borderRadius: 8,
+                                            cursor: 'pointer',
+                                            transition: 'background 0.2s',
+                                        }}
+                                        className="theme-menu-item"
+                                    >
+                                        <RadiusSettingOutlined style={{ fontSize: 16, color: roundedMode ? '#52c41a' : (currentTheme === 'dark' ? '#888' : '#595959') }} />
+                                        <span style={{ flex: 1, fontSize: 14, color: currentTheme === 'dark' ? 'var(--text-primary, #fff)' : '#333' }}>圆角模式</span>
+                                        {roundedMode && <CheckOutlined style={{ fontSize: 12, color: '#52c41a' }} />}
+                                    </div>
+                                </div>
+                            )}
+                        >
+                            <Button
+                                type="text"
+                                icon={<FormatPainterOutlined style={{ fontSize: 18 }} />}
+                                title="主题"
+                                style={{
+                                    color: (currentTheme === 'dark' || transparentMode || roundedMode)
+                                        ? 'var(--accent-primary, #1677ff)'
+                                        : undefined,
+                                }}
+                            />
+                        </Dropdown>
 
                         {/* 语言切换 */}
                         <Dropdown 

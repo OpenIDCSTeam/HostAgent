@@ -41,20 +41,18 @@ function UserPostin() {
     }
     window.addEventListener('languageChanged', handleLangChange)
     
-    // 轮询检查语言列表是否加载完成
-    const interval = setInterval(() => {
-      const langs = getAvailableLanguages()
-      if (langs.length > 0 && languages.length === 0) {
-        setLanguages(langs)
-        setCurrentLang(getCurrentLanguage())
-      }
-    }, 1000)
+    // 监听语言列表加载完成事件（替代轮询）
+    const handleLangsLoaded = (e: any) => {
+      setLanguages(e.detail.languages)
+      setCurrentLang(getCurrentLanguage())
+    }
+    window.addEventListener('languagesLoaded', handleLangsLoaded)
     
     return () => {
       window.removeEventListener('languageChanged', handleLangChange)
-      clearInterval(interval)
+      window.removeEventListener('languagesLoaded', handleLangsLoaded)
     }
-  }, [languages.length])
+  }, [])
 
   // 语言菜单项
   const languageMenuItems: MenuProps['items'] = languages.map(lang => ({

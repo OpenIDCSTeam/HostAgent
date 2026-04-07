@@ -6,6 +6,7 @@ import enum
 import json
 import random
 import string
+import threading
 import traceback
 from functools import wraps
 from flask import request, jsonify, session, redirect, url_for, g
@@ -39,6 +40,13 @@ class RestManager:
         """
         self.hs_manage = hs_manage
         self.db = db
+        # 用户级别的配额操作锁，防止并发创建/修改VM时超配额
+        self._quota_locks: dict = {}  # {username: threading.Lock()}
+        self._quota_locks_guard = threading.Lock()  # 保护_quota_locks字典本身的锁
+        # 临时登录凭据存储（内存字典，进程重启后失效）
+        # 格式: {temp_token: {'hs_name': str, 'vm_uuid': str, 'expire': int}}
+        self._temp_tokens: dict = {}
+        self._temp_tokens_lock = threading.Lock()
 
     # ========================================================================
     # 认证装饰器和响应函数
@@ -130,7 +138,8 @@ class RestManager:
     # ####################################################################################
     def api_response(self, code=200, msg='success', data=None):
         """统一API响应格式"""
-        return jsonify({'code': code, 'msg': msg, 'data': data})
+        import time
+        return jsonify({'code': code, 'msg': msg, 'data': data, 'timestamp': int(time.time())})
 
     def _calculate_user_ip_usage(self, username):
         """计算用户的IP使用量"""
@@ -186,26 +195,71 @@ class RestManager:
             'used_pub_ips': used_pub_ips
         }
 
+    def get_temp_user_data(self, temp_key: str):
+        """根据temp_token key返回虚拟用户信息（供require_auth使用）"""
+        import time
+        with self._temp_tokens_lock:
+            token_data = self._temp_tokens.get(temp_key)
+        if not token_data:
+            return None
+        if int(time.time()) > token_data.get('expire', 0):
+            with self._temp_tokens_lock:
+                self._temp_tokens.pop(temp_key, None)
+            return None
+        hs_name = token_data.get('hs_name', '')
+        vm_uuid = token_data.get('vm_uuid', '')
+        virtual_user = token_data.get('virtual_user', f'{hs_name}-{vm_uuid}')
+        return {
+            'id': 0,
+            'username': virtual_user,
+            'is_admin': False,
+            'is_token_login': False,
+            'temp_login': True,
+            'temp_hs_name': hs_name,
+            'temp_vm_uuid': vm_uuid,
+            'assigned_hosts': [hs_name]
+        }
+
     def _get_current_user(self):
         """获取当前用户信息"""
         # 检查Bearer Token
         auth_header = request.headers.get('Authorization', '')
         if auth_header.startswith('Bearer '):
-            # Token登录，返回管理员权限
-            return {
-                'id': 1,
-                'username': 'admin',
-                'is_admin': True,
-                'is_token_login': True
-            }
+            token = auth_header[7:]
+            # 临时token（财务系统插件跳转）：格式为 temp:<sha256>
+            if token.startswith('temp:'):
+                user_data = self.get_temp_user_data(token[5:])
+                if user_data:
+                    return user_data
+            elif token == self.hs_manage.bearer:
+                # 主Bearer Token登录，返回管理员权限
+                return {
+                    'id': 1,
+                    'username': 'admin',
+                    'is_admin': True,
+                    'is_token_login': True
+                }
 
         # 检查Session登录
-        if self.db and session.get('logged_in'):
-            user_id = session.get('user_id')
-            user_data = self.db.get_user_by_id(user_id)
-            if user_data:
-                user_data['is_token_login'] = False
-                return user_data
+        if session.get('logged_in'):
+            # 临时Token登录（财务系统插件跳转），返回虚拟用户信息（受限权限）
+            if session.get('temp_login'):
+                return {
+                    'id': 0,
+                    'username': session.get('username', ''),
+                    'is_admin': False,
+                    'is_token_login': False,
+                    'temp_login': True,
+                    'temp_hs_name': session.get('temp_hs_name', ''),
+                    'temp_vm_uuid': session.get('temp_vm_uuid', ''),
+                    'assigned_hosts': []
+                }
+            if self.db:
+                user_id = session.get('user_id')
+                user_data = self.db.get_user_by_id(user_id)
+                if user_data:
+                    user_data['is_token_login'] = False
+                    return user_data
 
         return None
 
@@ -217,6 +271,12 @@ class RestManager:
 
         # 管理员或Token登录有所有权限
         if user_data.get('is_admin') or user_data.get('is_token_login'):
+            return True, user_data
+
+        # 临时登录（财务系统插件跳转）：只允许访问指定主机
+        if user_data.get('temp_login'):
+            if hs_name != user_data.get('temp_hs_name', ''):
+                return False, self.api_response(403, '没有访问该主机的权限')
             return True, user_data
 
         # 检查主机访问权限
@@ -303,7 +363,7 @@ class RestManager:
         if is_admin or is_token_login:
             return True, None
 
-        if not user_id:
+        if user_id is None and not session.get('logged_in'):
             return False, self.api_response(401, '未登录')
 
         username = session.get('username', '')
@@ -313,7 +373,8 @@ class RestManager:
         user_data = {
             'username': username,
             'is_admin': is_admin,
-            'is_token_login': is_token_login
+            'is_token_login': is_token_login,
+            'temp_login': session.get('temp_login', False),
         }
         return self._check_fine_permission(hs_name, vm_uuid, user_data, action)
 
@@ -381,6 +442,13 @@ class RestManager:
             return False, self.api_response(403, '只有主用户可以删除虚拟机')
 
         return True, None
+
+    def _get_quota_lock(self, username: str) -> threading.Lock:
+        """获取指定用户的配额操作锁（线程安全）"""
+        with self._quota_locks_guard:
+            if username not in self._quota_locks:
+                self._quota_locks[username] = threading.Lock()
+            return self._quota_locks[username]
 
     def _check_resource_quota(self, user_data, **resources):
         """检查资源配额"""
@@ -510,6 +578,47 @@ class RestManager:
             return self.api_response(400, '下行带宽不能少于0')
         data['speed_u'] = speed_u
         data['speed_d'] = speed_d
+
+        # 配额配置验证：备份数、光盘数、PCIe数、USB数、数据盘数、数据盘容量
+        bak_num = int(data.get('bak_num', 1))
+        if bak_num < 0:
+            return self.api_response(400, '备份数量不能少于0')
+        data['bak_num'] = bak_num
+
+        iso_num = int(data.get('iso_num', 1))
+        if iso_num < 0:
+            return self.api_response(400, '光盘数量不能少于0')
+        data['iso_num'] = iso_num
+
+        pci_num = int(data.get('pci_num', 0))
+        if pci_num < 0:
+            return self.api_response(400, 'PCIe数量不能少于0')
+        data['pci_num'] = pci_num
+
+        usb_num = int(data.get('usb_num', 0))
+        if usb_num < 0:
+            return self.api_response(400, 'USB数量不能少于0')
+        data['usb_num'] = usb_num
+
+        dat_num = int(data.get('dat_num', 10))
+        if dat_num < 0:
+            return self.api_response(400, '数据盘数量不能少于0')
+        data['dat_num'] = dat_num
+
+        dat_all = int(data.get('dat_all', 0))
+        if dat_all < 0:
+            return self.api_response(400, '数据盘合计容量不能少于0')
+        data['dat_all'] = dat_all
+
+        # 检查PCIe直通是否超过配额
+        pci_all = data.get('pci_all', {})
+        if isinstance(pci_all, dict) and len(pci_all) > pci_num:
+            return self.api_response(400, f'PCIe设备数量超过配额，最多允许{pci_num}个')
+
+        # 检查USB直通是否超过配额
+        usb_all = data.get('usb_all', {})
+        if isinstance(usb_all, dict) and len(usb_all) > usb_num:
+            return self.api_response(400, f'USB设备数量超过配额，最多允许{usb_num}个')
 
         # 如果提供了用户数据，进行配额检查
         if user_data and not (user_data.get('is_admin') or user_data.get('is_token_login')):
@@ -1763,7 +1872,17 @@ class RestManager:
         # system_maps结构：{"Ubuntu22.04": ["ubuntu-22.04.iso", 20], ...}
         # [0]是镜像文件名，[1]是最小磁盘GB
         os_name = data.get('os_name', '')
-        if os_name and os_name in system_maps:
+        if os_name:
+            # 支持按key匹配，也支持按镜像路径(value[0])反向匹配
+            if os_name not in system_maps:
+                matched_key = next(
+                    (k for k, v in system_maps.items() if isinstance(v, list) and len(v) >= 1 and v[0] == os_name),
+                    None
+                )
+                if matched_key is None:
+                    return self.api_response(400, f'操作系统镜像不存在：{os_name}')
+                os_name = matched_key
+                data['os_name'] = os_name
             system_map = system_maps[os_name]
             if isinstance(system_map, list) and len(system_map) >= 2:
                 try:
@@ -1771,136 +1890,164 @@ class RestManager:
                 except (ValueError, TypeError):
                     min_disk_gb = 10  # 解析失败使用默认值
 
-        # 验证和设置资源限制（包含配额检查），传入最小磁盘要求
-        validation_result = self._validate_vm_resources(data, user_data, min_disk_gb=min_disk_gb)
-        if validation_result:
-            return validation_result
+        # 对非管理员用户加锁，防止并发创建VM时配额竞态条件
+        _quota_lock_username = user_data.get('username', '') if user_data and not (user_data.get('is_admin') or user_data.get('is_token_login')) else None
+        _quota_lock = self._get_quota_lock(_quota_lock_username) if _quota_lock_username else None
+        if _quota_lock:
+            _quota_lock.acquire()
+        try:
+            # 加锁后重新从数据库读取最新的用户配额数据，确保并发安全
+            if _quota_lock_username and self.db:
+                fresh_user = self.db.get_user_by_username(_quota_lock_username)
+                if fresh_user:
+                    user_data = fresh_user
 
-        # 映射os_name为实际文件名
-        original_os_name = data.get('os_name', '')
-        if original_os_name and original_os_name in system_maps:
-            system_map = system_maps[original_os_name]
-            if isinstance(system_map, list) and len(system_map) >= 1:
-                data['os_name'] = system_map[0]  # 获取映射的实际文件名
+            # 验证和设置资源限制（包含配额检查），传入最小磁盘要求
+            validation_result = self._validate_vm_resources(data, user_data, min_disk_gb=min_disk_gb)
+            if validation_result:
+                return validation_result
 
-        # 根据服务器类型过滤被禁用的字段（创建模式 - Ban_Init）
-        if server.hs_config and hasattr(server.hs_config, 'server_type'):
-            server_type = server.hs_config.server_type
-            data = self._filter_banned_fields(data, server_type, mode='init')
+            # 映射os_name为实际文件名
+            original_os_name = data.get('os_name', '')
+            if original_os_name and original_os_name in system_maps:
+                system_map = system_maps[original_os_name]
+                if isinstance(system_map, list) and len(system_map) >= 1:
+                    data['os_name'] = system_map[0]  # 获取映射的实际文件名
 
-        # 处理网卡配置
-        nic_all = {}
-        nic_data = data.pop('nic_all', {})
-        for nic_name, nic_conf in nic_data.items():
-            nic_all[nic_name] = NCConfig(**nic_conf)
-        # 创建虚拟机配置
-        vm_config = VMConfig(**data, nic_all=nic_all)
+            # 根据服务器类型过滤被禁用的字段（创建模式 - Ban_Init）
+            if server.hs_config and hasattr(server.hs_config, 'server_type'):
+                server_type = server.hs_config.server_type
+                data = self._filter_banned_fields(data, server_type, mode='init')
 
-        # 处理GPU直通配置
-        gpu_id = data.get('gpu_id')
-        if gpu_id:
-            vm_config.pci_all[gpu_id] = VFConfig(
-                gpu_uuid=gpu_id,
-                gpu_mdev=data.get('gpu_mdev', ''),
-                gpu_hint=data.get('gpu_remark', '')
-            )
+            # 处理网卡配置
+            nic_all = {}
+            nic_data = data.pop('nic_all', {})
+            for nic_name, nic_conf in nic_data.items():
+                nic_all[nic_name] = NCConfig(**nic_conf)
+            # 创建虚拟机配置
+            vm_config = VMConfig(**data, nic_all=nic_all)
 
-        # 处理USB直通配置
-        usb_vid = data.get('usb_vid')
-        usb_pid = data.get('usb_pid')
-        if usb_vid and usb_pid:
-            import uuid
-            usb_key = str(uuid.uuid4())
-            vm_config.usb_all[usb_key] = USBInfos(
-                vid_uuid=usb_vid,
-                pid_uuid=usb_pid,
-                usb_hint=data.get('usb_remark', '')
-            )
+            # 处理GPU直通配置
+            gpu_id = data.get('gpu_id')
+            if gpu_id:
+                # 检查PCIe配额
+                if vm_config.pci_num <= 0:
+                    return self.api_response(400, 'PCIe配额为0，不允许添加PCI直通设备')
+                if len(vm_config.pci_all) >= vm_config.pci_num:
+                    return self.api_response(400, f'PCIe设备数量超过配额，最多允许{vm_config.pci_num}个')
+                vm_config.pci_all[gpu_id] = VFConfig(
+                    gpu_uuid=gpu_id,
+                    gpu_mdev=data.get('gpu_mdev', ''),
+                    gpu_hint=data.get('gpu_remark', '')
+                )
 
-        # 如果没有指定虚拟机名称，生成随机名称
-        if not vm_config.vm_uuid or vm_config.vm_uuid == '':
-            # 获取主机配置的前缀
-            prefix = ''
-            if server.hs_config and hasattr(server.hs_config, 'filter_name'):
-                prefix = server.hs_config.filter_name or ''
+            # 处理USB直通配置
+            usb_vid = data.get('usb_vid')
+            usb_pid = data.get('usb_pid')
+            if usb_vid and usb_pid:
+                # 检查USB配额
+                if vm_config.usb_num <= 0:
+                    return self.api_response(400, 'USB配额为0，不允许添加USB直通设备')
+                if len(vm_config.usb_all) >= vm_config.usb_num:
+                    return self.api_response(400, f'USB设备数量超过配额，最多允许{vm_config.usb_num}个')
+                import uuid
+                usb_key = str(uuid.uuid4())
+                vm_config.usb_all[usb_key] = USBInfos(
+                    vid_uuid=usb_vid,
+                    pid_uuid=usb_pid,
+                    usb_hint=data.get('usb_remark', '')
+                )
 
-            # 如果没有配置前缀，使用默认前缀 'vmx-'
-            if not prefix:
-                prefix = 'vmx-'
-            elif not prefix.endswith('-'):
-                # 如果前缀不以 '-' 结尾，添加 '-'
-                prefix = prefix + '-'
+            # 如果没有指定虚拟机名称，生成随机名称
+            if not vm_config.vm_uuid or vm_config.vm_uuid == '':
+                # 获取主机配置的前缀
+                prefix = ''
+                if server.hs_config and hasattr(server.hs_config, 'filter_name'):
+                    prefix = server.hs_config.filter_name or ''
 
-            # 生成格式: <前缀><8位随机字符>
-            random_suffix = ''.join(
-                random.sample(string.ascii_letters + string.digits, 8))
-            vm_config.vm_uuid = f'{prefix}{random_suffix}'
+                # 如果没有配置前缀，使用默认前缀 'vmx-'
+                if not prefix:
+                    prefix = 'vmx-'
+                elif not prefix.endswith('-'):
+                    # 如果前缀不以 '-' 结尾，添加 '-'
+                    prefix = prefix + '-'
 
-        # 设置虚拟机所有者
-        if not (user_data.get('is_admin') or user_data.get('is_token_login')):
-            # 普通用户创建虚拟机，设置所有者为用户名
-            username = user_data.get('username', '')
-            if username:
-                vm_config.own_all = {username: UserMask.full()}
+                # 生成格式: <前缀><8位随机字符>
+                random_suffix = ''.join(
+                    random.sample(string.ascii_letters + string.digits, 8))
+                vm_config.vm_uuid = f'{prefix}{random_suffix}'
+
+            # 设置虚拟机所有者
+            if not (user_data.get('is_admin') or user_data.get('is_token_login')):
+                # 普通用户创建虚拟机，设置所有者为用户名
+                username = user_data.get('username', '')
+                if username:
+                    vm_config.own_all = {username: UserMask.full()}
+                else:
+                    # 如果没有用户名，保持默认值{"admin": UserMask(全权限)}
+                    pass
             else:
-                # 如果没有用户名，保持默认值{"admin": UserMask(全权限)}
-                pass
-        else:
-            # 管理员或token登录创建虚拟机，保持默认所有者{"admin": UserMask(全权限)}
-            pass
+                # 管理员或token登录创建虚拟机，保持默认所有者{"admin": UserMask(全权限)}
+                # 同时添加虚拟用户（hs_name-vm_uuid），用于财务系统临时凭据访问（掩码35295）
+                virtual_user = f'{hs_name}-{vm_config.vm_uuid}'
+                vm_config.own_all['admin'] = UserMask.full()
+                vm_config.own_all[virtual_user] = UserMask(35295)
 
-        vm_config.vc_port = random.randint(10000, 59999)
-        if vm_config.vc_pass == '':
-            vm_config.vc_pass = ''.join(
-                random.sample(string.ascii_letters + string.digits, 8))
+            vm_config.vc_port = random.randint(10000, 59999)
+            if vm_config.vc_pass == '':
+                vm_config.vc_pass = ''.join(
+                    random.sample(string.ascii_letters + string.digits, 8))
 
-        result = server.VMCreate(vm_config)
+            result = server.VMCreate(vm_config)
 
-        # 如果创建成功，更新虚拟机第一个所有者的资源使用量
-        if result and result.success:
-            # 获取虚拟机的第一个所有者
-            first_owner = next(iter(vm_config.own_all), None) if vm_config.own_all else None
+            # 如果创建成功，更新虚拟机第一个所有者的资源使用量
+            if result and result.success:
+                # 获取虚拟机的第一个所有者
+                first_owner = next(iter(vm_config.own_all), None) if vm_config.own_all else None
 
-            # 计算资源使用量（使用vm_config的实际值，而不是data）
-            cpu_needed = vm_config.cpu_num
-            ram_needed = vm_config.mem_num
-            ssd_needed = vm_config.hdd_num
-            gpu_needed = vm_config.gpu_mem
-            traffic_needed = vm_config.flu_num
-            nat_ports_needed = vm_config.nat_num
-            web_proxy_needed = vm_config.web_num
-            bandwidth_up_needed = vm_config.speed_u
-            bandwidth_down_needed = vm_config.speed_d
+                # 计算资源使用量（使用vm_config的实际值，而不是data）
+                cpu_needed = vm_config.cpu_num
+                ram_needed = vm_config.mem_num
+                ssd_needed = vm_config.hdd_num
+                gpu_needed = vm_config.gpu_mem
+                traffic_needed = vm_config.flu_num
+                nat_ports_needed = vm_config.nat_num
+                web_proxy_needed = vm_config.web_num
+                bandwidth_up_needed = vm_config.speed_u
+                bandwidth_down_needed = vm_config.speed_d
 
-            # 计算IP数量（使用vm_config的nic_all）
-            nat_ips_count = 0
-            pub_ips_count = 0
-            for nic_name, nic_conf in vm_config.nic_all.items():
-                nic_type = getattr(nic_conf, 'nic_type', 'nat')
-                if nic_type == 'nat':
-                    nat_ips_count += 1
-                elif nic_type == 'pub':
-                    pub_ips_count += 1
+                # 计算IP数量（使用vm_config的nic_all）
+                nat_ips_count = 0
+                pub_ips_count = 0
+                for nic_name, nic_conf in vm_config.nic_all.items():
+                    nic_type = getattr(nic_conf, 'nic_type', 'nat')
+                    if nic_type == 'nat':
+                        nat_ips_count += 1
+                    elif nic_type == 'pub':
+                        pub_ips_count += 1
 
-            # 只有第一个所有者才占用配额（跳过admin用户）
-            if first_owner and first_owner != 'admin':
-                owner_user = self.db.get_user_by_username(first_owner)
-                if owner_user:
-                    self.db.update_user_resource_usage(
-                        owner_user['id'],
-                        used_cpu=owner_user.get('used_cpu', 0) + cpu_needed,
-                        used_ram=owner_user.get('used_ram', 0) + ram_needed,
-                        used_ssd=owner_user.get('used_ssd', 0) + ssd_needed,
-                        used_gpu=owner_user.get('used_gpu', 0) + gpu_needed,
-                        used_traffic=owner_user.get('used_traffic', 0) + traffic_needed,
-                        used_nat_ports=owner_user.get('used_nat_ports', 0) + nat_ports_needed,
-                        used_web_proxy=owner_user.get('used_web_proxy', 0) + web_proxy_needed,
-                        used_bandwidth_up=owner_user.get('used_bandwidth_up', 0) + bandwidth_up_needed,
-                        used_bandwidth_down=owner_user.get('used_bandwidth_down', 0) + bandwidth_down_needed
-                        # 注意：IP使用量通过_calculate_user_ip_usage函数实时计算，无需在数据库中维护
-                    )
+                # 只有第一个所有者才占用配额（跳过admin用户）
+                if first_owner and first_owner != 'admin':
+                    owner_user = self.db.get_user_by_username(first_owner)
+                    if owner_user:
+                        self.db.update_user_resource_usage(
+                            owner_user['id'],
+                            used_cpu=owner_user.get('used_cpu', 0) + cpu_needed,
+                            used_ram=owner_user.get('used_ram', 0) + ram_needed,
+                            used_ssd=owner_user.get('used_ssd', 0) + ssd_needed,
+                            used_gpu=owner_user.get('used_gpu', 0) + gpu_needed,
+                            used_traffic=owner_user.get('used_traffic', 0) + traffic_needed,
+                            used_nat_ports=owner_user.get('used_nat_ports', 0) + nat_ports_needed,
+                            used_web_proxy=owner_user.get('used_web_proxy', 0) + web_proxy_needed,
+                            used_bandwidth_up=owner_user.get('used_bandwidth_up', 0) + bandwidth_up_needed,
+                            used_bandwidth_down=owner_user.get('used_bandwidth_down', 0) + bandwidth_down_needed
+                            # 注意：IP使用量通过_calculate_user_ip_usage函数实时计算，无需在数据库中维护
+                        )
 
-        self.hs_manage.all_save()
+            self.hs_manage.all_save()
+        finally:
+            if _quota_lock:
+                _quota_lock.release()
         
         # 记录操作日志
         if result and result.success:
@@ -1988,154 +2135,181 @@ class RestManager:
         original_keys = set(data.keys())  # 保存前端实际发送的字段名集合
         data['vm_uuid'] = vm_uuid
 
-        # 检查资源配额（非管理员用户）
-        if not (user_data.get('is_admin') or user_data.get('is_token_login')):
-            # 计算资源变化
-            cpu_change = int(data.get('cpu_num', 0)) - old_resource_usage['cpu']
-            ram_change = int(data.get('mem_num', 0)) - old_resource_usage['ram']
-            ssd_change = int(data.get('hdd_num', 0)) - old_resource_usage['ssd']
-            gpu_change = int(data.get('gpu_mem', 0)) - old_resource_usage['gpu']
-            traffic_change = int(data.get('flu_num', 0)) - old_resource_usage['traffic']
-            nat_ports_change = int(data.get('nat_num', 0)) - old_resource_usage.get('nat_ports', 0)
-            web_proxy_change = int(data.get('web_num', 0)) - old_resource_usage.get('web_proxy', 0)
-            bandwidth_up_change = int(data.get('speed_u', 0)) - old_resource_usage.get('bandwidth_up', 0)
-            bandwidth_down_change = int(data.get('speed_d', 0)) - old_resource_usage.get('bandwidth_down', 0)
+        # 对非管理员用户加锁，防止并发修改VM时配额竞态条件
+        _quota_lock_username = user_data.get('username', '') if user_data and not (user_data.get('is_admin') or user_data.get('is_token_login')) else None
+        _quota_lock = self._get_quota_lock(_quota_lock_username) if _quota_lock_username else None
+        if _quota_lock:
+            _quota_lock.acquire()
+        try:
+            # 加锁后重新从数据库读取最新的用户配额数据，确保并发安全
+            if _quota_lock_username and self.db:
+                fresh_user = self.db.get_user_by_username(_quota_lock_username)
+                if fresh_user:
+                    user_data = fresh_user
 
-            # 计算IP数量变化
-            nic_all = data.get('nic_all', {})
-            new_nat_ips = 0
-            new_pub_ips = 0
-            for nic_name, nic_conf in nic_all.items():
-                nic_type = nic_conf.get('nic_type', 'nat')
-                if nic_type == 'nat':
-                    new_nat_ips += 1
-                elif nic_type == 'pub':
-                    new_pub_ips += 1
+            # 检查资源配额（非管理员用户）
+            if not (user_data.get('is_admin') or user_data.get('is_token_login')):
+                # 计算资源变化
+                cpu_change = int(data.get('cpu_num', 0)) - old_resource_usage['cpu']
+                ram_change = int(data.get('mem_num', 0)) - old_resource_usage['ram']
+                ssd_change = int(data.get('hdd_num', 0)) - old_resource_usage['ssd']
+                gpu_change = int(data.get('gpu_mem', 0)) - old_resource_usage['gpu']
+                traffic_change = int(data.get('flu_num', 0)) - old_resource_usage['traffic']
+                nat_ports_change = int(data.get('nat_num', 0)) - old_resource_usage.get('nat_ports', 0)
+                web_proxy_change = int(data.get('web_num', 0)) - old_resource_usage.get('web_proxy', 0)
+                bandwidth_up_change = int(data.get('speed_u', 0)) - old_resource_usage.get('bandwidth_up', 0)
+                bandwidth_down_change = int(data.get('speed_d', 0)) - old_resource_usage.get('bandwidth_down', 0)
 
-            nat_ips_change = new_nat_ips - old_resource_usage.get('nat_ips', 0)
-            pub_ips_change = new_pub_ips - old_resource_usage.get('pub_ips', 0)
+                # 计算IP数量变化
+                nic_all = data.get('nic_all', {})
+                new_nat_ips = 0
+                new_pub_ips = 0
+                for nic_name, nic_conf in nic_all.items():
+                    nic_type = nic_conf.get('nic_type', 'nat')
+                    if nic_type == 'nat':
+                        new_nat_ips += 1
+                    elif nic_type == 'pub':
+                        new_pub_ips += 1
 
-            # 如果资源增加，检查配额
-            if any(change > 0 for change in [cpu_change, ram_change, ssd_change, gpu_change, traffic_change,
-                                             nat_ports_change, web_proxy_change, bandwidth_up_change,
-                                             bandwidth_down_change,
-                                             nat_ips_change, pub_ips_change]):
-                has_quota, error_response = self._check_resource_quota(
-                    user_data,
-                    cpu=max(0, cpu_change),
-                    ram=max(0, ram_change),
-                    ssd=max(0, ssd_change),
-                    gpu=max(0, gpu_change),
-                    traffic=max(0, traffic_change),
-                    nat_ports=max(0, nat_ports_change),
-                    web_proxy=max(0, web_proxy_change),
-                    bandwidth_up=max(0, bandwidth_up_change),
-                    bandwidth_down=max(0, bandwidth_down_change),
-                    nat_ips=max(0, nat_ips_change),
-                    pub_ips=max(0, pub_ips_change)
-                )
-                if not has_quota:
-                    return error_response
+                nat_ips_change = new_nat_ips - old_resource_usage.get('nat_ips', 0)
+                pub_ips_change = new_pub_ips - old_resource_usage.get('pub_ips', 0)
 
-        # 处理网卡配置
-        nic_all = {}
-        nic_data = data.pop('nic_all', {})
-        for nic_name, nic_conf in nic_data.items():
-            nic_all[nic_name] = NCConfig(**nic_conf)
-
-        # 根据服务器类型过滤被禁用的字段（编辑模式 - Ban_Edit）
-        if server.hs_config and hasattr(server.hs_config, 'server_type'):
-            server_type = server.hs_config.server_type
-            data = self._filter_banned_fields(data, server_type, mode='edit')
-
-        vm_config = VMConfig(**data, nic_all=nic_all)
-
-        # 从旧配置中复制前端未发送的受权限控制字段
-        if old_vm_config and hasattr(old_vm_config, '__dict__'):
-            # 操作系统：前端未发送os_name时（无sys_edits权限），从旧配置复制
-            if 'os_name' not in original_keys:
-                vm_config.os_name = getattr(old_vm_config, 'os_name', '')
-            # 系统密码：前端未发送os_pass时（无pwd_edits权限），从旧配置复制
-            if 'os_pass' not in original_keys:
-                vm_config.os_pass = getattr(old_vm_config, 'os_pass', '')
-            # VNC密码：前端未发送vc_pass时（无vnc_edits权限），从旧配置复制
-            if 'vc_pass' not in original_keys:
-                vm_config.vc_pass = getattr(old_vm_config, 'vc_pass', '')
-            # 网卡配置：编辑模式不再管理网卡，始终从旧配置保留
-            if 'nic_all' not in original_keys:
-                vm_config.nic_all = getattr(old_vm_config, 'nic_all', {})
-
-        # 处理GPU直通配置
-        gpu_id = data.get('gpu_id')
-        if gpu_id:
-            vm_config.pci_all[gpu_id] = VFConfig(
-                gpu_uuid=gpu_id,
-                gpu_mdev=data.get('gpu_mdev', ''),
-                gpu_hint=data.get('gpu_remark', '')
-            )
-
-        # 处理USB直通配置
-        usb_vid = data.get('usb_vid')
-        usb_pid = data.get('usb_pid')
-        if usb_vid and usb_pid:
-            import uuid
-            usb_key = str(uuid.uuid4())
-            vm_config.usb_all[usb_key] = USBInfos(
-                vid_uuid=usb_vid,
-                pid_uuid=usb_pid,
-                usb_hint=data.get('usb_remark', '')
-            )
-
-        result = server.VMUpdate(vm_config, old_vm_config)
-
-        # 如果更新成功，更新第一个所有者（排除admin）的资源使用量
-        if result and result.success and vm_owners:
-            # 使用vm_config的实际值计算资源变化
-            cpu_change = vm_config.cpu_num - old_resource_usage['cpu']
-            ram_change = vm_config.mem_num - old_resource_usage['ram']
-            ssd_change = vm_config.hdd_num - old_resource_usage['ssd']
-            gpu_change = vm_config.gpu_mem - old_resource_usage['gpu']
-            traffic_change = vm_config.flu_num - old_resource_usage['traffic']
-            nat_ports_change = vm_config.nat_num - old_resource_usage.get('nat_ports', 0)
-            web_proxy_change = vm_config.web_num - old_resource_usage.get('web_proxy', 0)
-            bandwidth_up_change = vm_config.speed_u - old_resource_usage.get('bandwidth_up', 0)
-            bandwidth_down_change = vm_config.speed_d - old_resource_usage.get('bandwidth_down', 0)
-
-            # 计算IP数量变化（使用vm_config的nic_all）
-            new_nat_ips = 0
-            new_pub_ips = 0
-            for nic_name, nic_conf in vm_config.nic_all.items():
-                nic_type = getattr(nic_conf, 'nic_type', 'nat')
-                if nic_type == 'nat':
-                    new_nat_ips += 1
-                elif nic_type == 'pub':
-                    new_pub_ips += 1
-
-            nat_ips_change = new_nat_ips - old_resource_usage.get('nat_ips', 0)
-            pub_ips_change = new_pub_ips - old_resource_usage.get('pub_ips', 0)
-
-            # 只更新第一个所有者的配额（跳过admin用户）
-            first_owner = vm_owners[0] if vm_owners else None
-            if first_owner and first_owner != 'admin':
-                # 根据用户名查询用户信息
-                owner_user = self.db.get_user_by_username(first_owner)
-                if owner_user:
-                    self.db.update_user_resource_usage(
-                        owner_user['id'],
-                        used_cpu=owner_user.get('used_cpu', 0) + cpu_change,
-                        used_ram=owner_user.get('used_ram', 0) + ram_change,
-                        used_ssd=owner_user.get('used_ssd', 0) + ssd_change,
-                        used_gpu=owner_user.get('used_gpu', 0) + gpu_change,
-                        used_traffic=owner_user.get('used_traffic', 0) + traffic_change,
-                        used_nat_ports=owner_user.get('used_nat_ports', 0) + nat_ports_change,
-                        used_web_proxy=owner_user.get('used_web_proxy', 0) + web_proxy_change,
-                        used_bandwidth_up=owner_user.get('used_bandwidth_up', 0) + bandwidth_up_change,
-                        used_bandwidth_down=owner_user.get('used_bandwidth_down', 0) + bandwidth_down_change
-                        # 注意：IP使用量通过_calculate_user_ip_usage函数实时计算，无需在数据库中维护
+                # 如果资源增加，检查配额
+                if any(change > 0 for change in [cpu_change, ram_change, ssd_change, gpu_change, traffic_change,
+                                                 nat_ports_change, web_proxy_change, bandwidth_up_change,
+                                                 bandwidth_down_change,
+                                                 nat_ips_change, pub_ips_change]):
+                    has_quota, error_response = self._check_resource_quota(
+                        user_data,
+                        cpu=max(0, cpu_change),
+                        ram=max(0, ram_change),
+                        ssd=max(0, ssd_change),
+                        gpu=max(0, gpu_change),
+                        traffic=max(0, traffic_change),
+                        nat_ports=max(0, nat_ports_change),
+                        web_proxy=max(0, web_proxy_change),
+                        bandwidth_up=max(0, bandwidth_up_change),
+                        bandwidth_down=max(0, bandwidth_down_change),
+                        nat_ips=max(0, nat_ips_change),
+                        pub_ips=max(0, pub_ips_change)
                     )
+                    if not has_quota:
+                        return error_response
+
+            # 处理网卡配置
+            nic_all = {}
+            nic_data = data.pop('nic_all', {})
+            for nic_name, nic_conf in nic_data.items():
+                nic_all[nic_name] = NCConfig(**nic_conf)
+
+            # 根据服务器类型过滤被禁用的字段（编辑模式 - Ban_Edit）
+            if server.hs_config and hasattr(server.hs_config, 'server_type'):
+                server_type = server.hs_config.server_type
+                data = self._filter_banned_fields(data, server_type, mode='edit')
+
+            vm_config = VMConfig(**data, nic_all=nic_all)
+
+            # 从旧配置中复制前端未发送的受权限控制字段
+            if old_vm_config and hasattr(old_vm_config, '__dict__'):
+                # 操作系统：前端未发送os_name时（无sys_edits权限），从旧配置复制
+                if 'os_name' not in original_keys:
+                    vm_config.os_name = getattr(old_vm_config, 'os_name', '')
+                # 系统密码：前端未发送os_pass时（无pwd_edits权限），从旧配置复制
+                if 'os_pass' not in original_keys:
+                    vm_config.os_pass = getattr(old_vm_config, 'os_pass', '')
+                # VNC密码：前端未发送vc_pass时（无vnc_edits权限），从旧配置复制
+                if 'vc_pass' not in original_keys:
+                    vm_config.vc_pass = getattr(old_vm_config, 'vc_pass', '')
+                # 网卡配置：编辑模式不再管理网卡，始终从旧配置保留
+                if 'nic_all' not in original_keys:
+                    vm_config.nic_all = getattr(old_vm_config, 'nic_all', {})
+
+            # 处理GPU直通配置
+            gpu_id = data.get('gpu_id')
+            if gpu_id:
+                # 检查PCIe配额
+                if vm_config.pci_num <= 0:
+                    return self.api_response(400, 'PCIe配额为0，不允许添加PCI直通设备')
+                if len(vm_config.pci_all) >= vm_config.pci_num:
+                    return self.api_response(400, f'PCIe设备数量超过配额，最多允许{vm_config.pci_num}个')
+                vm_config.pci_all[gpu_id] = VFConfig(
+                    gpu_uuid=gpu_id,
+                    gpu_mdev=data.get('gpu_mdev', ''),
+                    gpu_hint=data.get('gpu_remark', '')
+                )
+
+            # 处理USB直通配置
+            usb_vid = data.get('usb_vid')
+            usb_pid = data.get('usb_pid')
+            if usb_vid and usb_pid:
+                # 检查USB配额
+                if vm_config.usb_num <= 0:
+                    return self.api_response(400, 'USB配额为0，不允许添加USB直通设备')
+                if len(vm_config.usb_all) >= vm_config.usb_num:
+                    return self.api_response(400, f'USB设备数量超过配额，最多允许{vm_config.usb_num}个')
+                import uuid
+                usb_key = str(uuid.uuid4())
+                vm_config.usb_all[usb_key] = USBInfos(
+                    vid_uuid=usb_vid,
+                    pid_uuid=usb_pid,
+                    usb_hint=data.get('usb_remark', '')
+                )
+
+            result = server.VMUpdate(vm_config, old_vm_config)
+
+            # 如果更新成功，更新第一个所有者（排除admin）的资源使用量
+            if result and result.success and vm_owners:
+                # 使用vm_config的实际值计算资源变化
+                cpu_change = vm_config.cpu_num - old_resource_usage['cpu']
+                ram_change = vm_config.mem_num - old_resource_usage['ram']
+                ssd_change = vm_config.hdd_num - old_resource_usage['ssd']
+                gpu_change = vm_config.gpu_mem - old_resource_usage['gpu']
+                traffic_change = vm_config.flu_num - old_resource_usage['traffic']
+                nat_ports_change = vm_config.nat_num - old_resource_usage.get('nat_ports', 0)
+                web_proxy_change = vm_config.web_num - old_resource_usage.get('web_proxy', 0)
+                bandwidth_up_change = vm_config.speed_u - old_resource_usage.get('bandwidth_up', 0)
+                bandwidth_down_change = vm_config.speed_d - old_resource_usage.get('bandwidth_down', 0)
+
+                # 计算IP数量变化（使用vm_config的nic_all）
+                new_nat_ips = 0
+                new_pub_ips = 0
+                for nic_name, nic_conf in vm_config.nic_all.items():
+                    nic_type = getattr(nic_conf, 'nic_type', 'nat')
+                    if nic_type == 'nat':
+                        new_nat_ips += 1
+                    elif nic_type == 'pub':
+                        new_pub_ips += 1
+
+                nat_ips_change = new_nat_ips - old_resource_usage.get('nat_ips', 0)
+                pub_ips_change = new_pub_ips - old_resource_usage.get('pub_ips', 0)
+
+                # 只更新第一个所有者的配额（跳过admin用户）
+                first_owner = vm_owners[0] if vm_owners else None
+                if first_owner and first_owner != 'admin':
+                    # 根据用户名查询用户信息
+                    owner_user = self.db.get_user_by_username(first_owner)
+                    if owner_user:
+                        self.db.update_user_resource_usage(
+                            owner_user['id'],
+                            used_cpu=owner_user.get('used_cpu', 0) + cpu_change,
+                            used_ram=owner_user.get('used_ram', 0) + ram_change,
+                            used_ssd=owner_user.get('used_ssd', 0) + ssd_change,
+                            used_gpu=owner_user.get('used_gpu', 0) + gpu_change,
+                            used_traffic=owner_user.get('used_traffic', 0) + traffic_change,
+                            used_nat_ports=owner_user.get('used_nat_ports', 0) + nat_ports_change,
+                            used_web_proxy=owner_user.get('used_web_proxy', 0) + web_proxy_change,
+                            used_bandwidth_up=owner_user.get('used_bandwidth_up', 0) + bandwidth_up_change,
+                            used_bandwidth_down=owner_user.get('used_bandwidth_down', 0) + bandwidth_down_change
+                            # 注意：IP使用量通过_calculate_user_ip_usage函数实时计算，无需在数据库中维护
+                        )
+
+            if result and result.success:
+                self.hs_manage.all_save()
+        finally:
+            if _quota_lock:
+                _quota_lock.release()
 
         if result and result.success:
-            self.hs_manage.all_save()
             # 记录操作日志
             user_data = self._get_current_user()
             username = user_data.get('username', '') if user_data else ''
@@ -2220,7 +2394,8 @@ class RestManager:
                     elif nic_type == 'pub':
                         vm_resource_usage['pub_ips'] += 1
                 # 获取虚拟机的所有所有者
-                vm_owners = getattr(vm_config, 'own_all', {})
+                own_all = getattr(vm_config, 'own_all', {})
+                vm_owners = list(own_all.keys()) if isinstance(own_all, dict) else list(own_all)
 
         result = server.VMDelete(vm_uuid)
 
@@ -2803,6 +2978,151 @@ class RestManager:
         except Exception as e:
             traceback.print_exc()
             return self.api_response(500, f'获取VNC控制台失败: {str(e)}')
+
+    # 获取临时访问凭据 ####################################################################
+    # :param hs_name: 主机名称
+    # :param vm_uuid: 虚拟机UUID
+    # :return: 包含临时token和控制台URL的API响应（供财务系统插件使用）
+    # ####################################################################################
+    def get_temp_token(self, hs_name, vm_uuid):
+        """生成临时访问凭据，用于财务系统插件跳转登录（有效期1小时）"""
+        import time
+        import hashlib
+
+        # 检查主机访问权限（需要Bearer Token认证）
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return self.api_response(401, '需要Bearer Token认证')
+        token = auth_header[7:]
+        if not token or token != self.hs_manage.bearer:
+            return self.api_response(401, 'Token无效')
+
+        server = self.hs_manage.get_host(hs_name)
+        if not server:
+            return self.api_response(404, '主机不存在')
+
+        # 检查虚拟机是否存在
+        vm_config = server.vm_saving.get(vm_uuid)
+        if not vm_config:
+            return self.api_response(404, '虚拟机不存在')
+
+        # 虚拟用户名：hs_name-vm_uuid（不在系统用户表中，仅用于vm own_all关联）
+        virtual_user = f'{hs_name}-{vm_uuid}'
+        # 检查虚拟机own_all中是否已有此虚拟用户，没有则添加（掩码35295）
+        owners = getattr(vm_config, 'own_all', {})
+        if virtual_user not in owners:
+            owners[virtual_user] = UserMask(35295)
+            vm_config.own_all = owners
+            # 持久化保存
+            try:
+                server.VMSave(vm_config)
+            except Exception as e:
+                logger.warning(f'[TempToken] 保存虚拟用户失败: {e}')
+
+        # 生成临时token：基于vm_uuid + 当前时间戳 + 主Bearer Token
+        expire_ts = int(time.time()) + 3600  # 1小时有效期
+        raw = f"{hs_name}:{vm_uuid}:{expire_ts}:{self.hs_manage.bearer}"
+        temp_token = hashlib.sha256(raw.encode()).hexdigest()
+
+        # 存储临时token（内存字典，线程安全）
+        with self._temp_tokens_lock:
+            # 顺便清理已过期的token
+            now = int(time.time())
+            expired_keys = [k for k, v in self._temp_tokens.items() if v['expire'] < now]
+            for k in expired_keys:
+                del self._temp_tokens[k]
+            self._temp_tokens[temp_token] = {
+                'hs_name': hs_name,
+                'vm_uuid': vm_uuid,
+                'virtual_user': virtual_user,
+                'expire': expire_ts
+            }
+
+        return self.api_response(200, '临时凭据生成成功', {
+            'temp_token': temp_token,
+            'expire': expire_ts,
+            'hs_name': hs_name,
+            'vm_uuid': vm_uuid
+        })
+
+    # 使用临时凭据登录 ####################################################################
+    # :return: 重定向到虚拟机管理控制台
+    # ####################################################################################
+    def temp_token_login(self):
+        """使用临时凭据登录，重定向到虚拟机管理控制台"""
+        import time
+        from flask import redirect
+
+        temp_token = request.args.get('token', '')
+        if not temp_token:
+            return self.api_response(400, '缺少临时凭据')
+
+        # 查找临时token（有效期内可重复使用）
+        with self._temp_tokens_lock:
+            token_data = self._temp_tokens.get(temp_token, None)
+
+        if not token_data:
+            return self.api_response(401, '临时凭据无效或已过期')
+
+        # 检查过期时间（过期则清理）
+        if int(time.time()) > token_data.get('expire', 0):
+            with self._temp_tokens_lock:
+                self._temp_tokens.pop(temp_token, None)
+            return self.api_response(401, '临时凭据已过期')
+
+        hs_name = token_data.get('hs_name', '')
+        vm_uuid = token_data.get('vm_uuid', '')
+        virtual_user = token_data.get('virtual_user', f'{hs_name}-{vm_uuid}')
+
+        # 设置临时session（虚拟用户权限，仅限当前vm访问）
+        from flask import session, make_response
+        session['logged_in'] = True
+        session['user_id'] = 0
+        session['username'] = virtual_user
+        session['is_admin'] = False
+        session['is_token_login'] = False
+        session['assigned_hosts'] = []
+        session['temp_login'] = True       # 标记为临时登录
+        session['temp_hs_name'] = hs_name  # 允许访问的主机
+        session['temp_vm_uuid'] = vm_uuid  # 允许访问的虚拟机
+
+        # 返回HTML页面用JS跳转，同时把虚拟用户信息写入localStorage
+        # 让前端React(zustand persist)能直接读取，不依赖session cookie
+        import json as _json
+        target_url = f'/hosts/{hs_name}/vms/{vm_uuid}'
+        user_info = {
+            'id': 0,
+            'username': virtual_user,
+            'is_admin': False,
+            'is_token_login': False,
+            'temp_login': True,
+            'temp_hs_name': hs_name,
+            'temp_vm_uuid': vm_uuid,
+            'assigned_hosts': [hs_name]
+        }
+        user_storage = {
+            'state': {
+                'user': user_info,
+                'token': f'temp:{temp_token}',
+                'isAuthenticated': True
+            },
+            'version': 0
+        }
+        user_storage_js = _json.dumps(user_storage, ensure_ascii=False)
+        html = f'''<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>正在跳转...</title></head><body>
+<p>正在跳转，请稍候...</p>
+<script>
+try {{
+    localStorage.setItem('user-storage', {repr(user_storage_js)});
+    localStorage.setItem('token', 'temp:{temp_token}');
+}} catch(e) {{}}
+window.location.replace({repr(target_url)});
+</script>
+</body></html>'''
+        resp = make_response(html, 200)
+        resp.headers['Content-Type'] = 'text/html; charset=utf-8'
+        return resp
 
     # 获取虚拟机截图 ########################################################################
     # :param hs_name: 主机名称

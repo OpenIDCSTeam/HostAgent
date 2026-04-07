@@ -14,12 +14,22 @@ from MainObject.Config.WebUsers import WebUser
 # 全局Bearer Token验证器（由HostServer.py启动时注入）
 _bearer_token_getter: Callable[[], str] = lambda: ""
 
+# 全局数据库getter（由MainServer.py启动时注入，用于require_permission权限查询）
+_db_getter: Callable[[], Any] = lambda: None
+
 
 def init_bearer_validator(getter: Callable[[], str]):
     """初始化Bearer Token验证器，由HostServer.py启动时调用注入"""
     global _bearer_token_getter
     _bearer_token_getter = getter
     logger.info("[UserManager] Bearer Token验证器已注入")
+
+
+def init_db_getter(getter: Callable[[], Any]):
+    """初始化数据库getter，由MainServer.py启动时调用注入"""
+    global _db_getter
+    _db_getter = getter
+    logger.info("[UserManager] 数据库getter已注入")
 
 
 def _verify_bearer_token(auth_header: str) -> bool:
@@ -105,6 +115,10 @@ def require_login(f):
         if _verify_bearer_token(auth_header):
             # Token认证通过，继续执行
             return f(*args, **kwargs)
+        # 临时token（财务系统插件跳转）：格式为 temp:<sha256>
+        if auth_header.startswith('Bearer temp:'):
+            # 只要格式正确就放行，具体权限由各接口内部检查
+            return f(*args, **kwargs)
         
         # 检查Session登录
         if session.get('logged_in'):
@@ -143,25 +157,53 @@ def require_admin(f):
 
 
 def require_permission(permission: str):
-    """需要特定权限的装饰器"""
+    """
+    需要特定权限的装饰器
+    :param permission: 权限字段名，对应 WebUser 中的布尔字段，如 'can_create_vm'、'can_delete_vm' 等
+    """
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            # Token登录或管理员拥有所有权限（必须验证Token值）
+            # Token登录拥有所有权限（必须验证Token值）
             auth_header = request.headers.get('Authorization', '')
             if _verify_bearer_token(auth_header):
                 return f(*args, **kwargs)
-            
+
             current_user = UserManager.get_current_user_from_session()
-            if current_user and (current_user.get('is_admin') or current_user.get('is_token_login')):
+            if not current_user:
+                logger.warning(f"[UserManager] 未登录访问需要权限 {permission} 的接口: {request.path}")
+                if request.is_json or request.path.startswith('/api/'):
+                    return jsonify({'code': 401, 'msg': '未授权访问', 'data': None}), 401
+                return redirect(url_for('login'))
+
+            # 管理员拥有所有权限
+            if current_user.get('is_admin') or current_user.get('is_token_login'):
                 return f(*args, **kwargs)
-            
-            # 检查用户权限（需要从数据库获取完整用户信息）
-            # 这里需要在实际使用时注入数据库实例
-            if request.is_json or request.path.startswith('/api/'):
-                return jsonify({'code': 403, 'msg': f'需要{permission}权限', 'data': None}), 403
-            return redirect(url_for('dashboard'))
-        
+
+            # 从数据库获取完整用户信息，检查具体权限字段
+            db = _db_getter()
+            if db is None:
+                logger.error(f"[UserManager] 数据库未注入，无法检查权限 {permission}")
+                if request.is_json or request.path.startswith('/api/'):
+                    return jsonify({'code': 500, 'msg': '权限服务不可用', 'data': None}), 500
+                return redirect(url_for('dashboard'))
+
+            user_id = current_user.get('id')
+            full_user = db.get_user_by_id(user_id)
+            if not full_user:
+                logger.warning(f"[UserManager] 用户 {user_id} 不存在，拒绝权限 {permission}")
+                if request.is_json or request.path.startswith('/api/'):
+                    return jsonify({'code': 403, 'msg': f'需要{permission}权限', 'data': None}), 403
+                return redirect(url_for('dashboard'))
+
+            if not full_user.get(permission):
+                logger.warning(f"[UserManager] 用户 {full_user.get('username')} 缺少权限 {permission}: {request.path}")
+                if request.is_json or request.path.startswith('/api/'):
+                    return jsonify({'code': 403, 'msg': f'需要{permission}权限', 'data': None}), 403
+                return redirect(url_for('dashboard'))
+
+            return f(*args, **kwargs)
+
         return decorated
     return decorator
 

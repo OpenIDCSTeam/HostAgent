@@ -85,6 +85,10 @@ async function loadAvailableLanguages(): Promise<boolean> {
     if (result.code === 200) {
       i18nState.availableLanguages = result.data;
       renderLanguageDropdown();
+      // 触发语言列表加载完成事件，通知前端组件更新
+      window.dispatchEvent(new CustomEvent('languagesLoaded', {
+        detail: { languages: result.data }
+      }));
       return true;
     }
     return false;

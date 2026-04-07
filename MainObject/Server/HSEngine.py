@@ -55,7 +55,8 @@ HEConfig = {
             "speed_u", "speed_d",
         ],
         "Tab_Lock": [
-            "hdd", "iso", "pci", "usb"
+            "hdd", "iso", "pci",
+            "usb", "efi", "gpu"
         ]
     },
     "OCInterface": {
@@ -126,28 +127,28 @@ HEConfig = {
         "Ban_Edit": [],
         "Tab_Lock": []
     },
-    "QingzhouYun": {
-        "Imported": QingzhouYun.HostServer,
-        "Descript": "QingzhouYun Cloud",
-        "isEnable": True,
-        "isRemote": True,
-        "Platform": ["Linux", "Windows", "MacOS"],
-        "CPU_Arch": ["x86_64", "aarch64"],
-        "Optional": {},
-        "Messages": [
-            "1、云平台不支持PCI/USB设备直通",
-            "2、通过HTTP API远程管理虚拟机"
-        ],
-        "Ban_Init": [
-            "gpu_num", "gpu_mem",
-        ],
-        "Ban_Edit": [
-            "gpu_num", "gpu_mem",
-        ],
-        "Tab_Lock": [
-            "pci", "usb"
-        ]
-    },
+    # "QingzhouYun": {
+    #     "Imported": QingzhouYun.HostServer,
+    #     "Descript": "QingzhouYun Cloud",
+    #     "isEnable": True,
+    #     "isRemote": True,
+    #     "Platform": ["Linux", "Windows", "MacOS"],
+    #     "CPU_Arch": ["x86_64", "aarch64"],
+    #     "Optional": {},
+    #     "Messages": [
+    #         "1、云平台不支持PCI/USB设备直通",
+    #         "2、通过HTTP API远程管理虚拟机"
+    #     ],
+    #     "Ban_Init": [
+    #         "gpu_num", "gpu_mem",
+    #     ],
+    #     "Ban_Edit": [
+    #         "gpu_num", "gpu_mem",
+    #     ],
+    #     "Tab_Lock": [
+    #         "pci", "usb"
+    #     ]
+    # },
     "VirtualBoxs": {
         "Imported": VirtualBoxsModule.HostServer,
         "Descript": "Oracle VirtualBox",

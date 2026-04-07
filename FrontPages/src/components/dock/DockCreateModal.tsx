@@ -190,44 +190,44 @@ const DockCreateModal: React.FC<DockCreateModalProps> = ({
         )
     }
 
-    // Load host data
+    // Load host data，返回加载到的数据供调用方直接使用（避免依赖 React state 异步更新）
     const loadHostData = async (host: string) => {
         if (!host) {
             setHostImages({})
             setGpuList({})
             setHostConfig(null)
-            return
+            return { hostImages: {}, gpuList: {}, pciDeviceList: {}, usbDeviceList: {}, hostConfig: null }
         }
         try {
-            // Load OS Images
-            const imagesResult = await api.getOSImages(host)
-            if (imagesResult.code === 200 && imagesResult.data) {
-                setHostConfig(imagesResult.data as any)
-setHostImages((imagesResult.data.system_maps || {}) as unknown as Record<string, [string, number]>)
-            }
+            // 并行加载所有主机配置
+            const [imagesResult, gpuResult, pciResult, usbResult] = await Promise.all([
+                api.getOSImages(host),
+                api.getGPUList(host),
+                api.getPCIList(host),
+                api.getUSBList(host),
+            ])
 
-            // Load GPU List
-            const gpuResult = await api.getGPUList(host)
-            if (gpuResult.code === 200 && gpuResult.data) {
-                setGpuList(gpuResult.data)
-            } else {
-                setGpuList({})
-            }
+            const loadedHostConfig = (imagesResult.code === 200 && imagesResult.data) ? imagesResult.data as any : null
+            const loadedHostImages = loadedHostConfig ? ((loadedHostConfig.system_maps || {}) as unknown as Record<string, [string, number]>) : {}
+            const loadedGpuList = (gpuResult.code === 200 && gpuResult.data) ? gpuResult.data : {}
+            const loadedPciList = (pciResult.code === 200 && pciResult.data) ? pciResult.data : {}
+            const loadedUsbList = (usbResult.code === 200 && usbResult.data) ? usbResult.data : {}
 
-            // Load PCI Device List
-            const pciResult = await api.getPCIList(host)
-            if (pciResult.code === 200 && pciResult.data) {
-                setPciDeviceList(pciResult.data)
-            } else {
-                setPciDeviceList({})
+            // 更新 React state（用于后续渲染）
+            if (loadedHostConfig) {
+                setHostConfig(loadedHostConfig)
+                setHostImages(loadedHostImages)
             }
+            setGpuList(loadedGpuList)
+            setPciDeviceList(loadedPciList)
+            setUsbDeviceList(loadedUsbList)
 
-            // Load USB Device List
-            const usbResult = await api.getUSBList(host)
-            if (usbResult.code === 200 && usbResult.data) {
-                setUsbDeviceList(usbResult.data)
-            } else {
-                setUsbDeviceList({})
+            return {
+                hostImages: loadedHostImages,
+                gpuList: loadedGpuList,
+                pciDeviceList: loadedPciList,
+                usbDeviceList: loadedUsbList,
+                hostConfig: loadedHostConfig,
             }
         } catch (error) {
             console.error('加载主机配置失败:', error)
@@ -235,6 +235,7 @@ setHostImages((imagesResult.data.system_maps || {}) as unknown as Record<string,
             setGpuList({})
             setPciDeviceList({})
             setUsbDeviceList({})
+            return { hostImages: {}, gpuList: {}, pciDeviceList: {}, usbDeviceList: {}, hostConfig: null }
         }
     }
 
@@ -264,10 +265,13 @@ setHostImages((imagesResult.data.system_maps || {}) as unknown as Record<string,
 
         try {
             setLoading(true)
-            await loadHostData(targetHost)
+            // 并行加载主机配置和虚拟机详情，避免串行等待
+            const [hostData, result] = await Promise.all([
+                loadHostData(targetHost),
+                api.getVMDetail(targetHost, vmUuid),
+            ])
             setSelectedHost(targetHost)
 
-            const result = await api.getVMDetail(targetHost, vmUuid)
             if (result.code === 200) {
                 const vm = result.data as Record<string, any>
                 const config = vm?.config || {}
@@ -303,6 +307,15 @@ setHostImages((imagesResult.data.system_maps || {}) as unknown as Record<string,
                     }
                 }
 
+                // 计算最小磁盘要求（使用 loadHostData 返回的局部数据，不依赖 React state）
+                if (config.os_name && hostData?.hostImages) {
+                    const entry = Object.entries(hostData.hostImages as Record<string, [string, number]>)
+                        .find(([_, [img]]) => img === config.os_name)
+                    if (entry) {
+                        setSelectedOsMinDisk(entry[1][1] || 0)
+                    }
+                }
+
                 form.setFieldsValue({
                     host_name: targetHost,
                     vm_uuid_suffix: vmUuid,
@@ -331,13 +344,13 @@ setHostImages((imagesResult.data.system_maps || {}) as unknown as Record<string,
                     flu_rst_limit: fluRst[1],
                     flu_rst_time: fluRst[2],
                     web_num: config.web_num,
+                    bak_num: config.bak_num ?? 1,
+                    iso_num: config.iso_num ?? 1,
+                    pci_num: config.pci_num ?? 0,
+                    usb_num: config.usb_num ?? 0,
+                    dat_num: config.dat_num ?? 10,
+                    dat_all: config.dat_all ?? 0,
                 })
-
-                // Set min disk requirement based on current OS
-                if (config.os_name && result.data && (result.data as any).system_maps) {
-                   // This logic is tricky because we need system_maps from hostConfig which might not be loaded yet
-                   // We rely on loadHostData to populate hostImages
-                }
 
                 // NICs
                 const nicAll = config.nic_all || {}
@@ -460,6 +473,12 @@ setHostImages((imagesResult.data.system_maps || {}) as unknown as Record<string,
                     values.flu_rst_time || Math.floor(Date.now() / 1000)
                 ],
                 web_num: values.web_num,
+                bak_num: values.bak_num,
+                iso_num: values.iso_num,
+                pci_num: values.pci_num,
+                usb_num: values.usb_num,
+                dat_num: values.dat_num,
+                dat_all: values.dat_all,
             }
 
             // 创建模式发送所有字段，编辑模式根据权限选择性发送
@@ -469,11 +488,18 @@ setHostImages((imagesResult.data.system_maps || {}) as unknown as Record<string,
                 vmData.vc_pass = values.vc_pass
                 vmData.nic_all = nicAll
             } else {
-                // 编辑模式：有权限则发送用户修改值，无权限不发送（后端从旧配置复制）
+            // 编辑模式：有权限则发送用户修改值，无权限不发送（后端从旧配置复制）
                 if (canEditSys) vmData.os_name = values.os_name
                 if (canEditPwd) vmData.os_pass = values.os_pass
                 if (canEditVnc) vmData.vc_pass = values.vc_pass
                 // 编辑模式不发送nic_all，网卡管理已移除
+                // 编辑模式发送配额字段
+                vmData.bak_num = values.bak_num
+                vmData.iso_num = values.iso_num
+                vmData.pci_num = values.pci_num
+                vmData.usb_num = values.usb_num
+                vmData.dat_num = values.dat_num
+                vmData.dat_all = values.dat_all
             }
 
             if (isEditMode) {
@@ -566,6 +592,12 @@ setHostImages((imagesResult.data.system_maps || {}) as unknown as Record<string,
             flu_rst_time: Math.floor(Date.now() / 1000),
             nat_num: 100,
             web_num: 100,
+            bak_num: 1,
+            iso_num: 1,
+            pci_num: 0,
+            usb_num: 0,
+            dat_num: 10,
+            dat_all: 0,
         })
 
         if (userQuota) {
@@ -789,6 +821,47 @@ setHostImages((imagesResult.data.system_maps || {}) as unknown as Record<string,
                                     'gpu_mem', '显存', 0, isAdmin ? 16384 : 128, 128, 'MB',
                                     isFieldDisabled('gpu_mem')
                                 )}
+                        </Col>
+                        </Row>
+                    </div>
+
+                    <div className="modal-section">
+                        <div style={sectionTitleStyle}>
+                            <div className="w-8 h-8 rounded-lg section-icon-bg-purple flex items-center justify-center">
+                                <ThunderboltOutlined />
+                            </div>
+                            <span>配额配置</span>
+                        </div>
+                        <Row gutter={24}>
+                            <Col span={8}>
+                                <Form.Item name="bak_num" label="最大备份数" style={{ marginBottom: 16 }}>
+                                    <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter="个" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={8}>
+                                <Form.Item name="iso_num" label="最大光盘数" style={{ marginBottom: 16 }}>
+                                    <InputNumber min={0} max={10} style={{ width: '100%' }} addonAfter="个" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={8}>
+                                <Form.Item name="pci_num" label="最大PCIe数" style={{ marginBottom: 16 }}>
+                                    <InputNumber min={0} max={16} style={{ width: '100%' }} addonAfter="个" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={8}>
+                                <Form.Item name="usb_num" label="最大USB数" style={{ marginBottom: 16 }}>
+                                    <InputNumber min={0} max={16} style={{ width: '100%' }} addonAfter="个" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={8}>
+                                <Form.Item name="dat_num" label="最大数据盘数" style={{ marginBottom: 16 }}>
+                                    <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter="个" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={8}>
+                                <Form.Item name="dat_all" label="数据盘总容量" style={{ marginBottom: 16 }}>
+                                    <InputNumber min={0} style={{ width: '100%' }} addonAfter="MB" />
+                                </Form.Item>
                             </Col>
                         </Row>
                     </div>
@@ -847,7 +920,7 @@ setHostImages((imagesResult.data.system_maps || {}) as unknown as Record<string,
                             <span>USB配置</span>
                         </div>
                         <Row gutter={24}>
-                            <Col span={12}>
+                            <Col span={8}>
                                 <Form.Item label="USB设备" name="usb_device_key">
                                     <Select allowClear placeholder="选择USB设备" onChange={(val) => {
                                         if (val && usbDeviceList[val]) {
@@ -868,7 +941,7 @@ setHostImages((imagesResult.data.system_maps || {}) as unknown as Record<string,
                                     </Select>
                                 </Form.Item>
                             </Col>
-                            <Col span={12}>
+                            <Col span={8}>
                                 <Form.Item label="VID / PID">
                                     <Space.Compact style={{ width: '100%' }}>
                                         <Form.Item name="usb_vid" noStyle>
@@ -880,9 +953,7 @@ setHostImages((imagesResult.data.system_maps || {}) as unknown as Record<string,
                                     </Space.Compact>
                                 </Form.Item>
                             </Col>
-                        </Row>
-                        <Row gutter={24}>
-                            <Col span={12}>
+                            <Col span={8}>
                                 <Form.Item label="备注" name="usb_remark">
                                     <Input placeholder="USB备注信息" />
                                 </Form.Item>

@@ -3,11 +3,92 @@ import json
 import os
 import sys
 import traceback
+import threading
+from queue import Queue, Empty
 from typing import Dict, List, Any, Optional
 from loguru import logger
 from MainObject.Config.HSConfig import HSConfig
 from MainObject.Config.VMConfig import VMConfig
 from MainObject.Public.ZMessage import ZMessage
+
+
+class PooledConnection:
+    """连接池包装类，close()时归还连接到池中而非真正关闭"""
+
+    def __init__(self, conn: sqlite3.Connection, pool: 'SQLiteConnectionPool'):
+        self._conn = conn
+        self._pool = pool
+
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+
+    def close(self):
+        """归还连接到池中"""
+        self._pool.return_connection(self._conn)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+
+class SQLiteConnectionPool:
+    """SQLite连接池，复用数据库连接以提升高并发下的性能"""
+
+    def __init__(self, db_path: str, max_size: int = 10):
+        self.db_path = db_path
+        self.max_size = max_size
+        self._pool: Queue = Queue(maxsize=max_size)
+        self._lock = threading.Lock()
+        self._created_count = 0
+
+    def _create_connection(self) -> sqlite3.Connection:
+        """创建新的数据库连接"""
+        conn = sqlite3.connect(self.db_path, timeout=30.0, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
+        return conn
+
+    def get_connection(self) -> PooledConnection:
+        """从池中获取连接，池空且未达上限时创建新连接"""
+        try:
+            conn = self._pool.get_nowait()
+            # 检查连接是否仍然有效
+            try:
+                conn.execute("SELECT 1")
+            except sqlite3.Error:
+                conn = self._create_connection()
+            return PooledConnection(conn, self)
+        except Empty:
+            with self._lock:
+                if self._created_count < self.max_size:
+                    self._created_count += 1
+                    conn = self._create_connection()
+                    return PooledConnection(conn, self)
+            # 已达上限，阻塞等待归还
+            conn = self._pool.get(timeout=30.0)
+            return PooledConnection(conn, self)
+
+    def return_connection(self, conn: sqlite3.Connection):
+        """归还连接到池中"""
+        try:
+            self._pool.put_nowait(conn)
+        except Exception:
+            # 池已满，直接关闭多余连接
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+    def close_all(self):
+        """关闭池中所有连接"""
+        while not self._pool.empty():
+            try:
+                conn = self._pool.get_nowait()
+                conn.close()
+            except Exception:
+                pass
 
 
 class DataManager:
@@ -16,6 +97,8 @@ class DataManager:
     def __init__(self, path: str = "./DataSaving/hostmanage.db"):
         self.db_path = path
         self.dir_db_loader()
+        # 初始化连接池
+        self._conn_pool = SQLiteConnectionPool(self.db_path, max_size=10)
         self.set_db_sqlite()
 
     # ==================== 数据库初始化 =====================
@@ -25,13 +108,9 @@ class DataManager:
         if not os.path.exists(db_dir):
             os.makedirs(db_dir, exist_ok=True)
 
-    def get_db_sqlite(self) -> sqlite3.Connection:
-        """获取数据库连接"""
-        conn = sqlite3.connect(self.db_path, timeout=30.0)  # 添加30秒超时
-        conn.row_factory = sqlite3.Row  # 启用字典式访问
-        # 启用WAL模式以提高并发性能
-        conn.execute("PRAGMA journal_mode=WAL")
-        return conn
+    def get_db_sqlite(self) -> PooledConnection:
+        """从连接池获取数据库连接（close时自动归还到池中）"""
+        return self._conn_pool.get_connection()
 
     def set_db_sqlite(self):
         """初始化数据库表结构"""

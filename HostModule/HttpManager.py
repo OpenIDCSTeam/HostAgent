@@ -104,13 +104,13 @@ class HttpManager:
                     if self.proxys_type == "tty":
                         config += f"\thandle_path /{token}* {{\n"
                         config += f"\t\treverse_proxy http://{target_ip}:{target_port} {{\n"
-                        config += f"\t\theader_up Host {{http.axio.host}}\n"
-                        config += f"\t\theader_up X-Real-IP {{http.axio.remote.host}}\n"
-                        config += f"\t\theader_up X-Forwarded-For {{http.axio.remote.host}}\n"
-                        config += f"\t\theader_up REMOTE-HOST {{http.axio.remote.host}}\n"
-                        config += f"\t\theader_up Connection {{http.axio.header.Connection}}\n"
-                        config += f"\t\theader_up Upgrade {{http.axio.header.Upgrade}}\n"
-                        config += f"\t}}\n"
+                        config += f"\t\t\theader_up Host {{http.request.host}}\n"
+                        config += f"\t\t\theader_up X-Real-IP {{http.request.remote.host}}\n"
+                        config += f"\t\t\theader_up X-Forwarded-For {{http.request.remote.host}}\n"
+                        config += f"\t\t\theader_up REMOTE-HOST {{http.request.remote.host}}\n"
+                        config += f"\t\t\theader_up Connection {{http.request.header.Connection}}\n"
+                        config += f"\t\t\theader_up Upgrade {{http.request.header.Upgrade}}\n"
+                        config += f"\t\t}}\n"
                         config += f"\t}}\n"
                     # VMK代理 ====================================================================
                     elif self.proxys_type == "vmk":
@@ -143,8 +143,8 @@ class HttpManager:
                         </head>
                         <body>
                         <link rel="stylesheet" type="text/css" href="/static/css/wmks-all.css" />
-                        <script type="text/javascript" src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
-                        <script type="text/javascript" src="http://code.jquery.com/ui/1.8.16/jquery-ui.min.js"></script>
+                        <script type="text/javascript" src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
+                        <script type="text/javascript" src="https://code.jquery.com/ui/1.8.16/jquery-ui.min.js"></script>
                         <script type="text/javascript" src="/static/wmks.min.js"></script>
                         <div id="wmksContainer" style="position:absolute;width:100%;height:100%"></div>
                         <script>
@@ -306,6 +306,7 @@ class HttpManager:
     def closed_web(self):
         """停止Caddy服务"""
         try:
+            # 先尝试通过 binary_proc 停止
             if self.binary_proc and self.binary_proc.poll() is None:
                 self.binary_proc.terminate()
                 try:
@@ -313,9 +314,22 @@ class HttpManager:
                 except subprocess.TimeoutExpired:
                     self.binary_proc.kill()
                     self.binary_proc.wait()
+                self.binary_proc = None
                 logger.info("[HttpManager] Caddy进程已停止")
-                return True
-            return False
+            # 再按进程名强制杀掉所有残留的 Caddy 进程（防止 binary_proc 引用丢失）
+            binary_name = os.path.basename(self.binary_path)
+            if os.name == 'nt':
+                result = subprocess.run(
+                    ["taskkill", "/F", "/IM", binary_name],
+                    capture_output=True, text=True
+                )
+                if result.returncode == 0:
+                    logger.info(f"[HttpManager] 已强制终止残留Caddy进程: {binary_name}")
+            else:
+                subprocess.run(["pkill", "-f", binary_name],
+                               capture_output=True)
+            time.sleep(1)
+            return True
         except Exception as e:
             logger.error(f"[HttpManager] 停止Caddy时发生错误: {str(e)}")
             return False

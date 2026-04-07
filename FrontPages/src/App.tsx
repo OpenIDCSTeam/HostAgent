@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import ErrorBoundary from './components/ErrorBoundary'
 import MainLayout from './pages/MainLayout'
 import Login from './pages/UserLogins'
 import Register from './pages/UserPostin'
@@ -28,6 +29,7 @@ function App() {
   const defaultRoute = user?.is_admin ? '/dashboard' : '/user/dashboard'
 
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <Routes>
         {/* 公开路由 - 无需登录 */}
@@ -67,6 +69,7 @@ function App() {
         <Route path="*" element={<Navigate to={defaultRoute} replace />} />
       </Routes>
     </BrowserRouter>
+    </ErrorBoundary>
   )
 }
 

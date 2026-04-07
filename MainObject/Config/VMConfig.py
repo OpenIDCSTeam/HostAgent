@@ -37,6 +37,13 @@ class VMConfig:
         self.mem_num = 2048  # 分配内存数-(MB)
         self.hdd_num = 8192  # 分配硬盘数-(MB)
         self.hdd_iop = 1000  # 分配硬盘可用IOP
+        # 配额配置 ===========================
+        self.bak_num = 1  # 允许最大的备份数量
+        self.iso_num = 1  # 允许最大的光盘数量
+        self.pci_num = 0  # 允许最大的PCIe数量
+        self.usb_num = 0  # 允许最大的USBs数量
+        self.dat_num = 1  # 允许最大数据盘数量
+        self.dat_all = 0  # 允许数据盘合计容量
         # 网络配置 ===========================
         self.speed_u = 100  # VM上行带宽(Mbps)
         self.speed_d = 100  # VM下行带宽(Mbps)
@@ -224,6 +231,13 @@ class VMConfig:
             "flu_rst": self.flu_rst,
             "nat_num": self.nat_num,
             "web_num": self.web_num,
+            # 配额配置 =======================
+            "bak_num": self.bak_num,
+            "iso_num": self.iso_num,
+            "pci_num": self.pci_num,
+            "usb_num": self.usb_num,
+            "dat_num": self.dat_num,
+            "dat_all": self.dat_all,
             # 远程连接 =======================
             "vc_port": self.vc_port,
             "vc_pass": self.vc_pass,

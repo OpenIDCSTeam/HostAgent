@@ -203,6 +203,7 @@ function VMDetail() {
     // 状态管理
     const [vm, setVM] = useState<DockDetail | null>(null)
     const vmRef = useRef<DockDetail | null>(null)
+    const hostConfigRef = useRef<HostConfig | null>(null)
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState('overview')
     const [showPassword, setShowPassword] = useState(false)
@@ -217,6 +218,7 @@ function VMDetail() {
     })
     const [hostConfig, setHostConfig] = useState<HostConfig | null>(null)
     const [hostEnabled, setHostEnabled] = useState<boolean>(true) // 主机是否启用
+    // 用ref跟踪最新hostConfig，避免setInterval闭包读到陈旧值
     const [userPermissions, setUserPermissions] = useState<number>(VM_PERMISSION.FULL_MASK) // 当前用户权限掩码
 
     // 模态框状态
@@ -431,6 +433,7 @@ const [operationTimeoutId, setOperationTimeoutId] = useState<ReturnType<typeof s
             if (result.code === 200) {
                 const config = result.data as unknown as HostConfig
                 setHostConfig(config)
+                hostConfigRef.current = config
                 // 从同一接口获取主机启用状态
                 const enabled = config.enable_host !== false
                 setHostEnabled(enabled)
@@ -446,7 +449,7 @@ const [operationTimeoutId, setOperationTimeoutId] = useState<ReturnType<typeof s
         const currentVm = vmRef.current
         if (!hostName || !uuid || !currentVm) return
 
-        const serverType = hostConfig?.server_type || '';
+        const serverType = (hostConfigRef.current ?? hostConfig)?.server_type || '';
         if (serverType === 'OCInterface' || serverType === 'LxContainer') return;
 
         // 直接从vm对象获取最新状态，而不是依赖currentStatus

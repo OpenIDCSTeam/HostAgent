@@ -26,7 +26,7 @@ mimetypes.add_type('image/svg+xml', '.svg')
 from loguru import logger
 from HostModule.HostManager import HostManage
 from HostModule.RestManager import RestManager
-from HostModule.UserManager import UserManager, require_login, require_admin, check_host_access, check_vm_permission, check_resource_quota, EmailService, init_bearer_validator
+from HostModule.UserManager import UserManager, require_login, require_admin, check_host_access, check_vm_permission, check_resource_quota, EmailService, init_bearer_validator, init_db_getter
 from HostModule.DataManager import DataManager
 
 # 获取项目根目录，兼容开发环境和打包后的环境
@@ -44,7 +44,44 @@ template_folder = os.path.join(project_root, 'WebDesigns')
 static_folder = os.path.join(project_root, 'static')
 
 app = Flask(__name__, template_folder=template_folder, static_folder=None, static_url_path='')
-app.secret_key = secrets.token_hex(32)
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 请求体大小限制100MB，防止大请求DoS攻击
+
+# 登录速率限制 ################################################################
+# 记录每个IP的登录失败次数和锁定时间
+_login_fail_records: dict = {}  # {ip: {'count': int, 'lock_until': float}}
+_LOGIN_MAX_FAILS = 5       # 最大失败次数
+_LOGIN_LOCK_SECONDS = 300  # 锁定时长（秒）
+_login_lock = threading.Lock()
+
+def _check_login_rate_limit(ip: str) -> tuple:
+    """检查登录速率限制，返回 (是否允许, 剩余锁定秒数)"""
+    import time
+    with _login_lock:
+        record = _login_fail_records.get(ip)
+        if not record:
+            return True, 0
+        lock_until = record.get('lock_until', 0)
+        if lock_until and time.time() < lock_until:
+            return False, int(lock_until - time.time())
+        # 锁定已过期，清除记录
+        if lock_until and time.time() >= lock_until:
+            _login_fail_records.pop(ip, None)
+        return True, 0
+
+def _record_login_fail(ip: str):
+    """记录登录失败，超过阈值则锁定"""
+    import time
+    with _login_lock:
+        record = _login_fail_records.setdefault(ip, {'count': 0, 'lock_until': 0})
+        record['count'] += 1
+        if record['count'] >= _LOGIN_MAX_FAILS:
+            record['lock_until'] = time.time() + _LOGIN_LOCK_SECONDS
+            logger.warning(f"[安全] IP {ip} 登录失败 {record['count']} 次，锁定 {_LOGIN_LOCK_SECONDS} 秒")
+
+def _clear_login_fail(ip: str):
+    """登录成功后清除失败记录"""
+    with _login_lock:
+        _login_fail_records.pop(ip, None)
 
 # 全局主机管理实例
 hs_manage = HostManage()
@@ -52,11 +89,36 @@ hs_manage = HostManage()
 # 数据库实例
 db = DataManager()
 
+# 持久化Flask secret_key：从数据库读取，避免重启后所有Session失效
+def _init_secret_key():
+    """从数据库获取或生成持久化的Flask secret_key"""
+    config = db.get_ap_config()
+    secret_key = config.get('flask_secret_key', '')
+    if not secret_key:
+        secret_key = secrets.token_hex(32)
+        # 写入数据库持久化
+        conn = db.get_db_sqlite()
+        try:
+            conn.execute(
+                "INSERT OR REPLACE INTO hs_global (id, data) VALUES (?, ?)",
+                ("flask_secret_key", secret_key)
+            )
+            conn.commit()
+            logger.info("[安全] 已生成并持久化Flask secret_key")
+        except Exception as e:
+            logger.error(f"持久化secret_key失败: {e}")
+        finally:
+            conn.close()
+    return secret_key
+
+app.secret_key = _init_secret_key()
+
 # 全局REST管理器实例
 rest_manager = RestManager(hs_manage, db)
 
 # 注入Bearer Token验证器（让UserManager的装饰器能验证Token值）
 init_bearer_validator(lambda: hs_manage.bearer)
+init_db_getter(lambda: db)
 
 # 认证装饰器（保持向后兼容）###################################################
 # 需要登录或Bearer Token认证的装饰器
@@ -78,6 +140,13 @@ def require_auth(f):
                     'assigned_hosts': []
                 }
                 return f(*args, **kwargs)
+            # 临时token（财务系统插件跳转）：格式为 temp:<sha256>
+            if token and token.startswith('temp:'):
+                temp_key = token[5:]
+                user_data = rest_manager.get_temp_user_data(temp_key)
+                if user_data:
+                    g.current_user = user_data
+                    return f(*args, **kwargs)
         # 检查Session登录
         if session.get('logged_in'):
             return f(*args, **kwargs)
@@ -177,6 +246,12 @@ cd AllBuilder
 @app.route('/api/login', methods=['POST'])
 def login():
     try:
+        # 速率限制检查
+        client_ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+        allowed, remaining = _check_login_rate_limit(client_ip)
+        if not allowed:
+            return api_response_wrapper(429, f'登录失败次数过多，请 {remaining} 秒后再试')
+
         # POST登录处理
         data = request.get_json() or request.form
         login_type = data.get('login_type', 'token')
@@ -192,10 +267,12 @@ def login():
             # 查询用户
             user_data = db.get_user_by_username(username)
             if not user_data:
+                _record_login_fail(client_ip)
                 return api_response_wrapper(401, '用户名或密码错误')
             
             # 验证密码
             if not UserManager.verify_password(password, user_data['password']):
+                _record_login_fail(client_ip)
                 return api_response_wrapper(401, '用户名或密码错误')
             
             # 检查用户是否启用
@@ -213,6 +290,9 @@ def login():
             # 更新最后登录时间
             db.update_user_last_login(user_data['id'])
             
+            # 登录成功，清除失败记录
+            _clear_login_fail(client_ip)
+            
             # 构建返回的用户信息（移除敏感字段）
             user_info = dict(user_data)
             user_info.pop('password', None)
@@ -223,7 +303,7 @@ def login():
                 except Exception:
                     user_info['assigned_hosts'] = []
             
-            return api_response_wrapper(200, '登录成功', {'redirect': '/admin', 'token': hs_manage.bearer, 'user_info': user_info})
+            return api_response_wrapper(200, '登录成功', {'redirect': '/admin', 'user_info': user_info})
         
         else:
             # Token登录
@@ -242,6 +322,9 @@ def login():
                     # 更新最后登录时间
                     db.update_user_last_login(admin_user_data['id'])
                     
+                    # 登录成功，清除失败记录
+                    _clear_login_fail(client_ip)
+                    
                     # 构建返回的用户信息（移除敏感字段）
                     admin_info = dict(admin_user_data)
                     admin_info.pop('password', None)
@@ -252,7 +335,7 @@ def login():
                         except Exception:
                             admin_info['assigned_hosts'] = []
                     
-                    return api_response_wrapper(200, '登录成功', {'redirect': '/admin', 'token': token, 'user_info': admin_info})
+                    return api_response_wrapper(200, '登录成功', {'redirect': '/admin', 'user_info': admin_info})
                 else:
                     # 如果admin用户不存在，创建临时的admin session（兼容原有逻辑）
                     temp_admin_data = {
@@ -263,8 +346,11 @@ def login():
                         'assigned_hosts': []
                     }
                     UserManager.set_user_session(temp_admin_data, is_token_login=True)
-                    return api_response_wrapper(200, '登录成功', {'redirect': '/admin', 'token': token, 'user_info': temp_admin_data})
+                    _clear_login_fail(client_ip)
+                    return api_response_wrapper(200, '登录成功', {'redirect': '/admin', 'user_info': temp_admin_data})
             
+            # Token错误，记录失败
+            _record_login_fail(client_ip)
             return api_response_wrapper(401, 'Token错误')
     except Exception as e:
         logger.error(f"登录失败: {e}")
@@ -1140,6 +1226,20 @@ def api_vm_console(hs_name, vm_uuid):
     return rest_manager.vm_console(hs_name, vm_uuid)
 
 
+# 临时凭据（财务系统插件使用）########################################################
+@app.route('/api/client/temptoken/<hs_name>/<vm_uuid>', methods=['GET'])
+def api_get_temp_token(hs_name, vm_uuid):
+    """生成临时访问凭据，供财务系统插件跳转登录（需Bearer Token，有效期5分钟）"""
+    return rest_manager.get_temp_token(hs_name, vm_uuid)
+
+
+# 临时凭据登录跳转 ##################################################################
+@app.route('/api/client/templogin', methods=['GET'])
+def api_temp_token_login():
+    """使用临时凭据登录并跳转到虚拟机管理控制台"""
+    return rest_manager.temp_token_login()
+
+
 # 虚拟机截图 ########################################################################
 @app.route('/api/client/screenshot/<hs_name>/<vm_uuid>', methods=['GET'])
 @require_auth
@@ -1489,18 +1589,37 @@ def api_get_current_user():
     try:
         # 检查Bearer Token（Token登录视为管理员）
         auth_header = request.headers.get('Authorization', '')
-        if auth_header.startswith('Bearer ') and auth_header[7:] == hs_manage.bearer:
-            return api_response_wrapper(200, '获取成功', {
-                'id': 0,
-                'username': 'admin',
-                'is_admin': True,
-                'is_token_login': True,
-                'used_cpu': 0, 'used_ram': 0, 'used_ssd': 0, 'used_gpu': 0,
-                'quota_cpu': 999999, 'quota_ram': 999999, 'quota_ssd': 999999, 'quota_gpu': 999999,
-                'used_traffic': 0, 'quota_traffic': 999999,
-                'used_bandwidth_up': 0, 'quota_bandwidth_up': 999999,
-                'used_bandwidth_down': 0, 'quota_bandwidth_down': 999999,
-                'used_nat_ports': 0, 'quota_nat_ports': 999999,
+        if auth_header.startswith('Bearer '):
+            token = auth_header[7:]
+            # 临时token（财务系统插件跳转）
+            if token.startswith('temp:'):
+                user_data = rest_manager.get_temp_user_data(token[5:])
+                if user_data:
+                    return api_response_wrapper(200, '获取成功', {
+                        **user_data,
+                        'used_cpu': 0, 'used_ram': 0, 'used_ssd': 0, 'used_gpu': 0,
+                        'quota_cpu': 0, 'quota_ram': 0, 'quota_ssd': 0, 'quota_gpu': 0,
+                        'used_traffic': 0, 'quota_traffic': 0,
+                        'used_bandwidth_up': 0, 'quota_bandwidth_up': 0,
+                        'used_bandwidth_down': 0, 'quota_bandwidth_down': 0,
+                        'used_nat_ports': 0, 'quota_nat_ports': 0,
+                        'used_web_proxy': 0, 'quota_web_proxy': 0,
+                        'used_nat_ips': 0, 'quota_nat_ips': 0,
+                        'used_pub_ips': 0, 'quota_pub_ips': 0,
+                    })
+                return api_response_wrapper(401, '临时凭据无效或已过期')
+            if token == hs_manage.bearer:
+                return api_response_wrapper(200, '获取成功', {
+                    'id': 0,
+                    'username': 'admin',
+                    'is_admin': True,
+                    'is_token_login': True,
+                    'used_cpu': 0, 'used_ram': 0, 'used_ssd': 0, 'used_gpu': 0,
+                    'quota_cpu': 999999, 'quota_ram': 999999, 'quota_ssd': 999999, 'quota_gpu': 999999,
+                    'used_traffic': 0, 'quota_traffic': 999999,
+                    'used_bandwidth_up': 0, 'quota_bandwidth_up': 999999,
+                    'used_bandwidth_down': 0, 'quota_bandwidth_down': 999999,
+                    'used_nat_ports': 0, 'quota_nat_ports': 999999,
                 'used_web_proxy': 0, 'quota_web_proxy': 999999,
                 'used_nat_ips': 0, 'quota_nat_ips': 999999,
                 'used_pub_ips': 0, 'quota_pub_ips': 999999,
@@ -1509,6 +1628,27 @@ def api_get_current_user():
 
         # 检查Session登录
         if session.get('logged_in'):
+            # 临时Token登录（财务系统插件跳转），返回虚拟用户信息（受限权限）
+            if session.get('temp_login'):
+                return api_response_wrapper(200, '获取成功', {
+                    'id': 0,
+                    'username': session.get('username', ''),
+                    'is_admin': False,
+                    'is_token_login': False,
+                    'temp_login': True,
+                    'temp_hs_name': session.get('temp_hs_name', ''),
+                    'temp_vm_uuid': session.get('temp_vm_uuid', ''),
+                    'used_cpu': 0, 'used_ram': 0, 'used_ssd': 0, 'used_gpu': 0,
+                    'quota_cpu': 0, 'quota_ram': 0, 'quota_ssd': 0, 'quota_gpu': 0,
+                    'used_traffic': 0, 'quota_traffic': 0,
+                    'used_bandwidth_up': 0, 'quota_bandwidth_up': 0,
+                    'used_bandwidth_down': 0, 'quota_bandwidth_down': 0,
+                    'used_nat_ports': 0, 'quota_nat_ports': 0,
+                    'used_web_proxy': 0, 'quota_web_proxy': 0,
+                    'used_nat_ips': 0, 'quota_nat_ips': 0,
+                    'used_pub_ips': 0, 'quota_pub_ips': 0,
+                    'assigned_hosts': [session.get('temp_hs_name', '')]
+                })
             user_id = session.get('user_id')
             user_data = db.get_user_by_id(user_id)
             if user_data:
@@ -1936,7 +2076,13 @@ def init_app():
     # 如果没有Token，生成一个
     if not hs_manage.bearer:
         hs_manage.set_pass()
-        logger.info(f"已生成访问Token: {hs_manage.bearer}")
+        # Token脱敏日志
+        _t = hs_manage.bearer
+        if _t and len(_t) > 10:
+            _mt = _t[:6] + '*' * (len(_t) - 10) + _t[-4:]
+        else:
+            _mt = _t
+        logger.info(f"已生成访问Token: {_mt}")
 
     # 初始化admin用户（如果不存在）
     try:
@@ -2038,7 +2184,13 @@ if __name__ == '__main__':
         logger.info(f"OpenIDCS Server 启动中...")
         logger.info(f"运行模式: {'打包模式' if is_frozen else '开发模式'}")
         logger.info(f"访问地址: http://127.0.0.1:1880")
-        logger.info(f"访问Token: {hs_manage.bearer}")
+        # Token脱敏：只显示前6位和后4位，中间用*替代
+        _token = hs_manage.bearer
+        if _token and len(_token) > 10:
+            _masked_token = _token[:6] + '*' * (len(_token) - 10) + _token[-4:]
+        else:
+            _masked_token = _token
+        logger.info(f"访问Token: {_token}")
         logger.info(f"{'=' * 60}\n")
         
         # 打包后禁用调试模式，避免 Nuitka 兼容性问题
@@ -2059,3 +2211,4 @@ if __name__ == '__main__':
         if getattr(sys, 'frozen', False):
             input("\n按回车键退出...")
         sys.exit(1)
+

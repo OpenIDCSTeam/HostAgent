@@ -11,6 +11,8 @@ interface ThemeContextType {
   setTheme: (theme: Theme) => void;
   transparentMode: boolean;
   toggleTransparentMode: () => void;
+  roundedMode: boolean;
+  toggleRoundedMode: () => void;
   getThemeConfig: () => ThemeConfig;
 }
 
@@ -41,6 +43,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     return savedMode === 'true';
   });
 
+  // 从 localStorage 读取圆角模式状态，默认为关闭
+  const [roundedMode, setRoundedMode] = useState<boolean>(() => {
+    const savedMode = localStorage.getItem('roundedMode');
+    return savedMode === 'true';
+  });
+
   // 当主题变化时，更新 DOM 和 localStorage
   useEffect(() => {
     const root = document.documentElement;
@@ -68,6 +76,17 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     localStorage.setItem('transparentMode', String(transparentMode));
   }, [transparentMode]);
 
+  // 当圆角模式变化时，更新 DOM 和 localStorage
+  useEffect(() => {
+    const root = document.documentElement;
+    if (roundedMode) {
+      root.setAttribute('data-rounded', 'true');
+    } else {
+      root.removeAttribute('data-rounded');
+    }
+    localStorage.setItem('roundedMode', String(roundedMode));
+  }, [roundedMode]);
+
   const toggleTheme = () => {
     setThemeState(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
   };
@@ -80,15 +99,47 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     setTransparentMode(prev => !prev);
   };
 
+  const toggleRoundedMode = () => {
+    setRoundedMode(prev => !prev);
+  };
+
   const getThemeConfig = (): ThemeConfig => {
+    let base: ThemeConfig;
     if (transparentMode) {
-      return theme === 'light' ? lightTransparentTheme : darkTransparentTheme;
+      base = theme === 'light' ? lightTransparentTheme : darkTransparentTheme;
+    } else {
+      base = theme === 'light' ? lightTheme : darkTheme;
     }
-    return theme === 'light' ? lightTheme : darkTheme;
+    // 关闭圆角模式时：将所有 borderRadius 设为 5px
+    if (!roundedMode) {
+      return {
+        ...base,
+        token: {
+          ...base.token,
+          borderRadius: 5,
+          borderRadiusLG: 5,
+          borderRadiusSM: 5,
+          borderRadiusXS: 5,
+          borderRadiusOuter: 5,
+        },
+      };
+    }
+    // 开启圆角模式时：统一设为 20px
+    return {
+      ...base,
+      token: {
+        ...base.token,
+        borderRadius: 20,
+        borderRadiusLG: 20,
+        borderRadiusSM: 20,
+        borderRadiusXS: 20,
+        borderRadiusOuter: 20,
+      },
+    };
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme, transparentMode, toggleTransparentMode, getThemeConfig }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme, transparentMode, toggleTransparentMode, roundedMode, toggleRoundedMode, getThemeConfig }}>
       <ConfigProvider 
         theme={getThemeConfig()}
         locale={zhCN}

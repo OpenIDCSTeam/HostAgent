@@ -103,6 +103,8 @@ interface HostStatus {
     cpu_power?: number
     mem_usage?: number
     mem_total?: number
+    hdd_usage?: number
+    hdd_total?: number
     ext_usage?: Record<string, [number, number]>
     network_a?: number
     network_u?: number
@@ -216,8 +218,8 @@ function HostManage() {
                 const statusMap: Record<string, HostStatus> = {}
                 enabledNames.forEach((name, index) => {
                     const statusResult = statusResults[index] as any
-                    if (statusResult && statusResult.code === 200) {
-                        statusMap[name] = statusResult.data
+                    if (statusResult && statusResult.code === 200 && statusResult.data?.status) {
+                        statusMap[name] = statusResult.data.status
                     }
                 })
                 setHostsStatus(statusMap)
@@ -258,8 +260,8 @@ function HostManage() {
                         const statusMap: Record<string, HostStatus> = {}
                         enabledNames.forEach((name, index) => {
                             const statusResult = statusResults[index] as any
-                            if (statusResult && statusResult.code === 200) {
-                                statusMap[name] = statusResult.data
+                            if (statusResult && statusResult.code === 200 && statusResult.data?.status) {
+                                statusMap[name] = statusResult.data.status
                             }
                         })
                         setHostsStatus(statusMap)
@@ -658,16 +660,18 @@ function HostManage() {
         const memUsageGB = status ? ((status.mem_usage || 0) / 1024).toFixed(1) : '0.0'
         const memTotalGB = status ? ((status.mem_total || 0) / 1024).toFixed(1) : '0.0'
 
-        // 获取第一个磁盘
+        // 获取磁盘使用率：优先使用 hdd_total/hdd_usage，备用 ext_usage
         let diskPercent = 0
         let diskUsageGB = 0
         let diskTotalGB = 0
-        // let diskName = '系统盘'  // 暂未使用
-        if (status?.ext_usage) {
+        if (status?.hdd_total && status.hdd_total > 0) {
+            diskTotalGB = (status.hdd_total / 1024)
+            diskUsageGB = ((status.hdd_usage || 0) / 1024)
+            diskPercent = Math.min((status.hdd_usage || 0) / status.hdd_total * 100, 100)
+        } else if (status?.ext_usage) {
             const disks = Object.entries(status.ext_usage)
             if (disks.length > 0) {
                 const [_name, [total, used]] = disks[0]
-                // diskName = _name
                 diskTotalGB = (total / 1024)
                 diskUsageGB = (used / 1024)
                 diskPercent = total > 0 ? Math.min((used / total * 100), 100) : 0

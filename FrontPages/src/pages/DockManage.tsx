@@ -342,7 +342,7 @@ function DockManage() {
                         const vmHost = vm._host || hostName
                         const isHostDisabled = vmHost ? availableHosts[vmHost]?.enabled === false : false
                         return (
-                            <Col key={key} xs={24} sm={12} md={8} lg={6} xl={6} style={{ minWidth: 450 }}>
+                    <Col key={key} xs={24} sm={24} md={12} lg={8} xl={6} style={{ minWidth: 500 }}>
                                 <DockCard
                                     uuid={vm._realUuid || key}
                                     vm={vm}
@@ -354,7 +354,6 @@ function DockManage() {
                                     onPower={(uuid) => handleOpenPower(uuid, vm._host)}
                                     onVnc={(uuid) => handleOpenVnc(uuid, vm._host)}
                                     onDetail={(uuid) => handleOpenDetail(uuid, vm._host)}
-                                    style={{ minWidth: '500px' }}
                                 />
                             </Col>
                         )

@@ -937,3 +937,39 @@ html[data-transparent="true"][data-theme="dark"] body .ant-modal .ant-modal-cont
 .ant-card-head-title{
     padding: 16px;
 }
+
+/* ==================== 圆角模式（开启时 20px，关闭时 5px） ==================== */
+html[data-rounded="true"] *,
+html[data-rounded="true"] *::before,
+html[data-rounded="true"] *::after {
+    border-radius: 20px !important;
+}
+
+html:not([data-rounded="true"]) *,
+html:not([data-rounded="true"]) *::before,
+html:not([data-rounded="true"]) *::after {
+    border-radius: 5px !important;
+}
+
+/* 对需要保持原样的特殊元素还原 */
+html:not([data-rounded="true"]) .ant-table-cell,
+html:not([data-rounded="true"]) .ant-table-thead > tr > th,
+html:not([data-rounded="true"]) .ant-table-tbody > tr > td,
+html:not([data-rounded="true"]) .ant-table-wrapper,
+html:not([data-rounded="true"]) .ant-layout,
+html:not([data-rounded="true"]) .ant-layout-content,
+html:not([data-rounded="true"]) .ant-layout-sider-children,
+html:not([data-rounded="true"]) .ant-menu-inline,
+html:not([data-rounded="true"]) .ant-menu-vertical,
+html:not([data-rounded="true"]) .ant-form,
+html:not([data-rounded="true"]) .ant-row,
+html:not([data-rounded="true"]) .ant-col,
+html:not([data-rounded="true"]) body,
+html:not([data-rounded="true"]) html {
+    border-radius: 0 !important;
+}
+
+/* ==================== 主题菜单悬停效果 ==================== */
+.theme-menu-item:hover {
+    background: rgba(128, 128, 128, 0.1) !important;
+}
