@@ -214,13 +214,18 @@ class HostServer(BasicServer):
 
     # 宿主机状态 ###############################################################
     def HSStatus(self) -> HWStatus:
-        # 通过 SSH 采集远程宿主机实时状态 =========================================
         addr = self.hs_config.server_addr or ""
-        if addr and addr not in ["localhost", "127.0.0.1"]:
-            hw = self.ssh_get_hw_status()
-            if hw.cpu_total > 0 or hw.mem_total > 0:
-                return hw
-            logger.warning(f"[{self.hs_config.server_name}] SSH采集失败，尝试LXD API")
+        is_remote = addr and addr not in ["localhost", "127.0.0.1"]
+
+        # 本地 LXD：直接用 psutil 采集完整数据 ====================================
+        if not is_remote:
+            return self.local_get_hw_status()
+
+        # 远程 LXD：优先通过 SSH 采集完整宿主机状态 ================================
+        hw = self.ssh_get_hw_status()
+        if hw.cpu_total > 0 or hw.mem_total > 0:
+            return hw
+        logger.warning(f"[{self.hs_config.server_name}] SSH采集失败，尝试LXD API")
 
         # 降级：通过 LXD API 获取 ===============================================
         try:
@@ -1033,14 +1038,19 @@ class HostServer(BasicServer):
 
             result = container.execute(
                 command,
-                stdin_payload=stdin_data,
-                stdin_raw=True
+                stdin_payload=stdin_data
             )
 
             if result.exit_code != 0:
                 raise Exception(f"chpasswd command failed: {result.stderr}")
 
             logger.info(f"Password set for container {vm_name}")
+
+            # 将新密码保存到配置
+            vm_conf = self.vm_finds(vm_name)
+            if vm_conf:
+                vm_conf.os_pass = os_pass
+                self.data_set()
 
             return ZMessage(success=True, action="Password")
 

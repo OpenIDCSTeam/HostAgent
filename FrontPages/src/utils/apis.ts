@@ -268,7 +268,7 @@ export const getVMConsole = (hsName: string, vmUuid: string): Promise<ApiRespons
  * 修改虚拟机密码
  */
 export const changeVMPassword = (hsName: string, vmUuid: string, data: { password?: string; vnc_password?: string }): Promise<ApiResponse> => {
-  return http.post(`/api/client/reset/${hsName}/${vmUuid}`, data);
+  return http.post(`/api/client/password/${hsName}/${vmUuid}`, data);
 };
 
 /**
