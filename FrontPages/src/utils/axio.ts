@@ -13,6 +13,7 @@ declare module 'axios' {
 const axio: AxiosInstance = axios.create({
   baseURL: '', // 不设置baseURL，直接使用完整路径（/api会被Vite代理处理）
   timeout: 30000, // 请求超时时间30秒
+  withCredentials: true, // 允许跨域请求携带Cookie（Session认证必须）
   headers: {
     'Content-Type': 'application/json',
   },
