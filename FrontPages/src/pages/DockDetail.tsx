@@ -2335,7 +2335,7 @@ await api.vmPower(hostName!, uuid!, 'H_CLOSE')
                     </Card>
 
                     {/* 实例配置区域 */}
-                    <Card title="实例配置" size="small" variant="borderless" className="shadow-sm glass-card-transparent">
+                    <Card title="实例配置" size="small" variant="borderless" className="shadow-sm glass-card-transparent" style={{minHeight: '780px'}}>
                         <Row gutter={[16, 16]}>
                             <Col span={8}>
                                 <div className="space-y-4">

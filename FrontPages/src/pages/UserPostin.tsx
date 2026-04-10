@@ -223,8 +223,8 @@ function UserPostin() {
         {/* 头部图标和标题 */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-4 rounded-2xl shadow-lg">
-              <UserAddOutlined className="text-white text-5xl" />
+            <div style={{ background: 'linear-gradient(135deg, #6968fd, #8b8aff)', padding: '16px', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
+              <UserAddOutlined style={{ color: 'white', fontSize: 40 }} />
             </div>
           </div>
         <h1 className="text-3xl font-bold mb-2">用户注册</h1>
@@ -258,7 +258,6 @@ function UserPostin() {
             ]}
           >
             <Input
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200"
               placeholder="3-20位字母、数字或下划线"
             />
           </Form.Item>
@@ -278,7 +277,6 @@ function UserPostin() {
             ]}
           >
             <Input
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200"
               placeholder="请输入邮箱地址"
             />
           </Form.Item>
@@ -298,7 +296,6 @@ function UserPostin() {
             ]}
           >
             <Input.Password
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200"
               placeholder="至少6位字符"
             />
           </Form.Item>
@@ -326,7 +323,6 @@ function UserPostin() {
             ]}
           >
             <Input.Password
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200"
               placeholder="请再次输入密码"
             />
           </Form.Item>
@@ -362,7 +358,9 @@ function UserPostin() {
               htmlType="submit"
               loading={loading}
               icon={<UserAddOutlined />}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 h-12 text-base font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+              block
+              size="large"
+              style={{ background: 'linear-gradient(135deg, #6968fd, #8b8aff)', border: 'none', height: 48, fontWeight: 600 }}
             >
               注 册
             </Button>
@@ -370,7 +368,7 @@ function UserPostin() {
 
           {/* 底部链接 */}
           <div className="text-center pt-4">
-            <Link to="/login" className="text-sm text-blue-600 hover:text-blue-700">
+            <Link to="/login" style={{ fontSize: 14, color: '#6968fd' }}>
               已有账号？立即登录
             </Link>
           </div>

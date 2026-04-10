@@ -20,7 +20,7 @@ import type {
 /**
  * 用户登录
  */
-export const login = (data: LoginRequest): Promise<ApiResponse<{ token: string; user_info: User }>> => {
+export const login = (data: LoginRequest): Promise<ApiResponse<{ token: string; user_info: User; redirect: string; is_token: boolean }>> => {
   return http.post('/api/login', data);
 };
 

@@ -394,7 +394,7 @@ function DockManage() {
                 okButtonProps={{ disabled: deleteConfirmInput !== deleteVmUuid }}
             >
                 <div>
-                    <p>此操作将永久删除虚拟机 "<strong className="text-red-500">{deleteVmUuid}</strong>" 且不可恢复</p>
+                    <p>此操作将永久删除虚拟机 "<strong style={{ color: '#ef4444' }}>{deleteVmUuid}</strong>" 且不可恢复</p>
                     <p className="mt-2 mb-2 text-xs  ">请输入虚拟机名称以确认删除：</p>
                     <Input
                         placeholder="请输入虚拟机名称"

@@ -122,32 +122,32 @@ function TaskManage() {
       pending: {
         text: '等待中',
         icon: 'mdi:clock-outline',
-        bgColor: 'bg-yellow-100',
-        textColor: 'text-yellow-600'
+        bgColor: 'rgba(234,179,8,0.15)',
+        textColor: '#ca8a04'
       },
       running: {
         text: '运行中',
         icon: 'mdi:play-circle',
-        bgColor: 'bg-blue-100',
-        textColor: 'text-blue-600'
+        bgColor: 'rgba(59,130,246,0.15)',
+        textColor: '#3b82f6'
       },
       completed: {
         text: '已完成',
         icon: 'mdi:check-circle',
-        bgColor: 'bg-green-100',
-        textColor: 'text-green-600'
+        bgColor: 'rgba(34,197,94,0.15)',
+        textColor: '#22c55e'
       },
       failed: {
         text: '失败',
         icon: 'mdi:close-circle',
-        bgColor: 'bg-red-100',
-        textColor: 'text-red-600'
+        bgColor: 'rgba(239,68,68,0.15)',
+        textColor: '#ef4444'
       }
     }
     return statusMap[status.toLowerCase()] || {
       text: '未知',
       icon: 'mdi:help-circle',
-      bgColor: 'bg-gray-100',
+      bgColor: 'rgba(107,114,128,0.15)',
         textColor: ''
     }
   }
@@ -243,7 +243,8 @@ function TaskManage() {
           <div className="flex items-end">
             <button
               onClick={loadTasks}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm flex items-center justify-center gap-2"
+              className="w-full text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2"
+              style={{ background: 'linear-gradient(135deg, #6968fd, #8b8aff)' }}
             >
               <span className="iconify" data-icon="mdi:refresh" style={{ width: '18px', height: '18px' }}></span>
               刷新
@@ -256,8 +257,8 @@ function TaskManage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="glass-card p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <span className="iconify text-yellow-600" data-icon="mdi:clock-outline" style={{ width: '20px', height: '20px' }}></span>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(234,179,8,0.15)' }}>
+<span className="iconify" data-icon="mdi:clock-outline" style={{ color: '#ca8a04', width: '20px', height: '20px' }}></span>
             </div>
             <div>
               <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>等待中</p>
@@ -267,8 +268,8 @@ function TaskManage() {
         </div>
         <div className="glass-card p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <span className="iconify text-blue-600" data-icon="mdi:play-circle" style={{ width: '20px', height: '20px' }}></span>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)' }}>
+              <span className="iconify" style={{ color: '#3b82f6', width: '20px', height: '20px' }} data-icon="mdi:play-circle"></span>
             </div>
             <div>
               <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>运行中</p>
@@ -278,8 +279,8 @@ function TaskManage() {
         </div>
         <div className="glass-card p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <span className="iconify text-green-600" data-icon="mdi:check-circle" style={{ width: '20px', height: '20px' }}></span>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.15)' }}>
+              <span className="iconify" style={{ color: '#22c55e', width: '20px', height: '20px' }} data-icon="mdi:check-circle"></span>
             </div>
             <div>
               <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>已完成</p>
@@ -289,8 +290,8 @@ function TaskManage() {
         </div>
         <div className="glass-card p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <span className="iconify text-red-600" data-icon="mdi:close-circle" style={{ width: '20px', height: '20px' }}></span>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.15)' }}>
+              <span className="iconify" style={{ color: '#ef4444', width: '20px', height: '20px' }} data-icon="mdi:close-circle"></span>
             </div>
             <div>
               <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>失败</p>
@@ -310,18 +311,18 @@ function TaskManage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setAutoRefresh(!autoRefresh)}
-              className={`text-xs px-3 py-1 rounded-lg transition-all duration-200 ${
-                autoRefresh
-                  ? 'bg-green-100 hover:bg-green-200 text-green-700'
-                  : 'bg-gray-100 hover:bg-gray-200'
-              }`}
+              className="text-xs px-3 py-1 rounded-lg transition-all duration-200"
+              style={autoRefresh
+                ? { background: 'rgba(34,197,94,0.15)', color: '#22c55e' }
+                : { background: 'rgba(107,114,128,0.12)', color: 'var(--text-secondary)' }}
             >
               <span className="iconify" data-icon={autoRefresh ? 'mdi:pause' : 'mdi:play'} style={{ width: '14px', height: '14px' }}></span>
               {autoRefresh ? ' 停止刷新' : ' 自动刷新'}
             </button>
             <button
               onClick={clearTasks}
-              className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded-lg transition-all duration-200"
+              className="text-xs px-3 py-1 rounded-lg transition-all duration-200"
+              style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}
             >
               <span className="iconify" data-icon="mdi:delete-sweep" style={{ width: '14px', height: '14px' }}></span>
               {' 清空显示'}
@@ -358,14 +359,14 @@ function TaskManage() {
                     onClick={() => showTaskDetail(task)}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 ${statusInfo.bgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                        <span className={`iconify ${statusInfo.textColor}`} data-icon={statusInfo.icon} style={{ width: '20px', height: '20px' }}></span>
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: statusInfo.bgColor }}>
+                        <span className="iconify" style={{ color: statusInfo.textColor, width: '20px', height: '20px' }} data-icon={statusInfo.icon}></span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{taskType}</span>
-                            <span className={`text-xs ${statusInfo.textColor} ${statusInfo.bgColor} px-2 py-1 rounded-full font-medium`}>
+                            <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ color: statusInfo.textColor, background: statusInfo.bgColor }}>
                               {statusInfo.text}
                             </span>
                           </div>
@@ -420,7 +421,7 @@ function TaskManage() {
                 {(() => {
                   const statusInfo = getStatusInfo(selectedTask.status || 'pending')
                   return (
-                    <span className={`inline-flex items-center gap-1 text-sm ${statusInfo.textColor} ${statusInfo.bgColor} px-3 py-1 rounded-full font-medium`}>
+                    <span className="inline-flex items-center gap-1 text-sm px-3 py-1 rounded-full font-medium" style={{ color: statusInfo.textColor, background: statusInfo.bgColor }}>
                       <span className="iconify" data-icon={statusInfo.icon} style={{ width: '16px', height: '16px' }}></span>
                       {statusInfo.text}
                     </span>
@@ -450,8 +451,8 @@ function TaskManage() {
             {selectedTask.error_message && (
               <div>
                 <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>错误信息</label>
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                  <p className="text-sm text-red-800 dark:text-red-300 font-mono">{selectedTask.error_message}</p>
+                <div className="rounded-lg p-3" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                  <p className="text-sm font-mono" style={{ color: '#ef4444' }}>{selectedTask.error_message}</p>
                 </div>
               </div>
             )}

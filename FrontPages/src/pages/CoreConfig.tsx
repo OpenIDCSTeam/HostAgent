@@ -321,10 +321,10 @@ function CoreConfig() {
         {/* API文档 */}
         <Card title={<span><span className="text-green-600">🔌</span> API接口说明</span>} className="shadow-sm">
           <div className="space-y-3 text-sm">
-            <div className="bg-gray-50 rounded-lg p-3">
+            <div className="rounded-lg p-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-hover)' }}>
                 <p className="font-medium mb-1">认证方式</p>
                 <p className="">在请求头中添加：</p>
-              <code className="block mt-1 bg-gray-200 px-2 py-1 rounded text-xs">
+              <code className="block mt-1 px-2 py-1 rounded text-xs" style={{ background: 'rgba(105,104,253,0.08)', color: 'var(--color-primary, #6968fd)' }}>
                 Authorization: Bearer YOUR_TOKEN
               </code>
             </div>
@@ -333,27 +333,27 @@ function CoreConfig() {
                 <p className="font-medium mb-2">主要接口</p>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">GET</span>
+                  <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>GET</span>
                   <code className="text-xs">/api/hosts</code>
                   <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>- 获取主机列表</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">POST</span>
+                  <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ background: 'rgba(59,130,246,0.15)', color: '#60a5fa' }}>POST</span>
                   <code className="text-xs">/api/hosts</code>
                   <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>- 添加主机</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">GET</span>
+                  <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>GET</span>
                   <code className="text-xs">/api/hosts/{'{name}'}/vms</code>
                   <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>- 获取虚拟机列表</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">POST</span>
+                  <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ background: 'rgba(59,130,246,0.15)', color: '#60a5fa' }}>POST</span>
                   <code className="text-xs">/api/hosts/{'{name}'}/vms</code>
                   <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>- 创建虚拟机</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">POST</span>
+                  <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ background: 'rgba(59,130,246,0.15)', color: '#60a5fa' }}>POST</span>
                   <code className="text-xs">/api/hosts/{'{name}'}/vms/{'{uuid}'}/power</code>
                   <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>- 电源操作</span>
                 </div>
@@ -543,7 +543,7 @@ function CoreConfig() {
                 <TextArea rows={4} placeholder="请输入邮件正文内容..." />
               </Form.Item>
 
-              <Button type="primary" htmlType="submit" block loading={loading} icon={<MailOutlined />} className="bg-green-600 hover:bg-green-700">
+              <Button type="primary" htmlType="submit" block loading={loading} icon={<MailOutlined />}>
                 发送测试邮件
               </Button>
             </Form>

@@ -47,11 +47,15 @@ axio.interceptors.response.use(
         message.error(res.msg || '请求失败');
       }
 
-      // 401: 未授权，跳转到登录页
+      // 401: 未授权，跳转到登录页（排除用于检查登录状态的接口）
       if (res.code === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+        const url = response.config?.url || '';
+        const isCheckUrl = url.includes('/api/users/current') || url.includes('/api/login');
+        if (!isCheckUrl) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user-storage');
+          window.location.href = '/login';
+        }
       }
 
       // 403: 权限不足
@@ -109,11 +113,15 @@ axio.interceptors.response.use(
       }
     }
 
-    // 401需要跳转登录（无论是否静默）
+    // 401需要跳转登录（排除用于检查登录状态的接口）
     if (status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      const url = (error.config as AxiosRequestConfig)?.url || '';
+      const isCheckUrl = url.includes('/api/users/current') || url.includes('/api/login');
+      if (!isCheckUrl) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user-storage');
+        window.location.href = '/login';
+      }
     }
 
     return Promise.reject(error);

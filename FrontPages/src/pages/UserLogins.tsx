@@ -98,18 +98,19 @@ function UserLogins() {
       if (response.data?.token) {
         setToken(response.data.token)
       }
-      if (response.data?.user_info) {
-        setUser(response.data.user_info)
-      }
+      // 优先用后端返回的user_info，否则构造基础对象保证isAuthenticated=true
+      const userInfo = response.data?.user_info || { username: values.username, is_admin: false }
+      setUser(userInfo as any)
       
       message.success('登录成功')
-      navigate('/dashboard')
+      // 根据后端返回的redirect跳转，或根据is_admin判断
+      const redirectTo = response.data?.redirect || (userInfo.is_admin ? '/dashboard' : '/user/dashboard')
+      navigate(redirectTo)
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.msg || '登录失败，请检查用户名和密码'
-      setErrorMsg(errorMessage)
+      const errMsg = error?.response?.data?.msg || '登录失败，请检查用户名和密码'
+      setErrorMsg(errMsg)
       // 4秒后自动隐藏错误提示
       setTimeout(() => setErrorMsg(''), 4000)
-    } finally {
       setLoading(false)
     }
   }
@@ -132,18 +133,18 @@ function UserLogins() {
       if (response.data?.token) {
         setToken(response.data.token)
       }
-      if (response.data?.user_info) {
-        setUser(response.data.user_info)
-      }
+      // 优先用后端返回的user_info，否则构造基础对象保证isAuthenticated=true
+      const userInfo = response.data?.user_info || { username: 'admin', is_admin: true }
+      setUser(userInfo as any)
       
       message.success('登录成功')
-      navigate('/dashboard')
+      const redirectTo = response.data?.redirect || '/dashboard'
+      navigate(redirectTo)
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.msg || 'Token登录失败，请检查Token是否正确'
-      setErrorMsg(errorMessage)
+      const errMsg = error?.response?.data?.msg || 'Token登录失败，请检查Token是否正确'
+      setErrorMsg(errMsg)
       // 4秒后自动隐藏错误提示
       setTimeout(() => setErrorMsg(''), 4000)
-    } finally {
       setLoading(false)
     }
   }

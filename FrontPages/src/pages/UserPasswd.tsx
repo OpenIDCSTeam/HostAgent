@@ -121,11 +121,11 @@ function UserPasswd() {
   }
 
   return (
-    <div className="h-auto flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="h-auto flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" style={{ background: 'var(--gradient-bg)' }}>
       <div className="max-w-md w-full space-y-8">
         {/* 顶部图标和标题 */}
         <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-blue-600 dark:bg-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+          <div className="mx-auto h-16 w-16 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #6968fd, #8b8aff)' }}>
             <LockOutlined className="text-white text-3xl" style={{ fontSize: 32 }} />
           </div>
 <h2 className="mt-6 text-3xl font-extrabold">
@@ -232,7 +232,7 @@ function UserPasswd() {
                 loading={loading}
                 block
                 size="large"
-                className="rounded-lg bg-blue-600 hover:bg-blue-700"
+                style={{ background: 'linear-gradient(135deg, #6968fd, #8b8aff)', border: 'none', borderRadius: 8 }}
                 icon={<LockOutlined />}
               >
                 重置密码
@@ -243,7 +243,7 @@ function UserPasswd() {
             <div className="text-center">
               <Link 
                 to="/login" 
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition"
+                style={{ fontSize: 14, color: '#6968fd' }}
               >
                 返回登录
               </Link>

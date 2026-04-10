@@ -349,7 +349,7 @@ function LogsManage() {
       <div className="flex gap-4 flex-1 min-h-0">
         {/* 左侧：日志列表 */}
         <div className="glass-card flex-1 flex flex-col">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
+          <div className="p-4 border-b flex items-center justify-between flex-shrink-0" style={{ borderColor: 'var(--border-primary, rgba(0,0,0,0.08))' }}>
             <h2 className="text-base font-semibold flex items-center gap-2">
               <FileTextOutlined className="text-blue-600" />
               日志记录
@@ -359,7 +359,7 @@ function LogsManage() {
                 size="small"
                 icon={autoRefresh ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
                 onClick={toggleAutoRefresh}
-                className={autoRefresh ? 'bg-green-100 text-green-700 border-green-300' : ''}
+                style={autoRefresh ? { background: 'rgba(34,197,94,0.15)', color: '#22c55e', borderColor: 'rgba(34,197,94,0.3)' } : {}}
               >
                 {autoRefresh ? '停止刷新' : '自动刷新'}
               </Button>
@@ -386,7 +386,7 @@ function LogsManage() {
                 <span className="ml-2">暂无日志记录</span>
               </div>
             ) : (
-              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              <div className="divide-y" style={{ borderColor: 'var(--border-primary, rgba(0,0,0,0.08))' }}>
                 {filteredLogs.map((log, index) => {
                   const level = log.level || 'INFO'
                   const timestamp = log.timestamp || new Date().toISOString()
@@ -401,11 +401,8 @@ function LogsManage() {
                   return (
                     <div 
                       key={index} 
-                      className={`p-4 cursor-pointer transition-colors ${
-                        isSelected 
-                          ? ' border-l-4 border-blue-500'
-                          : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                      }`}
+                    className={`p-4 cursor-pointer transition-colors`}
+                      style={isSelected ? { borderLeft: '4px solid #6968fd', background: 'rgba(105,104,253,0.06)' } : {}}
                       onClick={() => setSelectedLog(log)}
                     >
                       <div className="flex items-start gap-3">
@@ -433,7 +430,7 @@ function LogsManage() {
 
         {/* 右侧：日志详情 */}
         <div className="glass-card w-1/2 flex flex-col">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div className="p-4 border-b flex-shrink-0" style={{ borderColor: 'var(--border-primary, rgba(0,0,0,0.08))' }}>
             <h2 className="text-base font-semibold flex items-center gap-2">
               <EyeOutlined className="text-blue-600" />
               日志详情
@@ -443,7 +440,7 @@ function LogsManage() {
             {selectedLog ? (
               <div className="space-y-4">
                 {/* 基本信息 */}
-                <div className=" rounded-lg p-4">
+                  <div className="rounded-lg p-4" style={{ background: 'var(--bg-card, rgba(0,0,0,0.03))', border: '1px solid var(--border-primary, rgba(0,0,0,0.06))' }}>
                   <h3 className="text-sm font-semibold mb-3">基本信息</h3>
                   <div className="space-y-2">
                     <div className="flex items-start">
@@ -479,7 +476,7 @@ function LogsManage() {
                 </div>
 
                 {/* 消息内容 */}
-                <div className=" rounded-lg p-4">
+                  <div className="rounded-lg p-4" style={{ background: 'var(--bg-card, rgba(0,0,0,0.03))', border: '1px solid var(--border-primary, rgba(0,0,0,0.06))' }}>
                   <h3 className="text-sm font-semibold mb-3">消息内容</h3>
                   <p className="text-sm whitespace-pre-wrap break-words">
                     {selectedLog.message || selectedLog.content || '无消息内容'}
@@ -488,12 +485,12 @@ function LogsManage() {
 
                 {/* 操作结果 */}
                 {selectedLog.results && Object.keys(selectedLog.results).length > 0 && (
-                  <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
-                    <h3 className="text-sm font-semibold text-purple-700 dark:text-purple-300 mb-3 flex items-center gap-2">
+                  <div className="rounded-lg p-4" style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                    <h3 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: '#8b5cf6' }}>
                       <EyeOutlined />
                       操作结果
                     </h3>
-                    <pre className="text-xs bg-white dark:bg-gray-800 p-3 rounded border border-purple-200 dark:border-purple-800 whitespace-pre-wrap break-words overflow-x-auto">
+                    <pre className="text-xs p-3 rounded whitespace-pre-wrap break-words overflow-x-auto" style={{ background: 'var(--bg-card, rgba(255,255,255,0.8))', border: '1px solid rgba(139,92,246,0.2)' }}>
                       {JSON.stringify(selectedLog.results, null, 2)}
                     </pre>
                   </div>
@@ -501,12 +498,12 @@ function LogsManage() {
 
                 {/* 错误堆栈 */}
                 {selectedLog.execute && selectedLog.execute !== 'None' && selectedLog.execute.trim() !== '' && (
-                  <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-                    <h3 className="text-sm font-semibold text-red-700 dark:text-red-300 mb-3 flex items-center gap-2">
+                  <div className="rounded-lg p-4" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                    <h3 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: '#ef4444' }}>
                       <BugOutlined />
                       错误堆栈
                     </h3>
-                    <pre className="text-xs text-red-700 dark:text-red-400 bg-white dark:bg-gray-800 p-3 rounded border border-red-200 dark:border-red-800 whitespace-pre-wrap break-words font-mono overflow-x-auto">
+                    <pre className="text-xs p-3 rounded whitespace-pre-wrap break-words font-mono overflow-x-auto" style={{ color: '#ef4444', background: 'var(--bg-card, rgba(255,255,255,0.8))', border: '1px solid rgba(239,68,68,0.2)' }}>
                       {selectedLog.execute}
                     </pre>
                   </div>

@@ -20,6 +20,16 @@ import UserWebProxys from './user/UserProxys.tsx'
 import UserNAT from './user/PortManage'
 import { useUserStore } from '@/utils/data.ts'
 
+// 路由守卫：未登录时重定向到登录页
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, user } = useUserStore()
+  // 同时检查 user 和 isAuthenticated，避免 persist 异步写入导致误判
+  if (!isAuthenticated && !user) {
+    return <Navigate to="/login" replace />
+  }
+  return <>{children}</>
+}
+
 /**
  * 应用主组件
  * 配置路由和页面导航
@@ -38,7 +48,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         
         {/* 受保护路由 - 需要登录 */}
-        <Route path="/" element={<MainLayout />}>
+        <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to={defaultRoute} replace />} />
           
           {/* 系统界面 (管理员) */}

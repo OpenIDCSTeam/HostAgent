@@ -6,11 +6,11 @@ export const lightTheme: ThemeConfig = {
   algorithm: theme.defaultAlgorithm,
   token: {
     // 主色调
-    colorPrimary: '#0ea5e9',
-    colorSuccess: '#10b981',
-    colorWarning: '#f59e0b',
-    colorError: '#ef4444',
-    colorInfo: '#3b82f6',
+    colorPrimary: '#6968fd',
+    colorSuccess: '#22C55E',
+    colorWarning: '#F59E0B',
+    colorError: '#EF4444',
+    colorInfo: '#6366f1',
     
     // 文本颜色
     colorText: '#1e293b',
@@ -73,13 +73,13 @@ export const lightTheme: ThemeConfig = {
     // Menu组件
     Menu: {
       itemBg: 'transparent',
-      itemSelectedBg: 'rgba(14, 165, 233, 0.1)',
-      itemHoverBg: 'rgba(14, 165, 233, 0.05)',
+      itemSelectedBg: 'rgba(105, 104, 253, 0.1)',
+      itemHoverBg: 'rgba(105, 104, 253, 0.05)',
     },
     // Table组件
     Table: {
       headerBg: 'rgba(248, 250, 252, 0.8)',
-      rowHoverBg: 'rgba(14, 165, 233, 0.05)',
+      rowHoverBg: '#f0f2ff',
     },
     // Modal组件
     Modal: {
@@ -106,11 +106,11 @@ export const darkTheme: ThemeConfig = {
   algorithm: theme.darkAlgorithm,
   token: {
     // 主色调
-    colorPrimary: '#64b5f6',
-    colorSuccess: '#81c784',
-    colorWarning: '#ffb74d',
-    colorError: '#e57373',
-    colorInfo: '#64b5f6',
+    colorPrimary: '#8b8aff',
+    colorSuccess: '#4ade80',
+    colorWarning: '#fbbf24',
+    colorError: '#f87171',
+    colorInfo: '#a5b4fc',
     
     // 文本颜色
     colorText: '#e2e8f0',
@@ -173,13 +173,13 @@ export const darkTheme: ThemeConfig = {
     // Menu组件
     Menu: {
       itemBg: 'transparent',
-      itemSelectedBg: 'rgba(100, 181, 246, 0.15)',
-      itemHoverBg: 'rgba(100, 181, 246, 0.08)',
+      itemSelectedBg: 'rgba(105, 104, 253, 0.15)',
+      itemHoverBg: 'rgba(105, 104, 253, 0.08)',
     },
     // Table组件
     Table: {
       headerBg: 'rgba(30, 41, 59, 0.8)',
-      rowHoverBg: 'rgba(100, 181, 246, 0.08)',
+      rowHoverBg: 'rgba(105, 104, 253, 0.1)',
     },
     // Modal组件
     Modal: {
@@ -206,11 +206,11 @@ export const lightTransparentTheme: ThemeConfig = {
   algorithm: theme.defaultAlgorithm,
   token: {
     // 主色调
-    colorPrimary: '#0ea5e9',
-    colorSuccess: '#10b981',
-    colorWarning: '#f59e0b',
-    colorError: '#ef4444',
-    colorInfo: '#3b82f6',
+    colorPrimary: '#6968fd',
+    colorSuccess: '#22C55E',
+    colorWarning: '#F59E0B',
+    colorError: '#EF4444',
+    colorInfo: '#6366f1',
     
     // 文本颜色
     colorText: '#1e293b',
@@ -273,13 +273,13 @@ export const lightTransparentTheme: ThemeConfig = {
     // Menu组件
     Menu: {
       itemBg: 'transparent',
-      itemSelectedBg: 'rgba(14, 165, 233, 0.1)',
-      itemHoverBg: 'rgba(14, 165, 233, 0.05)',
+      itemSelectedBg: 'rgba(105, 104, 253, 0.1)',
+      itemHoverBg: 'rgba(105, 104, 253, 0.05)',
     },
     // Table组件
     Table: {
       headerBg: 'rgba(248, 250, 252, 0.3)',
-      rowHoverBg: 'rgba(14, 165, 233, 0.05)',
+      rowHoverBg: 'rgba(105, 104, 253, 0.05)',
     },
     // Modal组件
     Modal: {
@@ -306,11 +306,11 @@ export const darkTransparentTheme: ThemeConfig = {
   algorithm: theme.darkAlgorithm,
   token: {
     // 主色调
-    colorPrimary: '#64b5f6',
-    colorSuccess: '#81c784',
-    colorWarning: '#ffb74d',
-    colorError: '#e57373',
-    colorInfo: '#64b5f6',
+    colorPrimary: '#8b8aff',
+    colorSuccess: '#4ade80',
+    colorWarning: '#fbbf24',
+    colorError: '#f87171',
+    colorInfo: '#a5b4fc',
     
     // 文本颜色
     colorText: '#e2e8f0',
@@ -373,13 +373,13 @@ export const darkTransparentTheme: ThemeConfig = {
     // Menu组件
     Menu: {
       itemBg: 'transparent',
-      itemSelectedBg: 'rgba(100, 181, 246, 0.15)',
-      itemHoverBg: 'rgba(100, 181, 246, 0.08)',
+      itemSelectedBg: 'rgba(105, 104, 253, 0.15)',
+      itemHoverBg: 'rgba(105, 104, 253, 0.08)',
     },
     // Table组件
     Table: {
       headerBg: 'rgba(30, 41, 59, 0.3)',
-      rowHoverBg: 'rgba(100, 181, 246, 0.08)',
+      rowHoverBg: 'rgba(105, 104, 253, 0.1)',
     },
     // Modal组件
     Modal: {

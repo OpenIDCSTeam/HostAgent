@@ -110,17 +110,17 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     } else {
       base = theme === 'light' ? lightTheme : darkTheme;
     }
-    // 关闭圆角模式时：将所有 borderRadius 设为 5px
+    // 关闭圆角模式时：使用 theme.config.ts 的基础圆角值（与小黑云一致）
     if (!roundedMode) {
       return {
         ...base,
         token: {
           ...base.token,
-          borderRadius: 5,
-          borderRadiusLG: 5,
-          borderRadiusSM: 5,
-          borderRadiusXS: 5,
-          borderRadiusOuter: 5,
+          borderRadius: 16,
+          borderRadiusLG: 20,
+          borderRadiusSM: 12,
+          borderRadiusXS: 8,
+          borderRadiusOuter: 16,
         },
       };
     }
