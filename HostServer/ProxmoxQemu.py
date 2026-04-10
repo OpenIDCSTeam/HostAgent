@@ -7,7 +7,7 @@ import traceback
 from loguru import logger
 from copy import deepcopy
 from proxmoxer import ProxmoxAPI
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict
 from HostServer.BasicServer import BasicServer
 from MainObject.Config.HSConfig import HSConfig
 from MainObject.Config.IMConfig import IMConfig
@@ -67,9 +67,13 @@ class HostServer(BasicServer):
                 logger.warning("无法连接Proxmox，使用默认VMID 100")
                 return 100  # 默认起始VMID
             
+            # 检查节点名是否配置 ================================================
+            if not self.hs_config.launch_path:
+                logger.warning("launch_path（PVE节点名）未配置，使用默认VMID 100")
+                return 100
             # 获取所有现有的VMID ===============================================
             vms = client.nodes(self.hs_config.launch_path).qemu.get()
-            now_vmid = [vm['vmid'] for vm in vms]
+            now_vmid = [vm.get('vmid', 0) for vm in vms if vm.get('vmid')]
             
             # 从100开始查找可用的VMID ===========================================
             vmid = 100
@@ -244,6 +248,9 @@ class HostServer(BasicServer):
 
             # 获取主机状态 =====================================================
             node_status = client.nodes(self.hs_config.launch_path).status.get()
+            # API 可能返回列表，取第一个元素
+            if isinstance(node_status, list):
+                node_status = node_status[0] if node_status else None
 
             if node_status:
                 hw_status = HWStatus()
@@ -426,24 +433,30 @@ class HostServer(BasicServer):
             # 配置网卡 ------------------------------------------
             config.update(self.net_conf(vm_conf))
             # 创建虚拟机 --------------------------------------------
+            # 检查节点名是否配置 ============================================
+            if not self.hs_config.launch_path:
+                raise ValueError("launch_path（PVE节点名）未配置，请在服务器配置中填写PVE节点名称（如: pve）")
             logger.info(f"[{self.hs_config.server_name}] 正在创建虚拟机配置...")
             client.nodes(self.hs_config.launch_path).qemu.create(**config)
             logger.info(f"[{self.hs_config.server_name}] 虚拟机 {vm_conf.vm_uuid} (VMID: {vm_vmid}) 创建成功")
             
             # 配置GPU直通 -------------------------------------------
-            if vm_conf.gpu_num > 0 and vm_conf.gpu_id:
-                logger.info(f"[{self.hs_config.server_name}] 配置GPU直通: {vm_conf.gpu_id}")
+            if vm_conf.pci_num > 0 and vm_conf.pci_all:
+                logger.info(f"[{self.hs_config.server_name}] 配置PCI直通，共 {len(vm_conf.pci_all)} 个设备")
                 try:
                     vm_conn = client.nodes(self.hs_config.launch_path).qemu(vm_vmid)
-                    # 添加PCI设备直通
+                    # 遍历pci_all，逐个添加PCI设备直通
                     # 格式: hostpci0: 01:00.0,pcie=1
-                    gpu_config = {
-                        'hostpci0': f"{vm_conf.gpu_id},pcie=1"
-                    }
-                    vm_conn.config.put(**gpu_config)
-                    logger.info(f"[{self.hs_config.server_name}] GPU直通配置成功")
+                    gpu_config = {}
+                    for idx, (pci_key, pci_cfg) in enumerate(vm_conf.pci_all.items()):
+                        if pci_cfg.gpu_uuid:
+                            gpu_config[f'hostpci{idx}'] = f"{pci_cfg.gpu_uuid},pcie=1"
+                            logger.info(f"[{self.hs_config.server_name}] PCI设备{idx}: {pci_cfg.gpu_uuid}")
+                    if gpu_config:
+                        vm_conn.config.put(**gpu_config)
+                        logger.info(f"[{self.hs_config.server_name}] PCI直通配置成功")
                 except Exception as gpu_error:
-                    logger.warning(f"[{self.hs_config.server_name}] GPU直通配置失败: {str(gpu_error)}")
+                    logger.warning(f"[{self.hs_config.server_name}] PCI直通配置失败: {str(gpu_error)}")
             
             # 配置路由器绑定（iKuai层面）----------------------------
             logger.info(f"[{self.hs_config.server_name}] 配置路由器IP绑定...")
@@ -506,51 +519,89 @@ class HostServer(BasicServer):
             vm_disk_dir = f"/var/lib/vz/images/{vm_vmid}"
             disk_name = f"vm-{vm_vmid}-disk-0{src_ext}"
             dest_image = f"{vm_disk_dir}/{disk_name}"
-            # 远程复制 =========================================================
-            if self.flag_web():
-                # 远程模式：src_file 是远程服务器上的路径，使用 posixpath.join
-                src_file = posixpath.join(self.hs_config.images_path, vm_conf.os_name)
-                ssh = paramiko.SSHClient()
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh.connect(
-                    self.hs_config.server_addr,
-                    username=self.hs_config.server_user,
-                    password=self.hs_config.server_pass)
-                # 检查远程镜像文件是否存在
-                stdin, stdout, stderr = ssh.exec_command(f"test -f {src_file} && echo 'exists' || echo 'not_exists'")
-                file_check = stdout.read().decode().strip()
-                if file_check != 'exists':
+            system_storage = self.hs_config.system_path or "local"
+            # 判断是否为PVE存储名（不含/则视为存储名，走import流程）=============
+            images_is_storage = '/' not in self.hs_config.images_path
+            if images_is_storage:
+                # import模式：images_path为PVE存储名，使用qm importdisk导入 ====
+                import_storage = self.hs_config.images_path
+                src_file = f"{import_storage}:import/{vm_conf.os_name}"
+                import_cmd = (f"qm importdisk {vm_vmid} {src_file} "
+                              f"{system_storage} --format qcow2")
+                if self.flag_web():
+                    # 远程模式：通过SSH执行importdisk ===========================
+                    ssh = paramiko.SSHClient()
+                    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    ssh.connect(
+                        self.hs_config.server_addr,
+                        username=self.hs_config.server_user,
+                        password=self.hs_config.server_pass)
+                    stdin, stdout, stderr = ssh.exec_command(import_cmd)
+                    exit_status = stdout.channel.recv_exit_status()
+                    if exit_status != 0:
+                        error_msg = stderr.read().decode()
+                        ssh.close()
+                        return ZMessage(
+                            success=False, action="VInstall",
+                            message=f"importdisk失败: {error_msg}")
                     ssh.close()
-                    return ZMessage(
-                        success=False, action="VInstall",
-                        message=f"镜像文件不存在: {src_file}")
-                # 在远程服务器上复制镜像文件
-                ssh.exec_command(f"mkdir -p {vm_disk_dir}")
-                copy_cmd = f"cp {src_file} {dest_image}"
-                stdin, stdout, stderr = ssh.exec_command(copy_cmd)
-                exit_status = stdout.channel.recv_exit_status()
-                if exit_status != 0:
-                    error_msg = stderr.read().decode()
-                    ssh.close()
-                    return ZMessage(
-                        success=False, action="VInstall",
-                        message=f"复制镜像失败: {error_msg}")
-                ssh.close()
-                logger.info(f"通过SSH复制镜像: {src_file} -> {dest_image}")
-            # 本地复制 ==========================================================
+                    logger.info(f"通过SSH importdisk: {src_file} -> {system_storage}")
+                else:
+                    # 本地模式：直接执行importdisk ==============================
+                    exit_status = os.system(import_cmd)
+                    if exit_status != 0:
+                        return ZMessage(
+                            success=False, action="VInstall",
+                            message="importdisk失败")
+                    logger.info(f"本地importdisk: {src_file} -> {system_storage}")
+                # importdisk后磁盘进入unused状态，需挂载 ========================
+                vm_conn = client.nodes(self.hs_config.launch_path).qemu(vm_vmid)
+                vm_conn.config.put(sata0=f"{system_storage}:{vm_vmid}/{disk_name}")
             else:
-                # 本地模式：src_file 是 Linux 路径，使用 posixpath.join
-                src_file = posixpath.join(self.hs_config.images_path, vm_conf.os_name)
-                if not os.path.exists(src_file):
-                    return ZMessage(
-                        success=False, action="VInstall",
-                        message=f"镜像文件不存在: {src_file}")
-                os.makedirs(vm_disk_dir, exist_ok=True)
-                shutil.copy2(src_file, dest_image)
-                logger.info(f"本地复制镜像: {src_file} -> {dest_image}")
-            # 分配磁盘 ==========================================================
-            vm_conn = client.nodes(self.hs_config.launch_path).qemu(vm_vmid)
-            vm_conn.config.put(sata0=f"local:{vm_vmid}/{disk_name}")
+                # 复制模式：images_path为物理路径，直接cp复制 ===================
+                if self.flag_web():
+                    # 远程模式：src_file 是远程服务器上的路径，使用 posixpath.join
+                    src_file = posixpath.join(self.hs_config.images_path, vm_conf.os_name)
+                    ssh = paramiko.SSHClient()
+                    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    ssh.connect(
+                        self.hs_config.server_addr,
+                        username=self.hs_config.server_user,
+                        password=self.hs_config.server_pass)
+                    # 检查远程镜像文件是否存在
+                    stdin, stdout, stderr = ssh.exec_command(f"test -f {src_file} && echo 'exists' || echo 'not_exists'")
+                    file_check = stdout.read().decode().strip()
+                    if file_check != 'exists':
+                        ssh.close()
+                        return ZMessage(
+                            success=False, action="VInstall",
+                            message=f"镜像文件不存在: {src_file}")
+                    # 在远程服务器上复制镜像文件
+                    ssh.exec_command(f"mkdir -p {vm_disk_dir}")
+                    copy_cmd = f"cp {src_file} {dest_image}"
+                    stdin, stdout, stderr = ssh.exec_command(copy_cmd)
+                    exit_status = stdout.channel.recv_exit_status()
+                    if exit_status != 0:
+                        error_msg = stderr.read().decode()
+                        ssh.close()
+                        return ZMessage(
+                            success=False, action="VInstall",
+                            message=f"复制镜像失败: {error_msg}")
+                    ssh.close()
+                    logger.info(f"通过SSH复制镜像: {src_file} -> {dest_image}")
+                else:
+                    # 本地模式：src_file 是 Linux 路径，使用 posixpath.join
+                    src_file = posixpath.join(self.hs_config.images_path, vm_conf.os_name)
+                    if not os.path.exists(src_file):
+                        return ZMessage(
+                            success=False, action="VInstall",
+                            message=f"镜像文件不存在: {src_file}")
+                    os.makedirs(vm_disk_dir, exist_ok=True)
+                    shutil.copy2(src_file, dest_image)
+                    logger.info(f"本地复制镜像: {src_file} -> {dest_image}")
+                # 分配磁盘 ======================================================
+                vm_conn = client.nodes(self.hs_config.launch_path).qemu(vm_vmid)
+                vm_conn.config.put(sata0=f"{system_storage}:{vm_vmid}/{disk_name}")
             logger.info(f"虚拟机 {vm_conf.vm_uuid} 系统安装完成")
             return ZMessage(success=True, action="VInstall", message="安装成功")
         # 处理异常 ==============================================================
@@ -618,29 +669,39 @@ class HostServer(BasicServer):
                 config_updates['boot'] = boot_order
                 logger.info(f"[{self.hs_config.server_name}] 更新启动顺序: {boot_order}")
             
-            # 配置GPU直通 =======================================================
-            if vm_conf.gpu_num > 0 and vm_conf.gpu_id:
-                # 检查GPU配置是否变更
-                gpu_changed = (vm_conf.gpu_id != getattr(vm_last, 'gpu_id', ''))
-                if gpu_changed:
-                    logger.info(f"[{self.hs_config.server_name}] GPU配置变更: {getattr(vm_last, 'gpu_id', '无')} -> {vm_conf.gpu_id}")
+            # 配置PCI直通 =======================================================
+            if vm_conf.pci_num > 0 and vm_conf.pci_all:
+                # 检查PCI配置是否变更
+                new_pci_keys = set(vm_conf.pci_all.keys())
+                old_pci_keys = set(vm_last.pci_all.keys()) if vm_last.pci_all else set()
+                if new_pci_keys != old_pci_keys:
+                    logger.info(f"[{self.hs_config.server_name}] PCI配置变更: {old_pci_keys} -> {new_pci_keys}")
                     try:
-                        # 移除旧的GPU配置
-                        if hasattr(vm_last, 'gpu_id') and vm_last.gpu_id:
-                            vm.config.put(delete='hostpci0')
-                            logger.info(f"[{self.hs_config.server_name}] 已移除旧GPU配置")
-                        
-                        # 添加新的GPU配置
-                        config_updates['hostpci0'] = f"{vm_conf.gpu_id},pcie=1"
-                        logger.info(f"[{self.hs_config.server_name}] 已添加新GPU配置: {vm_conf.gpu_id}")
+                        # 移除旧的PCI配置
+                        for idx in range(len(old_pci_keys)):
+                            try:
+                                vm.config.put(delete=f'hostpci{idx}')
+                            except Exception:
+                                pass
+                        logger.info(f"[{self.hs_config.server_name}] 已移除旧PCI配置")
+
+                        # 添加新的PCI配置
+                        for idx, (pci_key, pci_cfg) in enumerate(vm_conf.pci_all.items()):
+                            if pci_cfg.gpu_uuid:
+                                config_updates[f'hostpci{idx}'] = f"{pci_cfg.gpu_uuid},pcie=1"
+                                logger.info(f"[{self.hs_config.server_name}] 已添加PCI配置{idx}: {pci_cfg.gpu_uuid}")
                     except Exception as gpu_error:
-                        logger.warning(f"[{self.hs_config.server_name}] GPU配置更新失败: {str(gpu_error)}")
-            elif vm_conf.gpu_num == 0 and hasattr(vm_last, 'gpu_id') and vm_last.gpu_id:
-                # 移除GPU直通
-                logger.info(f"[{self.hs_config.server_name}] 移除GPU直通配置")
+                        logger.warning(f"[{self.hs_config.server_name}] PCI配置更新失败: {str(gpu_error)}")
+            elif vm_conf.pci_num == 0 and vm_last.pci_all:
+                # 移除PCI直通
+                logger.info(f"[{self.hs_config.server_name}] 移除PCI直通配置")
                 try:
-                    vm.config.put(delete='hostpci0')
-                    logger.info(f"[{self.hs_config.server_name}] GPU直通已移除")
+                    for idx in range(len(vm_last.pci_all)):
+                        try:
+                            vm.config.put(delete=f'hostpci{idx}')
+                        except Exception:
+                            pass
+                    logger.info(f"[{self.hs_config.server_name}] PCI直通已移除")
                 except Exception as gpu_error:
                     logger.warning(f"[{self.hs_config.server_name}] 移除GPU配置失败: {str(gpu_error)}")
             
@@ -1287,7 +1348,8 @@ class HostServer(BasicServer):
             # 执行挂载/卸载操作 ================================================
             if in_flag:
                 # 挂载ISO ======================================================
-                iso_path = f"local:iso/{vm_imgs.iso_file}"
+                dvdrom_storage = self.hs_config.dvdrom_path or "local:iso"
+                iso_path = f"{dvdrom_storage}/{vm_imgs.iso_file}"
                 vm_conn.config.put(ide2=f"{iso_path},media=cdrom")
                 self.vm_saving[vm_name].iso_all[vm_imgs.iso_name] = vm_imgs
                 logger.info(f"ISO已挂载到虚拟机 {vm_name}: {vm_imgs.iso_file}")
@@ -1614,89 +1676,53 @@ class HostServer(BasicServer):
                 logger.warning(f"[{self.hs_config.server_name}] 虚拟机 {vm_name} 未运行，无法获取截图")
                 return ""
             
-            # 4. 使用Proxmox API获取截图
-            # Proxmox VE支持通过vncproxy获取VNC连接，但没有直接的截图API
-            # 我们需要通过SSH连接到Proxmox主机，使用qm命令获取截图
-            import paramiko
-            import tempfile
-            import os
+            # 4. 通过 SSH + qm monitor screendump 获取截图（PPM格式）
             import base64
-            
-            # 5. 建立SSH连接
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            
+            import io
+
             try:
+                remote_ppm = f"/tmp/screen-{vmid}.ppm"
+                ssh = paramiko.SSHClient()
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 ssh.connect(
-                    hostname=self.hs_config.server_addr,
-                    port=22,
+                    self.hs_config.server_addr,
                     username=self.hs_config.server_user,
                     password=self.hs_config.server_pass,
-                    timeout=10
-                )
-                
-                # 6. 生成临时文件路径
-                temp_dir = tempfile.gettempdir()
-                screenshot_path = os.path.join(temp_dir, f"{vm_name}_screenshot.ppm")
-                remote_screenshot_path = f"/tmp/{vm_name}_screenshot.ppm"
-                
-                # 7. 执行qm命令获取截图（PPM格式）
-                qm_command = f"qm screenshot {vmid} {remote_screenshot_path}"
-                stdin, stdout, stderr = ssh.exec_command(qm_command)
-                exit_status = stdout.channel.recv_exit_status()
-                
-                if exit_status != 0:
-                    error_output = stderr.read().decode()
-                    logger.error(f"[{self.hs_config.server_name}] 执行qm screenshot命令失败: {error_output}")
-                    ssh.close()
-                    return ""
-                
-                # 8. 使用SFTP下载截图文件
+                    timeout=10)
+
+                # 5. 通过 qm monitor 发送 screendump 命令
+                cmd = f"echo 'screendump {remote_ppm}' | qm monitor {vmid}"
+                stdin, stdout, stderr = ssh.exec_command(cmd)
+                stdout.channel.recv_exit_status()
+
+                # 6. 读取 PPM 文件内容
                 sftp = ssh.open_sftp()
-                sftp.get(remote_screenshot_path, screenshot_path)
+                buf = io.BytesIO()
+                sftp.getfo(remote_ppm, buf)
                 sftp.close()
-                
-                # 9. 删除远程临时文件
-                ssh.exec_command(f"rm -f {remote_screenshot_path}")
+                ssh.exec_command(f"rm -f {remote_ppm}")
                 ssh.close()
-                
-                # 10. 读取截图文件并转换为PNG格式（使用PIL）
-                if os.path.exists(screenshot_path):
-                    try:
-                        from PIL import Image
-                        
-                        # 读取PPM文件并转换为PNG
-                        img = Image.open(screenshot_path)
-                        png_path = screenshot_path.replace('.ppm', '.png')
-                        img.save(png_path, 'PNG')
-                        
-                        # 读取PNG文件并转换为base64
-                        with open(png_path, "rb") as f:
-                            screenshot_base64 = base64.b64encode(f.read()).decode('utf-8')
-                        
-                        # 删除临时文件
-                        os.remove(screenshot_path)
-                        os.remove(png_path)
-                        
-                        logger.info(f"[{self.hs_config.server_name}] 成功获取虚拟机 {vm_name} 截图")
-                        return screenshot_base64
-                    except ImportError:
-                        # 如果没有PIL库，直接返回PPM文件的base64
-                        logger.warning(f"[{self.hs_config.server_name}] PIL库未安装，返回PPM格式截图")
-                        with open(screenshot_path, "rb") as f:
-                            screenshot_base64 = base64.b64encode(f.read()).decode('utf-8')
-                        os.remove(screenshot_path)
-                        return screenshot_base64
-                else:
-                    logger.error(f"[{self.hs_config.server_name}] 截图文件不存在: {screenshot_path}")
+
+                ppm_data = buf.getvalue()
+                if not ppm_data:
+                    logger.error(f"[{self.hs_config.server_name}] screendump 返回空数据")
                     return ""
-                    
-            except Exception as e:
-                logger.error(f"[{self.hs_config.server_name}] SSH连接或文件传输失败: {str(e)}")
+
+                # 7. PPM 转 PNG（有 PIL 则转，否则直接返回 PPM 的 base64）
                 try:
-                    ssh.close()
-                except Exception as e_close:
-                    logger.warning(f"[{self.hs_config.server_name}] 关闭SSH连接失败: {str(e_close)}")
+                    from PIL import Image
+                    img = Image.open(io.BytesIO(ppm_data))
+                    out = io.BytesIO()
+                    img.save(out, format='PNG')
+                    screenshot_base64 = base64.b64encode(out.getvalue()).decode('utf-8')
+                except ImportError:
+                    screenshot_base64 = base64.b64encode(ppm_data).decode('utf-8')
+
+                logger.info(f"[{self.hs_config.server_name}] 成功获取虚拟机 {vm_name} 截图")
+                return screenshot_base64
+
+            except Exception as e:
+                logger.error(f"[{self.hs_config.server_name}] 获取截图失败: {str(e)}")
                 return ""
                 
         except Exception as e:
@@ -1705,7 +1731,7 @@ class HostServer(BasicServer):
             return ""
 
     # 查找PCI设备 #################################################################
-    def PCIShows(self) -> dict[str, 'VFConfig']:
+    def PCIShows(self) -> Dict[str, 'VFConfig']:
         """获取可用的PCI直通设备列表
         通过SSH lspci -nn列出所有PCI设备及其IOMMU组
         Returns:
@@ -1784,18 +1810,12 @@ class HostServer(BasicServer):
                 return ZMessage(success=False, action="PCISetup", message=f"PVE连接失败: {result.message}")
 
             # 获取虚拟机VMID
-            vmid = self._get_vmid(vm_name)
+            vm_conf_pci = self.vm_saving[vm_name]
+            vmid = self.get_vmid(vm_conf_pci)
             if not vmid:
                 return ZMessage(success=False, action="PCISetup", message="无法获取虚拟机VMID")
 
-            node = self.hs_config.server_addr.split('.')[0] if '.' in self.hs_config.server_addr else self.hs_config.server_addr
-            # 获取实际node名
-            try:
-                nodes = client.nodes.get()
-                if nodes:
-                    node = nodes[0]['node']
-            except Exception as e_node:
-                logger.warning(f"[{self.hs_config.server_name}] 获取PVE节点名失败，使用默认值: {str(e_node)}")
+            node = self.hs_config.launch_path
 
             pci_id = config.gpu_uuid
 
@@ -1835,7 +1855,7 @@ class HostServer(BasicServer):
             return ZMessage(success=False, action="PCISetup", message=str(e))
 
     # 查找USB设备 ##################################################################
-    def USBShows(self) -> dict[str, 'USBInfos']:
+    def USBShows(self) -> Dict[str, 'USBInfos']:  # noqa
         """获取PVE主机上的USB设备列表"""
         from MainObject.Config.USBInfos import USBInfos
         try:
@@ -1897,17 +1917,12 @@ class HostServer(BasicServer):
             if not result.success:
                 return ZMessage(success=False, action="USBSetup", message=f"PVE连接失败: {result.message}")
 
-            vmid = self._get_vmid(vm_name)
+            vm_conf_usb = self.vm_saving[vm_name]
+            vmid = self.get_vmid(vm_conf_usb)
             if not vmid:
                 return ZMessage(success=False, action="USBSetup", message="无法获取虚拟机VMID")
 
-            node = self.hs_config.server_addr.split('.')[0]
-            try:
-                nodes = client.nodes.get()
-                if nodes:
-                    node = nodes[0]['node']
-            except Exception as e_node:
-                logger.warning(f"[{self.hs_config.server_name}] 获取PVE节点名失败，使用默认值: {str(e_node)}")
+            node = self.hs_config.launch_path
 
             vid = ud_info.vid_uuid
             pid = ud_info.pid_uuid

@@ -321,6 +321,9 @@ function HostManage() {
 
                 const config = hostData.config || {}
 
+                // 先重置表单，防止残留上次编辑的字段值
+                form.resetFields()
+
                 // 设置表单值
                 form.setFieldsValue({
                     name: name,
@@ -347,7 +350,8 @@ function HostManage() {
                     limits_nums: config.limits_nums,
                     ipaddr_ddns: (config.ipaddr_ddns || []).join(', '),
                     public_addr: (config.public_addr || []).join(', '),
-                    extend_data: config.extend_data ? JSON.stringify(config.extend_data, null, 2) : ''
+                    extend_data: config.extend_data ? JSON.stringify(config.extend_data, null, 2) : '',
+                    server_area: config.server_area || ''
                 })
 
                 // 加载系统映射
@@ -432,9 +436,6 @@ function HostManage() {
                     })
                 }
                 setServerPlans(serverPlansData)
-
-                // 加载区域配置
-                form.setFieldsValue({ server_area: config.server_area || '' })
 
                 setModalVisible(true)
             }

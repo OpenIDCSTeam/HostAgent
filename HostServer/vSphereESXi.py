@@ -4,6 +4,7 @@
 import datetime
 import traceback
 
+from typing import Dict
 from loguru import logger
 from HostServer.BasicServer import BasicServer
 from HostServer.vSphereESXiAPI.vSphereAPI import vSphereAPI
@@ -1209,7 +1210,7 @@ class HostServer(BasicServer):
         # return super().RMMounts(vm_name, vm_imgs)
 
     # 查找PCI设备 =================================================================
-    def PCIShows(self) -> dict[str, 'VFConfig']:
+    def PCIShows(self) -> Dict[str, 'VFConfig']:
         """获取可用的PCI直通设备列表
         Returns:
             dict: {pci_id: VFConfig}
@@ -1342,7 +1343,7 @@ class HostServer(BasicServer):
             return ZMessage(success=False, action="PCISetup", message=str(e))
 
     # 查找USB设备 ==============================================================
-    def USBShows(self) -> dict[str, 'USBInfos']:
+    def USBShows(self) -> Dict[str, 'USBInfos']:
         """获取ESXi主机上的USB设备列表"""
         from MainObject.Config.USBInfos import USBInfos
         try:
